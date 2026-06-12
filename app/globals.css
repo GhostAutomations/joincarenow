@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  /* Join Care Now brand palette */
+  --color-brand-50: #eef7f6;
+  --color-brand-100: #d5ecea;
+  --color-brand-200: #aedad6;
+  --color-brand-300: #7fc1bc;
+  --color-brand-400: #54a49f;
+  --color-brand-500: #3a8884;
+  --color-brand-600: #2d6d6a;
+  --color-brand-700: #275856;
+  --color-brand-800: #234746;
+  --color-brand-900: #203c3b;
+  --color-brand-950: #0e2221;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 antialiased;
+}

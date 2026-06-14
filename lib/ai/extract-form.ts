@@ -42,29 +42,48 @@ export async function extractFormFields(base64Pdf: string): Promise<ExtractedFie
     throw new Error("PDF import isn't configured yet (missing ANTHROPIC_API_KEY).");
   }
 
-  const client = new Anthropic({ apiKey });
+  // Keep retries low and time out before Vercel kills the function, so we
+  // surface the real error instead of a generic "Connection error".
+  const client = new Anthropic({ apiKey, maxRetries: 0, timeout: 50_000 });
   const model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
 
-  const msg = await client.messages.create({
-    model,
-    max_tokens: 4096,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "document",
-            source: {
-              type: "base64",
-              media_type: "application/pdf",
-              data: base64Pdf,
+  let msg;
+  try {
+    msg = await client.messages.create({
+      model,
+      max_tokens: 4096,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "document",
+              source: {
+                type: "base64",
+                media_type: "application/pdf",
+                data: base64Pdf,
+              },
             },
-          },
-          { type: "text", text: PROMPT },
-        ],
-      },
-    ],
-  });
+            { type: "text", text: PROMPT },
+          ],
+        },
+      ],
+    });
+  } catch (err: unknown) {
+    const e = err as {
+      name?: string;
+      status?: number;
+      message?: string;
+      error?: { error?: { message?: string } };
+      cause?: { message?: string };
+    };
+    console.error("PDF import — Anthropic request failed:", err);
+    const name = e?.name ?? "Error";
+    const status = e?.status ? ` ${e.status}` : "";
+    const detail = e?.error?.error?.message || e?.message || "unknown error";
+    const cause = e?.cause?.message ? ` (cause: ${e.cause.message})` : "";
+    throw new Error(`AI request failed: ${name}${status} — ${detail}${cause} [model: ${model}]`);
+  }
 
   const text = msg.content
     .filter((b): b is Anthropic.TextBlock => b.type === "text")

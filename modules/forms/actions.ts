@@ -223,6 +223,79 @@ export async function updateField(
   return { ok: true };
 }
 
+/** Default values for a freshly-inserted field of a given type. */
+function defaultField(ft: FieldType): FieldData {
+  if (ft === "body_text") {
+    return {
+      label: "Information",
+      field_type: ft,
+      required: false,
+      options: [],
+      help_text: null,
+      config: { text: "Add your text here", size: "normal", color: "#374151" },
+    };
+  }
+  if (CHOICE_TYPES.includes(ft)) {
+    return {
+      label: "Untitled question",
+      field_type: ft,
+      required: false,
+      options: ["Option 1"],
+      help_text: null,
+      config: {},
+    };
+  }
+  return {
+    label: "Untitled question",
+    field_type: ft,
+    required: false,
+    options: [],
+    help_text: null,
+    config: {},
+  };
+}
+
+/** Insert a field of the chosen type after `afterId` ("" = top), then reindex. */
+export async function addFieldOfType(formData: FormData) {
+  const formId = String(formData.get("formId") ?? "");
+  const afterId = String(formData.get("afterId") ?? "");
+  const ft = String(formData.get("fieldType") ?? "") as FieldType;
+  if (!formId || !FIELD_TYPES.includes(ft)) return;
+
+  const { supabase, current } = await requireCompany();
+  const { data: form } = await supabase
+    .from("forms")
+    .select("id")
+    .eq("id", formId)
+    .eq("company_id", current.company_id)
+    .single();
+  if (!form) return;
+
+  const { data: existing } = await supabase
+    .from("form_fields")
+    .select("id")
+    .eq("form_id", formId)
+    .order("position", { ascending: true });
+  const ids = (existing ?? []).map((e) => e.id);
+
+  const { data: created, error } = await supabase
+    .from("form_fields")
+    .insert({ form_id: formId, ...defaultField(ft), position: ids.length })
+    .select("id")
+    .single();
+  if (error || !created) return;
+
+  const idx = afterId ? ids.indexOf(afterId) + 1 : 0;
+  ids.splice(idx, 0, created.id);
+  await Promise.all(
+    ids.map((fid, i) =>
+      supabase.from("form_fields").update({ position: i }).eq("id", fid)
+    )
+  );
+
+  revalidatePath(`/forms/${formId}`);
+}
+
 export async function deleteField(formData: FormData) {
   const id = formData.get("id");
   const formId = formData.get("formId");

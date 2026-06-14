@@ -18,6 +18,9 @@ Follow these steps once. After this, every new phase is just code + a migration.
    `supabase/migrations/0001_foundations.sql`, and click **Run**
 5. Then run `supabase/migrations/0002_invitations.sql` (invite-only access +
    invitations). Always run migrations in order.
+5b. Then run `supabase/migrations/0003_jobs_applicants_applications.sql`
+   (jobs, careers pages, applicants, applications + a private `applications`
+   storage bucket for CVs). Run once.
 6. (Recommended) Paste and run `supabase/tests/rls_isolation_test.sql` —
    you should see four `PASS` notices. This proves one company can never see another's data.
 6. Go to **Authentication → Sign In / Up → Email** and (for now) turn **off**
@@ -98,4 +101,27 @@ Create a GitHub repo named `joincarenow`, push, then in Vercel:
 | Multi-tenancy | Membership-scoped queries; cross-company isolation enforced in the database |
 | UI | Landing page, sign-in, accept-invite, no-access, founder console (`/admin`), dashboard shell, Settings with team roster + invitations |
 
-**Next: Phase 1 — Jobs & public careers pages (incl. applicant self-signup).**
+## Phase 1 — Jobs & careers (built)
+
+Join Care Now is a **per-company hiring funnel**, not a public job board. Each
+company has its own careers page; applicants only see the jobs of the company
+whose link they followed (e.g. from an Indeed or Facebook ad). They create one
+reusable applicant account at the point of applying, and can re-use it to apply
+to other employers later.
+
+| Area | What was built |
+|---|---|
+| Database | `jobs`, `applicants`, `applications` + enums + RLS (company sees only its own applicants; applicant sees only their own) + RPCs (`get_company_careers`, `get_public_job`, `apply_to_job`, `get_my_applications`) + private `applications` CV bucket |
+| Staff | Jobs screen: create / edit / publish / close roles; applicant count per job; one-click public link |
+| Public | `/careers/[company]` listing + `/careers/[company]/[job]` detail — SEO-friendly, shareable, no login to browse |
+| Apply | Simple built-in form + optional CV upload; applicant email/password sign-up/sign-in; reuses the applicant's profile across companies |
+| Applicant | `/portal` — "my applications" with live status across every company applied to |
+
+**Test it:** sign in as an Admin → Jobs → New job → Publish. Open the public
+link in a private window → Apply → create an applicant account → submit → see it
+in `/portal`. Back in the staff Jobs list, the applicant count goes up.
+
+**Note:** keep Supabase "Confirm email" **off** for now (Phase 0 step 6) — applicant
+sign-up needs an active session immediately. It gets turned on with email (Phase 3).
+
+**Next: Recruitment Pipeline — staff review of applications (Kanban + table).**

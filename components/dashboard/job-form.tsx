@@ -1,0 +1,152 @@
+"use client";
+
+import { useActionState } from "react";
+import { SubmitButton, FormError } from "@/components/ui/form";
+import type { JobState } from "@/modules/jobs/actions";
+
+type Action = (prev: JobState, formData: FormData) => Promise<JobState>;
+
+export type JobDefaults = {
+  id?: string;
+  title?: string;
+  description?: string;
+  employment_type?: string;
+  location?: string;
+  salary?: string;
+  vacancies?: number;
+  closing_date?: string;
+};
+
+const inputClass =
+  "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+
+const EMPLOYMENT_TYPES = [
+  "Full time",
+  "Part time",
+  "Bank / Casual",
+  "Fixed term",
+  "Apprenticeship",
+];
+
+export function JobForm({
+  action,
+  defaults,
+  submitLabel,
+}: {
+  action: Action;
+  defaults?: JobDefaults;
+  submitLabel: string;
+}) {
+  const [state, formAction] = useActionState<JobState, FormData>(action, undefined);
+
+  return (
+    <form action={formAction} className="space-y-5">
+      <FormError error={state?.error} />
+      {defaults?.id && <input type="hidden" name="id" value={defaults.id} />}
+
+      <div>
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+          Job title
+        </label>
+        <input
+          id="title"
+          name="title"
+          required
+          defaultValue={defaults?.title}
+          placeholder="e.g. Care Assistant"
+          className={inputClass}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <label htmlFor="employment_type" className="block text-sm font-medium text-gray-700">
+            Employment type
+          </label>
+          <select
+            id="employment_type"
+            name="employment_type"
+            defaultValue={defaults?.employment_type ?? "Full time"}
+            className={inputClass}
+          >
+            {EMPLOYMENT_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+            Location
+          </label>
+          <input
+            id="location"
+            name="location"
+            defaultValue={defaults?.location}
+            placeholder="e.g. Cardiff"
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label htmlFor="salary" className="block text-sm font-medium text-gray-700">
+            Salary / rate
+          </label>
+          <input
+            id="salary"
+            name="salary"
+            defaultValue={defaults?.salary}
+            placeholder="e.g. £12.50 per hour"
+            className={inputClass}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-5">
+          <div>
+            <label htmlFor="vacancies" className="block text-sm font-medium text-gray-700">
+              Vacancies
+            </label>
+            <input
+              id="vacancies"
+              name="vacancies"
+              type="number"
+              min={1}
+              max={999}
+              defaultValue={defaults?.vacancies ?? 1}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="closing_date" className="block text-sm font-medium text-gray-700">
+              Closing date
+            </label>
+            <input
+              id="closing_date"
+              name="closing_date"
+              type="date"
+              defaultValue={defaults?.closing_date}
+              className={inputClass}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+          Job description
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          rows={10}
+          defaultValue={defaults?.description}
+          placeholder="Describe the role, responsibilities, requirements and benefits…"
+          className={inputClass}
+        />
+      </div>
+
+      <div className="sm:w-48">
+        <SubmitButton>{submitLabel}</SubmitButton>
+      </div>
+    </form>
+  );
+}

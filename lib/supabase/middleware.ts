@@ -10,6 +10,9 @@ const PUBLIC_PATHS = [
   "/accept-invite",
   "/auth",
   "/careers",
+  "/applicant",
+  // Guarded at the page level (redirects to the applicant sign-in, not staff).
+  "/portal",
 ];
 
 function isPublicPath(pathname: string) {

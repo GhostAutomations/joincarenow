@@ -41,14 +41,33 @@ export async function getMemberships() {
 }
 
 /** Require at least one company membership. Founders go to their console;
- *  anyone else without a membership has no access (staff join by invite only). */
+ *  applicants go to their portal; anyone else has no access. */
 export async function requireCompany() {
   const ctx = await getMemberships();
   if (ctx.memberships.length === 0) {
-    redirect(ctx.profile?.is_platform_admin ? "/admin" : "/no-access");
+    if (ctx.profile?.is_platform_admin) redirect("/admin");
+    // Is this person an applicant rather than staff?
+    const { data: applicant } = await ctx.supabase
+      .from("applicants")
+      .select("id")
+      .eq("user_id", ctx.user.id)
+      .maybeSingle();
+    redirect(applicant ? "/portal" : "/no-access");
   }
   // Single-company users go straight in; multi-company picker comes later.
   return { ...ctx, current: ctx.memberships[0] };
+}
+
+/** Require a signed-in applicant; otherwise send to applicant sign-in. */
+export async function requireApplicant(nextPath = "/portal") {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect(`/applicant/sign-in?next=${encodeURIComponent(nextPath)}`);
+  }
+  return { supabase, user };
 }
 
 /** Require platform-admin (founder) access, else redirect appropriately. */

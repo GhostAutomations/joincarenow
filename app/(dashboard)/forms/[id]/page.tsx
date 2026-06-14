@@ -7,6 +7,10 @@ import { FieldForm } from "@/components/dashboard/field-form";
 import { FieldRow } from "@/components/dashboard/field-row";
 import { PdfImport } from "@/components/dashboard/pdf-import";
 
+// PDF import calls Claude, which can take longer than the default function
+// limit. Allow up to 60s (Vercel Hobby cap) for this route's server actions.
+export const maxDuration = 60;
+
 type Field = {
   id: string;
   label: string;

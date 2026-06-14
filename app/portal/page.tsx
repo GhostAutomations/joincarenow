@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { requireApplicant } from "@/modules/auth/queries";
 import { signOut } from "@/modules/auth/actions";
+import {
+  InterviewInvite,
+  type PortalInterview,
+} from "@/components/portal/interview-invite";
 
 type MyApplication = {
   application_id: string;
@@ -38,8 +42,17 @@ export default async function PortalPage({
   const { supabase, user } = await requireApplicant();
   const { applied } = await searchParams;
 
-  const { data } = await supabase.rpc("get_my_applications");
+  const [{ data }, { data: ivData }] = await Promise.all([
+    supabase.rpc("get_my_applications"),
+    supabase.rpc("get_my_interviews"),
+  ]);
   const applications = (data ?? []) as MyApplication[];
+  const interviewByApp = new Map<string, PortalInterview>();
+  for (const iv of (ivData ?? []) as (PortalInterview & {
+    application_id: string;
+  })[]) {
+    interviewByApp.set(iv.application_id, iv);
+  }
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -71,32 +84,38 @@ export default async function PortalPage({
           </p>
         ) : (
           <ul className="mt-6 space-y-3">
-            {applications.map((a) => (
-              <li
-                key={a.application_id}
-                className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-5"
-              >
-                <div className="min-w-0">
-                  <Link
-                    href={`/careers/${a.company_slug}/${a.job_slug}`}
-                    className="font-medium text-gray-900 hover:text-brand-700"
-                  >
-                    {a.job_title}
-                  </Link>
-                  <p className="text-sm text-gray-500">
-                    {a.company_name} · applied{" "}
-                    {new Date(a.created_at).toLocaleDateString("en-GB")}
-                  </p>
-                </div>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    STAGE_STYLES[a.stage] ?? "bg-gray-100 text-gray-700"
-                  }`}
+            {applications.map((a) => {
+              const interview = interviewByApp.get(a.application_id);
+              return (
+                <li
+                  key={a.application_id}
+                  className="rounded-xl border border-gray-200 bg-white p-5"
                 >
-                  {STAGE_LABEL[a.stage] ?? a.stage}
-                </span>
-              </li>
-            ))}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/careers/${a.company_slug}/${a.job_slug}`}
+                        className="font-medium text-gray-900 hover:text-brand-700"
+                      >
+                        {a.job_title}
+                      </Link>
+                      <p className="text-sm text-gray-500">
+                        {a.company_name} · applied{" "}
+                        {new Date(a.created_at).toLocaleDateString("en-GB")}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        STAGE_STYLES[a.stage] ?? "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {STAGE_LABEL[a.stage] ?? a.stage}
+                    </span>
+                  </div>
+                  {interview && <InterviewInvite interview={interview} />}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

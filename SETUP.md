@@ -143,4 +143,19 @@ it's used only server-side to sign CV downloads after a permission check.
 to "Interview" (or use the stage dropdown) → click the card to open the panel →
 **View CV**. Sign in as that applicant and confirm `/portal` shows the new stage.
 
+## Phase 2.1 — Interview scheduling (built)
+
+First example of a pipeline stage that *does* something. Run
+`supabase/migrations/0004_interviews.sql` (interviews table + RPCs).
+
+| Area | What was built |
+|---|---|
+| Schedule | Open an Interview-stage card → set date/time, duration, mode, location, and how to invite (SMS / Email / Both) |
+| Colours | Interview cards are colour-coded: blue = awaiting reply, green = confirmed, yellow = new time requested, red = declined |
+| Applicant | The invite appears in `/portal` with Confirm / Request new time / No longer interested |
+| Audit | Scheduling and responses are audit-logged |
+
+**Note:** actual SMS/email delivery is added in the Communication phase; the
+channel choice is saved now and the applicant responds via their portal.
+
 **Next: Application Form Builder, then Onboarding.**

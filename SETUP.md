@@ -124,4 +124,23 @@ in `/portal`. Back in the staff Jobs list, the applicant count goes up.
 **Note:** keep Supabase "Confirm email" **off** for now (Phase 0 step 6) — applicant
 sign-up needs an active session immediately. It gets turned on with email (Phase 3).
 
-**Next: Recruitment Pipeline — staff review of applications (Kanban + table).**
+## Phase 2 — Recruitment Pipeline (built)
+
+Staff review of incoming applications. No new migration — uses the Phase 1
+tables and the `application_stage` enum.
+
+| Area | What was built |
+|---|---|
+| Pipeline | `/pipeline` — Kanban board (drag cards between stages) + table view; stage changes are optimistic and audit-logged |
+| Applicant panel | Slide-over with profile, contact, right-to-work, cover message, and a secure **View CV** button (short-lived signed URL minted server-side; the CV bucket stays private) |
+| Applicants | `/applicants` — searchable list of everyone who applied to the company |
+| Stages | Fixed set: Applied · Reviewing · Interview · Offer · Hired · Not progressing. The applicant's `/portal` reflects the current stage (no emails yet) |
+
+Needs `SUPABASE_SERVICE_ROLE_KEY` set locally and on Vercel (already configured) —
+it's used only server-side to sign CV downloads after a permission check.
+
+**Test it:** with an application in the system, open **Pipeline** → drag the card
+to "Interview" (or use the stage dropdown) → click the card to open the panel →
+**View CV**. Sign in as that applicant and confirm `/portal` shows the new stage.
+
+**Next: Application Form Builder, then Onboarding.**

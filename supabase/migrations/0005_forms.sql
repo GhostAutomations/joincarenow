@@ -4,6 +4,7 @@
 -- 'onboarding' reuse the same engine later). A form is assigned to
 -- a job; its fields render on the apply page on top of the built-in
 -- basics, and answers are stored as a submission per application.
+-- No double-quoted identifiers (avoids smart-quote paste issues).
 -- Run AFTER 0004_interviews.sql.
 -- ============================================================
 
@@ -12,99 +13,65 @@ create type public.form_field_type as enum (
   'dropdown', 'radio', 'checkboxes', 'yes_no', 'file'
 );
 
--- ---------- FORMS -------------------------------------------
 create table public.forms (
   id uuid primary key default gen_random_uuid(),
   company_id uuid not null references public.companies (id) on delete cascade,
   name text not null,
-  purpose text not null default 'application',  -- application | offer | onboarding
+  purpose text not null default 'application',
   created_by uuid references public.profiles (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 create index idx_forms_company on public.forms (company_id);
-
 create trigger trg_forms_updated before update on public.forms
   for each row execute function public.set_updated_at();
 
--- ---------- FORM FIELDS -------------------------------------
 create table public.form_fields (
   id uuid primary key default gen_random_uuid(),
   form_id uuid not null references public.forms (id) on delete cascade,
   label text not null,
   field_type public.form_field_type not null,
   required boolean not null default false,
-  options jsonb not null default '[]'::jsonb,   -- array of strings for choice types
+  options jsonb not null default '[]'::jsonb,
   help_text text,
   position int not null default 0,
   created_at timestamptz not null default now()
 );
 create index idx_form_fields_form on public.form_fields (form_id, position);
 
--- ---------- JOB ↔ FORM --------------------------------------
 alter table public.jobs
   add column application_form_id uuid references public.forms (id) on delete set null;
 
--- ---------- FORM SUBMISSIONS --------------------------------
 create table public.form_submissions (
   id uuid primary key default gen_random_uuid(),
   company_id uuid not null references public.companies (id) on delete cascade,
   form_id uuid not null references public.forms (id) on delete cascade,
   application_id uuid references public.applications (id) on delete cascade,
   applicant_id uuid references public.applicants (id) on delete set null,
-  answers jsonb not null default '{}'::jsonb,    -- { field_id: value }
+  answers jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   unique (application_id, form_id)
 );
 create index idx_form_submissions_company on public.form_submissions (company_id);
 create index idx_form_submissions_application on public.form_submissions (application_id);
 
--- ---------- RLS ---------------------------------------------
 alter table public.forms enable row level security;
 alter table public.form_fields enable row level security;
 alter table public.form_submissions enable row level security;
 
--- forms: company members manage their company's forms
-create policy "forms_select_member" on public.forms
-  for select using (public.is_company_member(company_id));
-create policy "forms_insert_member" on public.forms
-  for insert with check (public.is_company_member(company_id));
-create policy "forms_update_member" on public.forms
-  for update using (public.is_company_member(company_id))
-  with check (public.is_company_member(company_id));
-create policy "forms_delete_member" on public.forms
-  for delete using (public.is_company_member(company_id));
+create policy forms_select_member on public.forms for select using (public.is_company_member(company_id));
+create policy forms_insert_member on public.forms for insert with check (public.is_company_member(company_id));
+create policy forms_update_member on public.forms for update using (public.is_company_member(company_id)) with check (public.is_company_member(company_id));
+create policy forms_delete_member on public.forms for delete using (public.is_company_member(company_id));
 
--- form_fields: governed by the parent form's company
-create policy "form_fields_select_member" on public.form_fields
-  for select using (
-    exists (select 1 from public.forms f
-            where f.id = form_id and public.is_company_member(f.company_id))
-  );
-create policy "form_fields_insert_member" on public.form_fields
-  for insert with check (
-    exists (select 1 from public.forms f
-            where f.id = form_id and public.is_company_member(f.company_id))
-  );
-create policy "form_fields_update_member" on public.form_fields
-  for update using (
-    exists (select 1 from public.forms f
-            where f.id = form_id and public.is_company_member(f.company_id))
-  );
-create policy "form_fields_delete_member" on public.form_fields
-  for delete using (
-    exists (select 1 from public.forms f
-            where f.id = form_id and public.is_company_member(f.company_id))
-  );
+create policy form_fields_select_member on public.form_fields for select using (exists (select 1 from public.forms f where f.id = form_id and public.is_company_member(f.company_id)));
+create policy form_fields_insert_member on public.form_fields for insert with check (exists (select 1 from public.forms f where f.id = form_id and public.is_company_member(f.company_id)));
+create policy form_fields_update_member on public.form_fields for update using (exists (select 1 from public.forms f where f.id = form_id and public.is_company_member(f.company_id)));
+create policy form_fields_delete_member on public.form_fields for delete using (exists (select 1 from public.forms f where f.id = form_id and public.is_company_member(f.company_id)));
 
--- form_submissions: company members read theirs; applicant reads own.
--- Inserts happen through apply_to_job() (SECURITY DEFINER).
-create policy "form_submissions_select_company" on public.form_submissions
-  for select using (public.is_company_member(company_id));
-create policy "form_submissions_select_applicant" on public.form_submissions
-  for select using (public.is_applicant_owner(applicant_id));
+create policy form_submissions_select_company on public.form_submissions for select using (public.is_company_member(company_id));
+create policy form_submissions_select_applicant on public.form_submissions for select using (public.is_applicant_owner(applicant_id));
 
--- ---------- PUBLIC: get a job's application form fields ------
 create or replace function public.get_application_form(p_job_id uuid)
 returns table (
   field_id uuid,
@@ -113,22 +80,17 @@ returns table (
   required boolean,
   options jsonb,
   help_text text,
-  "position" int
+  field_position int
 )
 language sql security definer stable set search_path = public
 as $$
   select ff.id, ff.label, ff.field_type, ff.required, ff.options, ff.help_text, ff.position
   from public.jobs j
   join public.form_fields ff on ff.form_id = j.application_form_id
-  where j.id = p_job_id
-    and j.status = 'published'
-    and j.application_form_id is not null
+  where j.id = p_job_id and j.status = 'published' and j.application_form_id is not null
   order by ff.position, ff.created_at;
 $$;
 
--- ---------- Extend apply_to_job to store custom answers ------
--- Drop the previous 8-arg version first; we're adding p_form_answers,
--- which would otherwise create an ambiguous overload.
 drop function if exists public.apply_to_job(
   uuid, text, text, text, text, text, text, jsonb
 );
@@ -191,7 +153,6 @@ begin
     raise exception 'You have already applied for this role';
   end if;
 
-  -- Store custom form answers, if this job has an assigned form.
   if v_form_id is not null and p_form_answers is not null and p_form_answers <> '{}'::jsonb then
     insert into public.form_submissions
       (company_id, form_id, application_id, applicant_id, answers)

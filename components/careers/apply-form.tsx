@@ -21,7 +21,7 @@ export type FormField = {
   required: boolean;
   options: string[];
   help_text: string | null;
-  position: number;
+  field_position: number;
 };
 
 export function ApplyForm({

@@ -40,10 +40,27 @@ export async function getMemberships() {
   };
 }
 
-/** Require at least one company membership, else send to onboarding. */
+/** Require at least one company membership. Founders go to their console;
+ *  anyone else without a membership has no access (staff join by invite only). */
 export async function requireCompany() {
   const ctx = await getMemberships();
-  if (ctx.memberships.length === 0) redirect("/onboarding");
+  if (ctx.memberships.length === 0) {
+    redirect(ctx.profile?.is_platform_admin ? "/admin" : "/no-access");
+  }
   // Single-company users go straight in; multi-company picker comes later.
   return { ...ctx, current: ctx.memberships[0] };
+}
+
+/** Require platform-admin (founder) access, else redirect appropriately. */
+export async function requirePlatformAdmin() {
+  const { supabase, user, profile } = await requireUser();
+  if (!profile?.is_platform_admin) {
+    const { data } = await supabase
+      .from("company_users")
+      .select("company_id")
+      .eq("user_id", user.id)
+      .limit(1);
+    redirect(data && data.length > 0 ? "/dashboard" : "/no-access");
+  }
+  return { supabase, user, profile };
 }

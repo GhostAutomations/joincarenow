@@ -11,15 +11,9 @@ export default function LandingPage() {
           <nav className="flex items-center gap-4">
             <Link
               href="/sign-in"
-              className="text-sm font-medium text-gray-700 hover:text-brand-700"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/sign-up"
               className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
             >
-              Get started
+              Staff sign in
             </Link>
           </nav>
         </div>
@@ -38,10 +32,10 @@ export default function LandingPage() {
           </p>
           <div className="mt-10 flex justify-center gap-4">
             <Link
-              href="/sign-up"
+              href="/sign-in"
               className="rounded-lg bg-brand-600 px-6 py-3 text-base font-medium text-white hover:bg-brand-700"
             >
-              Start free
+              Staff sign in
             </Link>
           </div>
         </div>

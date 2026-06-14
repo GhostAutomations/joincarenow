@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
@@ -9,8 +9,10 @@ const createCompanySchema = z.object({
   name: z.string().min(2, "Company name must be at least 2 characters").max(120),
 });
 
-export type CompanyState = { error?: string } | undefined;
+export type CompanyState = { error?: string; ok?: boolean } | undefined;
 
+/** Founder-only (enforced in the create_company RPC). Provisions a company;
+ *  the first admin is added afterwards via invitation, not here. */
 export async function createCompany(
   _prev: CompanyState,
   formData: FormData
@@ -36,9 +38,12 @@ export async function createCompany(
       company_slug: slug,
     });
 
-    if (!error) redirect("/dashboard");
+    if (!error) {
+      revalidatePath("/admin");
+      return { ok: true };
+    }
     if (!error.message.includes("duplicate key")) {
-      return { error: "Could not create company. Please try again." };
+      return { error: error.message || "Could not create company. Please try again." };
     }
   }
   return { error: "Could not generate a unique web address. Try a different name." };

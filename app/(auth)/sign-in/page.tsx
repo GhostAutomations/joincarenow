@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "@/modules/auth/actions";
@@ -35,14 +34,7 @@ export default function SignInPage() {
   return (
     <AuthCard
       title="Sign in"
-      subtitle={
-        <>
-          New to Join Care Now?{" "}
-          <Link href="/sign-up" className="text-brand-600 hover:underline">
-            Create an account
-          </Link>
-        </>
-      }
+      subtitle="Staff access is by invitation. If you've been invited, use the link in your email to set up your account."
     >
       <Suspense>
         <SignInForm />

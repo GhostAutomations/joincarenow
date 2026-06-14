@@ -19,3 +19,6 @@ build/
 
 # vercel
 .vercel
+
+# supabase CLI temp files
+supabase/.temp/

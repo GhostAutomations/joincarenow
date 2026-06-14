@@ -26,6 +26,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "supabase": "^2.106.0",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3"
   }

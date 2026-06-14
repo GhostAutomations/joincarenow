@@ -15,6 +15,8 @@ const TYPE_LABEL: Record<string, string> = {
   checkboxes: "Checkboxes",
   yes_no: "Yes / No",
   file: "File upload",
+  signature: "Signature",
+  body_text: "Body text",
 };
 
 export function FieldRow({
@@ -45,8 +47,10 @@ export function FieldRow({
   return (
     <li className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-gray-900">
-          {field.label}
+        <p className="truncate text-sm font-medium text-gray-900">
+          {field.field_type === "body_text"
+            ? field.config?.text || field.label
+            : field.label}
           {field.required && <span className="ml-1 text-red-500">*</span>}
         </p>
         <p className="text-xs text-gray-500">

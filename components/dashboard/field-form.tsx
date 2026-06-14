@@ -14,6 +14,8 @@ const TYPES: { value: string; label: string }[] = [
   { value: "checkboxes", label: "Checkboxes (pick many)" },
   { value: "yes_no", label: "Yes / No" },
   { value: "file", label: "File upload" },
+  { value: "signature", label: "Signature" },
+  { value: "body_text", label: "Body text / information" },
 ];
 const CHOICE = ["dropdown", "radio", "checkboxes"];
 
@@ -27,6 +29,7 @@ export type FieldDefaults = {
   required: boolean;
   options: string[];
   helpText: string;
+  config?: { text?: string; size?: string; color?: string } | null;
 };
 
 export function FieldForm({
@@ -57,6 +60,8 @@ export function FieldForm({
     }
   }, [state, isEdit, onSaved, router]);
 
+  const isBody = type === "body_text";
+
   return (
     <form ref={formRef} action={formAction} className="space-y-3">
       {state?.error && (
@@ -69,8 +74,8 @@ export function FieldForm({
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="text-xs font-medium text-gray-600">
-          Question / label
-          <input name="label" required defaultValue={defaults?.label} className={cls} />
+          {isBody ? "Heading (optional)" : "Question / label"}
+          <input name="label" defaultValue={defaults?.label} className={cls} />
         </label>
         <label className="text-xs font-medium text-gray-600">
           Field type
@@ -89,33 +94,74 @@ export function FieldForm({
         </label>
       </div>
 
-      {CHOICE.includes(type) && (
-        <label className="block text-xs font-medium text-gray-600">
-          Options (one per line)
-          <textarea
-            name="options"
-            rows={3}
-            defaultValue={defaults?.options.join("\n")}
-            placeholder={"Yes\nNo\nMaybe"}
-            className={cls}
-          />
-        </label>
+      {isBody ? (
+        <>
+          <label className="block text-xs font-medium text-gray-600">
+            Text to display
+            <textarea
+              name="content"
+              rows={4}
+              defaultValue={defaults?.config?.text ?? ""}
+              placeholder="Explain what's needed in this section…"
+              className={cls}
+            />
+          </label>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="text-xs font-medium text-gray-600">
+              Font size
+              <select
+                name="fontSize"
+                defaultValue={defaults?.config?.size ?? "normal"}
+                className={cls}
+              >
+                <option value="small">Small</option>
+                <option value="normal">Normal</option>
+                <option value="large">Large</option>
+                <option value="xl">Extra large</option>
+              </select>
+            </label>
+            <label className="text-xs font-medium text-gray-600">
+              Text colour
+              <input
+                type="color"
+                name="fontColor"
+                defaultValue={defaults?.config?.color ?? "#374151"}
+                className="mt-1 block h-9 w-16 rounded-md border border-gray-300"
+              />
+            </label>
+          </div>
+        </>
+      ) : (
+        <>
+          {CHOICE.includes(type) && (
+            <label className="block text-xs font-medium text-gray-600">
+              Options (one per line)
+              <textarea
+                name="options"
+                rows={3}
+                defaultValue={defaults?.options.join("\n")}
+                placeholder={"Yes\nNo\nMaybe"}
+                className={cls}
+              />
+            </label>
+          )}
+
+          <label className="block text-xs font-medium text-gray-600">
+            Help text (optional)
+            <input name="helpText" defaultValue={defaults?.helpText} className={cls} />
+          </label>
+
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              name="required"
+              defaultChecked={defaults?.required}
+              className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+            />
+            Required
+          </label>
+        </>
       )}
-
-      <label className="block text-xs font-medium text-gray-600">
-        Help text (optional)
-        <input name="helpText" defaultValue={defaults?.helpText} className={cls} />
-      </label>
-
-      <label className="flex items-center gap-2 text-sm text-gray-700">
-        <input
-          type="checkbox"
-          name="required"
-          defaultChecked={defaults?.required}
-          className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-        />
-        Required
-      </label>
 
       <div className="flex items-center gap-2">
         <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">

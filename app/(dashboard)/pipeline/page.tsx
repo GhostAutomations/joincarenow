@@ -89,6 +89,7 @@ export default async function PipelinePage() {
 
   const formatAnswer = (v: unknown, type: string): string => {
     if (v == null || v === "") return "";
+    if (type === "signature") return "Signature captured";
     if (type === "file") {
       const path = Array.isArray(v) ? v.join(", ") : String(v);
       return path.split("/").pop() || "File attached";

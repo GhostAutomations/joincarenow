@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { requireCompany } from "@/modules/auth/queries";
 import { extractFormFields } from "@/lib/ai/extract-form";
 
@@ -16,10 +15,68 @@ const FIELD_TYPES = [
   "checkboxes",
   "yes_no",
   "file",
+  "signature",
+  "body_text",
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 
 const CHOICE_TYPES: FieldType[] = ["dropdown", "radio", "checkboxes"];
+
+type FieldData = {
+  label: string;
+  field_type: FieldType;
+  required: boolean;
+  options: string[];
+  help_text: string | null;
+  config: Record<string, unknown>;
+};
+
+/** Normalise a field submission from the builder (handles body_text styling). */
+function buildField(formData: FormData): { error: string } | { value: FieldData } {
+  const fieldType = String(formData.get("fieldType") ?? "");
+  if (!FIELD_TYPES.includes(fieldType as FieldType)) {
+    return { error: "Pick a field type" };
+  }
+  const ft = fieldType as FieldType;
+  const helpText = (formData.get("helpText")?.toString() ?? "").trim();
+
+  if (ft === "body_text") {
+    const text = (formData.get("content")?.toString() ?? "").trim();
+    if (!text) return { error: "Add the text to display." };
+    const heading = (formData.get("label")?.toString() ?? "").trim() || "Information";
+    return {
+      value: {
+        label: heading.slice(0, 200),
+        field_type: ft,
+        required: false,
+        options: [],
+        help_text: null,
+        config: {
+          text: text.slice(0, 5000),
+          size: formData.get("fontSize")?.toString() || "normal",
+          color: formData.get("fontColor")?.toString() || "#374151",
+        },
+      },
+    };
+  }
+
+  const label = (formData.get("label")?.toString() ?? "").trim();
+  if (!label) return { error: "Field label is required" };
+  const options = parseOptions(formData.get("options"));
+  if (CHOICE_TYPES.includes(ft) && options.length === 0) {
+    return { error: "Add at least one option (one per line) for this field type." };
+  }
+  return {
+    value: {
+      label: label.slice(0, 200),
+      field_type: ft,
+      required: formData.get("required") === "on",
+      options,
+      help_text: helpText ? helpText.slice(0, 300) : null,
+      config: {},
+    },
+  };
+}
 
 export type FormState = { error?: string; ok?: boolean } | undefined;
 
@@ -68,15 +125,6 @@ export async function deleteForm(formData: FormData) {
 }
 
 // ---------- Fields ----------
-const fieldSchema = z.object({
-  formId: z.string().uuid(),
-  label: z.string().min(1, "Field label is required").max(200),
-  fieldType: z.enum(FIELD_TYPES),
-  required: z.boolean(),
-  options: z.array(z.string()).default([]),
-  helpText: z.string().max(300).optional().or(z.literal("")),
-});
-
 function parseOptions(raw: FormDataEntryValue | null): string[] {
   if (typeof raw !== "string") return [];
   return raw
@@ -89,27 +137,18 @@ export async function addField(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const parsed = fieldSchema.safeParse({
-    formId: formData.get("formId"),
-    label: formData.get("label"),
-    fieldType: formData.get("fieldType"),
-    required: formData.get("required") === "on",
-    options: parseOptions(formData.get("options")),
-    helpText: formData.get("helpText") ?? "",
-  });
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  const formId = formData.get("formId");
+  if (typeof formId !== "string") return { error: "Missing form" };
 
-  if (CHOICE_TYPES.includes(parsed.data.fieldType) && parsed.data.options.length === 0) {
-    return { error: "Add at least one option (one per line) for this field type." };
-  }
+  const built = buildField(formData);
+  if ("error" in built) return { error: built.error };
 
   const { supabase, current } = await requireCompany();
 
-  // Ownership check + next position.
   const { data: form } = await supabase
     .from("forms")
     .select("id")
-    .eq("id", parsed.data.formId)
+    .eq("id", formId)
     .eq("company_id", current.company_id)
     .single();
   if (!form) return { error: "Form not found" };
@@ -117,24 +156,20 @@ export async function addField(
   const { data: last } = await supabase
     .from("form_fields")
     .select("position")
-    .eq("form_id", parsed.data.formId)
+    .eq("form_id", formId)
     .order("position", { ascending: false })
     .limit(1)
     .maybeSingle();
   const nextPos = (last?.position ?? -1) + 1;
 
   const { error } = await supabase.from("form_fields").insert({
-    form_id: parsed.data.formId,
-    label: parsed.data.label,
-    field_type: parsed.data.fieldType,
-    required: parsed.data.required,
-    options: parsed.data.options,
-    help_text: parsed.data.helpText || null,
+    form_id: formId,
+    ...built.value,
     position: nextPos,
   });
   if (error) return { error: "Could not add the field." };
 
-  revalidatePath(`/forms/${parsed.data.formId}`);
+  revalidatePath(`/forms/${formId}`);
   return { ok: true };
 }
 
@@ -143,34 +178,21 @@ export async function updateField(
   formData: FormData
 ): Promise<FormState> {
   const id = formData.get("id");
-  const parsed = fieldSchema.safeParse({
-    formId: formData.get("formId"),
-    label: formData.get("label"),
-    fieldType: formData.get("fieldType"),
-    required: formData.get("required") === "on",
-    options: parseOptions(formData.get("options")),
-    helpText: formData.get("helpText") ?? "",
-  });
+  const formId = formData.get("formId");
   if (typeof id !== "string") return { error: "Missing field id" };
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
-  if (CHOICE_TYPES.includes(parsed.data.fieldType) && parsed.data.options.length === 0) {
-    return { error: "Add at least one option for this field type." };
-  }
+  if (typeof formId !== "string") return { error: "Missing form" };
+
+  const built = buildField(formData);
+  if ("error" in built) return { error: built.error };
 
   const { supabase } = await requireCompany();
   const { error } = await supabase
     .from("form_fields")
-    .update({
-      label: parsed.data.label,
-      field_type: parsed.data.fieldType,
-      required: parsed.data.required,
-      options: parsed.data.options,
-      help_text: parsed.data.helpText || null,
-    })
+    .update(built.value)
     .eq("id", id);
   if (error) return { error: "Could not save the field." };
 
-  revalidatePath(`/forms/${parsed.data.formId}`);
+  revalidatePath(`/forms/${formId}`);
   return { ok: true };
 }
 

@@ -18,6 +18,7 @@ type Field = {
   required: boolean;
   options: string[];
   help_text: string | null;
+  config: { text?: string; size?: string; color?: string } | null;
   position: number;
 };
 
@@ -39,7 +40,7 @@ export default async function FormEditorPage({
 
   const { data: fieldsData } = await supabase
     .from("form_fields")
-    .select("id, label, field_type, required, options, help_text, position")
+    .select("id, label, field_type, required, options, help_text, config, position")
     .eq("form_id", id)
     .order("position", { ascending: true });
   const fields = (fieldsData ?? []) as Field[];
@@ -94,6 +95,7 @@ export default async function FormEditorPage({
                 required: f.required,
                 options: f.options ?? [],
                 helpText: f.help_text ?? "",
+                config: f.config ?? null,
               }}
             />
           ))}

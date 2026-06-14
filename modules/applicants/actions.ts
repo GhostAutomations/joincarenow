@@ -157,6 +157,24 @@ export async function applyToJob(
         (v): v is string => typeof v === "string" && v !== ""
       );
       if (strs.length === 0) continue;
+
+      // A signature arrives as a data: URL — upload it as a PNG.
+      const dataUrl = strs.find((s) => s.startsWith("data:image/"));
+      if (dataUrl) {
+        const m = dataUrl.match(/^data:image\/\w+;base64,(.+)$/);
+        if (m) {
+          const buf = Buffer.from(m[1], "base64");
+          if (buf.byteLength > 0 && buf.byteLength <= 2 * 1024 * 1024) {
+            const path = `${user.id}/signature-${Date.now()}.png`;
+            const { error: sigErr } = await supabase.storage
+              .from("applications")
+              .upload(path, buf, { contentType: "image/png", upsert: false });
+            if (!sigErr) formAnswers[fieldId] = path;
+          }
+        }
+        continue;
+      }
+
       formAnswers[fieldId] = strs.length === 1 ? strs[0] : strs;
     }
   }

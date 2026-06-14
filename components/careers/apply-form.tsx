@@ -1,6 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import {
+  useActionState,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { applyToJob } from "@/modules/applicants/actions";
 import { SubmitButton, FormError } from "@/components/ui/form";
 
@@ -21,6 +26,7 @@ export type FormField = {
   required: boolean;
   options: string[];
   help_text: string | null;
+  config: { text?: string; size?: string; color?: string } | null;
   field_position: number;
 };
 
@@ -140,9 +146,38 @@ export function ApplyForm({
   );
 }
 
+const SIZE_CLASS: Record<string, string> = {
+  small: "text-xs",
+  normal: "text-sm",
+  large: "text-lg",
+  xl: "text-2xl",
+};
+
 function DynamicField({ field }: { field: FormField }) {
   const name = `field_${field.field_id}`;
   const req = field.required;
+
+  // Static information block — not an input.
+  if (field.field_type === "body_text") {
+    const sizeClass = SIZE_CLASS[field.config?.size ?? "normal"] ?? "text-sm";
+    return (
+      <div>
+        {field.label && field.label !== "Information" && (
+          <p className="mb-1 text-sm font-semibold text-gray-900">{field.label}</p>
+        )}
+        <p
+          className={`whitespace-pre-wrap ${sizeClass}`}
+          style={{ color: field.config?.color ?? "#374151" }}
+        >
+          {field.config?.text ?? ""}
+        </p>
+      </div>
+    );
+  }
+
+  if (field.field_type === "signature") {
+    return <SignatureField name={name} label={field.label} required={req} help={field.help_text} />;
+  }
   const label = (
     <span className="block text-sm font-medium text-gray-700">
       {field.label}
@@ -232,5 +267,88 @@ function DynamicField({ field }: { field: FormField }) {
       {help}
       <input type={type} name={name} required={req} className={inputClass} />
     </label>
+  );
+}
+
+function SignatureField({
+  name,
+  label,
+  required,
+  help,
+}: {
+  name: string;
+  label: string;
+  required: boolean;
+  help: string | null;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+  const [value, setValue] = useState("");
+
+  function point(e: ReactPointerEvent<HTMLCanvasElement>) {
+    const c = canvasRef.current!;
+    const r = c.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  function down(e: ReactPointerEvent<HTMLCanvasElement>) {
+    drawing.current = true;
+    const ctx = canvasRef.current!.getContext("2d")!;
+    const { x, y } = point(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    canvasRef.current!.setPointerCapture(e.pointerId);
+  }
+  function move(e: ReactPointerEvent<HTMLCanvasElement>) {
+    if (!drawing.current) return;
+    const ctx = canvasRef.current!.getContext("2d")!;
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#111827";
+    const { x, y } = point(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
+  function up() {
+    if (!drawing.current) return;
+    drawing.current = false;
+    setValue(canvasRef.current!.toDataURL("image/png"));
+  }
+  function clear() {
+    const c = canvasRef.current!;
+    c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
+    setValue("");
+  }
+
+  return (
+    <div>
+      <span className="block text-sm font-medium text-gray-700">
+        {label}
+        {required && <span className="ml-0.5 text-red-500">*</span>}
+      </span>
+      {help && <span className="mt-0.5 block text-xs text-gray-500">{help}</span>}
+      <div className="mt-1 inline-block rounded-md border border-gray-300 bg-white">
+        <canvas
+          ref={canvasRef}
+          width={400}
+          height={140}
+          onPointerDown={down}
+          onPointerMove={move}
+          onPointerUp={up}
+          onPointerLeave={up}
+          className="touch-none rounded-md"
+          style={{ width: 400, height: 140, maxWidth: "100%" }}
+        />
+      </div>
+      <div className="mt-1">
+        <button
+          type="button"
+          onClick={clear}
+          className="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+        >
+          Clear signature
+        </button>
+      </div>
+      <input type="hidden" name={name} value={value} />
+    </div>
   );
 }

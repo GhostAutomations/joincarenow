@@ -448,20 +448,26 @@ function InterviewSection({ app }: { app: AppCard }) {
                 type="datetime-local"
                 name="scheduledAt"
                 required
+                step={900}
                 defaultValue={defaultDt}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
               />
             </label>
             <label className="text-xs text-gray-600">
-              Duration (min)
-              <input
-                type="number"
+              Duration
+              <select
                 name="durationMinutes"
-                min={5}
-                max={480}
-                defaultValue={iv?.duration_minutes ?? 30}
+                defaultValue={String(iv?.duration_minutes ?? 30)}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
-              />
+              >
+                {[15, 30, 45, 60, 75, 90, 120].map((m) => (
+                  <option key={m} value={m}>
+                    {m >= 60
+                      ? `${Math.floor(m / 60)} hr${m % 60 ? ` ${m % 60} min` : ""}`
+                      : `${m} min`}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
 

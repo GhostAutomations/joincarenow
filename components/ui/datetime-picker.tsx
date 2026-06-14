@@ -2,18 +2,13 @@
 
 import { useState } from "react";
 
-// "HH:MM" every 15 minutes, 00:00 → 23:45
-const TIMES: string[] = [];
-for (let h = 0; h < 24; h++) {
-  for (const m of [0, 15, 30, 45]) {
-    TIMES.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-  }
-}
+const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
+const MINUTES = ["00", "15", "30", "45"];
 
-const inputClass =
+const fieldClass =
   "rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
-/** Date picker + 15-minute time dropdown. Emits a combined
+/** Date picker + separate hour and 15-minute dropdowns. Emits a combined
  *  "YYYY-MM-DDTHH:MM" value in a hidden input named `name`. */
 export function DateTimePicker({
   name,
@@ -25,35 +20,54 @@ export function DateTimePicker({
   minToday?: boolean;
 }) {
   const initDate = defaultValue ? defaultValue.slice(0, 10) : "";
-  const initTime = defaultValue ? defaultValue.slice(11, 16) : "";
-  const [date, setDate] = useState(initDate);
-  // Only keep the time if it lands on a 15-min slot we offer.
-  const [time, setTime] = useState(TIMES.includes(initTime) ? initTime : "");
+  const initHour = defaultValue ? defaultValue.slice(11, 13) : "";
+  const initMin = defaultValue ? defaultValue.slice(14, 16) : "";
 
-  const value = date && time ? `${date}T${time}` : "";
+  const [date, setDate] = useState(initDate);
+  const [hour, setHour] = useState(HOURS.includes(initHour) ? initHour : "");
+  const [minute, setMinute] = useState(MINUTES.includes(initMin) ? initMin : "");
+
+  const value = date && hour && minute ? `${date}T${hour}:${minute}` : "";
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <input
         type="date"
         value={date}
         min={minToday ? today : undefined}
         onChange={(e) => setDate(e.target.value)}
-        className={inputClass}
+        className={fieldClass}
       />
-      <select
-        value={time}
-        onChange={(e) => setTime(e.target.value)}
-        className={inputClass}
-      >
-        <option value="">--:--</option>
-        {TIMES.map((t) => (
-          <option key={t} value={t}>
-            {t}
-          </option>
-        ))}
-      </select>
+      <div className="flex items-center gap-1">
+        <select
+          aria-label="Hour"
+          value={hour}
+          onChange={(e) => setHour(e.target.value)}
+          className={fieldClass}
+        >
+          <option value="">HH</option>
+          {HOURS.map((h) => (
+            <option key={h} value={h}>
+              {h}
+            </option>
+          ))}
+        </select>
+        <span className="text-gray-500">:</span>
+        <select
+          aria-label="Minutes"
+          value={minute}
+          onChange={(e) => setMinute(e.target.value)}
+          className={fieldClass}
+        >
+          <option value="">MM</option>
+          {MINUTES.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+      </div>
       <input type="hidden" name={name} value={value} />
     </div>
   );

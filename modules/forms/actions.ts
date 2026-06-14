@@ -101,18 +101,45 @@ export async function createForm(
   redirect(`/forms/${data.id}`);
 }
 
-export async function renameForm(formData: FormData) {
+/** Create an untitled form and go straight into the builder. */
+export async function createBlankForm() {
+  const { supabase, user, current } = await requireCompany();
+  const { data, error } = await supabase
+    .from("forms")
+    .insert({ company_id: current.company_id, name: "Untitled form", created_by: user.id })
+    .select("id")
+    .single();
+  if (error || !data) throw new Error("Could not create the form.");
+  revalidatePath("/forms");
+  redirect(`/forms/${data.id}`);
+}
+
+const CATEGORIES = ["recruitment", "hr", "onboarding", "other"];
+
+export type DetailsState = { error?: string; ok?: boolean } | undefined;
+
+/** Save a form's name + category from the builder header. */
+export async function saveFormDetails(
+  _prev: DetailsState,
+  formData: FormData
+): Promise<DetailsState> {
   const id = formData.get("id");
   const name = (formData.get("name")?.toString() ?? "").trim();
-  if (typeof id !== "string" || name.length < 2) return;
+  const categoryRaw = formData.get("category")?.toString() ?? "recruitment";
+  if (typeof id !== "string") return { error: "Missing form" };
+  if (name.length < 2) return { error: "Give the form a name" };
+  const category = CATEGORIES.includes(categoryRaw) ? categoryRaw : "other";
 
   const { supabase, current } = await requireCompany();
-  await supabase
+  const { error } = await supabase
     .from("forms")
-    .update({ name })
+    .update({ name, category })
     .eq("id", id)
     .eq("company_id", current.company_id);
+  if (error) return { error: "Could not save. Please try again." };
+
   revalidatePath(`/forms/${id}`);
+  return { ok: true };
 }
 
 export async function deleteForm(formData: FormData) {

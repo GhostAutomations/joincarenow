@@ -80,7 +80,10 @@ export function PipelineBoard({ initial }: { initial: AppCard[] }) {
   const selected = apps.find((a) => a.id === selectedId) ?? null;
 
   function move(id: string, stage: string) {
+    const prevStage = apps.find((a) => a.id === id)?.stage;
     setApps((prev) => prev.map((a) => (a.id === id ? { ...a, stage } : a)));
+    // Moving into Interview opens the card so you can schedule straight away.
+    if (stage === "interview" && prevStage !== "interview") setSelectedId(id);
     changeStage(id, stage).then((res) => {
       if (res.error) router.refresh();
     });

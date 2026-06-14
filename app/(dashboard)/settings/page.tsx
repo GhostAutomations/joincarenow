@@ -1,6 +1,7 @@
 import { requireCompany } from "@/modules/auth/queries";
 import { InviteForm } from "@/components/dashboard/invite-form";
 import { PendingInvites } from "@/components/dashboard/pending-invites";
+import { InterviewAddressForm } from "@/components/dashboard/interview-address-form";
 
 export default async function SettingsPage() {
   const { supabase, current } = await requireCompany();
@@ -10,6 +11,15 @@ export default async function SettingsPage() {
     .from("company_users")
     .select("id, role, profiles ( full_name, email )")
     .eq("company_id", current.company_id);
+
+  const { data: companyRow } = await supabase
+    .from("companies")
+    .select("settings")
+    .eq("id", current.company_id)
+    .single();
+  const interviewAddress =
+    ((companyRow?.settings as { interview_address?: string } | null)
+      ?.interview_address) ?? "";
 
   // Admins manage invitations. RLS only returns this company's invites.
   const { data: invites } = isAdmin
@@ -42,6 +52,22 @@ export default async function SettingsPage() {
           </div>
         </dl>
       </section>
+
+      {isAdmin && (
+        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-base font-medium text-gray-900">
+            Interview address
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Your default address for in-person interviews. It pre-fills the
+            location when you schedule an in-person interview.
+          </p>
+          <InterviewAddressForm
+            companyId={current.company_id}
+            defaultValue={interviewAddress}
+          />
+        </section>
+      )}
 
       {isAdmin && (
         <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">

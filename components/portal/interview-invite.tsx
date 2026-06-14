@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CalendarClock } from "lucide-react";
 import { respondToInterview } from "@/modules/interviews/actions";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
 
 export type PortalInterview = {
   interview_id: string;
@@ -79,11 +80,10 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
         <form action={respondToInterview} className="mt-3 space-y-2">
           <input type="hidden" name="interviewId" value={interview.interview_id} />
           <input type="hidden" name="response" value="reschedule_requested" />
-          <input
-            name="requestedTime"
-            placeholder="When would suit you better?"
-            className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
-          />
+          <div>
+            <p className="mb-1 text-xs text-gray-600">When would suit you better?</p>
+            <DateTimePicker name="requestedTime" />
+          </div>
           <textarea
             name="note"
             rows={2}

@@ -91,3 +91,40 @@ export async function createCompany(
     invitedEmail: parsed.data.adminEmail,
   };
 }
+
+// ---------- Company profile: interview address ----------
+
+export type SettingsState = { error?: string; ok?: boolean } | undefined;
+
+/** Admins set the default in-person interview address for their company.
+ *  Stored in companies.settings.interview_address. RLS limits this to admins. */
+export async function setInterviewAddress(
+  _prev: SettingsState,
+  formData: FormData
+): Promise<SettingsState> {
+  const companyId = formData.get("companyId");
+  if (typeof companyId !== "string") return { error: "Missing company" };
+  const address = (formData.get("interviewAddress")?.toString() ?? "").slice(0, 500);
+
+  const supabase = await createClient();
+  const { data: company } = await supabase
+    .from("companies")
+    .select("settings")
+    .eq("id", companyId)
+    .single();
+
+  const settings = {
+    ...((company?.settings as Record<string, unknown>) ?? {}),
+    interview_address: address,
+  };
+
+  const { error } = await supabase
+    .from("companies")
+    .update({ settings })
+    .eq("id", companyId);
+
+  if (error) return { error: "Could not save. Please try again." };
+
+  revalidatePath("/settings");
+  return { ok: true };
+}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FileText, X, Phone, Mail, MapPin, CalendarClock } from "lucide-react";
 import { changeStage, getCvUrl } from "@/modules/applications/actions";
 import { scheduleInterview } from "@/modules/interviews/actions";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
 
 export type Interview = {
   id: string;
@@ -67,7 +68,13 @@ function fullName(a: AppCard) {
   return [a.first_name, a.last_name].filter(Boolean).join(" ") || a.email || "Applicant";
 }
 
-export function PipelineBoard({ initial }: { initial: AppCard[] }) {
+export function PipelineBoard({
+  initial,
+  interviewAddress,
+}: {
+  initial: AppCard[];
+  interviewAddress: string;
+}) {
   const router = useRouter();
   const [apps, setApps] = useState(initial);
   const [view, setView] = useState<"board" | "table">("board");
@@ -216,6 +223,7 @@ export function PipelineBoard({ initial }: { initial: AppCard[] }) {
       {selected && (
         <ApplicantPanel
           app={selected}
+          interviewAddress={interviewAddress}
           onClose={() => setSelectedId(null)}
           onStage={(s) => move(selected.id, s)}
         />
@@ -248,10 +256,12 @@ function StageSelect({
 
 function ApplicantPanel({
   app,
+  interviewAddress,
   onClose,
   onStage,
 }: {
   app: AppCard;
+  interviewAddress: string;
   onClose: () => void;
   onStage: (s: string) => void;
 }) {
@@ -298,7 +308,9 @@ function ApplicantPanel({
             </div>
           </div>
 
-          {app.stage === "interview" && <InterviewSection app={app} />}
+          {app.stage === "interview" && (
+            <InterviewSection app={app} interviewAddress={interviewAddress} />
+          )}
 
           <div className="space-y-1.5 text-sm text-gray-700">
             {app.email && (
@@ -358,11 +370,30 @@ function ApplicantPanel({
   );
 }
 
-function InterviewSection({ app }: { app: AppCard }) {
+function InterviewSection({
+  app,
+  interviewAddress,
+}: {
+  app: AppCard;
+  interviewAddress: string;
+}) {
   const router = useRouter();
   const iv = app.interview;
   const [state, action] = useActionState(scheduleInterview, undefined);
   const [editing, setEditing] = useState(!iv);
+
+  // Type (in person / phone / video) + location, so "in person" can
+  // pre-fill the company's saved interview address.
+  const [type, setType] = useState(iv?.mode ?? "in_person");
+  const [location, setLocation] = useState(
+    iv ? (iv.location ?? "") : type === "in_person" ? interviewAddress : ""
+  );
+
+  function onTypeChange(next: string) {
+    setType(next);
+    if (next === "in_person" && !location.trim()) setLocation(interviewAddress);
+    if (next !== "in_person" && location === interviewAddress) setLocation("");
+  }
 
   useEffect(() => {
     if (state?.ok) {
@@ -401,7 +432,7 @@ function InterviewSection({ app }: { app: AppCard }) {
           </p>
           {iv.mode && (
             <p>
-              <span className="text-gray-500">Mode:</span> {modeLabel(iv.mode)}
+              <span className="text-gray-500">Type:</span> {modeLabel(iv.mode)}
             </p>
           )}
           {iv.location && (
@@ -416,7 +447,9 @@ function InterviewSection({ app }: { app: AppCard }) {
           {iv.status === "reschedule_requested" && (
             <div className="rounded-md bg-amber-100 px-3 py-2 text-amber-900">
               <p className="font-medium">Applicant requested a new time</p>
-              {iv.requested_time && <p>Preferred: {iv.requested_time}</p>}
+              {iv.requested_time && (
+                <p>Preferred: {formatRequested(iv.requested_time)}</p>
+              )}
               {iv.applicant_note && <p className="mt-0.5">“{iv.applicant_note}”</p>}
             </div>
           )}
@@ -441,41 +474,34 @@ function InterviewSection({ app }: { app: AppCard }) {
           )}
           <input type="hidden" name="applicationId" value={app.id} />
 
-          <div className="grid grid-cols-2 gap-3">
-            <label className="text-xs text-gray-600">
-              Date &amp; time
-              <input
-                type="datetime-local"
-                name="scheduledAt"
-                required
-                step={900}
-                defaultValue={defaultDt}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
-              />
-            </label>
-            <label className="text-xs text-gray-600">
-              Duration
-              <select
-                name="durationMinutes"
-                defaultValue={String(iv?.duration_minutes ?? 30)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
-              >
-                {[15, 30, 45, 60, 75, 90, 120].map((m) => (
-                  <option key={m} value={m}>
-                    {m >= 60
-                      ? `${Math.floor(m / 60)} hr${m % 60 ? ` ${m % 60} min` : ""}`
-                      : `${m} min`}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="space-y-1">
+            <p className="text-xs text-gray-600">Date &amp; time</p>
+            <DateTimePicker name="scheduledAt" defaultValue={defaultDt} />
           </div>
 
           <label className="block text-xs text-gray-600">
-            Mode
+            Duration
+            <select
+              name="durationMinutes"
+              defaultValue={String(iv?.duration_minutes ?? 30)}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+            >
+              {[15, 30, 45, 60, 75, 90, 120].map((m) => (
+                <option key={m} value={m}>
+                  {m >= 60
+                    ? `${Math.floor(m / 60)} hr${m % 60 ? ` ${m % 60} min` : ""}`
+                    : `${m} min`}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block text-xs text-gray-600">
+            Type
             <select
               name="mode"
-              defaultValue={iv?.mode ?? "in_person"}
+              value={type}
+              onChange={(e) => onTypeChange(e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
             >
               <option value="in_person">In person</option>
@@ -485,11 +511,22 @@ function InterviewSection({ app }: { app: AppCard }) {
           </label>
 
           <label className="block text-xs text-gray-600">
-            Location / number / link
+            {type === "in_person"
+              ? "Address"
+              : type === "phone"
+                ? "Phone number"
+                : "Video link"}
             <input
               name="location"
-              defaultValue={iv?.location ?? ""}
-              placeholder="e.g. Head office, or a phone number / video link"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder={
+                type === "in_person"
+                  ? "Interview address"
+                  : type === "phone"
+                    ? "Phone number to call"
+                    : "Video meeting link"
+              }
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
             />
           </label>
@@ -548,6 +585,12 @@ function toLocalInput(iso: string): string {
 
 function modeLabel(m: string) {
   return m === "in_person" ? "In person" : m === "phone" ? "Phone" : "Video call";
+}
+function formatRequested(v: string) {
+  const d = new Date(v);
+  return isNaN(d.getTime())
+    ? v
+    : d.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
 }
 function channelLabel(c: string) {
   return c === "both" ? "Email & SMS" : c === "sms" ? "SMS" : "Email";

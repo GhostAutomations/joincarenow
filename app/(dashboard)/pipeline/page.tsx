@@ -27,7 +27,7 @@ type InterviewRow = Interview & { application_id: string };
 export default async function PipelinePage() {
   const { supabase, current } = await requireCompany();
 
-  const [{ data }, { data: ivData }] = await Promise.all([
+  const [{ data }, { data: ivData }, { data: companyRow }] = await Promise.all([
     supabase
       .from("applications")
       .select(
@@ -41,7 +41,16 @@ export default async function PipelinePage() {
         "id, application_id, scheduled_at, duration_minutes, mode, location, channel, status, requested_time, applicant_note"
       )
       .eq("company_id", current.company_id),
+    supabase
+      .from("companies")
+      .select("settings")
+      .eq("id", current.company_id)
+      .single(),
   ]);
+
+  const interviewAddress =
+    ((companyRow?.settings as { interview_address?: string } | null)
+      ?.interview_address) ?? "";
 
   const interviewByApp = new Map<string, Interview>();
   for (const iv of (ivData ?? []) as unknown as InterviewRow[]) {
@@ -65,5 +74,5 @@ export default async function PipelinePage() {
     interview: interviewByApp.get(r.id) ?? null,
   }));
 
-  return <PipelineBoard initial={apps} />;
+  return <PipelineBoard initial={apps} interviewAddress={interviewAddress} />;
 }

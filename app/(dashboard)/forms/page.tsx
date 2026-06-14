@@ -1,7 +1,6 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
-import { createForm } from "@/modules/forms/actions";
-import { CreateFormButton } from "@/components/dashboard/create-form-button";
 
 export default async function FormsPage() {
   const { supabase, current } = await requireCompany();
@@ -16,22 +15,34 @@ export default async function FormsPage() {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">Forms</h1>
+        <Link
+          href="/forms/new"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+          Create a form
+        </Link>
       </div>
       <p className="mt-1 text-sm text-gray-500">
         Build custom application forms and assign them to your jobs. Applicants
         answer these on top of the built-in basics (name, contact, CV).
       </p>
 
-      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="text-base font-medium text-gray-900">Create a form</h2>
-        <div className="mt-3">
-          <CreateFormButton action={createForm} />
-        </div>
-      </div>
-
       <div className="mt-6">
         {(forms ?? []).length === 0 ? (
-          <p className="text-sm text-gray-500">No forms yet.</p>
+          <div className="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
+            <p className="text-sm font-medium text-gray-900">No forms yet</p>
+            <p className="mt-1 text-sm text-gray-500">
+              Create your first form, then add fields to it.
+            </p>
+            <Link
+              href="/forms/new"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              <Plus className="h-4 w-4" aria-hidden />
+              Create a form
+            </Link>
+          </div>
         ) : (
           <ul className="space-y-2">
             {(forms ?? []).map((f) => {

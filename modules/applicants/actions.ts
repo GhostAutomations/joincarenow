@@ -122,6 +122,45 @@ export async function applyToJob(
 
   const rightToWork = formData.get("rightToWork") === "on";
 
+  // Collect custom application-form answers (inputs named field_<id>).
+  const formAnswers: Record<string, unknown> = {};
+  const fieldKeys = new Set<string>();
+  for (const key of formData.keys()) {
+    if (key.startsWith("field_")) fieldKeys.add(key);
+  }
+  for (const key of fieldKeys) {
+    const fieldId = key.slice("field_".length);
+    const values = formData.getAll(key);
+    const files = values.filter(
+      (v): v is File => v instanceof File && v.size > 0
+    );
+    if (files.length > 0) {
+      const paths: string[] = [];
+      for (const f of files) {
+        if (f.size > 5 * 1024 * 1024) {
+          return { error: `"${f.name}" is larger than 5MB.` };
+        }
+        const safe = f.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${user.id}/${Date.now()}-${safe}`;
+        const { error: upErr } = await supabase.storage
+          .from("applications")
+          .upload(path, await f.arrayBuffer(), {
+            contentType: f.type || "application/octet-stream",
+            upsert: false,
+          });
+        if (upErr) return { error: "Could not upload an attachment. Please try again." };
+        paths.push(path);
+      }
+      formAnswers[fieldId] = paths.length === 1 ? paths[0] : paths;
+    } else {
+      const strs = values.filter(
+        (v): v is string => typeof v === "string" && v !== ""
+      );
+      if (strs.length === 0) continue;
+      formAnswers[fieldId] = strs.length === 1 ? strs[0] : strs;
+    }
+  }
+
   const { error } = await supabase.rpc("apply_to_job", {
     p_job_id: parsed.data.jobId,
     p_first_name: parsed.data.firstName,
@@ -131,6 +170,7 @@ export async function applyToJob(
     p_cover_message: parsed.data.coverMessage || null,
     p_cv_path: cvPath,
     p_answers: { right_to_work: rightToWork },
+    p_form_answers: formAnswers,
   });
 
   if (error) return { error: error.message };

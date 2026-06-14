@@ -14,6 +14,7 @@ const jobSchema = z.object({
   salary: z.string().max(100).optional().or(z.literal("")),
   vacancies: z.coerce.number().int().min(1).max(999).default(1),
   closing_date: z.string().optional().or(z.literal("")),
+  application_form_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 export type JobState = { error?: string } | undefined;
@@ -27,6 +28,7 @@ function parseJob(formData: FormData) {
     salary: formData.get("salary") ?? "",
     vacancies: formData.get("vacancies") ?? 1,
     closing_date: formData.get("closing_date") ?? "",
+    application_form_id: formData.get("application_form_id") ?? "",
   });
 }
 
@@ -57,6 +59,7 @@ export async function createJob(
         salary: parsed.data.salary || null,
         vacancies: parsed.data.vacancies,
         closing_date: parsed.data.closing_date || null,
+        application_form_id: parsed.data.application_form_id || null,
       })
       .select("id")
       .single();
@@ -97,6 +100,7 @@ export async function updateJob(
       salary: parsed.data.salary || null,
       vacancies: parsed.data.vacancies,
       closing_date: parsed.data.closing_date || null,
+      application_form_id: parsed.data.application_form_id || null,
     })
     .eq("id", id)
     .eq("company_id", current.company_id);

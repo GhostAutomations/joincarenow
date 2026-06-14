@@ -15,6 +15,7 @@ export type JobDefaults = {
   salary?: string;
   vacancies?: number;
   closing_date?: string;
+  application_form_id?: string;
 };
 
 const inputClass =
@@ -32,10 +33,12 @@ export function JobForm({
   action,
   defaults,
   submitLabel,
+  forms = [],
 }: {
   action: Action;
   defaults?: JobDefaults;
   submitLabel: string;
+  forms?: { id: string; name: string }[];
 }) {
   const [state, formAction] = useActionState<JobState, FormData>(action, undefined);
 
@@ -142,6 +145,31 @@ export function JobForm({
           placeholder="Describe the role, responsibilities, requirements and benefits…"
           className={inputClass}
         />
+      </div>
+
+      <div>
+        <label
+          htmlFor="application_form_id"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Application form
+        </label>
+        <select
+          id="application_form_id"
+          name="application_form_id"
+          defaultValue={defaults?.application_form_id ?? ""}
+          className={inputClass}
+        >
+          <option value="">Built-in basics only (name, contact, CV)</option>
+          {forms.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.name}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-gray-500">
+          Optional. Adds your custom questions on top of the built-in basics.
+        </p>
       </div>
 
       <div className="sm:w-48">

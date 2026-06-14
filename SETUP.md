@@ -158,4 +158,28 @@ First example of a pipeline stage that *does* something. Run
 **Note:** actual SMS/email delivery is added in the Communication phase; the
 channel choice is saved now and the applicant responds via their portal.
 
-**Next: Application Form Builder, then Onboarding.**
+## Phase 3 — Application Form Builder (built)
+
+Custom questions on top of the built-in apply basics. Run
+`supabase/migrations/0005_forms.sql` (forms, form_fields, form_submissions,
+jobs.application_form_id, RPC get_application_form, and an extended apply_to_job).
+
+| Area | What was built |
+|---|---|
+| Builder | `/forms` — create a form, add fields (short/long text, number, date, dropdown, multiple choice, checkboxes, yes/no, file), set required, options, help text, reorder, edit, delete |
+| Assignment | Jobs get an optional "Application form" selector (New / Edit job) |
+| Apply | The assigned form's fields render under the built-in basics; answers (and any uploaded files) are saved as a submission |
+| Pipeline | The applicant panel shows the submitted answers under "Application answers" |
+
+Forms are generic (purpose field) so Offer and Onboarding reuse the same engine
+later. Conditional logic is deferred.
+
+### PDF import (AI-assisted)
+
+On a form's page, **Import from PDF** lets an admin upload an existing
+application-form PDF; Claude reads it and adds the questions as draft fields to
+review and edit. Requires `ANTHROPIC_API_KEY` in the environment (local
+`.env.local` and Vercel). Optional `ANTHROPIC_MODEL` (defaults to a current
+Claude model). Server action body limit is raised to 10MB for the upload.
+
+**Next: Offer (as a form), then Onboarding.**

@@ -14,12 +14,24 @@ export type ApplyDefaults = {
   postcode?: string;
 };
 
+export type FormField = {
+  field_id: string;
+  label: string;
+  field_type: string;
+  required: boolean;
+  options: string[];
+  help_text: string | null;
+  position: number;
+};
+
 export function ApplyForm({
   jobId,
   defaults,
+  formFields = [],
 }: {
   jobId: string;
   defaults?: ApplyDefaults;
+  formFields?: FormField[];
 }) {
   const [state, action] = useActionState(applyToJob, undefined);
 
@@ -104,6 +116,14 @@ export function ApplyForm({
         />
       </div>
 
+      {formFields.length > 0 && (
+        <div className="space-y-5 border-t border-gray-100 pt-5">
+          {formFields.map((f) => (
+            <DynamicField key={f.field_id} field={f} />
+          ))}
+        </div>
+      )}
+
       <label className="flex items-start gap-2 text-sm text-gray-700">
         <input
           type="checkbox"
@@ -117,5 +137,100 @@ export function ApplyForm({
         <SubmitButton>Submit application</SubmitButton>
       </div>
     </form>
+  );
+}
+
+function DynamicField({ field }: { field: FormField }) {
+  const name = `field_${field.field_id}`;
+  const req = field.required;
+  const label = (
+    <span className="block text-sm font-medium text-gray-700">
+      {field.label}
+      {req && <span className="ml-0.5 text-red-500">*</span>}
+    </span>
+  );
+  const help = field.help_text ? (
+    <span className="mt-0.5 block text-xs text-gray-500">{field.help_text}</span>
+  ) : null;
+
+  if (field.field_type === "long_text") {
+    return (
+      <label className="block">
+        {label}
+        {help}
+        <textarea name={name} required={req} rows={4} className={inputClass} />
+      </label>
+    );
+  }
+  if (field.field_type === "dropdown") {
+    return (
+      <label className="block">
+        {label}
+        {help}
+        <select name={name} required={req} defaultValue="" className={inputClass}>
+          <option value="" disabled>
+            Select…
+          </option>
+          {field.options.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      </label>
+    );
+  }
+  if (field.field_type === "radio" || field.field_type === "yes_no") {
+    const opts = field.field_type === "yes_no" ? ["Yes", "No"] : field.options;
+    return (
+      <fieldset>
+        {label}
+        {help}
+        <div className="mt-1 space-y-1">
+          {opts.map((o) => (
+            <label key={o} className="flex items-center gap-2 text-sm text-gray-700">
+              <input type="radio" name={name} value={o} required={req} />
+              {o}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    );
+  }
+  if (field.field_type === "checkboxes") {
+    return (
+      <fieldset>
+        {label}
+        {help}
+        <div className="mt-1 space-y-1">
+          {field.options.map((o) => (
+            <label key={o} className="flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" name={name} value={o} />
+              {o}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    );
+  }
+  if (field.field_type === "file") {
+    return (
+      <label className="block">
+        {label}
+        {help}
+        <input type="file" name={name} required={req} className="mt-1 block w-full text-sm" />
+      </label>
+    );
+  }
+
+  // short_text, number, date
+  const type =
+    field.field_type === "number" ? "number" : field.field_type === "date" ? "date" : "text";
+  return (
+    <label className="block">
+      {label}
+      {help}
+      <input type={type} name={name} required={req} className={inputClass} />
+    </label>
   );
 }

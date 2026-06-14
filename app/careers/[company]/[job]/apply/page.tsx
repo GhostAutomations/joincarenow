@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { ApplyForm } from "@/components/careers/apply-form";
+import { ApplyForm, type FormField } from "@/components/careers/apply-form";
 
 type PublicJob = {
   company_name: string;
@@ -43,6 +43,12 @@ export default async function ApplyPage({
     .eq("user_id", user.id)
     .maybeSingle();
 
+  // Custom application-form fields assigned to this job, if any.
+  const { data: fieldsData } = await supabase.rpc("get_application_form", {
+    p_job_id: jobData.job_id,
+  });
+  const formFields = (fieldsData ?? []) as FormField[];
+
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-2xl px-6 py-8">
@@ -64,6 +70,7 @@ export default async function ApplyPage({
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
           <ApplyForm
             jobId={jobData.job_id}
+            formFields={formFields}
             defaults={{
               firstName: applicant?.first_name ?? "",
               lastName: applicant?.last_name ?? "",

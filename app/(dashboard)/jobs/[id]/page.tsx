@@ -19,14 +19,21 @@ export default async function EditJobPage({
   const { id } = await params;
   const { supabase, current } = await requireCompany();
 
-  const { data: job } = await supabase
-    .from("jobs")
-    .select(
-      "id, title, slug, description, employment_type, location, salary, vacancies, closing_date, status"
-    )
-    .eq("id", id)
-    .eq("company_id", current.company_id)
-    .single();
+  const [{ data: job }, { data: forms }] = await Promise.all([
+    supabase
+      .from("jobs")
+      .select(
+        "id, title, slug, description, employment_type, location, salary, vacancies, closing_date, status, application_form_id"
+      )
+      .eq("id", id)
+      .eq("company_id", current.company_id)
+      .single(),
+    supabase
+      .from("forms")
+      .select("id, name")
+      .eq("company_id", current.company_id)
+      .order("name"),
+  ]);
 
   if (!job) notFound();
 
@@ -104,6 +111,7 @@ export default async function EditJobPage({
         <JobForm
           action={updateJob}
           submitLabel="Save changes"
+          forms={forms ?? []}
           defaults={{
             id: job.id,
             title: job.title,
@@ -113,6 +121,7 @@ export default async function EditJobPage({
             salary: job.salary ?? "",
             vacancies: job.vacancies,
             closing_date: job.closing_date ?? "",
+            application_form_id: job.application_form_id ?? "",
           }}
         />
       </div>

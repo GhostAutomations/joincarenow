@@ -58,6 +58,57 @@ export default async function PipelinePage() {
     interviewByApp.set(application_id, rest);
   }
 
+  // Custom application-form answers per application (resolve field ids → labels).
+  const { data: subs } = await supabase
+    .from("form_submissions")
+    .select("application_id, form_id, answers")
+    .eq("company_id", current.company_id);
+
+  const formIds = [...new Set((subs ?? []).map((s) => s.form_id))];
+  const { data: fieldRows } = formIds.length
+    ? await supabase
+        .from("form_fields")
+        .select("id, form_id, label, field_type, position")
+        .in("form_id", formIds)
+        .order("position", { ascending: true })
+    : { data: [] };
+
+  type FieldRow = {
+    id: string;
+    form_id: string;
+    label: string;
+    field_type: string;
+    position: number;
+  };
+  const fieldsByForm = new Map<string, FieldRow[]>();
+  for (const f of (fieldRows ?? []) as FieldRow[]) {
+    const list = fieldsByForm.get(f.form_id) ?? [];
+    list.push(f);
+    fieldsByForm.set(f.form_id, list);
+  }
+
+  const formatAnswer = (v: unknown, type: string): string => {
+    if (v == null || v === "") return "";
+    if (type === "file") {
+      const path = Array.isArray(v) ? v.join(", ") : String(v);
+      return path.split("/").pop() || "File attached";
+    }
+    return Array.isArray(v) ? v.join(", ") : String(v);
+  };
+
+  const answersByApp = new Map<string, { label: string; value: string }[]>();
+  for (const s of subs ?? []) {
+    if (!s.application_id) continue;
+    const fields = fieldsByForm.get(s.form_id) ?? [];
+    const answers = (s.answers ?? {}) as Record<string, unknown>;
+    const out: { label: string; value: string }[] = [];
+    for (const f of fields) {
+      const value = formatAnswer(answers[f.id], f.field_type);
+      if (value) out.push({ label: f.label, value });
+    }
+    answersByApp.set(s.application_id, out);
+  }
+
   const apps: AppCard[] = ((data ?? []) as unknown as Row[]).map((r) => ({
     id: r.id,
     stage: r.stage,
@@ -72,6 +123,7 @@ export default async function PipelinePage() {
     phone: r.applicants?.phone ?? null,
     postcode: r.applicants?.postcode ?? null,
     interview: interviewByApp.get(r.id) ?? null,
+    customAnswers: answersByApp.get(r.id) ?? [],
   }));
 
   return <PipelineBoard initial={apps} interviewAddress={interviewAddress} />;

@@ -33,6 +33,7 @@ export type AppCard = {
   phone: string | null;
   postcode: string | null;
   interview: Interview | null;
+  customAnswers: { label: string; value: string }[];
 };
 
 const STAGES: { key: string; label: string; dot: string }[] = [
@@ -345,6 +346,22 @@ function ApplicantPanel({
               <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
                 {app.cover_message}
               </p>
+            </div>
+          )}
+
+          {app.customAnswers.length > 0 && (
+            <div>
+              <p className="text-xs uppercase tracking-wide text-gray-400">
+                Application answers
+              </p>
+              <dl className="mt-1 space-y-2">
+                {app.customAnswers.map((a, i) => (
+                  <div key={i}>
+                    <dt className="text-xs text-gray-500">{a.label}</dt>
+                    <dd className="text-sm text-gray-800">{a.value}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           )}
 

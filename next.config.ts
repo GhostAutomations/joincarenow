@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   // Pin serverless functions to London for UK data residency (Vercel)
   // Region is also set in vercel.json
   poweredByHeader: false,
+  // Allow PDF uploads to the form importer server action.
+  experimental: {
+    serverActions: { bodySizeLimit: "10mb" },
+  },
   async headers() {
     return [
       {

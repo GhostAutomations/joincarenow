@@ -88,6 +88,12 @@ export function PipelineBoard({
   // Keep local state in sync when the server data refreshes.
   useEffect(() => setApps(initial), [initial]);
 
+  // Open the requested applicant whenever a notification link points here
+  // (works even if we're already on the Pipeline page).
+  useEffect(() => {
+    if (openId) setSelectedId(openId);
+  }, [openId]);
+
   const selected = apps.find((a) => a.id === selectedId) ?? null;
 
   function move(id: string, stage: string) {

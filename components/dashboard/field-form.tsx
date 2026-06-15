@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Plus, X } from "lucide-react";
 import { addField, updateField, type FormState } from "@/modules/forms/actions";
 
 const TYPES: { value: string; label: string }[] = [
@@ -10,8 +11,8 @@ const TYPES: { value: string; label: string }[] = [
   { value: "number", label: "Number" },
   { value: "date", label: "Date" },
   { value: "dropdown", label: "Dropdown" },
-  { value: "radio", label: "Multiple choice (pick one)" },
-  { value: "checkboxes", label: "Checkboxes (pick many)" },
+  { value: "radio", label: "Single select" },
+  { value: "checkboxes", label: "Multi select" },
   { value: "yes_no", label: "Yes / No" },
   { value: "file", label: "File upload" },
   { value: "signature", label: "Signature" },
@@ -135,16 +136,7 @@ export function FieldForm({
       ) : (
         <>
           {CHOICE.includes(type) && (
-            <label className="block text-xs font-medium text-gray-600">
-              Options (one per line)
-              <textarea
-                name="options"
-                rows={3}
-                defaultValue={defaults?.options.join("\n")}
-                placeholder={"Yes\nNo\nMaybe"}
-                className={cls}
-              />
-            </label>
+            <OptionsEditor type={type} defaultOptions={defaults?.options ?? []} />
           )}
 
           <label className="block text-xs font-medium text-gray-600">
@@ -179,5 +171,62 @@ export function FieldForm({
         )}
       </div>
     </form>
+  );
+}
+
+function OptionsEditor({
+  type,
+  defaultOptions,
+}: {
+  type: string;
+  defaultOptions: string[];
+}) {
+  const [opts, setOpts] = useState<string[]>(
+    defaultOptions.length ? defaultOptions : ["Option 1"]
+  );
+  const isMulti = type === "checkboxes";
+
+  return (
+    <div>
+      <p className="mb-1 text-xs font-medium text-gray-600">Options</p>
+      <div className="space-y-2">
+        {opts.map((o, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className={`h-4 w-4 shrink-0 border border-gray-400 ${
+                isMulti ? "rounded-sm" : "rounded-full"
+              }`}
+            />
+            <input
+              value={o}
+              onChange={(e) =>
+                setOpts((arr) => arr.map((x, idx) => (idx === i ? e.target.value : x)))
+              }
+              placeholder={`Option ${i + 1}`}
+              className="flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+            <button
+              type="button"
+              onClick={() =>
+                setOpts((arr) => (arr.length > 1 ? arr.filter((_, idx) => idx !== i) : arr))
+              }
+              aria-label="Remove option"
+              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => setOpts((arr) => [...arr, `Option ${arr.length + 1}`])}
+        className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:underline"
+      >
+        <Plus className="h-4 w-4" /> Add option
+      </button>
+      <input type="hidden" name="options" value={opts.join("\n")} />
+    </div>
   );
 }

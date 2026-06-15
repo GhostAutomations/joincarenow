@@ -48,6 +48,17 @@ export async function getApplicantThread(
 
 export type SendState = { error?: string; ok?: boolean } | undefined;
 
+/** Best-effort normalise a UK mobile to E.164 (+44…) for Twilio.
+ *  Leaves already-international (+) numbers untouched. */
+function normalizeUkPhone(raw: string | null): string | null {
+  if (!raw) return null;
+  const t = raw.replace(/[\s()-]/g, "");
+  if (t.startsWith("+")) return t;
+  if (t.startsWith("0")) return "+44" + t.slice(1);
+  if (t.startsWith("44")) return "+" + t;
+  return t; // fall through; Twilio will validate
+}
+
 /** Build the merge-field values for an application. */
 async function mergeContext(
   supabase: Awaited<ReturnType<typeof requireCompany>>["supabase"],
@@ -100,7 +111,7 @@ export async function sendMessage(_prev: SendState, formData: FormData): Promise
   const ctx = await mergeContext(supabase, applicationId, senderName);
   if (!ctx) return { error: "Application not found" };
 
-  const to = channel === "email" ? ctx.email : ctx.phone;
+  const to = channel === "email" ? ctx.email : normalizeUkPhone(ctx.phone);
   if (!to) return { error: channel === "email" ? "No email address on file" : "No phone number on file" };
 
   const subject = channel === "email" ? renderMergeFields(rawSubject, ctx.values) : null;

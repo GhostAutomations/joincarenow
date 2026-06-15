@@ -15,6 +15,9 @@ export async function sendEmail(opts: {
     return { ok: false, error: "Email is not configured yet (missing RESEND_API_KEY / RESEND_FROM)." };
   }
 
+  // Optional: route replies to a Resend inbound address so they're captured.
+  const replyTo = process.env.RESEND_REPLY_TO;
+
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -27,6 +30,7 @@ export async function sendEmail(opts: {
         to: [opts.to],
         subject: opts.subject,
         text: opts.text,
+        ...(replyTo ? { reply_to: replyTo } : {}),
       }),
     });
     const data = (await res.json().catch(() => ({}))) as { id?: string; message?: string };

@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   "/portal",
   // Inbound webhooks — authenticated by provider signature, not a user session.
   "/api/twilio",
+  "/api/resend",
 ];
 
 function isPublicPath(pathname: string) {

@@ -1,0 +1,151 @@
+import crypto from "crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+export const runtime = "nodejs";
+
+const ok = (status = 200) =>
+  new Response(JSON.stringify({ ok: true }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+
+// Health check — visit in a browser to confirm the route is deployed.
+export async function GET() {
+  return new Response(
+    JSON.stringify({ ok: true, route: "resend-inbound", expects: "POST" }),
+    { headers: { "Content-Type": "application/json" } }
+  );
+}
+
+/** Verify a Resend (Svix) webhook signature over the raw body. */
+function verifySvix(secret: string, headers: Headers, rawBody: string): boolean {
+  const id = headers.get("svix-id");
+  const timestamp = headers.get("svix-timestamp");
+  const sigHeader = headers.get("svix-signature");
+  if (!id || !timestamp || !sigHeader) return false;
+
+  const key = Buffer.from(secret.replace(/^whsec_/, ""), "base64");
+  const signed = `${id}.${timestamp}.${rawBody}`;
+  const expected = crypto.createHmac("sha256", key).update(signed).digest("base64");
+
+  // Header is space-separated "v1,<sig>" entries.
+  return sigHeader.split(" ").some((part) => {
+    const sig = part.split(",")[1];
+    if (!sig) return false;
+    try {
+      return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(sig));
+    } catch {
+      return false;
+    }
+  });
+}
+
+/** Pull a bare email address out of "Name <email>" or a plain address. */
+function emailAddress(raw: string): string {
+  const m = raw.match(/<([^>]+)>/);
+  return (m ? m[1] : raw).trim().toLowerCase();
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+\n/g, "\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
+export async function POST(req: Request) {
+  const secret = process.env.RESEND_WEBHOOK_SECRET;
+  const apiKey = process.env.RESEND_API_KEY;
+  const rawBody = await req.text();
+
+  if (secret && !verifySvix(secret, req.headers, rawBody)) {
+    return new Response("Invalid signature", { status: 403 });
+  }
+
+  let event: { type?: string; data?: { email_id?: string; from?: string; subject?: string } };
+  try {
+    event = JSON.parse(rawBody);
+  } catch {
+    return ok(200);
+  }
+  if (event.type !== "email.received" || !event.data?.email_id) return ok(200);
+
+  const fromEmail = emailAddress(event.data.from ?? "");
+  if (!fromEmail) return ok(200);
+
+  const admin = createAdminClient();
+
+  // Match the sender to an applicant by email.
+  const { data: applicants } = await admin
+    .from("applicants")
+    .select("id, email, first_name, last_name")
+    .ilike("email", fromEmail);
+  const applicant = (applicants ?? [])[0];
+  if (!applicant) return ok(200); // unknown sender — ignore
+
+  const { data: app } = await admin
+    .from("applications")
+    .select("id, company_id")
+    .eq("applicant_id", applicant.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!app) return ok(200);
+
+  // Fetch the body from Resend's Received Emails API.
+  let body = "";
+  let subject = event.data.subject ?? null;
+  if (apiKey) {
+    try {
+      const res = await fetch(
+        `https://api.resend.com/emails/receiving/${event.data.email_id}`,
+        { headers: { Authorization: `Bearer ${apiKey}` } }
+      );
+      const email = (await res.json().catch(() => ({}))) as {
+        text?: string | null; html?: string | null; subject?: string | null;
+      };
+      body = email.text?.trim() || (email.html ? stripHtml(email.html) : "");
+      subject = email.subject ?? subject;
+    } catch {
+      /* fall back to metadata only */
+    }
+  }
+  if (!body) body = "(email received — open in your inbox to read)";
+
+  await admin.from("messages").insert({
+    company_id: app.company_id,
+    application_id: app.id,
+    applicant_id: applicant.id,
+    channel: "email",
+    direction: "inbound",
+    to_address: fromEmail,
+    subject,
+    body: body.slice(0, 5000),
+    status: "delivered",
+  });
+
+  const name =
+    [applicant.first_name, applicant.last_name].filter(Boolean).join(" ") || "An applicant";
+  const { data: members } = await admin
+    .from("company_users")
+    .select("user_id")
+    .eq("company_id", app.company_id);
+  if (members?.length) {
+    await admin.from("notifications").insert(
+      members.map((m) => ({
+        company_id: app.company_id,
+        user_id: m.user_id,
+        type: "email_received",
+        title: `New email from ${name}`,
+        body: (subject ?? body).slice(0, 160),
+        link: `/pipeline?open=${app.id}`,
+      }))
+    );
+  }
+
+  return ok(200);
+}

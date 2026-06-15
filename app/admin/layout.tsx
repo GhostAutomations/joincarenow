@@ -34,7 +34,23 @@ export default async function AdminLayout({
           </form>
         </div>
       </header>
-      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">{children}</main>
+      <nav className="border-b border-gray-200 bg-white px-4 sm:px-6">
+        <div className="mx-auto flex max-w-5xl gap-1">
+          <Link
+            href="/admin"
+            className="border-b-2 border-transparent px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-brand-700"
+          >
+            Companies
+          </Link>
+          <Link
+            href="/admin/forms"
+            className="border-b-2 border-transparent px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-brand-700"
+          >
+            Form Store
+          </Link>
+        </div>
+      </nav>
+      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">{children}</main>
     </div>
   );
 }

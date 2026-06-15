@@ -2,8 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { requireCompany } from "@/modules/auth/queries";
+import { requireCompany, requireUser, requirePlatformAdmin } from "@/modules/auth/queries";
 import { extractFormFields } from "@/lib/ai/extract-form";
+
+export const TIERS = ["free", "pro", "enterprise"];
+export const TIER_LABEL: Record<string, string> = {
+  free: "Free", pro: "Pro", enterprise: "Enterprise",
+};
+const tierRank = (t: string) => Math.max(0, TIERS.indexOf(t));
 
 const FIELD_TYPES = [
   "short_text",
@@ -149,7 +155,7 @@ export async function updateFormHeader(payload: {
   description: string;
   style: unknown;
 }): Promise<{ ok: boolean }> {
-  const { supabase, current } = await requireCompany();
+  const { supabase } = await requireUser();
   const name = payload.name.trim() || "Untitled form";
   const { error } = await supabase
     .from("forms")
@@ -158,8 +164,7 @@ export async function updateFormHeader(payload: {
       description: payload.description?.slice(0, 2000) || null,
       style: payload.style ?? {},
     })
-    .eq("id", payload.id)
-    .eq("company_id", current.company_id);
+    .eq("id", payload.id);
   if (error) return { ok: false };
   revalidatePath(`/forms/${payload.id}/build`);
   return { ok: true };
@@ -175,9 +180,9 @@ export async function uploadFormLogo(
   if (!(file instanceof File) || file.size === 0) return { error: "Choose an image" };
   if (file.size > 2 * 1024 * 1024) return { error: "Logo must be 2MB or smaller" };
 
-  const { supabase, current } = await requireCompany();
+  const { supabase } = await requireUser();
   const ext = (file.name.split(".").pop() || "png").replace(/[^a-z0-9]/gi, "");
-  const path = `${current.company_id}/${id}-${Date.now()}.${ext}`;
+  const path = `${id}-${Date.now()}.${ext}`;
   const { error } = await supabase.storage
     .from("branding")
     .upload(path, await file.arrayBuffer(), {
@@ -218,13 +223,12 @@ export async function addField(
   const built = buildField(formData);
   if ("error" in built) return { error: built.error };
 
-  const { supabase, current } = await requireCompany();
+  const { supabase } = await requireUser();
 
   const { data: form } = await supabase
     .from("forms")
     .select("id")
     .eq("id", formId)
-    .eq("company_id", current.company_id)
     .single();
   if (!form) return { error: "Form not found" };
 
@@ -260,7 +264,7 @@ export async function updateField(
   const built = buildField(formData);
   if ("error" in built) return { error: built.error };
 
-  const { supabase } = await requireCompany();
+  const { supabase } = await requireUser();
   const { error } = await supabase
     .from("form_fields")
     .update(built.value)
@@ -311,12 +315,11 @@ export async function addFieldOfType(formData: FormData): Promise<string | null>
   const ft = String(formData.get("fieldType") ?? "") as FieldType;
   if (!formId || !FIELD_TYPES.includes(ft)) return null;
 
-  const { supabase, current } = await requireCompany();
+  const { supabase } = await requireUser();
   const { data: form } = await supabase
     .from("forms")
     .select("id")
     .eq("id", formId)
-    .eq("company_id", current.company_id)
     .single();
   if (!form) return null;
 
@@ -349,12 +352,11 @@ export async function addFieldOfType(formData: FormData): Promise<string | null>
 /** Persist a new field order (from drag-and-drop). */
 export async function reorderFields(formId: string, orderedIds: string[]) {
   if (!formId || !Array.isArray(orderedIds)) return;
-  const { supabase, current } = await requireCompany();
+  const { supabase } = await requireUser();
   const { data: form } = await supabase
     .from("forms")
     .select("id")
     .eq("id", formId)
-    .eq("company_id", current.company_id)
     .single();
   if (!form) return;
   await Promise.all(
@@ -369,7 +371,7 @@ export async function deleteField(formData: FormData) {
   const id = formData.get("id");
   const formId = formData.get("formId");
   if (typeof id !== "string") return;
-  const { supabase } = await requireCompany();
+  const { supabase } = await requireUser();
   await supabase.from("form_fields").delete().eq("id", id);
   if (typeof formId === "string") revalidatePath(`/forms/${formId}`);
 }
@@ -394,12 +396,11 @@ export async function importFormFromPdf(
     return { error: "The PDF must be 10MB or smaller." };
   }
 
-  const { supabase, current } = await requireCompany();
+  const { supabase } = await requireUser();
   const { data: form } = await supabase
     .from("forms")
     .select("id")
     .eq("id", formId)
-    .eq("company_id", current.company_id)
     .single();
   if (!form) return { error: "Form not found" };
 
@@ -440,6 +441,120 @@ export async function importFormFromPdf(
   return { added: fields.length };
 }
 
+// ============================================================
+// FORM STORE (founder templates + admin acquire + company tiers)
+// ============================================================
+
+/** Founder: create a blank store template and open the builder. */
+export async function createBlankStoreForm() {
+  const { supabase, user } = await requirePlatformAdmin();
+  const { data, error } = await supabase
+    .from("forms")
+    .insert({ name: "Untitled form", is_store: true, company_id: null, created_by: user.id })
+    .select("id")
+    .single();
+  if (error || !data) throw new Error("Could not create the form.");
+  revalidatePath("/admin/forms");
+  redirect(`/admin/forms/${data.id}/build`);
+}
+
+/** Founder: save a store form's category + required subscription tier. */
+export async function saveStoreSettings(
+  _prev: DetailsState,
+  formData: FormData
+): Promise<DetailsState> {
+  const id = formData.get("id");
+  const categoryRaw = formData.get("category")?.toString() ?? "other";
+  const tierRaw = formData.get("storeTier")?.toString() ?? "free";
+  if (typeof id !== "string") return { error: "Missing form" };
+  const category = CATEGORIES.includes(categoryRaw) ? categoryRaw : "other";
+  const store_tier = TIERS.includes(tierRaw) ? tierRaw : "free";
+
+  const { supabase } = await requirePlatformAdmin();
+  const { error } = await supabase
+    .from("forms")
+    .update({ category, store_tier })
+    .eq("id", id)
+    .eq("is_store", true);
+  if (error) return { error: "Could not save. Please try again." };
+  revalidatePath(`/admin/forms/${id}/build`);
+  return { ok: true };
+}
+
+/** Founder: delete a store template. */
+export async function deleteStoreForm(formData: FormData) {
+  const id = formData.get("id");
+  if (typeof id !== "string") return;
+  const { supabase } = await requirePlatformAdmin();
+  await supabase.from("forms").delete().eq("id", id).eq("is_store", true);
+  revalidatePath("/admin/forms");
+  redirect("/admin/forms");
+}
+
+/** Founder: set a company's subscription tier. */
+export async function setCompanyTier(formData: FormData) {
+  const companyId = formData.get("companyId");
+  const tierRaw = formData.get("tier")?.toString() ?? "free";
+  if (typeof companyId !== "string") return;
+  const tier = TIERS.includes(tierRaw) ? tierRaw : "free";
+  const { supabase } = await requirePlatformAdmin();
+  await supabase.from("companies").update({ subscription_tier: tier }).eq("id", companyId);
+  revalidatePath("/admin");
+}
+
+/** Admin: copy a store template into the company's own forms (tier-gated). */
+export async function acquireStoreForm(formData: FormData) {
+  const storeId = formData.get("storeFormId");
+  if (typeof storeId !== "string") return;
+
+  const { supabase, user, current } = await requireCompany();
+  if (current.role !== "admin") return;
+
+  const { data: company } = await supabase
+    .from("companies")
+    .select("subscription_tier")
+    .eq("id", current.company_id)
+    .single();
+  const { data: store } = await supabase
+    .from("forms")
+    .select("id, name, description, style, category, store_tier")
+    .eq("id", storeId)
+    .eq("is_store", true)
+    .single();
+  if (!store) return;
+  if (tierRank(company?.subscription_tier ?? "free") < tierRank(store.store_tier)) return;
+
+  const { data: copy } = await supabase
+    .from("forms")
+    .insert({
+      company_id: current.company_id,
+      name: store.name,
+      description: store.description,
+      style: store.style ?? {},
+      category: store.category,
+      is_store: false,
+      source_form_id: store.id,
+      created_by: user.id,
+    })
+    .select("id")
+    .single();
+  if (!copy) return;
+
+  const { data: fields } = await supabase
+    .from("form_fields")
+    .select("label, field_type, required, options, help_text, config, position")
+    .eq("form_id", storeId)
+    .order("position", { ascending: true });
+  if (fields && fields.length) {
+    await supabase
+      .from("form_fields")
+      .insert(fields.map((f) => ({ ...f, form_id: copy.id })));
+  }
+
+  revalidatePath("/forms");
+  redirect(`/forms/${copy.id}/build`);
+}
+
 export async function moveField(formData: FormData) {
   const id = formData.get("id");
   const formId = formData.get("formId");
@@ -447,7 +562,7 @@ export async function moveField(formData: FormData) {
   if (typeof id !== "string" || typeof formId !== "string") return;
   if (direction !== "up" && direction !== "down") return;
 
-  const { supabase } = await requireCompany();
+  const { supabase } = await requireUser();
   const { data: fields } = await supabase
     .from("form_fields")
     .select("id, position")

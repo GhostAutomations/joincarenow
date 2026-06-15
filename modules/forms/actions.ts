@@ -141,27 +141,53 @@ export async function openBuilder(
   redirect(`/forms/${id}/build`);
 }
 
-/** Builder screen: save the form heading (name) + description/instructions. */
-export async function saveFormHeader(
-  _prev: DetailsState,
-  formData: FormData
-): Promise<DetailsState> {
-  const id = formData.get("id");
-  const name = (formData.get("name")?.toString() ?? "").trim();
-  const description = (formData.get("description")?.toString() ?? "").slice(0, 2000);
-  if (typeof id !== "string") return { error: "Missing form" };
-  if (name.length < 2) return { error: "Give the form a name" };
-
+/** Builder screen: auto-save the form heading (name + description + styling).
+ *  Called programmatically (debounced) from the client — no form button. */
+export async function updateFormHeader(payload: {
+  id: string;
+  name: string;
+  description: string;
+  style: unknown;
+}): Promise<{ ok: boolean }> {
   const { supabase, current } = await requireCompany();
+  const name = payload.name.trim() || "Untitled form";
   const { error } = await supabase
     .from("forms")
-    .update({ name, description: description || null })
-    .eq("id", id)
+    .update({
+      name,
+      description: payload.description?.slice(0, 2000) || null,
+      style: payload.style ?? {},
+    })
+    .eq("id", payload.id)
     .eq("company_id", current.company_id);
-  if (error) return { error: "Could not save. Please try again." };
-
-  revalidatePath(`/forms/${id}/build`);
+  if (error) return { ok: false };
+  revalidatePath(`/forms/${payload.id}/build`);
   return { ok: true };
+}
+
+/** Upload a logo to the public branding bucket; returns its public URL. */
+export async function uploadFormLogo(
+  formData: FormData
+): Promise<{ url?: string; error?: string }> {
+  const id = String(formData.get("id") ?? "");
+  const file = formData.get("logo");
+  if (!id) return { error: "Missing form" };
+  if (!(file instanceof File) || file.size === 0) return { error: "Choose an image" };
+  if (file.size > 2 * 1024 * 1024) return { error: "Logo must be 2MB or smaller" };
+
+  const { supabase, current } = await requireCompany();
+  const ext = (file.name.split(".").pop() || "png").replace(/[^a-z0-9]/gi, "");
+  const path = `${current.company_id}/${id}-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("branding")
+    .upload(path, await file.arrayBuffer(), {
+      contentType: file.type || "image/png",
+      upsert: true,
+    });
+  if (error) return { error: "Could not upload the logo. Please try again." };
+
+  const { data } = supabase.storage.from("branding").getPublicUrl(path);
+  return { url: data.publicUrl };
 }
 
 export async function deleteForm(formData: FormData) {

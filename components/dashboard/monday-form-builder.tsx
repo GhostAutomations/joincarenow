@@ -215,7 +215,14 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
           </div>
         </div>
 
-        <PlusRow open={openPlus === ""} onToggle={() => setOpenPlus(openPlus === "" ? null : "")} onPick={(t) => addAt("", t)} />
+        <PlusRow
+          open={openPlus === ""}
+          onToggle={() => {
+            setSelected(null);
+            setOpenPlus(openPlus === "" ? null : "");
+          }}
+          onPick={(t) => addAt("", t)}
+        />
 
         {ordered.map((f) => (
           <div key={f.id}>
@@ -264,7 +271,14 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
                 </button>
               )}
             </div>
-            <PlusRow open={openPlus === f.id} onToggle={() => setOpenPlus(openPlus === f.id ? null : f.id)} onPick={(t) => addAt(f.id, t)} />
+            <PlusRow
+              open={openPlus === f.id}
+              onToggle={() => {
+                setSelected(null);
+                setOpenPlus(openPlus === f.id ? null : f.id);
+              }}
+              onPick={(t) => addAt(f.id, t)}
+            />
           </div>
         ))}
       </div>

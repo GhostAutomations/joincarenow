@@ -37,7 +37,6 @@ export type FieldDefaults = {
 export function FieldForm({
   formId,
   defaults,
-  onSaved,
 }: {
   formId: string;
   defaults?: FieldDefaults;
@@ -48,24 +47,31 @@ export function FieldForm({
   const [state, formAction] = useActionState<FormState, FormData>(action, undefined);
   const [type, setType] = useState(defaults?.fieldType ?? "short_text");
   const formRef = useRef<HTMLFormElement>(null);
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (state?.ok) {
-      if (isEdit) {
-        onSaved?.();
-      } else {
-        formRef.current?.reset();
-        setType("short_text");
-      }
+    if (state?.ok && !isEdit) {
+      formRef.current?.reset();
+      setType("short_text");
       router.refresh();
     }
-  }, [state, isEdit, onSaved, router]);
+  }, [state, isEdit, router]);
+
+  // Edit mode auto-saves on any change (no Save button).
+  function autosave() {
+    if (!isEdit) return;
+    if (debounce.current) clearTimeout(debounce.current);
+    debounce.current = setTimeout(() => {
+      formRef.current?.requestSubmit();
+      router.refresh();
+    }, 600);
+  }
 
   const isBody = type === "body_text";
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-3">
+    <form ref={formRef} action={formAction} onChange={autosave} className="space-y-3">
       {state?.error && (
         <p className="rounded-md bg-red-50 px-2 py-1 text-xs text-red-700">
           {state.error}
@@ -156,20 +162,13 @@ export function FieldForm({
         </>
       )}
 
-      <div className="flex items-center gap-2">
+      {isEdit ? (
+        <p className="text-xs text-gray-400">Changes save automatically.</p>
+      ) : (
         <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">
-          {isEdit ? "Save changes" : "Add field"}
+          Add field
         </button>
-        {isEdit && onSaved && (
-          <button
-            type="button"
-            onClick={onSaved}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-        )}
-      </div>
+      )}
     </form>
   );
 }

@@ -34,27 +34,41 @@ export default async function FounderFormBuildPage({
     .order("position", { ascending: true });
   const fields = (fieldsData ?? []) as BuilderField[];
 
-  const builder = (
-    <MondayFormBuilder
-      form={{
-        id: form.id,
-        name: form.name,
-        description: (form as { description?: string | null }).description ?? "",
-        style: (form as { style?: Record<string, unknown> }).style ?? {},
-      }}
-      fields={fields}
+  const settings = (
+    <StoreSettingsBar
+      formId={form.id}
+      category={(form as { category?: string }).category ?? "recruitment"}
+      storeTier={(form as { store_tier?: string }).store_tier ?? "free"}
     />
   );
 
+  const builder = (
+    <div className="space-y-4">
+      {settings}
+      <MondayFormBuilder
+        form={{
+          id: form.id,
+          name: form.name,
+          description: (form as { description?: string | null }).description ?? "",
+          style: (form as { style?: Record<string, unknown> }).style ?? {},
+        }}
+        fields={fields}
+      />
+    </div>
+  );
+
   const importer = (
-    <div className="mx-auto max-w-2xl rounded-xl border border-dashed border-gray-300 bg-white p-5">
-      <h2 className="text-sm font-medium text-gray-900">Import questions from a PDF</h2>
-      <p className="mt-1 text-sm text-gray-500">
-        Upload an existing form (PDF) and we&apos;ll read it and add the questions
-        for you to review and edit.
-      </p>
-      <div className="mt-3">
-        <PdfImport formId={form.id} />
+    <div className="space-y-4">
+      {settings}
+      <div className="mx-auto max-w-2xl rounded-xl border border-dashed border-gray-300 bg-white p-5">
+        <h2 className="text-sm font-medium text-gray-900">Import questions from a PDF</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Upload an existing form (PDF) and we&apos;ll read it and add the
+          questions for you to review and edit.
+        </p>
+        <div className="mt-3">
+          <PdfImport formId={form.id} />
+        </div>
       </div>
     </div>
   );
@@ -74,14 +88,6 @@ export default async function FounderFormBuildPage({
             <Trash2 className="h-4 w-4" /> Delete
           </button>
         </form>
-      </div>
-
-      <div className="mt-4">
-        <StoreSettingsBar
-          formId={form.id}
-          category={(form as { category?: string }).category ?? "recruitment"}
-          storeTier={(form as { store_tier?: string }).store_tier ?? "free"}
-        />
       </div>
 
       <div className="mt-4">

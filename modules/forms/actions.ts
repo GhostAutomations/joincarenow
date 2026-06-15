@@ -303,12 +303,13 @@ function defaultField(ft: FieldType): FieldData {
   };
 }
 
-/** Insert a field of the chosen type after `afterId` ("" = top), then reindex. */
-export async function addFieldOfType(formData: FormData) {
+/** Insert a field of the chosen type after `afterId` ("" = top), then reindex.
+ *  Returns the new field's id so the builder can select it. */
+export async function addFieldOfType(formData: FormData): Promise<string | null> {
   const formId = String(formData.get("formId") ?? "");
   const afterId = String(formData.get("afterId") ?? "");
   const ft = String(formData.get("fieldType") ?? "") as FieldType;
-  if (!formId || !FIELD_TYPES.includes(ft)) return;
+  if (!formId || !FIELD_TYPES.includes(ft)) return null;
 
   const { supabase, current } = await requireCompany();
   const { data: form } = await supabase
@@ -317,7 +318,7 @@ export async function addFieldOfType(formData: FormData) {
     .eq("id", formId)
     .eq("company_id", current.company_id)
     .single();
-  if (!form) return;
+  if (!form) return null;
 
   const { data: existing } = await supabase
     .from("form_fields")
@@ -331,9 +332,9 @@ export async function addFieldOfType(formData: FormData) {
     .insert({ form_id: formId, ...defaultField(ft), position: ids.length })
     .select("id")
     .single();
-  if (error || !created) return;
+  if (error || !created) return null;
 
-  const idx = afterId ? ids.indexOf(afterId) + 1 : 0;
+  const idx = afterId ? ids.indexOf(afterId) + 1 : ids.length;
   ids.splice(idx, 0, created.id);
   await Promise.all(
     ids.map((fid, i) =>
@@ -341,7 +342,8 @@ export async function addFieldOfType(formData: FormData) {
     )
   );
 
-  revalidatePath(`/forms/${formId}`);
+  revalidatePath(`/forms/${formId}/build`);
+  return created.id;
 }
 
 export async function deleteField(formData: FormData) {

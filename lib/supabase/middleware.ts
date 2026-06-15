@@ -13,6 +13,8 @@ const PUBLIC_PATHS = [
   "/applicant",
   // Guarded at the page level (redirects to the applicant sign-in, not staff).
   "/portal",
+  // Inbound webhooks — authenticated by provider signature, not a user session.
+  "/api/twilio",
 ];
 
 function isPublicPath(pathname: string) {

@@ -5,6 +5,11 @@ import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { deleteStoreForm } from "@/modules/forms/actions";
 import { MondayFormBuilder, type BuilderField } from "@/components/dashboard/monday-form-builder";
 import { StoreSettingsBar } from "@/components/dashboard/store-settings-bar";
+import { BuildTabs } from "@/components/dashboard/build-tabs";
+import { PdfImport } from "@/components/dashboard/pdf-import";
+
+// PDF import calls Claude, which can take longer than the default function limit.
+export const maxDuration = 60;
 
 export default async function FounderFormBuildPage({
   params,
@@ -28,6 +33,31 @@ export default async function FounderFormBuildPage({
     .eq("form_id", id)
     .order("position", { ascending: true });
   const fields = (fieldsData ?? []) as BuilderField[];
+
+  const builder = (
+    <MondayFormBuilder
+      form={{
+        id: form.id,
+        name: form.name,
+        description: (form as { description?: string | null }).description ?? "",
+        style: (form as { style?: Record<string, unknown> }).style ?? {},
+      }}
+      fields={fields}
+    />
+  );
+
+  const importer = (
+    <div className="mx-auto max-w-2xl rounded-xl border border-dashed border-gray-300 bg-white p-5">
+      <h2 className="text-sm font-medium text-gray-900">Import questions from a PDF</h2>
+      <p className="mt-1 text-sm text-gray-500">
+        Upload an existing form (PDF) and we&apos;ll read it and add the questions
+        for you to review and edit.
+      </p>
+      <div className="mt-3">
+        <PdfImport formId={form.id} />
+      </div>
+    </div>
+  );
 
   return (
     <div>
@@ -54,16 +84,8 @@ export default async function FounderFormBuildPage({
         />
       </div>
 
-      <div className="mt-6">
-        <MondayFormBuilder
-          form={{
-            id: form.id,
-            name: form.name,
-            description: (form as { description?: string | null }).description ?? "",
-            style: (form as { style?: Record<string, unknown> }).style ?? {},
-          }}
-          fields={fields}
-        />
+      <div className="mt-4">
+        <BuildTabs builder={builder} importer={importer} />
       </div>
     </div>
   );

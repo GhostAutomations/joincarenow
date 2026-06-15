@@ -3,6 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+const RESPONSE_LABEL: Record<string, string> = {
+  confirm: "confirmed their interview",
+  confirmed: "confirmed their interview",
+  accept: "confirmed their interview",
+  decline: "declined their interview",
+  declined: "declined their interview",
+  reschedule: "requested a new interview time",
+  reschedule_requested: "requested a new interview time",
+};
 
 // ---------- Staff: schedule / reschedule ----------
 
@@ -54,7 +65,7 @@ export async function respondToInterview(formData: FormData) {
   if (typeof interviewId !== "string" || typeof response !== "string") return;
 
   const supabase = await createClient();
-  await supabase.rpc("respond_to_interview", {
+  const { error } = await supabase.rpc("respond_to_interview", {
     p_interview_id: interviewId,
     p_response: response,
     p_requested_time:
@@ -67,5 +78,45 @@ export async function respondToInterview(formData: FormData) {
         : null,
   });
 
+  if (!error) await notifyInterviewResponse(interviewId, response);
+
   revalidatePath("/portal");
+}
+
+/** Tell the company's team that an applicant responded to their interview. */
+async function notifyInterviewResponse(interviewId: string, response: string) {
+  try {
+    const admin = createAdminClient();
+    const { data: iv } = await admin
+      .from("interviews")
+      .select("application_id, company_id, applications(applicant_id, applicants(first_name, last_name))")
+      .eq("id", interviewId)
+      .single();
+    if (!iv?.company_id) return;
+
+    const appl = (iv.applications as unknown as {
+      applicants: { first_name: string | null; last_name: string | null } | null;
+    } | null)?.applicants;
+    const name = [appl?.first_name, appl?.last_name].filter(Boolean).join(" ") || "An applicant";
+    const what = RESPONSE_LABEL[response] ?? "responded to their interview invite";
+
+    const { data: members } = await admin
+      .from("company_users")
+      .select("user_id")
+      .eq("company_id", iv.company_id);
+    if (!members?.length) return;
+
+    await admin.from("notifications").insert(
+      members.map((m) => ({
+        company_id: iv.company_id,
+        user_id: m.user_id,
+        type: "interview_response",
+        title: `${name} ${what}`,
+        body: null,
+        link: `/pipeline?open=${iv.application_id}`,
+      }))
+    );
+  } catch {
+    /* notification failure shouldn't block the applicant's response */
+  }
 }

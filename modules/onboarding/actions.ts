@@ -19,6 +19,7 @@ export async function addTemplateTask(
   const required = formData.get("required") === "on";
   const dueRaw = formData.get("dueDays")?.toString() ?? "";
   const dueDays = dueRaw ? Math.max(0, parseInt(dueRaw, 10)) : null;
+  const dueDir = formData.get("dueDirection")?.toString() === "before" ? "before" : "after";
 
   if (title.length < 2) return { error: "Give the task a title" };
   if (!["form", "document", "acknowledge"].includes(taskType)) {
@@ -43,12 +44,27 @@ export async function addTemplateTask(
     body,
     required,
     due_days: dueDays,
+    due_direction: dueDir,
     position: (last?.position ?? -1) + 1,
   });
   if (error) return { error: "Could not add the task." };
 
   revalidatePath("/onboarding-board");
   return { ok: true };
+}
+
+/** Staff: set a new starter's start date (drives before/after due dates). */
+export async function setStartDate(formData: FormData) {
+  const applicationId = formData.get("applicationId");
+  const startDate = formData.get("startDate")?.toString() || null;
+  if (typeof applicationId !== "string") return;
+  const { supabase, current } = await requireCompany();
+  await supabase
+    .from("applications")
+    .update({ start_date: startDate })
+    .eq("id", applicationId)
+    .eq("company_id", current.company_id);
+  revalidatePath("/onboarding-board");
 }
 
 export async function deleteTemplateTask(formData: FormData) {

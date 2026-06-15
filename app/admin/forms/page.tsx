@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
-import { createBlankStoreForm, TIER_LABEL } from "@/modules/forms/actions";
+import { createBlankStoreForm } from "@/modules/forms/actions";
+import { TIER_LABEL } from "@/modules/forms/tiers";
 
 export default async function FounderFormsPage() {
   const { supabase } = await requirePlatformAdmin();

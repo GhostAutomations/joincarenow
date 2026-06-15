@@ -1,7 +1,6 @@
 import { requireCompany } from "@/modules/auth/queries";
-import { acquireStoreForm, TIERS, TIER_LABEL } from "@/modules/forms/actions";
-
-const tierRank = (t: string) => Math.max(0, TIERS.indexOf(t));
+import { acquireStoreForm } from "@/modules/forms/actions";
+import { TIER_LABEL, tierRank } from "@/modules/forms/tiers";
 
 type StoreForm = {
   id: string;

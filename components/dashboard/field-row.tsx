@@ -16,6 +16,7 @@ const TYPE_LABEL: Record<string, string> = {
   yes_no: "Yes / No",
   file: "File upload",
   signature: "Signature",
+  address: "Address",
   body_text: "Body text",
 };
 

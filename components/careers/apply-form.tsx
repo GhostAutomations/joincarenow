@@ -257,6 +257,21 @@ function DynamicField({ field }: { field: FormField }) {
       </label>
     );
   }
+  if (field.field_type === "address") {
+    return (
+      <fieldset>
+        {label}
+        {help}
+        <div className="mt-1 space-y-2">
+          <input name={name} required={req} placeholder="Address line 1" className={inputClass} />
+          <input name={name} placeholder="Address line 2 (optional)" className={inputClass} />
+          <input name={name} placeholder="Town / city" className={inputClass} />
+          <input name={name} placeholder="County" className={inputClass} />
+          <input name={name} placeholder="Postcode" className={inputClass} />
+        </div>
+      </fieldset>
+    );
+  }
 
   // short_text, number, date
   const type =

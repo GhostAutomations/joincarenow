@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { saveStoreSettings, type DetailsState, TIERS, TIER_LABEL } from "@/modules/forms/actions";
+import { saveStoreSettings, type DetailsState } from "@/modules/forms/actions";
+import { TIERS, TIER_LABEL } from "@/modules/forms/tiers";
 
 const CATEGORIES: { value: string; label: string }[] = [
   { value: "recruitment", label: "Recruitment" },

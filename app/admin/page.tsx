@@ -2,7 +2,8 @@ import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { CompanyForm } from "@/components/dashboard/company-form";
 import { InviteForm } from "@/components/dashboard/invite-form";
 import { PendingInvites } from "@/components/dashboard/pending-invites";
-import { setCompanyTier, TIERS, TIER_LABEL } from "@/modules/forms/actions";
+import { setCompanyTier } from "@/modules/forms/actions";
+import { TIERS, TIER_LABEL } from "@/modules/forms/tiers";
 
 type AdminRow = {
   company_id: string;

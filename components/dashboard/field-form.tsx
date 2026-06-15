@@ -15,6 +15,7 @@ const TYPES: { value: string; label: string }[] = [
   { value: "yes_no", label: "Yes / No" },
   { value: "file", label: "File upload" },
   { value: "signature", label: "Signature" },
+  { value: "address", label: "Address" },
   { value: "body_text", label: "Body text / information" },
 ];
 const CHOICE = ["dropdown", "radio", "checkboxes"];

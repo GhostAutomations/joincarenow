@@ -44,6 +44,7 @@ const PALETTE: { value: string; label: string }[] = [
   { value: "yes_no", label: "Yes / No" },
   { value: "file", label: "File upload" },
   { value: "signature", label: "Signature" },
+  { value: "address", label: "Address" },
 ];
 const TYPE_LABEL: Record<string, string> = Object.fromEntries(
   PALETTE.map((p) => [p.value, p.label])

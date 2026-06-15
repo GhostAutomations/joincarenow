@@ -4,12 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireCompany, requireUser, requirePlatformAdmin } from "@/modules/auth/queries";
 import { extractFormFields } from "@/lib/ai/extract-form";
-
-export const TIERS = ["free", "pro", "enterprise"];
-export const TIER_LABEL: Record<string, string> = {
-  free: "Free", pro: "Pro", enterprise: "Enterprise",
-};
-const tierRank = (t: string) => Math.max(0, TIERS.indexOf(t));
+import { TIERS, tierRank } from "@/modules/forms/tiers";
 
 const FIELD_TYPES = [
   "short_text",
@@ -23,6 +18,7 @@ const FIELD_TYPES = [
   "file",
   "signature",
   "body_text",
+  "address",
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 
@@ -296,6 +292,9 @@ function defaultField(ft: FieldType): FieldData {
       help_text: null,
       config: {},
     };
+  }
+  if (ft === "address") {
+    return { label: "Address", field_type: ft, required: false, options: [], help_text: null, config: {} };
   }
   return {
     label: "Untitled question",

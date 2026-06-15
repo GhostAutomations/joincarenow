@@ -164,16 +164,26 @@ export function ApplicantComms({
         ) : messages.length === 0 ? (
           <p className="text-sm text-gray-500">No messages yet.</p>
         ) : (
-          messages.map((m) => (
-            <div key={m.id} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+          messages.map((m) => {
+            const inbound = m.direction === "inbound";
+            return (
+            <div
+              key={m.id}
+              className={`rounded-lg border p-3 ${
+                inbound ? "border-blue-200 bg-blue-50" : "border-gray-100 bg-gray-50"
+              }`}
+            >
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span className="inline-flex items-center gap-1 font-medium capitalize text-gray-700">
                   {CH_ICON[m.channel]} {m.channel}
                 </span>
-                {m.status === "failed" && (
+                {inbound && (
+                  <span className="rounded bg-blue-100 px-1.5 py-0.5 text-blue-700">Received</span>
+                )}
+                {!inbound && m.status === "failed" && (
                   <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-700">Failed</span>
                 )}
-                {m.status === "sent" && (
+                {!inbound && m.status === "sent" && (
                   <span className="rounded bg-green-100 px-1.5 py-0.5 text-green-700">Sent</span>
                 )}
                 <span className="ml-auto">
@@ -184,7 +194,8 @@ export function ApplicantComms({
               <p className="mt-0.5 whitespace-pre-wrap text-sm text-gray-700">{m.body}</p>
               {m.error && <p className="mt-1 text-xs text-red-600">{m.error}</p>}
             </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

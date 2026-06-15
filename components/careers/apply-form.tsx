@@ -181,7 +181,7 @@ const SIZE_CLASS: Record<string, string> = {
   xl: "text-2xl",
 };
 
-function DynamicField({ field }: { field: FormField }) {
+export function DynamicField({ field }: { field: FormField }) {
   const name = `field_${field.field_id}`;
   const req = field.required;
 

@@ -3,13 +3,15 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Lock, Trash2, Plus, GripVertical, ImagePlus, X, GitBranch,
+  Lock, Trash2, Plus, GripVertical, ImagePlus, X, GitBranch, Eye,
   AlignLeft, AlignCenter, AlignRight,
 } from "lucide-react";
 import {
   addFieldOfType, deleteField, reorderFields, updateFormHeader, uploadFormLogo,
 } from "@/modules/forms/actions";
 import { FieldForm, type FieldDefaults } from "@/components/dashboard/field-form";
+import { FormPreview } from "@/components/dashboard/form-preview";
+import { type FormField } from "@/components/careers/apply-form";
 
 export type BuilderField = {
   id: string;
@@ -78,6 +80,7 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
 
   const [selected, setSelected] = useState<string | null>(null);
   const [openPlus, setOpenPlus] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [order, setOrder] = useState<string[]>(fields.map((f) => f.id));
   const dragId = useRef<string | null>(null);
   const headerMounted = useRef(false);
@@ -151,7 +154,30 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
     reorderFields(form.id, next).then(() => router.refresh());
   }
 
+  const previewFields: FormField[] = ordered.map((f) => ({
+    field_id: f.id,
+    label: f.label,
+    field_type: f.field_type,
+    required: f.required,
+    options: f.options ?? [],
+    help_text: f.help_text,
+    config: f.config,
+    parent_field_id: f.parent_field_id,
+    parent_value: f.parent_value,
+    field_position: 0,
+  }));
+
   return (
+    <>
+    <div className="mb-3 flex justify-end">
+      <button
+        type="button"
+        onClick={() => setShowPreview(true)}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+      >
+        <Eye className="h-4 w-4" /> Preview form
+      </button>
+    </div>
     <div className="grid grid-cols-[180px_1fr] gap-4">
       {/* LEFT: content outline */}
       <aside className="h-max rounded-xl border border-gray-200 bg-white p-3">
@@ -312,6 +338,14 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
         ))}
       </div>
     </div>
+    {showPreview && (
+      <FormPreview
+        form={{ name, description: desc, style: { title: { color: tColor, size: tSize, align: tAlign }, description: { color: dColor, size: dSize, align: dAlign }, logo_url: logoUrl } }}
+        fields={previewFields}
+        onClose={() => setShowPreview(false)}
+      />
+    )}
+    </>
   );
 }
 

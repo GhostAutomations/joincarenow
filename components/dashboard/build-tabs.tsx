@@ -11,7 +11,7 @@ export function BuildTabs({
   builder: ReactNode;
   importer: ReactNode;
 }) {
-  const [mode, setMode] = useState<"builder" | "import">("builder");
+  const [mode, setMode] = useState<"builder" | "import" | null>(null);
 
   return (
     <div>
@@ -40,7 +40,7 @@ export function BuildTabs({
         </button>
       </div>
 
-      <div className="mt-6">{mode === "builder" ? builder : importer}</div>
+      {mode && <div className="mt-6">{mode === "builder" ? builder : importer}</div>}
     </div>
   );
 }

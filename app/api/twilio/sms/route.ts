@@ -36,6 +36,14 @@ function isValidTwilioSignature(
   }
 }
 
+// Health check — visit this URL in a browser to confirm the route is deployed.
+export async function GET() {
+  return new Response(
+    JSON.stringify({ ok: true, route: "twilio-sms", expects: "POST" }),
+    { headers: { "Content-Type": "application/json" } }
+  );
+}
+
 export async function POST(req: Request) {
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   if (!authToken) return xml(200); // not configured; ack so Twilio doesn't retry

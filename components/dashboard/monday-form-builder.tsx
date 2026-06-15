@@ -243,13 +243,13 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
         />
 
         {ordered.map((f) => (
-          <div key={f.id} className={f.parent_field_id ? "ml-6 border-l-2 border-brand-100 pl-3" : ""}>
+          <div key={f.id}>
             <div
               draggable={selected !== f.id}
               onDragStart={() => (dragId.current = f.id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => onDrop(f.id)}
-              className={`rounded-lg border bg-white ${selected === f.id ? "border-brand-400 ring-1 ring-brand-200" : "border-gray-200"}`}
+              className={`rounded-lg border bg-white ${selected === f.id ? "border-brand-400 ring-1 ring-brand-200" : "border-gray-200"} ${f.parent_field_id ? "ml-6 border-l-2 border-l-brand-200" : ""}`}
             >
               {selected === f.id ? (
                 <div className="p-4">

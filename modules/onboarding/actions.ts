@@ -17,9 +17,7 @@ export async function addTemplateTask(
   const formId = formData.get("formId")?.toString() || null;
   const body = (formData.get("body")?.toString() ?? "").trim() || null;
   const required = formData.get("required") === "on";
-  const dueRaw = formData.get("dueDays")?.toString() ?? "";
-  const dueDays = dueRaw ? Math.max(0, parseInt(dueRaw, 10)) : null;
-  const dueDir = formData.get("dueDirection")?.toString() === "before" ? "before" : "after";
+  const dueDate = formData.get("dueDate")?.toString() || null;
 
   if (title.length < 2) return { error: "Give the task a title" };
   if (!["form", "document", "acknowledge"].includes(taskType)) {
@@ -43,8 +41,7 @@ export async function addTemplateTask(
     form_id: taskType === "form" ? formId : null,
     body,
     required,
-    due_days: dueDays,
-    due_direction: dueDir,
+    due_date: dueDate,
     position: (last?.position ?? -1) + 1,
   });
   if (error) return { error: "Could not add the task." };

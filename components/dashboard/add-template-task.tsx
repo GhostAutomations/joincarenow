@@ -55,17 +55,10 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
         <textarea name="body" rows={2} className={cls} />
       </label>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="text-xs font-medium text-gray-600">
-          Due (days)
-          <input name="dueDays" type="number" min={0} placeholder="e.g. 7" className={cls} />
-        </label>
-        <label className="text-xs font-medium text-gray-600">
-          Relative to start date
-          <select name="dueDirection" defaultValue="after" className={cls}>
-            <option value="after">After start date</option>
-            <option value="before">Before start date</option>
-          </select>
+          Due date
+          <input name="dueDate" type="date" className={cls} />
         </label>
         <label className="mt-5 flex items-center gap-2 text-sm text-gray-700">
           <input type="checkbox" name="required" defaultChecked className="h-4 w-4 rounded border-gray-300 text-brand-600" />

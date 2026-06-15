@@ -9,6 +9,7 @@ export type OnbTask = {
   title: string;
   task_type: string;
   status: string;
+  required: boolean;
   doc_path: string | null;
   note: string | null;
   due_date: string | null;

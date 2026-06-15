@@ -123,13 +123,9 @@ export default async function OnboardingBoardPage() {
         </section>
       )}
 
-      <section className="mt-6">
-        <h2 className="text-base font-medium text-gray-900">People in onboarding</h2>
-        {people.length === 0 ? (
-          <p className="mt-2 text-sm text-gray-500">
-            No one in onboarding yet. Move an applicant to Hired on the pipeline to start.
-          </p>
-        ) : (
+      {people.length > 0 && (
+        <section className="mt-6">
+          <h2 className="text-base font-medium text-gray-900">People in onboarding</h2>
           <div className="mt-4 space-y-4">
             {people.map((p, i) => {
               const done = p.tasks.filter((t) => t.status === "approved").length;
@@ -163,8 +159,8 @@ export default async function OnboardingBoardPage() {
               );
             })}
           </div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

@@ -4,6 +4,18 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendEmail, sendSms } from "@/lib/comms/send";
+
+const BASE_URL = "https://www.joincarenow.com";
+
+function ukPhone(raw: string | null): string | null {
+  if (!raw) return null;
+  const t = raw.replace(/[\s()-]/g, "");
+  if (t.startsWith("+")) return t;
+  if (t.startsWith("0")) return "+44" + t.slice(1);
+  if (t.startsWith("44")) return "+" + t;
+  return t;
+}
 
 const RESPONSE_LABEL: Record<string, string> = {
   confirm: "confirmed their interview",
@@ -43,7 +55,7 @@ export async function scheduleInterview(
   if (!parsed.success) return { error: parsed.error.errors[0].message };
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("schedule_interview", {
+  const { data: iv, error } = await supabase.rpc("schedule_interview", {
     p_application_id: parsed.data.applicationId,
     p_scheduled_at: new Date(parsed.data.scheduledAt).toISOString(),
     p_duration_minutes: parsed.data.durationMinutes,
@@ -53,7 +65,132 @@ export async function scheduleInterview(
   });
   if (error) return { error: error.message };
 
+  // Send the invite (with a one-tap response link) and log it to the timeline.
+  await sendInterviewInvite(supabase, parsed.data.applicationId, iv, parsed.data.channel);
+
   revalidatePath("/pipeline");
+  return { ok: true };
+}
+
+type IvRow = {
+  respond_token: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  mode: string | null;
+  location: string | null;
+};
+
+/** Email/SMS the applicant their interview invite + one-tap response link. */
+async function sendInterviewInvite(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  applicationId: string,
+  iv: IvRow | null,
+  channel: string
+) {
+  if (!iv?.respond_token) return;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: app } = await supabase
+      .from("applications")
+      .select("company_id, applicant_id, applicants(first_name, email, phone), jobs(title), companies(name)")
+      .eq("id", applicationId)
+      .single();
+    if (!app) return;
+
+    const ap = app.applicants as unknown as {
+      first_name: string | null; email: string | null; phone: string | null;
+    } | null;
+    const company = (app.companies as unknown as { name: string | null } | null)?.name ?? "the team";
+    const link = `${BASE_URL}/interview/${iv.respond_token}`;
+    const when = new Date(iv.scheduled_at).toLocaleString("en-GB", {
+      dateStyle: "full", timeStyle: "short",
+    });
+    const first = ap?.first_name || "there";
+    const modeText = iv.mode === "phone" ? "by phone" : iv.mode === "video" ? "by video call" : "in person";
+    const whereLine = iv.location ? `\nWhere: ${iv.location}` : "";
+
+    const emailBody =
+      `Hi ${first},\n\n${company} would like to invite you to an interview.\n\n` +
+      `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n\n` +
+      `Please confirm, ask to change the time, or decline here:\n${link}\n\nThank you,\n${company}`;
+    const smsBody =
+      `Hi ${first}, ${company} would like to interview you on ${when} (${modeText}). ` +
+      `Confirm/change/decline: ${link}`;
+
+    async function log(ch: "email" | "sms", to: string, subject: string | null, body: string, status: string, providerId?: string, err?: string) {
+      await supabase.from("messages").insert({
+        company_id: app!.company_id,
+        application_id: applicationId,
+        applicant_id: app!.applicant_id,
+        channel: ch,
+        direction: "outbound",
+        to_address: to,
+        subject,
+        body,
+        status,
+        provider_id: providerId ?? null,
+        error: err ?? null,
+        created_by: user?.id ?? null,
+      });
+    }
+
+    if ((channel === "email" || channel === "both") && ap?.email) {
+      const r = await sendEmail({ to: ap.email, subject: `Interview invitation from ${company}`, text: emailBody });
+      await log("email", ap.email, `Interview invitation from ${company}`, emailBody, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);
+    }
+    if ((channel === "sms" || channel === "both")) {
+      const phone = ukPhone(ap?.phone ?? null);
+      if (phone) {
+        const r = await sendSms({ to: phone, body: smsBody });
+        await log("sms", phone, null, smsBody, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);
+      }
+    }
+  } catch {
+    /* don't fail scheduling if the invite send hiccups */
+  }
+}
+
+/** Public (token) interview response — used by the one-tap link, no login. */
+export async function respondToInterviewByToken(
+  token: string,
+  response: string,
+  requestedTime?: string,
+  note?: string
+): Promise<{ ok?: boolean; error?: string }> {
+  if (!["confirmed", "reschedule_requested", "declined"].includes(response)) {
+    return { error: "Invalid response" };
+  }
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("respond_to_interview_by_token", {
+    p_token: token,
+    p_response: response,
+    p_requested_time: requestedTime ?? null,
+    p_note: note ?? null,
+  });
+  if (error) return { error: "Could not save your response. The link may have expired." };
+
+  const row = (data as { company_id: string; application_id: string; applicant_name: string | null }[])?.[0];
+  if (row) {
+    const what = RESPONSE_LABEL[response] ?? "responded to their interview invite";
+    const name = row.applicant_name || "An applicant";
+    try {
+      const admin = createAdminClient();
+      const { data: members } = await admin
+        .from("company_users").select("user_id").eq("company_id", row.company_id);
+      if (members?.length) {
+        await admin.from("notifications").insert(
+          members.map((m) => ({
+            company_id: row.company_id,
+            user_id: m.user_id,
+            type: "interview_response",
+            title: `${name} ${what}`,
+            body: null,
+            link: `/pipeline?open=${row.application_id}`,
+          }))
+        );
+      }
+    } catch { /* notification best-effort */ }
+  }
   return { ok: true };
 }
 

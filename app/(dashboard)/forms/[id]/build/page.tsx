@@ -28,7 +28,7 @@ export default async function FormBuildPage({
 
   const { data: fieldsData } = await supabase
     .from("form_fields")
-    .select("id, label, field_type, required, options, help_text, config, position")
+    .select("id, label, field_type, required, options, help_text, config, parent_field_id, parent_value, position")
     .eq("form_id", id)
     .order("position", { ascending: true });
   const fields = (fieldsData ?? []) as BuilderField[];

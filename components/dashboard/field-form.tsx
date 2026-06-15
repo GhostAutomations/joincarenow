@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
-import { addField, updateField, type FormState } from "@/modules/forms/actions";
+import { addField, updateField } from "@/modules/forms/actions";
 
 const TYPES: { value: string; label: string }[] = [
   { value: "short_text", label: "Short text" },
@@ -43,60 +43,94 @@ export function FieldForm({
   onSaved?: () => void;
 }) {
   const isEdit = !!defaults;
-  const action = isEdit ? updateField : addField;
-  const [state, formAction] = useActionState<FormState, FormData>(action, undefined);
-  const [type, setType] = useState(defaults?.fieldType ?? "short_text");
-  const formRef = useRef<HTMLFormElement>(null);
-  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    if (state?.ok && !isEdit) {
-      formRef.current?.reset();
-      setType("short_text");
-      router.refresh();
-    }
-  }, [state, isEdit, router]);
+  const [label, setLabel] = useState(defaults?.label ?? "");
+  const [type, setType] = useState(defaults?.fieldType ?? "short_text");
+  const [required, setRequired] = useState(defaults?.required ?? false);
+  const [helpText, setHelpText] = useState(defaults?.helpText ?? "");
+  const [options, setOptions] = useState<string[]>(
+    defaults?.options?.length ? defaults.options : ["Option 1"]
+  );
+  const [content, setContent] = useState(defaults?.config?.text ?? "");
+  const [size, setSize] = useState(defaults?.config?.size ?? "normal");
+  const [color, setColor] = useState(defaults?.config?.color ?? "#374151");
+  const [error, setError] = useState<string | null>(null);
 
-  // Edit mode auto-saves on any change (no Save button).
-  function autosave() {
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mounted = useRef(false);
+
+  function buildFD(): FormData {
+    const fd = new FormData();
+    fd.append("formId", formId);
+    if (defaults) fd.append("id", defaults.id);
+    fd.append("fieldType", type);
+    fd.append("label", label);
+    if (required) fd.append("required", "on");
+    fd.append("helpText", helpText);
+    fd.append("options", options.join("\n"));
+    fd.append("content", content);
+    fd.append("fontSize", size);
+    fd.append("fontColor", color);
+    return fd;
+  }
+
+  // Edit mode: debounced programmatic save (no form submit → no value loss).
+  useEffect(() => {
     if (!isEdit) return;
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
     if (debounce.current) clearTimeout(debounce.current);
-    debounce.current = setTimeout(() => {
-      formRef.current?.requestSubmit();
-      router.refresh();
+    debounce.current = setTimeout(async () => {
+      const res = await updateField(undefined, buildFD());
+      if (res?.error) setError(res.error);
+      else {
+        setError(null);
+        router.refresh();
+      }
     }, 600);
+    return () => {
+      if (debounce.current) clearTimeout(debounce.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [label, type, required, helpText, options, content, size, color]);
+
+  async function addNew() {
+    const res = await addField(undefined, buildFD());
+    if (res?.error) {
+      setError(res.error);
+      return;
+    }
+    setError(null);
+    setLabel("");
+    setType("short_text");
+    setRequired(false);
+    setHelpText("");
+    setOptions(["Option 1"]);
+    setContent("");
+    router.refresh();
   }
 
   const isBody = type === "body_text";
 
   return (
-    <form ref={formRef} action={formAction} onChange={autosave} className="space-y-3">
-      {state?.error && (
-        <p className="rounded-md bg-red-50 px-2 py-1 text-xs text-red-700">
-          {state.error}
-        </p>
+    <div className="space-y-3">
+      {error && (
+        <p className="rounded-md bg-red-50 px-2 py-1 text-xs text-red-700">{error}</p>
       )}
-      <input type="hidden" name="formId" value={formId} />
-      {defaults && <input type="hidden" name="id" value={defaults.id} />}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="text-xs font-medium text-gray-600">
           {isBody ? "Heading (optional)" : "Question / label"}
-          <input name="label" defaultValue={defaults?.label} className={cls} />
+          <input value={label} onChange={(e) => setLabel(e.target.value)} className={cls} />
         </label>
         <label className="text-xs font-medium text-gray-600">
           Field type
-          <select
-            name="fieldType"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className={cls}
-          >
+          <select value={type} onChange={(e) => setType(e.target.value)} className={cls}>
             {TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
+              <option key={t.value} value={t.value}>{t.label}</option>
             ))}
           </select>
         </label>
@@ -107,9 +141,9 @@ export function FieldForm({
           <label className="block text-xs font-medium text-gray-600">
             Text to display
             <textarea
-              name="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
               rows={4}
-              defaultValue={defaults?.config?.text ?? ""}
               placeholder="Explain what's needed in this section…"
               className={cls}
             />
@@ -117,11 +151,7 @@ export function FieldForm({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="text-xs font-medium text-gray-600">
               Font size
-              <select
-                name="fontSize"
-                defaultValue={defaults?.config?.size ?? "normal"}
-                className={cls}
-              >
+              <select value={size} onChange={(e) => setSize(e.target.value)} className={cls}>
                 <option value="small">Small</option>
                 <option value="normal">Normal</option>
                 <option value="large">Large</option>
@@ -132,8 +162,8 @@ export function FieldForm({
               Text colour
               <input
                 type="color"
-                name="fontColor"
-                defaultValue={defaults?.config?.color ?? "#374151"}
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
                 className="mt-1 block h-9 w-16 rounded-md border border-gray-300"
               />
             </label>
@@ -142,19 +172,19 @@ export function FieldForm({
       ) : (
         <>
           {CHOICE.includes(type) && (
-            <OptionsEditor type={type} defaultOptions={defaults?.options ?? []} />
+            <OptionsEditor type={type} options={options} setOptions={setOptions} />
           )}
 
           <label className="block text-xs font-medium text-gray-600">
             Help text (optional)
-            <input name="helpText" defaultValue={defaults?.helpText} className={cls} />
+            <input value={helpText} onChange={(e) => setHelpText(e.target.value)} className={cls} />
           </label>
 
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
               type="checkbox"
-              name="required"
-              defaultChecked={defaults?.required}
+              checked={required}
+              onChange={(e) => setRequired(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
             />
             Required
@@ -165,42 +195,42 @@ export function FieldForm({
       {isEdit ? (
         <p className="text-xs text-gray-400">Changes save automatically.</p>
       ) : (
-        <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">
+        <button
+          type="button"
+          onClick={addNew}
+          className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+        >
           Add field
         </button>
       )}
-    </form>
+    </div>
   );
 }
 
 function OptionsEditor({
   type,
-  defaultOptions,
+  options,
+  setOptions,
 }: {
   type: string;
-  defaultOptions: string[];
+  options: string[];
+  setOptions: (fn: (a: string[]) => string[]) => void;
 }) {
-  const [opts, setOpts] = useState<string[]>(
-    defaultOptions.length ? defaultOptions : ["Option 1"]
-  );
   const isMulti = type === "checkboxes";
-
   return (
     <div>
       <p className="mb-1 text-xs font-medium text-gray-600">Options</p>
       <div className="space-y-2">
-        {opts.map((o, i) => (
+        {options.map((o, i) => (
           <div key={i} className="flex items-center gap-2">
             <span
               aria-hidden
-              className={`h-4 w-4 shrink-0 border border-gray-400 ${
-                isMulti ? "rounded-sm" : "rounded-full"
-              }`}
+              className={`h-4 w-4 shrink-0 border border-gray-400 ${isMulti ? "rounded-sm" : "rounded-full"}`}
             />
             <input
               value={o}
               onChange={(e) =>
-                setOpts((arr) => arr.map((x, idx) => (idx === i ? e.target.value : x)))
+                setOptions((arr) => arr.map((x, idx) => (idx === i ? e.target.value : x)))
               }
               placeholder={`Option ${i + 1}`}
               className="flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
@@ -208,7 +238,7 @@ function OptionsEditor({
             <button
               type="button"
               onClick={() =>
-                setOpts((arr) => (arr.length > 1 ? arr.filter((_, idx) => idx !== i) : arr))
+                setOptions((arr) => (arr.length > 1 ? arr.filter((_, idx) => idx !== i) : arr))
               }
               aria-label="Remove option"
               className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-600"
@@ -220,12 +250,11 @@ function OptionsEditor({
       </div>
       <button
         type="button"
-        onClick={() => setOpts((arr) => [...arr, `Option ${arr.length + 1}`])}
+        onClick={() => setOptions((arr) => [...arr, `Option ${arr.length + 1}`])}
         className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:underline"
       >
         <Plus className="h-4 w-4" /> Add option
       </button>
-      <input type="hidden" name="options" value={opts.join("\n")} />
     </div>
   );
 }

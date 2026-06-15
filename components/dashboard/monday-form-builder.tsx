@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Lock, Trash2, Plus, GripVertical, ImagePlus, X,
+  Lock, Trash2, Plus, GripVertical, ImagePlus, X, GitBranch,
   AlignLeft, AlignCenter, AlignRight,
 } from "lucide-react";
 import {
@@ -19,7 +19,14 @@ export type BuilderField = {
   options: string[];
   help_text: string | null;
   config: { text?: string; size?: string; color?: string } | null;
+  parent_field_id: string | null;
+  parent_value: string | null;
 };
+
+const CHOICE_FIELD = ["dropdown", "radio", "checkboxes", "yes_no"];
+function optionsFor(f: BuilderField): string[] {
+  return f.field_type === "yes_no" ? ["Yes", "No"] : f.options ?? [];
+}
 
 type FormMeta = {
   id: string;
@@ -108,6 +115,17 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
     fd.append("fieldType", type);
     const id = await addFieldOfType(fd);
     setOpenPlus(null);
+    if (id) setSelected(id);
+    router.refresh();
+  }
+
+  async function addFollowUp(parentId: string, value: string, type: string) {
+    const fd = new FormData();
+    fd.append("formId", form.id);
+    fd.append("parentFieldId", parentId);
+    fd.append("parentValue", value);
+    fd.append("fieldType", type);
+    const id = await addFieldOfType(fd);
     if (id) setSelected(id);
     router.refresh();
   }
@@ -225,7 +243,7 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
         />
 
         {ordered.map((f) => (
-          <div key={f.id}>
+          <div key={f.id} className={f.parent_field_id ? "ml-6 border-l-2 border-brand-100 pl-3" : ""}>
             <div
               draggable={selected !== f.id}
               onDragStart={() => (dragId.current = f.id)}
@@ -242,6 +260,12 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
                       options: f.options ?? [], helpText: f.help_text ?? "", config: f.config ?? null,
                     } as FieldDefaults}
                   />
+                  {CHOICE_FIELD.includes(f.field_type) && (
+                    <LogicPanel
+                      options={optionsFor(f)}
+                      onAdd={(value, t) => addFollowUp(f.id, value, t)}
+                    />
+                  )}
                   <div className="mt-3 flex border-t border-gray-100 pt-3">
                     <form action={deleteField} className="ml-auto">
                       <input type="hidden" name="id" value={f.id} />
@@ -256,6 +280,11 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
                 <button onClick={() => setSelected(f.id)} className="flex w-full items-center gap-3 p-4 text-left">
                   <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-gray-300" />
                   <span className="min-w-0">
+                    {f.parent_field_id && (
+                      <span className="mb-0.5 block text-xs font-medium text-brand-600">
+                        Follow-up · shows if answer = “{f.parent_value}”
+                      </span>
+                    )}
                     {f.field_type === "body_text" ? (
                       <span className="text-sm text-gray-600">{f.config?.text || "Body text"}</span>
                     ) : (
@@ -309,6 +338,61 @@ function PlusRow({ open, onToggle, onPick }: { open: boolean; onToggle: () => vo
               {t.label}
             </button>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LogicPanel({
+  options,
+  onAdd,
+}: {
+  options: string[];
+  onAdd: (value: string, type: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(options[0] ?? "");
+
+  return (
+    <div className="mt-3 border-t border-gray-100 pt-3">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+      >
+        <GitBranch className="h-3.5 w-3.5" /> Logic
+      </button>
+      {open && (
+        <div className="mt-2 rounded-lg bg-gray-50 p-3">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
+            <span>Add a follow-up shown when the answer is</span>
+            <select
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="rounded border border-gray-300 px-1.5 py-1 text-xs"
+            >
+              {options.map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
+          </div>
+          <p className="mt-2 text-xs text-gray-500">Pick the follow-up field type:</p>
+          <div className="mt-1 grid grid-cols-2 gap-1 sm:grid-cols-3">
+            {PALETTE.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => {
+                  onAdd(value, t.value);
+                  setOpen(false);
+                }}
+                className="rounded-md border border-gray-200 px-2 py-1.5 text-left text-xs text-gray-700 hover:border-brand-300 hover:bg-brand-50"
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -27,6 +27,8 @@ export type FormField = {
   options: string[];
   help_text: string | null;
   config: { text?: string; size?: string; color?: string } | null;
+  parent_field_id: string | null;
+  parent_value: string | null;
   field_position: number;
 };
 
@@ -40,9 +42,35 @@ export function ApplyForm({
   formFields?: FormField[];
 }) {
   const [state, action] = useActionState(applyToJob, undefined);
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+
+  function track(e: { target: EventTarget | null }) {
+    const t = e.target as HTMLInputElement;
+    const name = t?.name;
+    if (!name || !name.startsWith("field_")) return;
+    const id = name.slice("field_".length);
+    if (t.type === "checkbox") {
+      setAnswers((a) => {
+        const cur = Array.isArray(a[id]) ? (a[id] as string[]) : [];
+        const next = t.checked ? [...cur, t.value] : cur.filter((v) => v !== t.value);
+        return { ...a, [id]: next };
+      });
+    } else {
+      setAnswers((a) => ({ ...a, [id]: t.value }));
+    }
+  }
+
+  function visible(f: FormField): boolean {
+    if (!f.parent_field_id) return true;
+    const v = answers[f.parent_field_id];
+    if (v == null) return false;
+    return Array.isArray(v) ? v.includes(f.parent_value ?? "") : v === f.parent_value;
+  }
+
+  const shownFields = formFields.filter(visible);
 
   return (
-    <form action={action} className="space-y-5">
+    <form action={action} onChange={track} className="space-y-5">
       <FormError error={state?.error} />
       <input type="hidden" name="jobId" value={jobId} />
 
@@ -122,9 +150,9 @@ export function ApplyForm({
         />
       </div>
 
-      {formFields.length > 0 && (
+      {shownFields.length > 0 && (
         <div className="space-y-5 border-t border-gray-100 pt-5">
-          {formFields.map((f) => (
+          {shownFields.map((f) => (
             <DynamicField key={f.field_id} field={f} />
           ))}
         </div>

@@ -310,8 +310,12 @@ function defaultField(ft: FieldType): FieldData {
  *  Returns the new field's id so the builder can select it. */
 export async function addFieldOfType(formData: FormData): Promise<string | null> {
   const formId = String(formData.get("formId") ?? "");
-  const afterId = String(formData.get("afterId") ?? "");
+  let afterId = String(formData.get("afterId") ?? "");
   const ft = String(formData.get("fieldType") ?? "") as FieldType;
+  // Optional: this field is a follow-up shown when parentFieldId == parentValue.
+  const parentFieldId = String(formData.get("parentFieldId") ?? "") || null;
+  const parentValue = parentFieldId ? String(formData.get("parentValue") ?? "") : null;
+  if (parentFieldId) afterId = parentFieldId;
   if (!formId || !FIELD_TYPES.includes(ft)) return null;
 
   const { supabase } = await requireUser();
@@ -331,7 +335,13 @@ export async function addFieldOfType(formData: FormData): Promise<string | null>
 
   const { data: created, error } = await supabase
     .from("form_fields")
-    .insert({ form_id: formId, ...defaultField(ft), position: ids.length })
+    .insert({
+      form_id: formId,
+      ...defaultField(ft),
+      parent_field_id: parentFieldId,
+      parent_value: parentValue,
+      position: ids.length,
+    })
     .select("id")
     .single();
   if (error || !created) return null;

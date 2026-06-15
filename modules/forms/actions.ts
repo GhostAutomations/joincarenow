@@ -118,8 +118,8 @@ const CATEGORIES = ["recruitment", "hr", "onboarding", "other"];
 
 export type DetailsState = { error?: string; ok?: boolean } | undefined;
 
-/** Save a form's name + category from the builder header. */
-export async function saveFormDetails(
+/** Details screen: save name + category, then open the builder screen. */
+export async function openBuilder(
   _prev: DetailsState,
   formData: FormData
 ): Promise<DetailsState> {
@@ -138,7 +138,29 @@ export async function saveFormDetails(
     .eq("company_id", current.company_id);
   if (error) return { error: "Could not save. Please try again." };
 
-  revalidatePath(`/forms/${id}`);
+  redirect(`/forms/${id}/build`);
+}
+
+/** Builder screen: save the form heading (name) + description/instructions. */
+export async function saveFormHeader(
+  _prev: DetailsState,
+  formData: FormData
+): Promise<DetailsState> {
+  const id = formData.get("id");
+  const name = (formData.get("name")?.toString() ?? "").trim();
+  const description = (formData.get("description")?.toString() ?? "").slice(0, 2000);
+  if (typeof id !== "string") return { error: "Missing form" };
+  if (name.length < 2) return { error: "Give the form a name" };
+
+  const { supabase, current } = await requireCompany();
+  const { error } = await supabase
+    .from("forms")
+    .update({ name, description: description || null })
+    .eq("id", id)
+    .eq("company_id", current.company_id);
+  if (error) return { error: "Could not save. Please try again." };
+
+  revalidatePath(`/forms/${id}/build`);
   return { ok: true };
 }
 

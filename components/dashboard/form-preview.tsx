@@ -109,9 +109,17 @@ export function FormPreview({
             </label>
           </div>
 
-          {fields.filter(visible).map((f) => (
-            <DynamicField key={f.field_id} field={f} />
-          ))}
+          {fields.filter(visible).map((f) =>
+            f.field_type === "page_break" ? (
+              <div key={f.field_id} className="flex items-center gap-3 py-1">
+                <div className="h-px flex-1 bg-gray-200" />
+                <span className="text-xs uppercase tracking-wide text-gray-400">New page</span>
+                <div className="h-px flex-1 bg-gray-200" />
+              </div>
+            ) : (
+              <DynamicField key={f.field_id} field={f} />
+            )
+          )}
 
           <div className="sm:w-48">
             <button

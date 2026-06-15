@@ -19,6 +19,7 @@ const FIELD_TYPES = [
   "signature",
   "body_text",
   "address",
+  "page_break",
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 
@@ -295,6 +296,9 @@ function defaultField(ft: FieldType): FieldData {
   }
   if (ft === "address") {
     return { label: "Address", field_type: ft, required: false, options: [], help_text: null, config: {} };
+  }
+  if (ft === "page_break") {
+    return { label: "Page break", field_type: ft, required: false, options: [], help_text: null, config: {} };
   }
   return {
     label: "Untitled question",

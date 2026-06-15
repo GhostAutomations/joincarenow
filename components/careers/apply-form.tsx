@@ -67,108 +67,121 @@ export function ApplyForm({
     return Array.isArray(v) ? v.includes(f.parent_value ?? "") : v === f.parent_value;
   }
 
-  const shownFields = formFields.filter(visible);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [page, setPage] = useState(0);
 
-  return (
-    <form action={action} onChange={track} className="space-y-5">
-      <FormError error={state?.error} />
-      <input type="hidden" name="jobId" value={jobId} />
+  // Split custom fields into pages at each page break.
+  const pages: FormField[][] = [[]];
+  for (const f of formFields) {
+    if (f.field_type === "page_break") pages.push([]);
+    else pages[pages.length - 1].push(f);
+  }
+  const lastPage = pages.length - 1;
 
+  function goNext() {
+    const el = formRef.current?.querySelector(`[data-page="${page}"]`);
+    if (el) {
+      const controls = Array.from(
+        el.querySelectorAll<HTMLInputElement>("input, select, textarea")
+      );
+      for (const c of controls) {
+        if (!c.checkValidity()) {
+          c.reportValidity();
+          return;
+        }
+      }
+    }
+    setPage((p) => Math.min(p + 1, lastPage));
+  }
+
+  const basics = (
+    <>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-            First name
-          </label>
-          <input
-            id="firstName"
-            name="firstName"
-            required
-            defaultValue={defaults?.firstName}
-            className={inputClass}
-          />
+          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">First name</label>
+          <input id="firstName" name="firstName" required defaultValue={defaults?.firstName} className={inputClass} />
         </div>
         <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-            Last name
-          </label>
-          <input
-            id="lastName"
-            name="lastName"
-            required
-            defaultValue={defaults?.lastName}
-            className={inputClass}
-          />
+          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Last name</label>
+          <input id="lastName" name="lastName" required defaultValue={defaults?.lastName} className={inputClass} />
         </div>
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-            Phone
-          </label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            defaultValue={defaults?.phone}
-            className={inputClass}
-          />
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
+          <input id="phone" name="phone" type="tel" defaultValue={defaults?.phone} className={inputClass} />
         </div>
         <div>
-          <label htmlFor="postcode" className="block text-sm font-medium text-gray-700">
-            Postcode
-          </label>
-          <input
-            id="postcode"
-            name="postcode"
-            defaultValue={defaults?.postcode}
-            className={inputClass}
-          />
+          <label htmlFor="postcode" className="block text-sm font-medium text-gray-700">Postcode</label>
+          <input id="postcode" name="postcode" defaultValue={defaults?.postcode} className={inputClass} />
         </div>
       </div>
-
       <div>
         <label htmlFor="coverMessage" className="block text-sm font-medium text-gray-700">
           Why are you a good fit? <span className="text-gray-400">(optional)</span>
         </label>
-        <textarea
-          id="coverMessage"
-          name="coverMessage"
-          rows={5}
-          className={inputClass}
-          placeholder="Tell the employer a little about yourself and your experience…"
-        />
+        <textarea id="coverMessage" name="coverMessage" rows={5} className={inputClass}
+          placeholder="Tell the employer a little about yourself and your experience…" />
       </div>
-
       <div>
         <label htmlFor="cv" className="block text-sm font-medium text-gray-700">
           Upload your CV <span className="text-gray-400">(optional, PDF/Word, max 5MB)</span>
         </label>
-        <input
-          id="cv"
-          name="cv"
-          type="file"
-          accept=".pdf,.doc,.docx"
-          className="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-700 hover:file:bg-brand-100"
-        />
+        <input id="cv" name="cv" type="file" accept=".pdf,.doc,.docx"
+          className="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-700 hover:file:bg-brand-100" />
       </div>
+    </>
+  );
 
-      {shownFields.length > 0 && (
-        <div className="space-y-5 border-t border-gray-100 pt-5">
-          {shownFields.map((f) => (
+  const rightToWork = (
+    <label className="flex items-start gap-2 text-sm text-gray-700">
+      <input type="checkbox" name="rightToWork"
+        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+      <span>I confirm I have the right to work in the UK.</span>
+    </label>
+  );
+
+  return (
+    <form ref={formRef} action={action} onChange={track} className="space-y-5">
+      <FormError error={state?.error} />
+      <input type="hidden" name="jobId" value={jobId} />
+
+      {pages.map((pageFields, idx) => (
+        <div key={idx} data-page={idx} className={idx === page ? "space-y-5" : "hidden"}>
+          {idx === 0 && basics}
+          {pageFields.filter(visible).map((f) => (
             <DynamicField key={f.field_id} field={f} />
           ))}
+          {idx === lastPage && rightToWork}
         </div>
-      )}
+      ))}
 
-      <label className="flex items-start gap-2 text-sm text-gray-700">
-        <input
-          type="checkbox"
-          name="rightToWork"
-          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-        />
-        <span>I confirm I have the right to work in the UK.</span>
-      </label>
-
-      <div className="sm:w-48">
-        <SubmitButton>Submit application</SubmitButton>
+      <div className="flex items-center justify-between gap-3 pt-2">
+        {page > 0 ? (
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          >
+            Back
+          </button>
+        ) : (
+          <span />
+        )}
+        {lastPage > 0 && (
+          <span className="text-xs text-gray-400">Page {page + 1} of {pages.length}</span>
+        )}
+        {page < lastPage ? (
+          <button
+            type="button"
+            onClick={goNext}
+            className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
+          >
+            Next
+          </button>
+        ) : (
+          <div className="sm:w-48">
+            <SubmitButton>Submit application</SubmitButton>
+          </div>
+        )}
       </div>
     </form>
   );

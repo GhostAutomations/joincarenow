@@ -54,6 +54,7 @@ const PALETTE: { value: string; label: string }[] = [
   { value: "file", label: "File upload" },
   { value: "signature", label: "Signature" },
   { value: "address", label: "Address" },
+  { value: "page_break", label: "New page" },
 ];
 const TYPE_LABEL: Record<string, string> = Object.fromEntries(
   PALETTE.map((p) => [p.value, p.label])
@@ -268,7 +269,36 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
           onPick={(t) => addAt("", t)}
         />
 
-        {ordered.map((f) => (
+        {ordered.map((f) =>
+          f.field_type === "page_break" ? (
+            <div key={f.id}>
+              <div className="flex items-center gap-3 py-2">
+                <div className="h-px flex-1 bg-brand-200" />
+                <span className="text-xs font-medium uppercase tracking-wide text-brand-600">
+                  Page break
+                </span>
+                <form action={deleteField}>
+                  <input type="hidden" name="id" value={f.id} />
+                  <input type="hidden" name="formId" value={form.id} />
+                  <button
+                    aria-label="Remove page break"
+                    className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </form>
+                <div className="h-px flex-1 bg-brand-200" />
+              </div>
+              <PlusRow
+                open={openPlus === f.id}
+                onToggle={() => {
+                  setSelected(null);
+                  setOpenPlus(openPlus === f.id ? null : f.id);
+                }}
+                onPick={(t) => addAt(f.id, t)}
+              />
+            </div>
+          ) : (
           <div key={f.id}>
             <div
               draggable={selected !== f.id}
@@ -413,7 +443,7 @@ function LogicPanel({
           </div>
           <p className="mt-2 text-xs text-gray-500">Pick the follow-up field type:</p>
           <div className="mt-1 grid grid-cols-2 gap-1 sm:grid-cols-3">
-            {PALETTE.map((t) => (
+            {PALETTE.filter((t) => t.value !== "page_break").map((t) => (
               <button
                 key={t.value}
                 type="button"

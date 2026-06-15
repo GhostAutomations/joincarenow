@@ -94,6 +94,15 @@ export function PipelineBoard({
     if (openId) setSelectedId(openId);
   }, [openId]);
 
+  // Quietly pull fresh data every 30s so responses/new applicants appear
+  // without a manual refresh (only while the tab is visible).
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (!document.hidden) router.refresh();
+    }, 30000);
+    return () => clearInterval(t);
+  }, [router]);
+
   const selected = apps.find((a) => a.id === selectedId) ?? null;
 
   function move(id: string, stage: string) {

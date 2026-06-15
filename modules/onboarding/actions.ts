@@ -18,7 +18,7 @@ export async function addTemplateTask(
   const body = (formData.get("body")?.toString() ?? "").trim() || null;
   const required = formData.get("required") === "on";
   const dueDate = formData.get("dueDate")?.toString() || null;
-  const triggerStage = formData.get("triggerStage")?.toString() || "hired";
+  const triggerStage = formData.get("triggerStage")?.toString() || "";
 
   if (title.length < 2) return { error: "Give the task a title" };
   if (!["form", "document", "acknowledge"].includes(taskType)) {

@@ -52,7 +52,8 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
 
       <label className="block text-xs font-medium text-gray-600">
         Send this to the applicant when…
-        <select name="triggerStage" defaultValue="hired" className={cls}>
+        <select name="triggerStage" defaultValue="" className={cls}>
+          <option value="" disabled>Select one…</option>
           <option value="on_application">They submit their application</option>
           <option value="reviewing">They reach Reviewing</option>
           <option value="interview">They reach Interview</option>

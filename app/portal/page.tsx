@@ -127,9 +127,9 @@ export default async function PortalPage({
 
         {onboarding.length > 0 && (
           <section className="mt-10">
-            <h2 className="text-xl font-semibold text-gray-900">Onboarding</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Your tasks</h2>
             <p className="mt-1 text-sm text-gray-500">
-              Complete these tasks to finish joining. Your employer will review them.
+              Please complete these tasks and forms. Your employer will review them.
             </p>
             <ul className="mt-4 space-y-3">
               {onboarding.map((t) => (

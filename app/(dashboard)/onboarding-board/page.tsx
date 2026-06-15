@@ -16,6 +16,14 @@ const TYPE_LABEL: Record<string, string> = {
   form: "Form", document: "Document", acknowledge: "Read & confirm",
 };
 
+const TRIGGER_LABEL: Record<string, string> = {
+  on_application: "on application",
+  reviewing: "at Reviewing",
+  interview: "at Interview",
+  offer: "at Offer",
+  hired: "when Hired",
+};
+
 export default async function OnboardingBoardPage() {
   const { supabase, current } = await requireCompany();
   const isAdmin = current.role === "admin";
@@ -23,7 +31,7 @@ export default async function OnboardingBoardPage() {
   const [{ data: templates }, { data: forms }, { data: tasks }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, required, due_date, position")
+      .select("id, title, task_type, required, due_date, trigger_stage, position")
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
@@ -51,16 +59,16 @@ export default async function OnboardingBoardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Onboarding</h1>
+      <h1 className="text-2xl font-semibold text-gray-900">Workflow</h1>
       <p className="mt-1 text-sm text-gray-500">
-        When an applicant is hired, your checklist becomes their onboarding tasks.
+        Build a checklist of tasks and forms, and choose the point in the pipeline each one is sent to the applicant.
       </p>
 
       {isAdmin && (
         <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-base font-medium text-gray-900">Onboarding checklist</h2>
+          <h2 className="text-base font-medium text-gray-900">Workflow checklist</h2>
           <p className="mt-1 text-sm text-gray-500">
-            These tasks are created for every new starter when they&apos;re hired.
+            Each task is sent automatically when an applicant reaches its trigger point.
           </p>
 
           {(templates ?? []).length > 0 && (
@@ -71,6 +79,7 @@ export default async function OnboardingBoardPage() {
                     <span className="text-sm font-medium text-gray-900">{t.title}</span>
                     <span className="ml-2 text-xs text-gray-400">
                       {TYPE_LABEL[t.task_type] ?? t.task_type}
+                      {t.trigger_stage && ` · ${TRIGGER_LABEL[t.trigger_stage] ?? t.trigger_stage}`}
                       {t.due_date && ` · due ${new Date(t.due_date).toLocaleDateString("en-GB")}`}
                       {!t.required && " · optional"}
                     </span>
@@ -95,7 +104,7 @@ export default async function OnboardingBoardPage() {
 
       {people.length > 0 && (
         <section className="mt-6">
-          <h2 className="text-base font-medium text-gray-900">People in onboarding</h2>
+          <h2 className="text-base font-medium text-gray-900">Applicants with tasks</h2>
           <div className="mt-4 space-y-4">
             {people.map((p, i) => {
               const done = p.tasks.filter((t) => t.status === "approved").length;

@@ -18,10 +18,14 @@ export async function addTemplateTask(
   const body = (formData.get("body")?.toString() ?? "").trim() || null;
   const required = formData.get("required") === "on";
   const dueDate = formData.get("dueDate")?.toString() || null;
+  const triggerStage = formData.get("triggerStage")?.toString() || "hired";
 
   if (title.length < 2) return { error: "Give the task a title" };
   if (!["form", "document", "acknowledge"].includes(taskType)) {
     return { error: "Pick a task type" };
+  }
+  if (!["on_application", "reviewing", "interview", "offer", "hired"].includes(triggerStage)) {
+    return { error: "Pick when to send this" };
   }
   if (taskType === "form" && !formId) return { error: "Choose which form to attach" };
 
@@ -42,6 +46,7 @@ export async function addTemplateTask(
     body,
     required,
     due_date: dueDate,
+    trigger_stage: triggerStage,
     position: (last?.position ?? -1) + 1,
   });
   if (error) return { error: "Could not add the task." };

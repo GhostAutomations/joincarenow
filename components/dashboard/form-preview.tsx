@@ -35,6 +35,14 @@ export function FormPreview({
   onClose: () => void;
 }) {
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+  const [page, setPage] = useState(0);
+
+  const pages: FormField[][] = [[]];
+  for (const f of fields) {
+    if (f.field_type === "page_break") pages.push([]);
+    else pages[pages.length - 1].push(f);
+  }
+  const lastPage = pages.length - 1;
 
   function track(e: { target: EventTarget | null }) {
     const t = e.target as HTMLInputElement;
@@ -98,37 +106,58 @@ export function FormPreview({
         )}
 
         <form onChange={track} className="mt-6 space-y-5">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <label className="block text-sm font-medium text-gray-700">
-              First name
-              <input className={inputClass} />
-            </label>
-            <label className="block text-sm font-medium text-gray-700">
-              Last name
-              <input className={inputClass} />
-            </label>
-          </div>
+          {pages.map((pf, idx) => (
+            <div key={idx} className={idx === page ? "space-y-5" : "hidden"}>
+              {idx === 0 && (
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    First name
+                    <input className={inputClass} />
+                  </label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Last name
+                    <input className={inputClass} />
+                  </label>
+                </div>
+              )}
+              {pf.filter(visible).map((f) => (
+                <DynamicField key={f.field_id} field={f} />
+              ))}
+            </div>
+          ))}
 
-          {fields.filter(visible).map((f) =>
-            f.field_type === "page_break" ? (
-              <div key={f.field_id} className="flex items-center gap-3 py-1">
-                <div className="h-px flex-1 bg-gray-200" />
-                <span className="text-xs uppercase tracking-wide text-gray-400">New page</span>
-                <div className="h-px flex-1 bg-gray-200" />
-              </div>
+          <div className="flex items-center justify-between gap-3 pt-2">
+            {page > 0 ? (
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Back
+              </button>
             ) : (
-              <DynamicField key={f.field_id} field={f} />
-            )
-          )}
-
-          <div className="sm:w-48">
-            <button
-              type="button"
-              disabled
-              className="w-full cursor-not-allowed rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white opacity-70"
-            >
-              Submit application
-            </button>
+              <span />
+            )}
+            {lastPage > 0 && (
+              <span className="text-xs text-gray-400">Page {page + 1} of {pages.length}</span>
+            )}
+            {page < lastPage ? (
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+                className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="cursor-not-allowed rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white opacity-70"
+              >
+                Submit application
+              </button>
+            )}
           </div>
         </form>
       </div>

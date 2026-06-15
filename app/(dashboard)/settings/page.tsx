@@ -3,6 +3,7 @@ import { InviteForm } from "@/components/dashboard/invite-form";
 import { PendingInvites } from "@/components/dashboard/pending-invites";
 import { InterviewAddressForm } from "@/components/dashboard/interview-address-form";
 import { BranchesManager } from "@/components/dashboard/branches-manager";
+import { RolesManager } from "@/components/dashboard/roles-manager";
 
 export default async function SettingsPage() {
   const { supabase, current } = await requireCompany();
@@ -13,11 +14,10 @@ export default async function SettingsPage() {
     .select("id, role, profiles ( full_name, email )")
     .eq("company_id", current.company_id);
 
-  const { data: branches } = await supabase
-    .from("branches")
-    .select("id, name")
-    .eq("company_id", current.company_id)
-    .order("name");
+  const [{ data: branches }, { data: roles }] = await Promise.all([
+    supabase.from("branches").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("name"),
+  ]);
 
   const { data: companyRow } = await supabase
     .from("companies")
@@ -69,6 +69,19 @@ export default async function SettingsPage() {
           </p>
           <div className="mt-4">
             <BranchesManager branches={branches ?? []} />
+          </div>
+        </section>
+      )}
+
+      {isAdmin && (
+        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-base font-medium text-gray-900">Roles</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Define your roles once (e.g. Walker, Driver). They become selectable
+            on jobs and follow each hire onto their employee record.
+          </p>
+          <div className="mt-4">
+            <RolesManager roles={roles ?? []} />
           </div>
         </section>
       )}

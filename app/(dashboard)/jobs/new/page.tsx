@@ -7,9 +7,10 @@ import { JobForm } from "@/components/dashboard/job-form";
 export default async function NewJobPage() {
   // Guard: only company members reach this.
   const { supabase, current } = await requireCompany();
-  const [{ data: forms }, { data: branches }] = await Promise.all([
+  const [{ data: forms }, { data: branches }, { data: roles }] = await Promise.all([
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("branches").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("name"),
   ]);
 
   return (
@@ -29,7 +30,7 @@ export default async function NewJobPage() {
       </p>
 
       <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-        <JobForm action={createJob} submitLabel="Save draft" forms={forms ?? []} branches={branches ?? []} />
+        <JobForm action={createJob} submitLabel="Save draft" forms={forms ?? []} branches={branches ?? []} roles={roles ?? []} />
       </div>
     </div>
   );

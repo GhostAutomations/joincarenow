@@ -70,8 +70,8 @@ export default async function EmployeeDetailPage({
       .order("created_at", { ascending: false }),
   ]);
 
-  // Roster for the manager dropdown (admins + managers) + branch list.
-  const [{ data: rosterRaw }, { data: branchList }] = await Promise.all([
+  // Roster for the manager dropdown (admins + managers) + branch + role lists.
+  const [{ data: rosterRaw }, { data: branchList }, { data: roleList }] = await Promise.all([
     supabase
       .from("company_users")
       .select("user_id, role, profiles ( full_name, email )")
@@ -79,6 +79,11 @@ export default async function EmployeeDetailPage({
       .in("role", ["admin", "manager"]),
     supabase
       .from("branches")
+      .select("id, name")
+      .eq("company_id", current.company_id)
+      .order("name"),
+    supabase
+      .from("roles")
       .select("id, name")
       .eq("company_id", current.company_id)
       .order("name"),
@@ -183,6 +188,7 @@ export default async function EmployeeDetailPage({
               }}
               managers={managers}
               branches={branchList ?? []}
+              roles={roleList ?? []}
             />
           </div>
         </section>

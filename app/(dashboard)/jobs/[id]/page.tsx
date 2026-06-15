@@ -19,11 +19,11 @@ export default async function EditJobPage({
   const { id } = await params;
   const { supabase, current } = await requireCompany();
 
-  const [{ data: job }, { data: forms }, { data: branches }] = await Promise.all([
+  const [{ data: job }, { data: forms }, { data: branches }, { data: roles }] = await Promise.all([
     supabase
       .from("jobs")
       .select(
-        "id, title, slug, description, employment_type, branch_id, worker_category, salary, vacancies, closing_date, status, application_form_id"
+        "id, title, slug, description, employment_type, branch_id, role_id, salary, vacancies, closing_date, status, application_form_id"
       )
       .eq("id", id)
       .eq("company_id", current.company_id)
@@ -35,6 +35,11 @@ export default async function EditJobPage({
       .order("name"),
     supabase
       .from("branches")
+      .select("id, name")
+      .eq("company_id", current.company_id)
+      .order("name"),
+    supabase
+      .from("roles")
       .select("id, name")
       .eq("company_id", current.company_id)
       .order("name"),
@@ -118,13 +123,14 @@ export default async function EditJobPage({
           submitLabel="Save changes"
           forms={forms ?? []}
           branches={branches ?? []}
+          roles={roles ?? []}
           defaults={{
             id: job.id,
             title: job.title,
             description: job.description ?? "",
             employment_type: job.employment_type ?? "",
             branch_id: job.branch_id ?? "",
-            worker_category: job.worker_category ?? "",
+            role_id: job.role_id ?? "",
             salary: job.salary ?? "",
             vacancies: job.vacancies,
             closing_date: job.closing_date ?? "",

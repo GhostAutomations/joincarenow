@@ -12,7 +12,7 @@ export type JobDefaults = {
   description?: string;
   employment_type?: string;
   branch_id?: string;
-  worker_category?: string;
+  role_id?: string;
   salary?: string;
   vacancies?: number;
   closing_date?: string;
@@ -36,12 +36,14 @@ export function JobForm({
   submitLabel,
   forms = [],
   branches = [],
+  roles = [],
 }: {
   action: Action;
   defaults?: JobDefaults;
   submitLabel: string;
   forms?: { id: string; name: string }[];
   branches?: { id: string; name: string }[];
+  roles?: { id: string; name: string }[];
 }) {
   const [state, formAction] = useActionState<JobState, FormData>(action, undefined);
 
@@ -106,18 +108,26 @@ export function JobForm({
           </p>
         </div>
         <div>
-          <label htmlFor="worker_category" className="block text-sm font-medium text-gray-700">
-            Worker category
+          <label htmlFor="role_id" className="block text-sm font-medium text-gray-700">
+            Role
           </label>
-          <input
-            id="worker_category"
-            name="worker_category"
-            defaultValue={defaults?.worker_category}
-            placeholder="e.g. Walker, Driver"
+          <select
+            id="role_id"
+            name="role_id"
+            defaultValue={defaults?.role_id ?? ""}
             className={inputClass}
-          />
+          >
+            <option value="">Select a role…</option>
+            {roles.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
           <p className="mt-1 text-xs text-gray-500">
-            The type of worker this role is. Drives the employee breakdown.
+            {roles.length === 0
+              ? "Add roles in Settings first."
+              : "Follows the hire onto their employee record and drives the breakdown."}
           </p>
         </div>
         <div>

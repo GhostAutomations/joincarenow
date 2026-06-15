@@ -23,10 +23,12 @@ export function EmployeeEditForm({
   employee,
   managers,
   branches,
+  roles,
 }: {
   employee: EmployeeFields;
   managers: { user_id: string; name: string }[];
   branches: { id: string; name: string }[];
+  roles: { id: string; name: string }[];
 }) {
   const [state, action] = useActionState<EmployeeState, FormData>(updateEmployee, undefined);
   const [saved, setSaved] = useState(false);
@@ -67,8 +69,19 @@ export function EmployeeEditForm({
           </select>
         </label>
         <label className="text-xs font-medium text-gray-600">
-          Worker category
-          <input name="workerCategory" defaultValue={employee.worker_category ?? ""} className={cls} />
+          Role
+          <select name="workerCategory" defaultValue={employee.worker_category ?? ""} className={cls}>
+            <option value="">No role</option>
+            {employee.worker_category &&
+              !roles.some((r) => r.name === employee.worker_category) && (
+                <option value={employee.worker_category}>{employee.worker_category}</option>
+              )}
+            {roles.map((r) => (
+              <option key={r.id} value={r.name}>
+                {r.name}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="text-xs font-medium text-gray-600">
           Mobile number

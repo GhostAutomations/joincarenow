@@ -61,9 +61,18 @@ export async function changeStage(
     });
   }
 
+  // Hiring creates the master employee record (idempotent — one per
+  // hired application). This is the source of truth downstream systems read.
+  if (stage === "hired") {
+    await supabase.rpc("create_employee_from_application", {
+      p_application_id: applicationId,
+    });
+  }
+
   revalidatePath("/pipeline");
   revalidatePath("/onboarding-board");
   revalidatePath("/applicants");
+  revalidatePath("/employees");
   return { ok: true };
 }
 

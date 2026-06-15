@@ -1,0 +1,152 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { requireCompany } from "@/modules/auth/queries";
+import { EmployeeEditForm } from "@/components/dashboard/employee-edit-form";
+
+type Employee = {
+  id: string;
+  company_id: string;
+  applicant_id: string | null;
+  application_id: string | null;
+  employee_ref: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+  job_title: string | null;
+  department: string | null;
+  location: string | null;
+  manager_id: string | null;
+  start_date: string | null;
+  training_group: string | null;
+  status: "active" | "inactive" | "left";
+  created_at: string;
+};
+
+export default async function EmployeeDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const { supabase, current } = await requireCompany();
+
+  const { data: employee } = await supabase
+    .from("employees")
+    .select(
+      "id, company_id, applicant_id, application_id, employee_ref, first_name, last_name, email, phone, job_title, department, location, manager_id, start_date, training_group, status, created_at"
+    )
+    .eq("id", id)
+    .eq("company_id", current.company_id)
+    .maybeSingle<Employee>();
+
+  if (!employee) notFound();
+
+  // Roster for the manager dropdown (admins + managers).
+  const { data: rosterRaw } = await supabase
+    .from("company_users")
+    .select("user_id, role, profiles ( full_name, email )")
+    .eq("company_id", current.company_id)
+    .in("role", ["admin", "manager"]);
+
+  const managers = (rosterRaw ?? []).map((m) => {
+    const p = m.profiles as unknown as { full_name: string | null; email: string } | null;
+    return { user_id: m.user_id as string, name: p?.full_name || p?.email || "Team member" };
+  });
+
+  const fullName =
+    [employee.first_name, employee.last_name].filter(Boolean).join(" ") ||
+    employee.email ||
+    "Employee";
+  const managerName = managers.find((m) => m.user_id === employee.manager_id)?.name;
+
+  return (
+    <div>
+      <Link
+        href="/employees"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
+      >
+        <ArrowLeft className="h-4 w-4" /> All employees
+      </Link>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <h1 className="text-2xl font-semibold text-gray-900">{fullName}</h1>
+        <span className="rounded-full bg-brand-50 px-2.5 py-0.5 font-mono text-xs text-brand-700">
+          {employee.employee_ref}
+        </span>
+        <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium capitalize text-gray-700">
+          {employee.status}
+        </span>
+      </div>
+      <p className="mt-1 text-sm text-gray-500">
+        Hired {new Date(employee.created_at).toLocaleDateString("en-GB")}
+        {managerName && ` · Reports to ${managerName}`}
+      </p>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Master record (read-only summary) */}
+        <section className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-base font-medium text-gray-900">Master profile</h2>
+          <p className="mt-1 text-xs text-gray-400">
+            The source of truth shared with connected systems.
+          </p>
+          <dl className="mt-4 space-y-3 text-sm">
+            <div>
+              <dt className="text-gray-500">Email</dt>
+              <dd className="font-medium text-gray-900">{employee.email || "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-gray-500">Mobile</dt>
+              <dd className="font-medium text-gray-900">{employee.phone || "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-gray-500">Role</dt>
+              <dd className="font-medium text-gray-900">{employee.job_title || "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-gray-500">Start date</dt>
+              <dd className="font-medium text-gray-900">
+                {employee.start_date
+                  ? new Date(employee.start_date).toLocaleDateString("en-GB")
+                  : "—"}
+              </dd>
+            </div>
+          </dl>
+          {employee.applicant_id && (
+            <Link
+              href="/pipeline"
+              className="mt-5 inline-block text-sm text-brand-600 hover:underline"
+            >
+              View recruitment history →
+            </Link>
+          )}
+        </section>
+
+        {/* Editable fields */}
+        <section className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-base font-medium text-gray-900">Employment details</h2>
+          <p className="mt-1 text-xs text-gray-400">
+            These feed the Carer.Academy sync and future connected systems.
+          </p>
+          <div className="mt-4">
+            <EmployeeEditForm
+              employee={{
+                id: employee.id,
+                job_title: employee.job_title,
+                department: employee.department,
+                location: employee.location,
+                training_group: employee.training_group,
+                phone: employee.phone,
+                start_date: employee.start_date,
+                manager_id: employee.manager_id,
+                status: employee.status,
+              }}
+              managers={managers}
+            />
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

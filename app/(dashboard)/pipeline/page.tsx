@@ -24,7 +24,12 @@ type Row = {
 
 type InterviewRow = Interview & { application_id: string };
 
-export default async function PipelinePage() {
+export default async function PipelinePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ open?: string }>;
+}) {
+  const { open } = await searchParams;
   const { supabase, current } = await requireCompany();
 
   const [{ data }, { data: ivData }, { data: companyRow }] = await Promise.all([
@@ -127,5 +132,5 @@ export default async function PipelinePage() {
     customAnswers: answersByApp.get(r.id) ?? [],
   }));
 
-  return <PipelineBoard initial={apps} interviewAddress={interviewAddress} />;
+  return <PipelineBoard initial={apps} interviewAddress={interviewAddress} openId={open ?? null} />;
 }

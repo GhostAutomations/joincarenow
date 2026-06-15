@@ -1,4 +1,5 @@
 import { signOut } from "@/modules/auth/actions";
+import { NotificationsBell } from "@/components/dashboard/notifications-bell";
 
 export function Topbar({ userName }: { userName: string }) {
   return (
@@ -8,7 +9,8 @@ export function Topbar({ userName }: { userName: string }) {
         Join Care Now
       </span>
       <div className="hidden md:block" />
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <NotificationsBell />
         <span className="text-sm text-gray-700">{userName}</span>
         <form action={signOut}>
           <button

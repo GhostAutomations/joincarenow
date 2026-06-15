@@ -73,14 +73,16 @@ function fullName(a: AppCard) {
 export function PipelineBoard({
   initial,
   interviewAddress,
+  openId = null,
 }: {
   initial: AppCard[];
   interviewAddress: string;
+  openId?: string | null;
 }) {
   const router = useRouter();
   const [apps, setApps] = useState(initial);
   const [view, setView] = useState<"board" | "table">("board");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(openId);
   const [dragId, setDragId] = useState<string | null>(null);
 
   // Keep local state in sync when the server data refreshes.

@@ -71,7 +71,7 @@ export async function POST(req: Request) {
   const fromKey = last10(from);
   const { data: applicants } = await admin
     .from("applicants")
-    .select("id, phone")
+    .select("id, phone, first_name, last_name")
     .not("phone", "is", null);
   const applicant = (applicants ?? []).find((a) => last10(a.phone) === fromKey);
   if (!applicant) return xml(200); // unknown sender — ignore quietly
@@ -96,6 +96,26 @@ export async function POST(req: Request) {
     body,
     status: "delivered",
   });
+
+  // Notify every team member of the company so they see the reply anywhere.
+  const name =
+    [applicant.first_name, applicant.last_name].filter(Boolean).join(" ") || "An applicant";
+  const { data: members } = await admin
+    .from("company_users")
+    .select("user_id")
+    .eq("company_id", app.company_id);
+  if (members && members.length > 0) {
+    await admin.from("notifications").insert(
+      members.map((m) => ({
+        company_id: app.company_id,
+        user_id: m.user_id,
+        type: "sms_received",
+        title: `New SMS from ${name}`,
+        body: body.slice(0, 160),
+        link: `/pipeline?open=${app.id}`,
+      }))
+    );
+  }
 
   return xml(200);
 }

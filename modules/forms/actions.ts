@@ -346,6 +346,25 @@ export async function addFieldOfType(formData: FormData): Promise<string | null>
   return created.id;
 }
 
+/** Persist a new field order (from drag-and-drop). */
+export async function reorderFields(formId: string, orderedIds: string[]) {
+  if (!formId || !Array.isArray(orderedIds)) return;
+  const { supabase, current } = await requireCompany();
+  const { data: form } = await supabase
+    .from("forms")
+    .select("id")
+    .eq("id", formId)
+    .eq("company_id", current.company_id)
+    .single();
+  if (!form) return;
+  await Promise.all(
+    orderedIds.map((fid, i) =>
+      supabase.from("form_fields").update({ position: i }).eq("id", fid).eq("form_id", formId)
+    )
+  );
+  revalidatePath(`/forms/${formId}/build`);
+}
+
 export async function deleteField(formData: FormData) {
   const id = formData.get("id");
   const formId = formData.get("formId");

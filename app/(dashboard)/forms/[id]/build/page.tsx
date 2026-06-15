@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { PdfImport } from "@/components/dashboard/pdf-import";
 import { BuildTabs } from "@/components/dashboard/build-tabs";
-import { FormBuilder3, type BuilderField } from "@/components/dashboard/form-builder-3";
+import { MondayFormBuilder, type BuilderField } from "@/components/dashboard/monday-form-builder";
 
 // PDF import calls Claude, which can take longer than the default function
 // limit. Allow up to 60s (Vercel Hobby cap) for this route's server actions.
@@ -34,7 +34,7 @@ export default async function FormBuildPage({
   const fields = (fieldsData ?? []) as BuilderField[];
 
   const builder = (
-    <FormBuilder3
+    <MondayFormBuilder
       form={{
         id: form.id,
         name: form.name,

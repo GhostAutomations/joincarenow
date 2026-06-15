@@ -6,6 +6,7 @@ import { FileText, X, Phone, Mail, MapPin, CalendarClock } from "lucide-react";
 import { changeStage, getCvUrl } from "@/modules/applications/actions";
 import { scheduleInterview } from "@/modules/interviews/actions";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
+import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 
 export type Interview = {
   id: string;
@@ -380,6 +381,10 @@ function ApplicantPanel({
               <p className="mt-0.5 text-sm text-gray-500">No CV uploaded.</p>
             )}
             {cvError && <p className="mt-1 text-xs text-red-600">{cvError}</p>}
+          </div>
+
+          <div className="border-t border-gray-100 pt-5">
+            <ApplicantComms applicationId={app.id} email={app.email} phone={app.phone} />
           </div>
         </div>
       </aside>

@@ -6,8 +6,8 @@ node_modules/
 out/
 next-env.d.ts
 
-# production
-build/
+# production (root build output only — not nested route folders named "build")
+/build/
 
 # env — never commit secrets
 .env

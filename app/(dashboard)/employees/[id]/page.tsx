@@ -22,8 +22,8 @@ type Employee = {
   phone: string | null;
   job_title: string | null;
   department: string | null;
-  location: string | null;
-  region: string | null;
+  branch_id: string | null;
+  branch: string | null;
   worker_category: string | null;
   manager_id: string | null;
   start_date: string | null;
@@ -43,7 +43,7 @@ export default async function EmployeeDetailPage({
   const { data: employee } = await supabase
     .from("employees")
     .select(
-      "id, company_id, applicant_id, application_id, employee_ref, first_name, last_name, email, phone, job_title, department, location, region, worker_category, manager_id, start_date, training_group, status, created_at"
+      "id, company_id, applicant_id, application_id, employee_ref, first_name, last_name, email, phone, job_title, department, branch_id, branch, worker_category, manager_id, start_date, training_group, status, created_at"
     )
     .eq("id", id)
     .eq("company_id", current.company_id)
@@ -70,12 +70,19 @@ export default async function EmployeeDetailPage({
       .order("created_at", { ascending: false }),
   ]);
 
-  // Roster for the manager dropdown (admins + managers).
-  const { data: rosterRaw } = await supabase
-    .from("company_users")
-    .select("user_id, role, profiles ( full_name, email )")
-    .eq("company_id", current.company_id)
-    .in("role", ["admin", "manager"]);
+  // Roster for the manager dropdown (admins + managers) + branch list.
+  const [{ data: rosterRaw }, { data: branchList }] = await Promise.all([
+    supabase
+      .from("company_users")
+      .select("user_id, role, profiles ( full_name, email )")
+      .eq("company_id", current.company_id)
+      .in("role", ["admin", "manager"]),
+    supabase
+      .from("branches")
+      .select("id, name")
+      .eq("company_id", current.company_id)
+      .order("name"),
+  ]);
 
   const managers = (rosterRaw ?? []).map((m) => {
     const p = m.profiles as unknown as { full_name: string | null; email: string } | null;
@@ -132,6 +139,10 @@ export default async function EmployeeDetailPage({
               <dd className="font-medium text-gray-900">{employee.job_title || "—"}</dd>
             </div>
             <div>
+              <dt className="text-gray-500">Branch</dt>
+              <dd className="font-medium text-gray-900">{employee.branch || "—"}</dd>
+            </div>
+            <div>
               <dt className="text-gray-500">Start date</dt>
               <dd className="font-medium text-gray-900">
                 {employee.start_date
@@ -162,8 +173,7 @@ export default async function EmployeeDetailPage({
                 id: employee.id,
                 job_title: employee.job_title,
                 department: employee.department,
-                location: employee.location,
-                region: employee.region,
+                branch_id: employee.branch_id,
                 worker_category: employee.worker_category,
                 training_group: employee.training_group,
                 phone: employee.phone,
@@ -172,6 +182,7 @@ export default async function EmployeeDetailPage({
                 status: employee.status,
               }}
               managers={managers}
+              branches={branchList ?? []}
             />
           </div>
         </section>

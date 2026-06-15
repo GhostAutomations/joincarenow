@@ -10,8 +10,7 @@ export type EmployeeFields = {
   id: string;
   job_title: string | null;
   department: string | null;
-  location: string | null;
-  region: string | null;
+  branch_id: string | null;
   worker_category: string | null;
   training_group: string | null;
   phone: string | null;
@@ -23,9 +22,11 @@ export type EmployeeFields = {
 export function EmployeeEditForm({
   employee,
   managers,
+  branches,
 }: {
   employee: EmployeeFields;
   managers: { user_id: string; name: string }[];
+  branches: { id: string; name: string }[];
 }) {
   const [state, action] = useActionState<EmployeeState, FormData>(updateEmployee, undefined);
   const [saved, setSaved] = useState(false);
@@ -55,12 +56,15 @@ export function EmployeeEditForm({
           <input name="department" defaultValue={employee.department ?? ""} className={cls} />
         </label>
         <label className="text-xs font-medium text-gray-600">
-          Location
-          <input name="location" defaultValue={employee.location ?? ""} className={cls} />
-        </label>
-        <label className="text-xs font-medium text-gray-600">
-          Area / region
-          <input name="region" defaultValue={employee.region ?? ""} className={cls} />
+          Branch
+          <select name="branchId" defaultValue={employee.branch_id ?? ""} className={cls}>
+            <option value="">No branch</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="text-xs font-medium text-gray-600">
           Worker category

@@ -20,15 +20,29 @@ export async function updateEmployee(
     return { error: "Invalid status" };
   }
   const managerId = formData.get("managerId")?.toString() || null;
+  const branchId = formData.get("branchId")?.toString() || null;
 
   const { supabase, current } = await requireCompany();
+
+  // Snapshot the branch name so the breakdown is resilient to renames/deletes.
+  let branchName: string | null = null;
+  if (branchId) {
+    const { data: b } = await supabase
+      .from("branches")
+      .select("name")
+      .eq("id", branchId)
+      .eq("company_id", current.company_id)
+      .maybeSingle();
+    branchName = b?.name ?? null;
+  }
+
   const { error } = await supabase
     .from("employees")
     .update({
       job_title: formData.get("jobTitle")?.toString()?.trim() || null,
       department: formData.get("department")?.toString()?.trim() || null,
-      location: formData.get("location")?.toString()?.trim() || null,
-      region: formData.get("region")?.toString()?.trim() || null,
+      branch_id: branchId,
+      branch: branchName,
       worker_category: formData.get("workerCategory")?.toString()?.trim() || null,
       training_group: formData.get("trainingGroup")?.toString()?.trim() || null,
       phone: formData.get("phone")?.toString()?.trim() || null,

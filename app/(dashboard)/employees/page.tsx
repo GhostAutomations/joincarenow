@@ -9,7 +9,7 @@ type EmployeeRow = {
   last_name: string | null;
   email: string | null;
   job_title: string | null;
-  region: string | null;
+  branch: string | null;
   worker_category: string | null;
   start_date: string | null;
   status: "active" | "inactive" | "left";
@@ -32,26 +32,26 @@ export default async function EmployeesPage({
   const { data } = await supabase
     .from("employees")
     .select(
-      "id, employee_ref, first_name, last_name, email, job_title, region, worker_category, start_date, status"
+      "id, employee_ref, first_name, last_name, email, job_title, branch, worker_category, start_date, status"
     )
     .eq("company_id", current.company_id)
     .order("created_at", { ascending: false });
 
   const allEmployees = (data ?? []) as EmployeeRow[];
 
-  // Build the region → worker-category breakdown from active employees.
+  // Build the branch → worker-category breakdown from active employees.
   const active = allEmployees.filter((e) => e.status === "active");
-  const regionMap = new Map<string, Map<string, number>>();
+  const branchMap = new Map<string, Map<string, number>>();
   for (const e of active) {
-    const region = e.region?.trim() || "Unassigned";
+    const branch = e.branch?.trim() || "Unassigned";
     const category = e.worker_category?.trim() || "Uncategorised";
-    const cats = regionMap.get(region) ?? new Map<string, number>();
+    const cats = branchMap.get(branch) ?? new Map<string, number>();
     cats.set(category, (cats.get(category) ?? 0) + 1);
-    regionMap.set(region, cats);
+    branchMap.set(branch, cats);
   }
-  const regions = [...regionMap.entries()]
-    .map(([region, cats]) => ({
-      region,
+  const branches = [...branchMap.entries()]
+    .map(([branch, cats]) => ({
+      branch,
       total: [...cats.values()].reduce((a, b) => a + b, 0),
       categories: [...cats.entries()].sort((a, b) => b[1] - a[1]),
     }))
@@ -77,20 +77,20 @@ export default async function EmployeesPage({
         The master record for everyone hired through Join Care Now. Created automatically when an applicant reaches Hired.
       </p>
 
-      {regions.length > 0 && (
+      {branches.length > 0 && (
         <div className="mt-6">
           <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <Users className="h-4 w-4 text-gray-400" />
             {active.length} active {active.length === 1 ? "employee" : "employees"} across{" "}
-            {regions.length} {regions.length === 1 ? "region" : "regions"}
+            {branches.length} {branches.length === 1 ? "branch" : "branches"}
           </div>
           <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {regions.map((r) => (
-              <div key={r.region} className="rounded-xl border border-gray-200 bg-white p-4">
+            {branches.map((r) => (
+              <div key={r.branch} className="rounded-xl border border-gray-200 bg-white p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
                     <MapPin className="h-4 w-4 text-brand-500" />
-                    {r.region}
+                    {r.branch}
                   </div>
                   <span className="text-lg font-semibold text-gray-900">{r.total}</span>
                 </div>
@@ -135,7 +135,7 @@ export default async function EmployeesPage({
                 <th className="px-4 py-3">Employee ID</th>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3">Region</th>
+                <th className="px-4 py-3">Branch</th>
                 <th className="px-4 py-3">Start date</th>
                 <th className="px-4 py-3">Status</th>
               </tr>
@@ -160,7 +160,7 @@ export default async function EmployeesPage({
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{e.region || "—"}</td>
+                    <td className="px-4 py-3 text-gray-600">{e.branch || "—"}</td>
                     <td className="px-4 py-3 text-gray-600">
                       {e.start_date ? new Date(e.start_date).toLocaleDateString("en-GB") : "—"}
                     </td>

@@ -11,8 +11,7 @@ export type JobDefaults = {
   title?: string;
   description?: string;
   employment_type?: string;
-  location?: string;
-  region?: string;
+  branch_id?: string;
   worker_category?: string;
   salary?: string;
   vacancies?: number;
@@ -36,11 +35,13 @@ export function JobForm({
   defaults,
   submitLabel,
   forms = [],
+  branches = [],
 }: {
   action: Action;
   defaults?: JobDefaults;
   submitLabel: string;
   forms?: { id: string; name: string }[];
+  branches?: { id: string; name: string }[];
 }) {
   const [state, formAction] = useActionState<JobState, FormData>(action, undefined);
 
@@ -82,30 +83,26 @@ export function JobForm({
           </select>
         </div>
         <div>
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-            Location
+          <label htmlFor="branch_id" className="block text-sm font-medium text-gray-700">
+            Branch
           </label>
-          <input
-            id="location"
-            name="location"
-            defaultValue={defaults?.location}
-            placeholder="e.g. Cardiff"
+          <select
+            id="branch_id"
+            name="branch_id"
+            defaultValue={defaults?.branch_id ?? ""}
             className={inputClass}
-          />
-        </div>
-        <div>
-          <label htmlFor="region" className="block text-sm font-medium text-gray-700">
-            Area / region
-          </label>
-          <input
-            id="region"
-            name="region"
-            defaultValue={defaults?.region}
-            placeholder="e.g. North Cardiff"
-            className={inputClass}
-          />
+          >
+            <option value="">Select a branch…</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
           <p className="mt-1 text-xs text-gray-500">
-            Used to group employees once hired.
+            {branches.length === 0
+              ? "Add branches in Settings first."
+              : "Shown as the job location and used to group employees once hired."}
           </p>
         </div>
         <div>

@@ -39,6 +39,7 @@ export async function updateEmployee(
   const { error } = await supabase
     .from("employees")
     .update({
+      employee_ref: formData.get("employeeRef")?.toString()?.trim() || null,
       job_title: formData.get("jobTitle")?.toString()?.trim() || null,
       department: formData.get("department")?.toString()?.trim() || null,
       branch_id: branchId,
@@ -53,7 +54,10 @@ export async function updateEmployee(
     .eq("id", id)
     .eq("company_id", current.company_id);
 
-  if (error) return { error: "Could not save. Please try again." };
+  if (error) {
+    if (error.code === "23505") return { error: "That employee number is already in use." };
+    return { error: "Could not save. Please try again." };
+  }
 
   revalidatePath("/employees");
   revalidatePath(`/employees/${id}`);

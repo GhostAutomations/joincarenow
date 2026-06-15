@@ -8,6 +8,7 @@ const cls =
 
 export type EmployeeFields = {
   id: string;
+  employee_ref: string | null;
   job_title: string | null;
   department: string | null;
   branch_id: string | null;
@@ -49,6 +50,15 @@ export function EmployeeEditForm({
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label className="text-xs font-medium text-gray-600">
+          Employee number
+          <input
+            name="employeeRef"
+            defaultValue={employee.employee_ref ?? ""}
+            placeholder="e.g. payroll number"
+            className={cls}
+          />
+        </label>
         <label className="text-xs font-medium text-gray-600">
           Job role
           <input name="jobTitle" defaultValue={employee.job_title ?? ""} className={cls} />

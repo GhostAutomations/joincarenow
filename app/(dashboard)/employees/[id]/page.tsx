@@ -176,6 +176,7 @@ export default async function EmployeeDetailPage({
             <EmployeeEditForm
               employee={{
                 id: employee.id,
+                employee_ref: employee.employee_ref,
                 job_title: employee.job_title,
                 department: employee.department,
                 branch_id: employee.branch_id,

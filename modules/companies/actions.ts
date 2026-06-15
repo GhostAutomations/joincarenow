@@ -128,3 +128,40 @@ export async function setInterviewAddress(
   revalidatePath("/settings");
   return { ok: true };
 }
+
+/** Admins choose how Employee IDs are assigned: auto-generated with a prefix,
+ *  or entered manually (for companies with their own payroll numbers). */
+export async function setEmployeeNumberSettings(
+  _prev: SettingsState,
+  formData: FormData
+): Promise<SettingsState> {
+  const companyId = formData.get("companyId");
+  if (typeof companyId !== "string") return { error: "Missing company" };
+
+  const mode = formData.get("mode") === "manual" ? "manual" : "auto";
+  let prefix = (formData.get("prefix")?.toString() ?? "").trim().slice(0, 20);
+  if (mode === "auto" && !prefix) prefix = "EMP-";
+
+  const supabase = await createClient();
+  const { data: company } = await supabase
+    .from("companies")
+    .select("settings")
+    .eq("id", companyId)
+    .single();
+
+  const settings = {
+    ...((company?.settings as Record<string, unknown>) ?? {}),
+    employee_number_mode: mode,
+    employee_number_prefix: prefix,
+  };
+
+  const { error } = await supabase
+    .from("companies")
+    .update({ settings })
+    .eq("id", companyId);
+
+  if (error) return { error: "Could not save. Please try again." };
+
+  revalidatePath("/settings");
+  return { ok: true };
+}

@@ -4,6 +4,7 @@ import { PendingInvites } from "@/components/dashboard/pending-invites";
 import { InterviewAddressForm } from "@/components/dashboard/interview-address-form";
 import { BranchesManager } from "@/components/dashboard/branches-manager";
 import { RolesManager } from "@/components/dashboard/roles-manager";
+import { EmployeeNumberSettings } from "@/components/dashboard/employee-number-settings";
 
 export default async function SettingsPage() {
   const { supabase, current } = await requireCompany();
@@ -24,9 +25,14 @@ export default async function SettingsPage() {
     .select("settings")
     .eq("id", current.company_id)
     .single();
-  const interviewAddress =
-    ((companyRow?.settings as { interview_address?: string } | null)
-      ?.interview_address) ?? "";
+  const settings = (companyRow?.settings as {
+    interview_address?: string;
+    employee_number_mode?: string;
+    employee_number_prefix?: string;
+  } | null) ?? {};
+  const interviewAddress = settings.interview_address ?? "";
+  const empNumberMode = settings.employee_number_mode === "manual" ? "manual" : "auto";
+  const empNumberPrefix = settings.employee_number_prefix ?? "EMP-";
 
   // Admins manage invitations. RLS only returns this company's invites.
   const { data: invites } = isAdmin
@@ -83,6 +89,20 @@ export default async function SettingsPage() {
           <div className="mt-4">
             <RolesManager roles={roles ?? []} />
           </div>
+        </section>
+      )}
+
+      {isAdmin && (
+        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-base font-medium text-gray-900">Employee numbers</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Choose how each new hire&apos;s Employee ID is set.
+          </p>
+          <EmployeeNumberSettings
+            companyId={current.company_id}
+            mode={empNumberMode}
+            prefix={empNumberPrefix}
+          />
         </section>
       )}
 

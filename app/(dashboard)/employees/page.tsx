@@ -146,7 +146,9 @@ export default async function EmployeesPage({
                   [e.first_name, e.last_name].filter(Boolean).join(" ") || e.email || "Employee";
                 return (
                   <tr key={e.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-500">{e.employee_ref}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-500">
+                      {e.employee_ref || <span className="text-gray-300">Not set</span>}
+                    </td>
                     <td className="px-4 py-3 font-medium text-gray-900">
                       <Link href={`/employees/${e.id}`} className="hover:text-brand-600 hover:underline">
                         {name}

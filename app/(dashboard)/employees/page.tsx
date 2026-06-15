@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, MapPin, Users } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 
 type EmployeeRow = {
@@ -9,6 +9,8 @@ type EmployeeRow = {
   last_name: string | null;
   email: string | null;
   job_title: string | null;
+  region: string | null;
+  worker_category: string | null;
   start_date: string | null;
   status: "active" | "inactive" | "left";
 };
@@ -29,11 +31,33 @@ export default async function EmployeesPage({
 
   const { data } = await supabase
     .from("employees")
-    .select("id, employee_ref, first_name, last_name, email, job_title, start_date, status")
+    .select(
+      "id, employee_ref, first_name, last_name, email, job_title, region, worker_category, start_date, status"
+    )
     .eq("company_id", current.company_id)
     .order("created_at", { ascending: false });
 
-  let employees = (data ?? []) as EmployeeRow[];
+  const allEmployees = (data ?? []) as EmployeeRow[];
+
+  // Build the region → worker-category breakdown from active employees.
+  const active = allEmployees.filter((e) => e.status === "active");
+  const regionMap = new Map<string, Map<string, number>>();
+  for (const e of active) {
+    const region = e.region?.trim() || "Unassigned";
+    const category = e.worker_category?.trim() || "Uncategorised";
+    const cats = regionMap.get(region) ?? new Map<string, number>();
+    cats.set(category, (cats.get(category) ?? 0) + 1);
+    regionMap.set(region, cats);
+  }
+  const regions = [...regionMap.entries()]
+    .map(([region, cats]) => ({
+      region,
+      total: [...cats.values()].reduce((a, b) => a + b, 0),
+      categories: [...cats.entries()].sort((a, b) => b[1] - a[1]),
+    }))
+    .sort((a, b) => b.total - a.total);
+
+  let employees = allEmployees;
   if (q && q.trim()) {
     const needle = q.trim().toLowerCase();
     employees = employees.filter((e) => {
@@ -53,7 +77,41 @@ export default async function EmployeesPage({
         The master record for everyone hired through Join Care Now. Created automatically when an applicant reaches Hired.
       </p>
 
-      <form method="get" className="mt-4 max-w-sm">
+      {regions.length > 0 && (
+        <div className="mt-6">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <Users className="h-4 w-4 text-gray-400" />
+            {active.length} active {active.length === 1 ? "employee" : "employees"} across{" "}
+            {regions.length} {regions.length === 1 ? "region" : "regions"}
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {regions.map((r) => (
+              <div key={r.region} className="rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
+                    <MapPin className="h-4 w-4 text-brand-500" />
+                    {r.region}
+                  </div>
+                  <span className="text-lg font-semibold text-gray-900">{r.total}</span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {r.categories.map(([cat, n]) => (
+                    <span
+                      key={cat}
+                      className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
+                    >
+                      {cat}
+                      <span className="font-semibold text-gray-900">{n}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <form method="get" className="mt-6 max-w-sm">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
           <input
@@ -77,6 +135,7 @@ export default async function EmployeesPage({
                 <th className="px-4 py-3">Employee ID</th>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Role</th>
+                <th className="px-4 py-3">Region</th>
                 <th className="px-4 py-3">Start date</th>
                 <th className="px-4 py-3">Status</th>
               </tr>
@@ -93,7 +152,15 @@ export default async function EmployeesPage({
                         {name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{e.job_title || "—"}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {e.job_title || "—"}
+                      {e.worker_category && (
+                        <span className="ml-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                          {e.worker_category}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{e.region || "—"}</td>
                     <td className="px-4 py-3 text-gray-600">
                       {e.start_date ? new Date(e.start_date).toLocaleDateString("en-GB") : "—"}
                     </td>

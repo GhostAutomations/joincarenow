@@ -11,6 +11,8 @@ export type EmployeeFields = {
   job_title: string | null;
   department: string | null;
   location: string | null;
+  region: string | null;
+  worker_category: string | null;
   training_group: string | null;
   phone: string | null;
   start_date: string | null;
@@ -55,6 +57,14 @@ export function EmployeeEditForm({
         <label className="text-xs font-medium text-gray-600">
           Location
           <input name="location" defaultValue={employee.location ?? ""} className={cls} />
+        </label>
+        <label className="text-xs font-medium text-gray-600">
+          Area / region
+          <input name="region" defaultValue={employee.region ?? ""} className={cls} />
+        </label>
+        <label className="text-xs font-medium text-gray-600">
+          Worker category
+          <input name="workerCategory" defaultValue={employee.worker_category ?? ""} className={cls} />
         </label>
         <label className="text-xs font-medium text-gray-600">
           Mobile number

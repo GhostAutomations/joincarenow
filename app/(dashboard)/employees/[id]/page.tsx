@@ -3,6 +3,12 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { EmployeeEditForm } from "@/components/dashboard/employee-edit-form";
+import {
+  EmployeeHr,
+  type Absence,
+  type Warning,
+  type HrDoc,
+} from "@/components/dashboard/employee-hr";
 
 type Employee = {
   id: string;
@@ -17,6 +23,8 @@ type Employee = {
   job_title: string | null;
   department: string | null;
   location: string | null;
+  region: string | null;
+  worker_category: string | null;
   manager_id: string | null;
   start_date: string | null;
   training_group: string | null;
@@ -35,13 +43,32 @@ export default async function EmployeeDetailPage({
   const { data: employee } = await supabase
     .from("employees")
     .select(
-      "id, company_id, applicant_id, application_id, employee_ref, first_name, last_name, email, phone, job_title, department, location, manager_id, start_date, training_group, status, created_at"
+      "id, company_id, applicant_id, application_id, employee_ref, first_name, last_name, email, phone, job_title, department, location, region, worker_category, manager_id, start_date, training_group, status, created_at"
     )
     .eq("id", id)
     .eq("company_id", current.company_id)
     .maybeSingle<Employee>();
 
   if (!employee) notFound();
+
+  // HR records for this employee.
+  const [{ data: absences }, { data: warnings }, { data: documents }] = await Promise.all([
+    supabase
+      .from("employee_absences")
+      .select("id, absence_type, start_date, end_date, days, reason")
+      .eq("employee_id", id)
+      .order("start_date", { ascending: false }),
+    supabase
+      .from("employee_warnings")
+      .select("id, level, title, note, issued_date, review_date")
+      .eq("employee_id", id)
+      .order("issued_date", { ascending: false }),
+    supabase
+      .from("employee_documents")
+      .select("id, doc_type, title, issued_date, expiry_date")
+      .eq("employee_id", id)
+      .order("created_at", { ascending: false }),
+  ]);
 
   // Roster for the manager dropdown (admins + managers).
   const { data: rosterRaw } = await supabase
@@ -136,6 +163,8 @@ export default async function EmployeeDetailPage({
                 job_title: employee.job_title,
                 department: employee.department,
                 location: employee.location,
+                region: employee.region,
+                worker_category: employee.worker_category,
                 training_group: employee.training_group,
                 phone: employee.phone,
                 start_date: employee.start_date,
@@ -146,6 +175,16 @@ export default async function EmployeeDetailPage({
             />
           </div>
         </section>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="mb-3 text-base font-medium text-gray-900">HR record</h2>
+        <EmployeeHr
+          employeeId={employee.id}
+          absences={(absences ?? []) as Absence[]}
+          warnings={(warnings ?? []) as Warning[]}
+          documents={(documents ?? []) as HrDoc[]}
+        />
       </div>
     </div>
   );

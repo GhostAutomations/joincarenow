@@ -23,7 +23,7 @@ export default async function EditJobPage({
     supabase
       .from("jobs")
       .select(
-        "id, title, slug, description, employment_type, location, salary, vacancies, closing_date, status, application_form_id"
+        "id, title, slug, description, employment_type, location, region, worker_category, salary, vacancies, closing_date, status, application_form_id"
       )
       .eq("id", id)
       .eq("company_id", current.company_id)
@@ -118,6 +118,8 @@ export default async function EditJobPage({
             description: job.description ?? "",
             employment_type: job.employment_type ?? "",
             location: job.location ?? "",
+            region: job.region ?? "",
+            worker_category: job.worker_category ?? "",
             salary: job.salary ?? "",
             vacancies: job.vacancies,
             closing_date: job.closing_date ?? "",

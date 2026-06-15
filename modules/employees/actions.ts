@@ -28,6 +28,8 @@ export async function updateEmployee(
       job_title: formData.get("jobTitle")?.toString()?.trim() || null,
       department: formData.get("department")?.toString()?.trim() || null,
       location: formData.get("location")?.toString()?.trim() || null,
+      region: formData.get("region")?.toString()?.trim() || null,
+      worker_category: formData.get("workerCategory")?.toString()?.trim() || null,
       training_group: formData.get("trainingGroup")?.toString()?.trim() || null,
       phone: formData.get("phone")?.toString()?.trim() || null,
       start_date: formData.get("startDate")?.toString() || null,

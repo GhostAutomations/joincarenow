@@ -12,6 +12,8 @@ export type JobDefaults = {
   description?: string;
   employment_type?: string;
   location?: string;
+  region?: string;
+  worker_category?: string;
   salary?: string;
   vacancies?: number;
   closing_date?: string;
@@ -90,6 +92,36 @@ export function JobForm({
             placeholder="e.g. Cardiff"
             className={inputClass}
           />
+        </div>
+        <div>
+          <label htmlFor="region" className="block text-sm font-medium text-gray-700">
+            Area / region
+          </label>
+          <input
+            id="region"
+            name="region"
+            defaultValue={defaults?.region}
+            placeholder="e.g. North Cardiff"
+            className={inputClass}
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Used to group employees once hired.
+          </p>
+        </div>
+        <div>
+          <label htmlFor="worker_category" className="block text-sm font-medium text-gray-700">
+            Worker category
+          </label>
+          <input
+            id="worker_category"
+            name="worker_category"
+            defaultValue={defaults?.worker_category}
+            placeholder="e.g. Walker, Driver"
+            className={inputClass}
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            The type of worker this role is. Drives the employee breakdown.
+          </p>
         </div>
         <div>
           <label htmlFor="salary" className="block text-sm font-medium text-gray-700">

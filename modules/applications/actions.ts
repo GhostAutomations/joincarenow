@@ -52,7 +52,13 @@ export async function changeStage(
     p_after: { stage },
   });
 
+  // Hiring kicks off onboarding (idempotent — only creates tasks once).
+  if (stage === "hired") {
+    await supabase.rpc("start_onboarding", { p_application_id: applicationId });
+  }
+
   revalidatePath("/pipeline");
+  revalidatePath("/onboarding-board");
   revalidatePath("/applicants");
   return { ok: true };
 }

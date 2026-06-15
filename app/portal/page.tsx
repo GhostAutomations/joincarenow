@@ -5,6 +5,10 @@ import {
   InterviewInvite,
   type PortalInterview,
 } from "@/components/portal/interview-invite";
+import {
+  OnboardingTaskItem,
+  type PortalTask,
+} from "@/components/portal/onboarding-task-item";
 
 type MyApplication = {
   application_id: string;
@@ -42,10 +46,12 @@ export default async function PortalPage({
   const { supabase, user } = await requireApplicant();
   const { applied } = await searchParams;
 
-  const [{ data }, { data: ivData }] = await Promise.all([
+  const [{ data }, { data: ivData }, { data: onbData }] = await Promise.all([
     supabase.rpc("get_my_applications"),
     supabase.rpc("get_my_interviews"),
+    supabase.rpc("get_my_onboarding"),
   ]);
+  const onboarding = (onbData ?? []) as PortalTask[];
   const applications = (data ?? []) as MyApplication[];
   const interviewByApp = new Map<string, PortalInterview>();
   for (const iv of (ivData ?? []) as (PortalInterview & {
@@ -117,6 +123,20 @@ export default async function PortalPage({
               );
             })}
           </ul>
+        )}
+
+        {onboarding.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-xl font-semibold text-gray-900">Onboarding</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Complete these tasks to finish joining. Your employer will review them.
+            </p>
+            <ul className="mt-4 space-y-3">
+              {onboarding.map((t) => (
+                <OnboardingTaskItem key={t.task_id} task={t} />
+              ))}
+            </ul>
+          </section>
         )}
       </div>
     </main>

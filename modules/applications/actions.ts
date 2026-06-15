@@ -64,9 +64,12 @@ export async function changeStage(
   // Hiring creates the master employee record (idempotent — one per
   // hired application). This is the source of truth downstream systems read.
   if (stage === "hired") {
-    await supabase.rpc("create_employee_from_application", {
+    const { error: empErr } = await supabase.rpc("create_employee_from_application", {
       p_application_id: applicationId,
     });
+    if (empErr) {
+      return { error: `Moved to Hired, but the employee record failed: ${empErr.message}` };
+    }
   }
 
   revalidatePath("/pipeline");

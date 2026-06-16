@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireCompany } from "@/modules/auth/queries";
 import { londonToUtcIso } from "@/lib/time";
 import { AppGrid } from "@/components/dashboard/app-grid";
@@ -30,11 +31,11 @@ export default async function DashboardPage() {
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   const stats = [
-    { label: "Live jobs", value: count(jobs) },
-    { label: "Active applicants", value: count(applicants) },
-    { label: "Interviews today", value: count(interviews) },
-    { label: "In workflow", value: count(workflow) },
-    { label: "SMS this month", value: count(sms) },
+    { label: "Live jobs", value: count(jobs), href: "/jobs" },
+    { label: "Active applicants", value: count(applicants), href: "/pipeline" },
+    { label: "Interviews today", value: count(interviews), href: "/interviews" },
+    { label: "In workflow", value: count(workflow), href: "/onboarding-board" },
+    { label: "SMS this month", value: count(sms), href: "/templates" },
   ];
 
   return (
@@ -51,10 +52,14 @@ export default async function DashboardPage() {
         {/* stat cards */}
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {stats.map((s) => (
-            <div key={s.label} className="rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md">
+            <Link
+              key={s.label}
+              href={s.href}
+              className="rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/25"
+            >
               <p className="text-sm text-white/70">{s.label}</p>
               <p className="mt-1 text-3xl font-semibold">{s.value}</p>
-            </div>
+            </Link>
           ))}
         </div>
 

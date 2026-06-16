@@ -11,7 +11,7 @@ const ITEMS = [
   { href: "/jobs", label: "Jobs", icon: Briefcase, grad: "from-teal-400 to-teal-600" },
   { href: "/pipeline", label: "Pipeline", icon: KanbanSquare, grad: "from-indigo-400 to-indigo-600" },
   { href: "/interviews", label: "Interviews", icon: CalendarClock, grad: "from-violet-400 to-violet-600" },
-  { href: "/applicants", label: "Applicants", icon: Users, grad: "from-sky-400 to-sky-600" },
+  { href: "/applicants", label: "Talent Pool", icon: Users, grad: "from-sky-400 to-sky-600" },
   { href: "/onboarding-board", label: "Workflow", icon: ClipboardCheck, grad: "from-emerald-400 to-emerald-600" },
   { href: "/employees", label: "Employees", icon: IdCard, grad: "from-cyan-400 to-cyan-600" },
   { href: "/forms", label: "Forms", icon: FileText, grad: "from-amber-400 to-amber-500" },

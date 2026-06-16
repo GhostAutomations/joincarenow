@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Search } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -79,7 +78,7 @@ export default async function ApplicantsPage({
 
   return (
     <div>
-      <PageHeader title="Applicants" subtitle="Everyone who has applied to your company." />
+      <PageHeader title="Talent Pool" subtitle="Everyone who has applied to your company." />
 
       <form method="get" className="mt-4 max-w-sm">
         <div className="relative">
@@ -133,14 +132,6 @@ export default async function ApplicantsPage({
           </table>
         </div>
       )}
-
-      <p className="mt-4 text-xs text-gray-400">
-        Review and move applicants through stages on the{" "}
-        <Link href="/pipeline" className="text-brand-600 hover:underline">
-          Pipeline
-        </Link>
-        .
-      </p>
     </div>
   );
 }

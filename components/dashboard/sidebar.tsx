@@ -23,7 +23,7 @@ const NAV = [
   { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/pipeline", label: "Pipeline", icon: KanbanSquare },
   { href: "/interviews", label: "Interviews", icon: CalendarClock },
-  { href: "/applicants", label: "Applicants", icon: Users },
+  { href: "/applicants", label: "Talent Pool", icon: Users },
   { href: "/onboarding-board", label: "Workflow", icon: ClipboardCheck },
   { href: "/employees", label: "Employees", icon: IdCard },
   { href: "/forms", label: "Forms", icon: FileText },

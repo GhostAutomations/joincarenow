@@ -151,13 +151,14 @@ export function StoreBrowser({
                     <p className="mt-1.5 line-clamp-2 text-sm text-gray-600">{f.description}</p>
                   )}
 
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 flex items-center gap-1.5">
                     <button
                       onClick={() => openPreview(f.id)}
                       disabled={busyId === f.id}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                      title="Preview"
+                      className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
                     >
-                      <Eye className="h-4 w-4" /> Preview
+                      <Eye className="h-3.5 w-3.5" /> Preview
                     </button>
 
                     {isAdmin && !f.acquired && (
@@ -166,20 +167,24 @@ export function StoreBrowser({
                           <button
                             onClick={() => addOne(f.id)}
                             disabled={pending || isAdded}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+                            title="Add to my forms"
+                            className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-60"
                           >
-                            {isAdded ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                            {isAdded ? "Added" : "Add to my forms"}
+                            {isAdded ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                            {isAdded ? "Added" : "Add"}
                           </button>
                           <form action={acquireStoreForm}>
                             <input type="hidden" name="storeFormId" value={f.id} />
-                            <button className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100">
-                              <Pencil className="h-4 w-4" /> Customise &amp; add
+                            <button
+                              title="Customise & add"
+                              className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                            >
+                              <Pencil className="h-3.5 w-3.5" /> Customise
                             </button>
                           </form>
                         </>
                       ) : (
-                        <span className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-400">
+                        <span className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs font-medium text-gray-400">
                           Requires {TIER_LABEL[f.store_tier] ?? f.store_tier} plan
                         </span>
                       )

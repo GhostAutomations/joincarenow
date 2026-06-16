@@ -43,7 +43,7 @@ export default async function PipelinePage({
     supabase
       .from("interviews")
       .select(
-        "id, application_id, scheduled_at, duration_minutes, mode, location, channel, status, requested_time, applicant_note"
+        "id, application_id, scheduled_at, duration_minutes, mode, location, channel, status, requested_time, applicant_note, interviewer_id"
       )
       .eq("company_id", current.company_id),
     supabase
@@ -65,6 +65,22 @@ export default async function PipelinePage({
     const { application_id, ...rest } = iv;
     interviewByApp.set(application_id, rest);
   }
+
+  // Booked interviews (for slot conflict detection) + staff list (interviewers).
+  const bookedInterviews = (ivData ?? []).map((iv) => ({
+    scheduled_at: iv.scheduled_at as string,
+    duration_minutes: iv.duration_minutes as number,
+    interviewer_id: (iv.interviewer_id as string) ?? null,
+  }));
+
+  const { data: staffRaw } = await supabase
+    .from("company_users")
+    .select("user_id, profiles ( full_name, email )")
+    .eq("company_id", current.company_id);
+  const staff = (staffRaw ?? []).map((m) => {
+    const p = m.profiles as unknown as { full_name: string | null; email: string } | null;
+    return { user_id: m.user_id as string, name: p?.full_name || p?.email || "Team member" };
+  });
 
   // Custom application-form answers per application (resolve field ids → labels).
   const { data: subs } = await supabase
@@ -142,6 +158,8 @@ export default async function PipelinePage({
       openId={open ?? null}
       companyId={current.company_id}
       openingHours={openingHours}
+      staff={staff}
+      bookedInterviews={bookedInterviews}
     />
   );
 }

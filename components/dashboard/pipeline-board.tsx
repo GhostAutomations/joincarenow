@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FileText, X, Phone, Mail, MapPin, CalendarClock } from "lucide-react";
 import { changeStage, getCvUrl } from "@/modules/applications/actions";
 import { scheduleInterview, acceptInterviewTime } from "@/modules/interviews/actions";
-import { DateTimePicker } from "@/components/ui/datetime-picker";
+import { InterviewSlotPicker, type BookedInterview } from "@/components/dashboard/interview-slot-picker";
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { createClient } from "@/lib/supabase/client";
 import { formatLondon, londonToUtcIso } from "@/lib/time";
@@ -21,7 +21,10 @@ export type Interview = {
   status: string;
   requested_time: string | null;
   applicant_note: string | null;
+  interviewer_id: string | null;
 };
+
+export type StaffMember = { user_id: string; name: string };
 
 export type AppCard = {
   id: string;
@@ -79,12 +82,16 @@ export function PipelineBoard({
   openId = null,
   companyId,
   openingHours,
+  staff = [],
+  bookedInterviews = [],
 }: {
   initial: AppCard[];
   interviewAddress: string;
   openId?: string | null;
   companyId: string;
   openingHours?: OpeningHours | null;
+  staff?: StaffMember[];
+  bookedInterviews?: BookedInterview[];
 }) {
   const router = useRouter();
   const [apps, setApps] = useState(initial);
@@ -292,6 +299,8 @@ export function PipelineBoard({
           onStage={(s) => move(selected.id, s)}
           onConfirmInterview={() => confirmInterviewLocal(selected.id)}
           openingHours={openingHours}
+          staff={staff}
+          bookedInterviews={bookedInterviews}
         />
       )}
     </div>
@@ -327,6 +336,8 @@ function ApplicantPanel({
   onStage,
   onConfirmInterview,
   openingHours,
+  staff,
+  bookedInterviews,
 }: {
   app: AppCard;
   interviewAddress: string;
@@ -334,6 +345,8 @@ function ApplicantPanel({
   onStage: (s: string) => void;
   onConfirmInterview: () => void;
   openingHours?: OpeningHours | null;
+  staff: StaffMember[];
+  bookedInterviews: BookedInterview[];
 }) {
   const [cvLoading, setCvLoading] = useState(false);
   const [cvError, setCvError] = useState<string | null>(null);
@@ -384,6 +397,8 @@ function ApplicantPanel({
               interviewAddress={interviewAddress}
               onConfirmInterview={onConfirmInterview}
               openingHours={openingHours}
+              staff={staff}
+              bookedInterviews={bookedInterviews}
             />
           )}
 
@@ -470,17 +485,22 @@ function InterviewSection({
   interviewAddress,
   onConfirmInterview,
   openingHours,
+  staff,
+  bookedInterviews,
 }: {
   app: AppCard;
   interviewAddress: string;
   onConfirmInterview: () => void;
   openingHours?: OpeningHours | null;
+  staff: StaffMember[];
+  bookedInterviews: BookedInterview[];
 }) {
   const router = useRouter();
   const iv = app.interview;
   const [state, action] = useActionState(scheduleInterview, undefined);
   const [editing, setEditing] = useState(!iv);
   const [accepting, setAccepting] = useState(false);
+  const [interviewerId, setInterviewerId] = useState(iv?.interviewer_id ?? "");
 
   async function accept() {
     setAccepting(true);
@@ -549,6 +569,12 @@ function InterviewSection({
             <span className="text-gray-500">Invite via:</span>{" "}
             {channelLabel(iv.channel)}
           </p>
+          {iv.interviewer_id && (
+            <p>
+              <span className="text-gray-500">With:</span>{" "}
+              {staff.find((s) => s.user_id === iv.interviewer_id)?.name ?? "Team member"}
+            </p>
+          )}
           {iv.status === "reschedule_requested" && (
             <div className="rounded-md bg-amber-100 px-3 py-2 text-amber-900">
               <p className="font-medium">Applicant requested a new time</p>
@@ -598,9 +624,30 @@ function InterviewSection({
           )}
           <input type="hidden" name="applicationId" value={app.id} />
 
+          <label className="block text-xs text-gray-600">
+            Interview with
+            <select
+              name="interviewerId"
+              value={interviewerId}
+              onChange={(e) => setInterviewerId(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+            >
+              <option value="">Choose a team member…</option>
+              {staff.map((s) => (
+                <option key={s.user_id} value={s.user_id}>{s.name}</option>
+              ))}
+            </select>
+          </label>
+
           <div className="space-y-1">
-            <p className="text-xs text-gray-600">Date &amp; time</p>
-            <DateTimePicker name="scheduledAt" defaultValue={defaultDt} openingHours={openingHours} />
+            <p className="text-xs text-gray-600">Pick a slot</p>
+            <InterviewSlotPicker
+              name="scheduledAt"
+              openingHours={openingHours ?? {}}
+              interviews={bookedInterviews}
+              interviewerId={interviewerId}
+              defaultValue={defaultDt}
+            />
           </div>
 
           <label className="block text-xs text-gray-600">

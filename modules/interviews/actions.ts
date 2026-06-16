@@ -38,6 +38,7 @@ const scheduleSchema = z.object({
   mode: z.enum(["in_person", "phone", "video"]).default("in_person"),
   location: z.string().max(300).optional().or(z.literal("")),
   channel: z.enum(["sms", "email", "both"]).default("email"),
+  interviewerId: z.string().uuid().optional().or(z.literal("")),
 });
 
 export type ScheduleState = { error?: string; ok?: boolean } | undefined;
@@ -53,6 +54,7 @@ export async function scheduleInterview(
     mode: formData.get("mode") ?? "in_person",
     location: formData.get("location") ?? "",
     channel: formData.get("channel") ?? "email",
+    interviewerId: formData.get("interviewerId") ?? "",
   });
   if (!parsed.success) return { error: parsed.error.errors[0].message };
 
@@ -79,6 +81,7 @@ export async function scheduleInterview(
     p_mode: parsed.data.mode,
     p_location: parsed.data.location || null,
     p_channel: parsed.data.channel,
+    p_interviewer_id: parsed.data.interviewerId || null,
   });
   if (error) return { error: error.message };
 

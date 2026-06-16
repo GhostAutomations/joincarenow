@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, sendSms } from "@/lib/comms/send";
 import { londonToUtcIso, formatLondon } from "@/lib/time";
+import { isWithinOpeningHours, type OpeningHours } from "@/lib/opening-hours";
 
 const BASE_URL = "https://www.joincarenow.com";
 
@@ -56,6 +57,21 @@ export async function scheduleInterview(
   if (!parsed.success) return { error: parsed.error.errors[0].message };
 
   const supabase = await createClient();
+
+  // Enforce opening hours (server-side safety net).
+  const { data: appco } = await supabase
+    .from("applications")
+    .select("companies(settings)")
+    .eq("id", parsed.data.applicationId)
+    .single();
+  const oh = (appco?.companies as unknown as { settings?: { opening_hours?: OpeningHours } } | null)
+    ?.settings?.opening_hours;
+  const dPart = parsed.data.scheduledAt.slice(0, 10);
+  const tPart = parsed.data.scheduledAt.slice(11, 16);
+  if (!isWithinOpeningHours(oh, dPart, tPart)) {
+    return { error: "That time is outside your office opening hours. Update them in Settings if needed." };
+  }
+
   const { data: iv, error } = await supabase.rpc("schedule_interview", {
     p_application_id: parsed.data.applicationId,
     p_scheduled_at: londonToUtcIso(parsed.data.scheduledAt),

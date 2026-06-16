@@ -23,6 +23,7 @@ export default async function InterviewTokenPage({
     company_name: (row.company_name as string) ?? "The team",
     job_title: (row.job_title as string) ?? null,
     first_name: (row.first_name as string) ?? null,
+    opening_hours: (row.opening_hours as Record<string, { open: string; close: string } | null>) ?? {},
   };
 
   return (

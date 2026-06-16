@@ -9,6 +9,7 @@ import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { createClient } from "@/lib/supabase/client";
 import { formatLondon, londonToUtcIso } from "@/lib/time";
+import type { OpeningHours } from "@/lib/opening-hours";
 
 export type Interview = {
   id: string;
@@ -77,11 +78,13 @@ export function PipelineBoard({
   interviewAddress,
   openId = null,
   companyId,
+  openingHours,
 }: {
   initial: AppCard[];
   interviewAddress: string;
   openId?: string | null;
   companyId: string;
+  openingHours?: OpeningHours | null;
 }) {
   const router = useRouter();
   const [apps, setApps] = useState(initial);
@@ -288,6 +291,7 @@ export function PipelineBoard({
           onClose={() => setSelectedId(null)}
           onStage={(s) => move(selected.id, s)}
           onConfirmInterview={() => confirmInterviewLocal(selected.id)}
+          openingHours={openingHours}
         />
       )}
     </div>
@@ -322,12 +326,14 @@ function ApplicantPanel({
   onClose,
   onStage,
   onConfirmInterview,
+  openingHours,
 }: {
   app: AppCard;
   interviewAddress: string;
   onClose: () => void;
   onStage: (s: string) => void;
   onConfirmInterview: () => void;
+  openingHours?: OpeningHours | null;
 }) {
   const [cvLoading, setCvLoading] = useState(false);
   const [cvError, setCvError] = useState<string | null>(null);
@@ -377,6 +383,7 @@ function ApplicantPanel({
               app={app}
               interviewAddress={interviewAddress}
               onConfirmInterview={onConfirmInterview}
+              openingHours={openingHours}
             />
           )}
 
@@ -462,10 +469,12 @@ function InterviewSection({
   app,
   interviewAddress,
   onConfirmInterview,
+  openingHours,
 }: {
   app: AppCard;
   interviewAddress: string;
   onConfirmInterview: () => void;
+  openingHours?: OpeningHours | null;
 }) {
   const router = useRouter();
   const iv = app.interview;
@@ -591,7 +600,7 @@ function InterviewSection({
 
           <div className="space-y-1">
             <p className="text-xs text-gray-600">Date &amp; time</p>
-            <DateTimePicker name="scheduledAt" defaultValue={defaultDt} />
+            <DateTimePicker name="scheduledAt" defaultValue={defaultDt} openingHours={openingHours} />
           </div>
 
           <label className="block text-xs text-gray-600">

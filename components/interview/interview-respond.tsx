@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CalendarClock, Check, X, Clock } from "lucide-react";
 import { respondToInterviewByToken } from "@/modules/interviews/actions";
 import { formatLondon } from "@/lib/time";
+import { slotsForDate, hasOpeningHours, isoWeekday, DAYS, type OpeningHours } from "@/lib/opening-hours";
 
 export type TokenInterview = {
   token: string;
@@ -15,6 +16,7 @@ export type TokenInterview = {
   company_name: string;
   job_title: string | null;
   first_name: string | null;
+  opening_hours: OpeningHours;
 };
 
 function modeLabel(m: string | null) {
@@ -34,9 +36,18 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
   const [status, setStatus] = useState(interview.status);
   const [view, setView] = useState<"buttons" | "change">("buttons");
   const [requestedTime, setRequestedTime] = useState("");
+  const [reqDate, setReqDate] = useState("");
+  const [reqSlot, setReqSlot] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const constrained = hasOpeningHours(interview.opening_hours);
+  const slots = reqDate ? slotsForDate(interview.opening_hours, reqDate) : [];
+  const closedDay = constrained && !!reqDate && slots.length === 0;
+  const dayLabel = reqDate ? DAYS.find((d) => d.iso === isoWeekday(reqDate))?.label : "";
+  const reqValue = constrained ? (reqDate && reqSlot ? `${reqDate}T${reqSlot}` : "") : requestedTime;
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const when = formatLondon(interview.scheduled_at);
   const alreadyResponded = ["confirmed", "reschedule_requested", "declined"].includes(status);
@@ -114,12 +125,40 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
               <label className="text-sm font-medium text-gray-700">
                 When would suit you better?
               </label>
-              <input
-                type="datetime-local"
-                value={requestedTime}
-                onChange={(e) => setRequestedTime(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
+              {constrained ? (
+                <>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <input
+                      type="date"
+                      min={todayStr}
+                      value={reqDate}
+                      onChange={(e) => { setReqDate(e.target.value); setReqSlot(""); }}
+                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    />
+                    <select
+                      value={reqSlot}
+                      onChange={(e) => setReqSlot(e.target.value)}
+                      disabled={!reqDate || closedDay}
+                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    >
+                      <option value="">{reqDate ? "Pick a time" : "Pick a date"}</option>
+                      {slots.map((s) => (<option key={s} value={s}>{s}</option>))}
+                    </select>
+                  </div>
+                  {closedDay && (
+                    <p className="mt-1 text-xs text-amber-600">
+                      They&apos;re closed on {dayLabel}. Please pick another day.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <input
+                  type="datetime-local"
+                  value={requestedTime}
+                  onChange={(e) => setRequestedTime(e.target.value)}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+              )}
             </div>
             <textarea
               value={note}
@@ -130,8 +169,8 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
             />
             <div className="flex gap-2">
               <button
-                onClick={() => respond("reschedule_requested", { requestedTime, note })}
-                disabled={busy || !requestedTime}
+                onClick={() => respond("reschedule_requested", { requestedTime: reqValue, note })}
+                disabled={busy || !reqValue}
                 className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
               >
                 Send my preferred time

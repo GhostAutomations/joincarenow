@@ -5,6 +5,8 @@ import { InterviewAddressForm } from "@/components/dashboard/interview-address-f
 import { BranchesManager } from "@/components/dashboard/branches-manager";
 import { RolesManager } from "@/components/dashboard/roles-manager";
 import { EmployeeNumberSettings } from "@/components/dashboard/employee-number-settings";
+import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
+import type { OpeningHours } from "@/lib/opening-hours";
 
 export default async function SettingsPage() {
   const { supabase, current } = await requireCompany();
@@ -33,6 +35,8 @@ export default async function SettingsPage() {
   const interviewAddress = settings.interview_address ?? "";
   const empNumberMode = settings.employee_number_mode === "manual" ? "manual" : "auto";
   const empNumberPrefix = settings.employee_number_prefix ?? "EMP-";
+  const openingHours =
+    ((companyRow?.settings as { opening_hours?: OpeningHours } | null)?.opening_hours) ?? {};
 
   // Admins manage invitations. RLS only returns this company's invites.
   const { data: invites } = isAdmin
@@ -119,6 +123,17 @@ export default async function SettingsPage() {
             companyId={current.company_id}
             defaultValue={interviewAddress}
           />
+        </section>
+      )}
+
+      {isAdmin && (
+        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-base font-medium text-gray-900">Opening hours</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Set the days and hours your office is open. Interviews can only be
+            scheduled — and applicants can only propose times — within these hours.
+          </p>
+          <OpeningHoursForm companyId={current.company_id} hours={openingHours} />
         </section>
       )}
 

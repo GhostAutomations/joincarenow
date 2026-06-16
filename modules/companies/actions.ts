@@ -129,6 +129,47 @@ export async function setInterviewAddress(
   return { ok: true };
 }
 
+/** Admins set the office opening hours (per ISO weekday). Interview times can
+ *  then only be picked within these hours. */
+export async function setOpeningHours(
+  _prev: SettingsState,
+  formData: FormData
+): Promise<SettingsState> {
+  const companyId = formData.get("companyId");
+  if (typeof companyId !== "string") return { error: "Missing company" };
+
+  const hours: Record<string, { open: string; close: string } | null> = {};
+  for (let d = 1; d <= 7; d++) {
+    const open = formData.get(`open_${d}`) === "on";
+    const from = formData.get(`from_${d}`)?.toString() || "";
+    const to = formData.get(`to_${d}`)?.toString() || "";
+    if (open && from && to && from < to) {
+      hours[String(d)] = { open: from, close: to };
+    } else {
+      hours[String(d)] = null;
+    }
+  }
+
+  const supabase = await createClient();
+  const { data: company } = await supabase
+    .from("companies")
+    .select("settings")
+    .eq("id", companyId)
+    .single();
+
+  const settings = {
+    ...((company?.settings as Record<string, unknown>) ?? {}),
+    opening_hours: hours,
+  };
+
+  const { error } = await supabase.from("companies").update({ settings }).eq("id", companyId);
+  if (error) return { error: "Could not save. Please try again." };
+
+  revalidatePath("/settings");
+  revalidatePath("/pipeline");
+  return { ok: true };
+}
+
 /** Admins choose how Employee IDs are assigned: auto-generated with a prefix,
  *  or entered manually (for companies with their own payroll numbers). */
 export async function setEmployeeNumberSettings(

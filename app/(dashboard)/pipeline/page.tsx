@@ -53,9 +53,12 @@ export default async function PipelinePage({
       .single(),
   ]);
 
-  const interviewAddress =
-    ((companyRow?.settings as { interview_address?: string } | null)
-      ?.interview_address) ?? "";
+  const cs = (companyRow?.settings as {
+    interview_address?: string;
+    opening_hours?: Record<string, { open: string; close: string } | null>;
+  } | null) ?? {};
+  const interviewAddress = cs.interview_address ?? "";
+  const openingHours = cs.opening_hours ?? {};
 
   const interviewByApp = new Map<string, Interview>();
   for (const iv of (ivData ?? []) as unknown as InterviewRow[]) {
@@ -138,6 +141,7 @@ export default async function PipelinePage({
       interviewAddress={interviewAddress}
       openId={open ?? null}
       companyId={current.company_id}
+      openingHours={openingHours}
     />
   );
 }

@@ -447,9 +447,9 @@ export function MondayFormBuilder({
         ))}
       </div>
 
-      {/* RIGHT: Preview, top-aligned with the form (equal width to the
-          content outline keeps the form centred). */}
-      <div className="hidden w-44 shrink-0 justify-end xl:flex">
+      {/* RIGHT: Preview, top-aligned with the form. Shrinks to the button so
+          the form sits an equal gap from both the outline and Preview. */}
+      <div className="hidden shrink-0 xl:flex">
         <button
           type="button"
           onClick={() => setShowPreview(true)}

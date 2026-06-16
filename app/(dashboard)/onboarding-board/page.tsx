@@ -32,7 +32,7 @@ export default async function OnboardingBoardPage() {
   const [{ data: templates }, { data: forms }, { data: tasks }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, required, due_date, trigger_stage, position")
+      .select("id, title, task_type, required, due_days, trigger_stage, position")
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
@@ -81,7 +81,7 @@ export default async function OnboardingBoardPage() {
                     <span className="ml-2 text-xs text-gray-400">
                       {TYPE_LABEL[t.task_type] ?? t.task_type}
                       {t.trigger_stage && ` · ${TRIGGER_LABEL[t.trigger_stage] ?? t.trigger_stage}`}
-                      {t.due_date && ` · due ${new Date(t.due_date).toLocaleDateString("en-GB")}`}
+                      {t.due_days != null && ` · due within ${t.due_days} day${t.due_days === 1 ? "" : "s"}`}
                       {!t.required && " · optional"}
                     </span>
                   </div>
@@ -97,7 +97,6 @@ export default async function OnboardingBoardPage() {
           )}
 
           <div className="mt-4 rounded-lg border border-dashed border-gray-300 p-4">
-            <p className="mb-3 text-sm font-medium text-gray-900">Add a checklist task</p>
             <AddTemplateTask forms={forms ?? []} />
           </div>
         </section>

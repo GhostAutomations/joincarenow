@@ -25,7 +25,7 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
       )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="text-xs font-medium text-gray-600">
-          Task title
+          Workflow title
           <input name="title" placeholder="e.g. Right to Work check" className={cls} />
         </label>
         <label className="text-xs font-medium text-gray-600">
@@ -40,13 +40,15 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
 
       {type === "form" && (
         <label className="block text-xs font-medium text-gray-600">
-          Form to complete
-          <select name="formId" defaultValue="" className={cls}>
-            <option value="" disabled>Choose a form…</option>
+          Form(s) to complete
+          <select name="formId" multiple className={`${cls} h-auto min-h-[6rem]`}>
             {forms.map((f) => (
-              <option key={f.id} value={f.id}>{f.name}</option>
+              <option key={f.id} value={f.id} className="py-0.5">{f.name}</option>
             ))}
           </select>
+          <span className="mt-1 block text-[11px] font-normal text-gray-400">
+            Hold {typeof navigator !== "undefined" && navigator.platform.includes("Mac") ? "Cmd" : "Ctrl"} to select more than one. Each becomes its own task.
+          </span>
         </label>
       )}
 
@@ -69,8 +71,8 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="text-xs font-medium text-gray-600">
-          Due date
-          <input name="dueDate" type="date" className={cls} />
+          Due within (days)
+          <input name="dueDays" type="number" min="0" placeholder="e.g. 7" className={cls} />
         </label>
         <label className="mt-5 flex items-center gap-2 text-sm text-gray-700">
           <input type="checkbox" name="required" defaultChecked className="h-4 w-4 rounded border-gray-300 text-brand-600" />

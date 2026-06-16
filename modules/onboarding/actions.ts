@@ -14,20 +14,23 @@ export async function addTemplateTask(
 ): Promise<OnbState> {
   const title = (formData.get("title")?.toString() ?? "").trim();
   const taskType = formData.get("taskType")?.toString() ?? "";
-  const formId = formData.get("formId")?.toString() || null;
+  const formIds = formData.getAll("formId").map((v) => v.toString()).filter(Boolean);
   const body = (formData.get("body")?.toString() ?? "").trim() || null;
   const required = formData.get("required") === "on";
-  const dueDate = formData.get("dueDate")?.toString() || null;
+  const dueDaysRaw = formData.get("dueDays")?.toString() ?? "";
+  const dueDays = dueDaysRaw === "" ? null : Math.max(0, parseInt(dueDaysRaw, 10) || 0);
   const triggerStage = formData.get("triggerStage")?.toString() || "";
 
-  if (title.length < 2) return { error: "Give the task a title" };
+  if (title.length < 2) return { error: "Give the workflow a title" };
   if (!["form", "document", "acknowledge"].includes(taskType)) {
     return { error: "Pick a task type" };
   }
   if (!["on_application", "reviewing", "interview", "offer", "hired"].includes(triggerStage)) {
     return { error: "Pick when to send this" };
   }
-  if (taskType === "form" && !formId) return { error: "Choose which form to attach" };
+  if (taskType === "form" && formIds.length === 0) {
+    return { error: "Choose at least one form to attach" };
+  }
 
   const { supabase, current } = await requireCompany();
   const { data: last } = await supabase
@@ -37,18 +40,49 @@ export async function addTemplateTask(
     .order("position", { ascending: false })
     .limit(1)
     .maybeSingle();
+  let pos = (last?.position ?? -1) + 1;
 
-  const { error } = await supabase.from("onboarding_templates").insert({
-    company_id: current.company_id,
-    title,
-    task_type: taskType,
-    form_id: taskType === "form" ? formId : null,
-    body,
-    required,
-    due_date: dueDate,
-    trigger_stage: triggerStage,
-    position: (last?.position ?? -1) + 1,
-  });
+  // For a form task, create one checklist item per selected form (so the
+  // applicant gets each as its own task). Other types create a single item.
+  let rows: Record<string, unknown>[];
+  if (taskType === "form") {
+    let names = new Map<string, string>();
+    if (formIds.length > 1) {
+      const { data: fs } = await supabase
+        .from("forms")
+        .select("id, name")
+        .in("id", formIds)
+        .eq("company_id", current.company_id);
+      names = new Map((fs ?? []).map((f) => [f.id as string, f.name as string]));
+    }
+    rows = formIds.map((fid) => ({
+      company_id: current.company_id,
+      title: formIds.length > 1 ? `${title} – ${names.get(fid) ?? "Form"}` : title,
+      task_type: "form",
+      form_id: fid,
+      body,
+      required,
+      due_days: dueDays,
+      trigger_stage: triggerStage,
+      position: pos++,
+    }));
+  } else {
+    rows = [
+      {
+        company_id: current.company_id,
+        title,
+        task_type: taskType,
+        form_id: null,
+        body,
+        required,
+        due_days: dueDays,
+        trigger_stage: triggerStage,
+        position: pos,
+      },
+    ];
+  }
+
+  const { error } = await supabase.from("onboarding_templates").insert(rows);
   if (error) return { error: "Could not add the task." };
 
   revalidatePath("/onboarding-board");

@@ -28,7 +28,7 @@ export function Dock() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-3">
-      <div className="pointer-events-auto flex max-w-[94vw] items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/50 bg-white/70 px-2.5 py-2 shadow-xl backdrop-blur-xl">
+      <div className="pointer-events-auto flex max-w-[94vw] flex-wrap items-center justify-center gap-1.5 rounded-2xl border border-white/50 bg-white/70 px-2.5 py-2 shadow-xl backdrop-blur-xl">
         {ITEMS.map(({ href, label, icon: Icon, grad }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (

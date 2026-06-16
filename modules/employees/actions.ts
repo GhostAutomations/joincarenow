@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireCompany } from "@/modules/auth/queries";
+import { syncEmployeeToCarerAcademy } from "@/lib/integrations/carer-academy";
 
 export type EmployeeState = { error?: string; ok?: boolean } | undefined;
 
@@ -61,5 +62,31 @@ export async function updateEmployee(
 
   revalidatePath("/employees");
   revalidatePath(`/employees/${id}`);
+  return { ok: true };
+}
+
+/** Manually (re)send an employee to Carer.Academy — for retries after a
+ *  failure or to re-sync updated details. */
+export async function resendToCarerAcademy(
+  _prev: EmployeeState,
+  formData: FormData
+): Promise<EmployeeState> {
+  const id = formData.get("id")?.toString();
+  if (!id) return { error: "Missing employee" };
+
+  // Confirm the employee belongs to the caller's company (RLS-safe).
+  const { supabase, current } = await requireCompany();
+  const { data: emp } = await supabase
+    .from("employees")
+    .select("id")
+    .eq("id", id)
+    .eq("company_id", current.company_id)
+    .maybeSingle();
+  if (!emp) return { error: "Employee not found." };
+
+  const result = await syncEmployeeToCarerAcademy(id);
+
+  revalidatePath(`/employees/${id}`);
+  if (!result.ok) return { error: result.error ?? "Sync failed." };
   return { ok: true };
 }

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { syncEmployeeToCarerAcademy } from "@/lib/integrations/carer-academy";
 
 const STAGES = [
   "applied",
@@ -64,11 +65,18 @@ export async function changeStage(
   // Hiring creates the master employee record (idempotent — one per
   // hired application). This is the source of truth downstream systems read.
   if (stage === "hired") {
-    const { error: empErr } = await supabase.rpc("create_employee_from_application", {
-      p_application_id: applicationId,
-    });
+    const { data: employeeId, error: empErr } = await supabase.rpc(
+      "create_employee_from_application",
+      { p_application_id: applicationId }
+    );
     if (empErr) {
       return { error: `Moved to Hired, but the employee record failed: ${empErr.message}` };
+    }
+    // Push the new employee to Carer.Academy (logs success/failure; the
+    // recruiter can Resend from the employee record if it fails). Don't block
+    // the hire on a sync error.
+    if (typeof employeeId === "string") {
+      await syncEmployeeToCarerAcademy(employeeId);
     }
   }
 

@@ -9,6 +9,7 @@ import {
   type Warning,
   type HrDoc,
 } from "@/components/dashboard/employee-hr";
+import { CarerAcademySync, type SyncEvent } from "@/components/dashboard/carer-academy-sync";
 
 type Employee = {
   id: string;
@@ -30,6 +31,10 @@ type Employee = {
   training_group: string | null;
   status: "active" | "inactive" | "left";
   created_at: string;
+  carer_academy_status: string;
+  carer_academy_user_id: string | null;
+  carer_academy_synced_at: string | null;
+  carer_academy_error: string | null;
 };
 
 export default async function EmployeeDetailPage({
@@ -43,7 +48,7 @@ export default async function EmployeeDetailPage({
   const { data: employee } = await supabase
     .from("employees")
     .select(
-      "id, company_id, applicant_id, application_id, employee_ref, first_name, last_name, email, phone, job_title, department, branch_id, branch, worker_category, manager_id, start_date, training_group, status, created_at"
+      "id, company_id, applicant_id, application_id, employee_ref, first_name, last_name, email, phone, job_title, department, branch_id, branch, worker_category, manager_id, start_date, training_group, status, created_at, carer_academy_status, carer_academy_user_id, carer_academy_synced_at, carer_academy_error"
     )
     .eq("id", id)
     .eq("company_id", current.company_id)
@@ -51,24 +56,32 @@ export default async function EmployeeDetailPage({
 
   if (!employee) notFound();
 
-  // HR records for this employee.
-  const [{ data: absences }, { data: warnings }, { data: documents }] = await Promise.all([
-    supabase
-      .from("employee_absences")
-      .select("id, absence_type, start_date, end_date, days, reason")
-      .eq("employee_id", id)
-      .order("start_date", { ascending: false }),
-    supabase
-      .from("employee_warnings")
-      .select("id, level, title, note, issued_date, review_date")
-      .eq("employee_id", id)
-      .order("issued_date", { ascending: false }),
-    supabase
-      .from("employee_documents")
-      .select("id, doc_type, title, issued_date, expiry_date")
-      .eq("employee_id", id)
-      .order("created_at", { ascending: false }),
-  ]);
+  // HR records + Carer.Academy sync history for this employee.
+  const [{ data: absences }, { data: warnings }, { data: documents }, { data: syncEvents }] =
+    await Promise.all([
+      supabase
+        .from("employee_absences")
+        .select("id, absence_type, start_date, end_date, days, reason")
+        .eq("employee_id", id)
+        .order("start_date", { ascending: false }),
+      supabase
+        .from("employee_warnings")
+        .select("id, level, title, note, issued_date, review_date")
+        .eq("employee_id", id)
+        .order("issued_date", { ascending: false }),
+      supabase
+        .from("employee_documents")
+        .select("id, doc_type, title, issued_date, expiry_date")
+        .eq("employee_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("integration_events")
+        .select("id, status, attempt, error, created_at")
+        .eq("employee_id", id)
+        .eq("target", "carer_academy")
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
 
   // Roster for the manager dropdown (admins + managers) + branch + role lists.
   const [{ data: rosterRaw }, { data: branchList }, { data: roleList }] = await Promise.all([
@@ -104,21 +117,21 @@ export default async function EmployeeDetailPage({
     <div>
       <Link
         href="/employees"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
+        className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white"
       >
         <ArrowLeft className="h-4 w-4" /> All employees
       </Link>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold text-gray-900">{fullName}</h1>
-        <span className="rounded-full bg-brand-50 px-2.5 py-0.5 font-mono text-xs text-brand-700">
+        <h1 className="text-2xl font-semibold text-white drop-shadow-sm">{fullName}</h1>
+        <span className="rounded-full bg-white/20 px-2.5 py-0.5 font-mono text-xs text-white backdrop-blur-sm">
           {employee.employee_ref}
         </span>
-        <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium capitalize text-gray-700">
+        <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium capitalize text-white backdrop-blur-sm">
           {employee.status}
         </span>
       </div>
-      <p className="mt-1 text-sm text-gray-500">
+      <p className="mt-1 text-sm text-white/80">
         Hired {new Date(employee.created_at).toLocaleDateString("en-GB")}
         {managerName && ` · Reports to ${managerName}`}
       </p>
@@ -196,7 +209,19 @@ export default async function EmployeeDetailPage({
       </div>
 
       <div className="mt-6">
-        <h2 className="mb-3 text-base font-medium text-gray-900">HR record</h2>
+        <h2 className="mb-3 text-base font-medium text-white drop-shadow-sm">Connected systems</h2>
+        <CarerAcademySync
+          employeeId={employee.id}
+          status={employee.carer_academy_status}
+          academyUserId={employee.carer_academy_user_id}
+          syncedAt={employee.carer_academy_synced_at}
+          error={employee.carer_academy_error}
+          events={(syncEvents ?? []) as SyncEvent[]}
+        />
+      </div>
+
+      <div className="mt-6">
+        <h2 className="mb-3 text-base font-medium text-white drop-shadow-sm">HR record</h2>
         <EmployeeHr
           employeeId={employee.id}
           absences={(absences ?? []) as Absence[]}

@@ -361,9 +361,10 @@ function ApplicantPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="flex-1 bg-black/30" onClick={onClose} aria-hidden />
-      <aside className="flex h-full w-full max-w-md flex-col overflow-y-auto bg-white shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop — intentionally does NOT close on click. */}
+      <div className="absolute inset-0 bg-black/40" aria-hidden />
+      <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
           <h2 className="text-lg font-semibold text-gray-900">{fullName(app)}</h2>
           <button
@@ -375,7 +376,7 @@ function ApplicantPanel({
           </button>
         </div>
 
-        <div className="space-y-5 px-5 py-5">
+        <div className="space-y-5 overflow-y-auto px-5 py-5">
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-400">Applied for</p>
             <p className="mt-0.5 text-sm font-medium text-gray-900">{app.job_title}</p>
@@ -399,6 +400,7 @@ function ApplicantPanel({
               openingHours={openingHours}
               staff={staff}
               bookedInterviews={bookedInterviews}
+              onScheduled={onClose}
             />
           )}
 
@@ -475,7 +477,7 @@ function ApplicantPanel({
             <ApplicantComms applicationId={app.id} email={app.email} phone={app.phone} />
           </div>
         </div>
-      </aside>
+      </div>
     </div>
   );
 }
@@ -487,6 +489,7 @@ function InterviewSection({
   openingHours,
   staff,
   bookedInterviews,
+  onScheduled,
 }: {
   app: AppCard;
   interviewAddress: string;
@@ -494,6 +497,7 @@ function InterviewSection({
   openingHours?: OpeningHours | null;
   staff: StaffMember[];
   bookedInterviews: BookedInterview[];
+  onScheduled: () => void;
 }) {
   const router = useRouter();
   const iv = app.interview;
@@ -527,8 +531,9 @@ function InterviewSection({
     if (state?.ok) {
       setEditing(false);
       router.refresh();
+      onScheduled(); // close the modal once the interview is scheduled
     }
-  }, [state, router]);
+  }, [state, router, onScheduled]);
 
   const defaultDt = iv ? toLocalInput(iv.scheduled_at) : "";
 

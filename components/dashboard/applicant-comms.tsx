@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Mail, MessageSquare, StickyNote, Send, Inbox } from "lucide-react";
+import { Mail, MessageSquare, StickyNote, Send, MessagesSquare } from "lucide-react";
 import {
   getApplicantThread,
   sendMessage,
@@ -108,7 +108,7 @@ export function ApplicantComms({
       {/* Inbox header + channel filter */}
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-100 px-4 py-3">
         <p className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
-          <Inbox className="h-4 w-4 text-gray-400" /> Inbox
+          <MessagesSquare className="h-4 w-4 text-gray-400" /> Conversation
         </p>
         <div className="inline-flex rounded-md border border-gray-300 p-0.5 text-xs">
           {FILTERS.map((f) => (

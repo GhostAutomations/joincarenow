@@ -78,6 +78,26 @@ export async function changeStage(
     if (typeof employeeId === "string") {
       await syncEmployeeToCarerAcademy(employeeId);
     }
+
+    // Record WHO hired them (named) for the audit trail / reports.
+    const { data: auth } = await supabase.auth.getUser();
+    let hiredBy = "";
+    if (auth.user) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+      hiredBy = prof?.full_name || prof?.email || "";
+    }
+    await supabase.rpc("log_audit", {
+      p_company_id: before.company_id,
+      p_action: "application.hired",
+      p_entity_type: "application",
+      p_entity_id: applicationId,
+      p_before: {},
+      p_after: { hired_by: hiredBy },
+    });
   }
 
   revalidatePath("/pipeline");
@@ -85,6 +105,28 @@ export async function changeStage(
   revalidatePath("/applicants");
   revalidatePath("/employees");
   return { ok: true };
+}
+
+export type HireChecklistItem = {
+  id: string;
+  title: string;
+  task_type: string;
+  required: boolean;
+  status: string;
+};
+
+/** Workflow items for an application, used by the pre-Hire confirmation.
+ *  "Outstanding" = required tasks not yet approved. RLS scopes to the company. */
+export async function getHireChecklist(
+  applicationId: string
+): Promise<{ items: HireChecklistItem[] }> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("onboarding_tasks")
+    .select("id, title, task_type, required, status")
+    .eq("application_id", applicationId)
+    .order("position");
+  return { items: (data ?? []) as HireChecklistItem[] };
 }
 
 /** Mint a short-lived signed URL for an application's CV. Permission is

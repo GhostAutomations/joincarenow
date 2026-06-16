@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useActionState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, X, Phone, Mail, MapPin, CalendarClock } from "lucide-react";
-import { changeStage, getCvUrl } from "@/modules/applications/actions";
+import { FileText, X, Phone, Mail, MapPin, CalendarClock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { changeStage, getCvUrl, getHireChecklist, type HireChecklistItem } from "@/modules/applications/actions";
 import { scheduleInterview, acceptInterviewTime } from "@/modules/interviews/actions";
 import { InterviewSlotPicker, type BookedInterview } from "@/components/dashboard/interview-slot-picker";
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
@@ -105,6 +105,8 @@ export function PipelineBoard({
   const [view, setView] = useState<"board" | "table">("board");
   const [selectedId, setSelectedId] = useState<string | null>(openId);
   const [dragId, setDragId] = useState<string | null>(null);
+  // Pre-Hire confirmation: holds the applicant pending a Hire confirm.
+  const [hireId, setHireId] = useState<string | null>(null);
 
   // Keep local state in sync when the server data refreshes.
   useEffect(() => setApps(initial), [initial]);
@@ -154,10 +156,25 @@ export function PipelineBoard({
 
   function move(id: string, stage: string) {
     const prevStage = apps.find((a) => a.id === id)?.stage;
+    // Moving into Hired requires a confirmation that reviews the workflow.
+    if (stage === "hired" && prevStage !== "hired") {
+      setHireId(id);
+      return;
+    }
     setApps((prev) => prev.map((a) => (a.id === id ? { ...a, stage } : a)));
     // Moving into Interview opens the card so you can schedule straight away.
     if (stage === "interview" && prevStage !== "interview") setSelectedId(id);
     changeStage(id, stage).then((res) => {
+      if (res.error) router.refresh();
+    });
+  }
+
+  // Confirmed Hire — actually performs the move (bypasses the gate).
+  function confirmHire(id: string) {
+    setHireId(null);
+    setSelectedId(null);
+    setApps((prev) => prev.map((a) => (a.id === id ? { ...a, stage: "hired" } : a)));
+    changeStage(id, "hired").then((res) => {
       if (res.error) router.refresh();
     });
   }
@@ -309,6 +326,129 @@ export function PipelineBoard({
           bookedInterviews={bookedInterviews}
         />
       )}
+
+      {hireId && (
+        <HireConfirm
+          applicationId={hireId}
+          name={fullName(apps.find((a) => a.id === hireId)!)}
+          onCancel={() => setHireId(null)}
+          onConfirm={() => confirmHire(hireId)}
+        />
+      )}
+    </div>
+  );
+}
+
+function HireConfirm({
+  applicationId,
+  name,
+  onCancel,
+  onConfirm,
+}: {
+  applicationId: string;
+  name: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const [items, setItems] = useState<HireChecklistItem[] | null>(null);
+  const [ack, setAck] = useState(false);
+
+  useEffect(() => {
+    getHireChecklist(applicationId).then((r) => setItems(r.items));
+  }, [applicationId]);
+
+  const outstanding = (items ?? []).filter(
+    (i) => i.required && i.status !== "approved"
+  );
+  const ready = outstanding.length === 0;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" aria-hidden onClick={onCancel} />
+      <div className="relative flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="border-b border-gray-200 px-5 py-4">
+          <h2 className="text-base font-semibold text-gray-900">Move {name} to Hired</h2>
+        </div>
+
+        <div className="overflow-y-auto px-5 py-4">
+          {items === null ? (
+            <p className="text-sm text-gray-400">Checking the workflow…</p>
+          ) : items.length === 0 ? (
+            <p className="text-sm text-gray-600">
+              No workflow tasks are set up for this applicant.
+            </p>
+          ) : (
+            <>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                Workflow checklist
+              </p>
+              <ul className="mt-2 space-y-1.5">
+                {items.map((i) => {
+                  const done = i.status === "approved";
+                  return (
+                    <li key={i.id} className="flex items-start gap-2 text-sm">
+                      {done ? (
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                      ) : (
+                        <AlertTriangle
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${i.required ? "text-amber-500" : "text-gray-300"}`}
+                        />
+                      )}
+                      <span className={done ? "text-gray-700" : "text-gray-900"}>
+                        {i.title}
+                        {!i.required && <span className="ml-1 text-xs text-gray-400">(optional)</span>}
+                        {!done && (
+                          <span className="ml-1 text-xs capitalize text-gray-400">— {i.status}</span>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+
+          {items !== null && !ready && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <p className="text-sm font-medium text-amber-800">
+                {outstanding.length} required {outstanding.length === 1 ? "item is" : "items are"} still outstanding.
+              </p>
+              <label className="mt-2 flex items-start gap-2 text-sm text-amber-900">
+                <input
+                  type="checkbox"
+                  checked={ack}
+                  onChange={(e) => setAck(e.target.checked)}
+                  className="mt-0.5"
+                />
+                Hire anyway — I understand these aren&apos;t complete.
+              </label>
+            </div>
+          )}
+
+          {items !== null && ready && (
+            <p className="mt-4 text-sm text-gray-600">
+              Everything required is complete. Are you sure you want to move {name} to Hired?
+              This creates their employee record and sends them to Carer.Academy.
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-gray-200 px-5 py-3">
+          <button
+            onClick={onCancel}
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={items === null || (!ready && !ack)}
+            className="rounded-lg bg-green-600 px-3.5 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            Yes, move to Hired
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -370,7 +510,7 @@ function ApplicantPanel({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop — intentionally does NOT close on click. */}
       <div className="absolute inset-0 bg-black/40" aria-hidden />
-      <div className="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="relative flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
           <h2 className="text-lg font-semibold text-gray-900">{fullName(app)}</h2>
           <button
@@ -382,8 +522,8 @@ function ApplicantPanel({
           </button>
         </div>
 
-        <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-2">
-        <div className="space-y-5 overflow-y-auto px-5 py-5">
+        <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-3">
+        <div className="space-y-5 overflow-y-auto px-5 py-5 lg:col-span-2">
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-400">Applied for</p>
             <p className="mt-0.5 text-sm font-medium text-gray-900">{app.job_title}</p>

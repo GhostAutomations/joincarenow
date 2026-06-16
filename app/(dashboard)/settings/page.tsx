@@ -6,6 +6,7 @@ import { BranchesManager } from "@/components/dashboard/branches-manager";
 import { RolesManager } from "@/components/dashboard/roles-manager";
 import { EmployeeNumberSettings } from "@/components/dashboard/employee-number-settings";
 import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
+import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
 import type { OpeningHours } from "@/lib/opening-hours";
 
 export default async function SettingsPage() {
@@ -37,6 +38,8 @@ export default async function SettingsPage() {
   const empNumberPrefix = settings.employee_number_prefix ?? "EMP-";
   const openingHours =
     ((companyRow?.settings as { opening_hours?: OpeningHours } | null)?.opening_hours) ?? {};
+  const showSidebar =
+    ((companyRow?.settings as { show_sidebar?: boolean } | null)?.show_sidebar) === true;
 
   // Admins manage invitations. RLS only returns this company's invites.
   const { data: invites } = isAdmin
@@ -69,6 +72,16 @@ export default async function SettingsPage() {
           </div>
         </dl>
       </section>
+
+      {isAdmin && (
+        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-base font-medium text-gray-900">Navigation</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Choose how your team moves around the platform.
+          </p>
+          <SidebarToggle companyId={current.company_id} show={showSidebar} />
+        </section>
+      )}
 
       {isAdmin && (
         <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">

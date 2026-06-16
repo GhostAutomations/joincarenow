@@ -55,10 +55,11 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="relative flex min-h-full flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-cyan-700 to-indigo-800 p-6 text-white shadow-xl sm:p-8">
-      {/* soft colour blobs */}
-      <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-teal-300/30 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-20 right-0 h-72 w-72 rounded-full bg-indigo-400/30 blur-3xl" />
+    <div className="relative -m-4 flex min-h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-gradient-to-br from-teal-600 via-cyan-700 to-indigo-800 p-6 text-white sm:-m-6 sm:p-10">
+      {/* fluid colour blobs */}
+      <div className="jcn-blob pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-teal-300/40 blur-3xl" />
+      <div className="jcn-blob jcn-blob-2 pointer-events-none absolute left-1/2 top-1/3 h-72 w-72 rounded-full bg-fuchsia-400/30 blur-3xl" />
+      <div className="jcn-blob jcn-blob-3 pointer-events-none absolute -bottom-24 right-0 h-96 w-96 rounded-full bg-indigo-400/40 blur-3xl" />
 
       <div className="relative">
         <h1 className="text-3xl font-semibold">{greeting}, {first} 👋</h1>

@@ -129,6 +129,28 @@ export async function setInterviewAddress(
   return { ok: true };
 }
 
+/** Admins choose whether to show the left sidebar (off = iPad-style launcher). */
+export async function setShowSidebar(
+  _prev: SettingsState,
+  formData: FormData
+): Promise<SettingsState> {
+  const companyId = formData.get("companyId");
+  if (typeof companyId !== "string") return { error: "Missing company" };
+  const show = formData.get("showSidebar") === "on";
+
+  const supabase = await createClient();
+  const { data: company } = await supabase
+    .from("companies").select("settings").eq("id", companyId).single();
+  const settings = {
+    ...((company?.settings as Record<string, unknown>) ?? {}),
+    show_sidebar: show,
+  };
+  const { error } = await supabase.from("companies").update({ settings }).eq("id", companyId);
+  if (error) return { error: "Could not save. Please try again." };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 /** Admins set the office opening hours (per ISO weekday). Interview times can
  *  then only be picked within these hours. */
 export async function setOpeningHours(

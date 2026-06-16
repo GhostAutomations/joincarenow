@@ -144,6 +144,18 @@ export function PipelineBoard({
     });
   }
 
+  // Instantly flip a card's interview to confirmed (optimistic) before the
+  // server round-trip completes.
+  function confirmInterviewLocal(id: string) {
+    setApps((prev) =>
+      prev.map((a) =>
+        a.id === id && a.interview
+          ? { ...a, interview: { ...a.interview, status: "confirmed" } }
+          : a
+      )
+    );
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -274,6 +286,7 @@ export function PipelineBoard({
           interviewAddress={interviewAddress}
           onClose={() => setSelectedId(null)}
           onStage={(s) => move(selected.id, s)}
+          onConfirmInterview={() => confirmInterviewLocal(selected.id)}
         />
       )}
     </div>
@@ -307,11 +320,13 @@ function ApplicantPanel({
   interviewAddress,
   onClose,
   onStage,
+  onConfirmInterview,
 }: {
   app: AppCard;
   interviewAddress: string;
   onClose: () => void;
   onStage: (s: string) => void;
+  onConfirmInterview: () => void;
 }) {
   const [cvLoading, setCvLoading] = useState(false);
   const [cvError, setCvError] = useState<string | null>(null);
@@ -357,7 +372,11 @@ function ApplicantPanel({
           </div>
 
           {app.stage === "interview" && (
-            <InterviewSection app={app} interviewAddress={interviewAddress} />
+            <InterviewSection
+              app={app}
+              interviewAddress={interviewAddress}
+              onConfirmInterview={onConfirmInterview}
+            />
           )}
 
           <div className="space-y-1.5 text-sm text-gray-700">
@@ -441,9 +460,11 @@ function ApplicantPanel({
 function InterviewSection({
   app,
   interviewAddress,
+  onConfirmInterview,
 }: {
   app: AppCard;
   interviewAddress: string;
+  onConfirmInterview: () => void;
 }) {
   const router = useRouter();
   const iv = app.interview;
@@ -453,9 +474,10 @@ function InterviewSection({
 
   async function accept() {
     setAccepting(true);
+    onConfirmInterview(); // optimistic: card flips green immediately
     const res = await acceptInterviewTime(app.id);
     setAccepting(false);
-    if (!res.error) router.refresh();
+    router.refresh(); // reconcile with server (also reverts if it failed)
   }
 
   // Type (in person / phone / video) + location, so "in person" can

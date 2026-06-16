@@ -90,7 +90,7 @@ export default async function FounderFormBuildPage({
         />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-2">
         <BuildTabs builder={builder} importer={importer} />
       </div>
     </div>

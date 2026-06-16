@@ -83,7 +83,7 @@ export default async function FormBuildPage({
       </h1>
       <p className="text-sm text-white/80">Build your form below.</p>
 
-      <div className="mt-4">
+      <div className="mt-3">
         <BuildTabs builder={builder} importer={importer} />
       </div>
     </div>

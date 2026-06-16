@@ -43,15 +43,19 @@ export function BuildTabs({
 
   return (
     <div>
-      <div className="mb-3 flex justify-end">
-        <button
-          type="button"
-          onClick={() => setMode(mode === "builder" ? "import" : "builder")}
-          className="rounded-lg border border-white/40 bg-white/15 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-white/25"
-        >
-          {mode === "builder" ? "Switch to Import from PDF" : "Switch to Form Builder"}
-        </button>
-      </div>
+      {/* Switch only shown on the Import view (so you can get back); the
+          Builder view keeps its top-right clean for the Preview button. */}
+      {mode === "import" && (
+        <div className="mb-3 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setMode("builder")}
+            className="rounded-lg border border-white/40 bg-white/15 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-white/25"
+          >
+            Switch to Form Builder
+          </button>
+        </div>
+      )}
       {mode === "builder" ? builder : importer}
     </div>
   );

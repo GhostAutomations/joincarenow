@@ -247,7 +247,7 @@ export function MondayFormBuilder({
 
   return (
     <>
-    <div className="mx-auto mb-3 flex max-w-2xl justify-end">
+    <div className="mb-3 flex justify-end">
       <button
         type="button"
         onClick={() => setShowPreview(true)}

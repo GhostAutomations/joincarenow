@@ -84,7 +84,7 @@ export function StoreBrowser({
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-6xl">
       {isAdmin && selected.size > 0 && (
         <div className="sticky top-2 z-10 mb-3 flex items-center justify-between gap-3 rounded-xl border border-brand-200 bg-white/90 px-4 py-2.5 shadow-sm backdrop-blur">
           <span className="text-sm text-gray-700">
@@ -108,7 +108,7 @@ export function StoreBrowser({
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {forms.map((f) => {
           const unlocked = tierRank(companyTier) >= tierRank(f.store_tier);
           const isAdded = added.has(f.id);

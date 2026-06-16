@@ -7,6 +7,98 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export type OnbState = { error?: string; ok?: boolean } | undefined;
 
+export type TaskDraft = {
+  title: string;
+  taskType: string;
+  formIds: string[];
+  dueDays: string;
+  required: boolean;
+  body: string;
+  triggerStage: string;
+};
+
+/** Add one or more workflow tasks at once. Each form task expands to one task
+ *  per selected form. */
+export async function addTemplateTasks(
+  drafts: TaskDraft[]
+): Promise<{ ok?: boolean; error?: string }> {
+  if (!Array.isArray(drafts) || drafts.length === 0) return { error: "Nothing to add" };
+
+  for (const d of drafts) {
+    if ((d.title ?? "").trim().length < 2) return { error: "Give each task a title" };
+    if (!["form", "document", "acknowledge"].includes(d.taskType)) {
+      return { error: "Pick a type for each task" };
+    }
+    if (!["on_application", "reviewing", "interview", "offer", "hired"].includes(d.triggerStage)) {
+      return { error: "Choose when to send each task" };
+    }
+    if (d.taskType === "form" && (!d.formIds || d.formIds.length === 0)) {
+      return { error: "Choose at least one form for each form task" };
+    }
+  }
+
+  const { supabase, current } = await requireCompany();
+  const { data: last } = await supabase
+    .from("onboarding_templates")
+    .select("position")
+    .eq("company_id", current.company_id)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  let pos = (last?.position ?? -1) + 1;
+
+  // Resolve form names (to disambiguate when a task has several forms).
+  const allFormIds = [...new Set(drafts.flatMap((d) => d.formIds ?? []))];
+  let names = new Map<string, string>();
+  if (allFormIds.length) {
+    const { data: fs } = await supabase
+      .from("forms")
+      .select("id, name")
+      .in("id", allFormIds)
+      .eq("company_id", current.company_id);
+    names = new Map((fs ?? []).map((f) => [f.id as string, f.name as string]));
+  }
+
+  const rows: Record<string, unknown>[] = [];
+  for (const d of drafts) {
+    const dueDays = d.dueDays === "" ? null : Math.max(0, parseInt(d.dueDays, 10) || 0);
+    const body = (d.body ?? "").trim() || null;
+    if (d.taskType === "form") {
+      const multi = d.formIds.length > 1;
+      for (const fid of d.formIds) {
+        rows.push({
+          company_id: current.company_id,
+          title: multi ? `${d.title.trim()} – ${names.get(fid) ?? "Form"}` : d.title.trim(),
+          task_type: "form",
+          form_id: fid,
+          body,
+          required: d.required,
+          due_days: dueDays,
+          trigger_stage: d.triggerStage,
+          position: pos++,
+        });
+      }
+    } else {
+      rows.push({
+        company_id: current.company_id,
+        title: d.title.trim(),
+        task_type: d.taskType,
+        form_id: null,
+        body,
+        required: d.required,
+        due_days: dueDays,
+        trigger_stage: d.triggerStage,
+        position: pos++,
+      });
+    }
+  }
+
+  const { error } = await supabase.from("onboarding_templates").insert(rows);
+  if (error) return { error: "Could not save. Please try again." };
+  revalidatePath("/onboarding-board");
+  return { ok: true };
+}
+
 // ---------- Staff: manage the checklist template ----------
 export async function addTemplateTask(
   _prev: OnbState,

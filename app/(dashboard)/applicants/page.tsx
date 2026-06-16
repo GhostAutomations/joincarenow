@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 type Row = {
   applicant_id: string;
@@ -78,7 +79,7 @@ export default async function ApplicantsPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Applicants</h1>
+      <PageHeader title="Applicants" subtitle="Everyone who has applied to your company." />
 
       <form method="get" className="mt-4 max-w-sm">
         <div className="relative">

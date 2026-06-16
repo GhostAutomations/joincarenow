@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { formatLondon } from "@/lib/time";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 type Row = {
   interview_id: string;
@@ -84,21 +85,20 @@ export default async function InterviewsPage({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-gray-900">Interviews</h1>
-        <div className="flex items-center gap-2 text-sm">
-          <Link href={`/interviews?week=${offset - 1}`} className="rounded-lg border border-gray-300 p-1.5 hover:bg-gray-100" aria-label="Previous week">
+      <PageHeader title="Interviews" subtitle="Everyone's upcoming interviews — visible to the whole team.">
+        <div className="flex items-center gap-2 text-sm text-white">
+          <Link href={`/interviews?week=${offset - 1}`} className="rounded-lg border border-white/40 bg-white/15 p-1.5 hover:bg-white/30" aria-label="Previous week">
             <ChevronLeft className="h-4 w-4" />
           </Link>
-          <span className="min-w-32 text-center font-medium text-gray-700">{rangeLabel}</span>
-          <Link href={`/interviews?week=${offset + 1}`} className="rounded-lg border border-gray-300 p-1.5 hover:bg-gray-100" aria-label="Next week">
+          <span className="min-w-32 text-center font-medium">{rangeLabel}</span>
+          <Link href={`/interviews?week=${offset + 1}`} className="rounded-lg border border-white/40 bg-white/15 p-1.5 hover:bg-white/30" aria-label="Next week">
             <ChevronRight className="h-4 w-4" />
           </Link>
           {offset !== 0 && (
-            <Link href="/interviews" className="ml-1 text-brand-600 hover:underline">Today</Link>
+            <Link href="/interviews" className="ml-1 underline">Today</Link>
           )}
         </div>
-      </div>
+      </PageHeader>
 
       <div className="mt-5 overflow-x-auto rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm">
         <div className="min-w-[820px]">

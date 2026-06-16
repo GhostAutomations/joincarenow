@@ -7,6 +7,7 @@ import { RolesManager } from "@/components/dashboard/roles-manager";
 import { EmployeeNumberSettings } from "@/components/dashboard/employee-number-settings";
 import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
 import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
+import { PageHeader } from "@/components/dashboard/page-header";
 import type { OpeningHours } from "@/lib/opening-hours";
 
 export default async function SettingsPage() {
@@ -53,7 +54,7 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
+      <PageHeader title="Settings" subtitle={current.companies.name} />
 
       <section className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
         <h2 className="text-base font-medium text-gray-900">Company</h2>

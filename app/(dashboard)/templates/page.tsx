@@ -1,5 +1,6 @@
 import { requireCompany } from "@/modules/auth/queries";
 import { TemplatesManager, type Template } from "@/components/dashboard/templates-manager";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export default async function TemplatesPage() {
   const { supabase, current } = await requireCompany();
@@ -12,11 +13,10 @@ export default async function TemplatesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Templates</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Reusable email &amp; SMS messages with merge fields. Pick them when
-        messaging an applicant from their record.
-      </p>
+      <PageHeader
+        title="Templates"
+        subtitle="Reusable email & SMS messages with merge fields. Pick them when messaging an applicant from their record."
+      />
 
       <div className="mt-6">
         <TemplatesManager templates={(data ?? []) as Template[]} />

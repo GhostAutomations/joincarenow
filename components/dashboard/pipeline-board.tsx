@@ -10,6 +10,7 @@ import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { createClient } from "@/lib/supabase/client";
 import { formatLondon, londonToUtcIso } from "@/lib/time";
 import type { OpeningHours } from "@/lib/opening-hours";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export type Interview = {
   id: string;
@@ -169,22 +170,21 @@ export function PipelineBoard({
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Pipeline</h1>
-        <div className="inline-flex rounded-lg border border-gray-300 bg-white p-0.5 text-sm">
+      <PageHeader title="Pipeline" subtitle="Drag applicants through your hiring stages.">
+        <div className="inline-flex rounded-lg border border-white/40 bg-white/15 p-0.5 text-sm">
           {(["board", "table"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
               className={`rounded-md px-3 py-1 capitalize ${
-                view === v ? "bg-brand-600 text-white" : "text-gray-600 hover:bg-gray-100"
+                view === v ? "bg-white text-brand-700" : "text-white/80 hover:bg-white/10"
               }`}
             >
               {v}
             </button>
           ))}
         </div>
-      </div>
+      </PageHeader>
 
       {apps.length === 0 && (
         <p className="mt-6 text-sm text-gray-500">

@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { deleteTemplateTask } from "@/modules/onboarding/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { AddTemplateTask } from "@/components/dashboard/add-template-task";
 import {
   OnboardingTaskReview,
@@ -59,10 +60,10 @@ export default async function OnboardingBoardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Workflow</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Build a checklist of tasks and forms, and choose the point in the pipeline each one is sent to the applicant.
-      </p>
+      <PageHeader
+        title="Workflow"
+        subtitle="Build a checklist of tasks and forms, and choose the point in the pipeline each one is sent to the applicant."
+      />
 
       {isAdmin && (
         <section className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">

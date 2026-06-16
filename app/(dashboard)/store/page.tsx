@@ -1,6 +1,7 @@
 import { requireCompany } from "@/modules/auth/queries";
 import { acquireStoreForm } from "@/modules/forms/actions";
 import { TIER_LABEL, tierRank } from "@/modules/forms/tiers";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 type StoreForm = {
   id: string;
@@ -29,15 +30,14 @@ export default async function StorePage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Form Store</h1>
-        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+      <PageHeader
+        title="Form Store"
+        subtitle="Ready-made forms. Add one to your Forms to edit it and assign it to jobs."
+      >
+        <span className="rounded-full border border-white/40 bg-white/20 px-3 py-1 text-xs font-medium text-white">
           Your plan: {TIER_LABEL[companyTier] ?? companyTier}
         </span>
-      </div>
-      <p className="mt-1 text-sm text-gray-500">
-        Ready-made forms. Add one to your Forms to edit it and assign it to jobs.
-      </p>
+      </PageHeader>
 
       {list.length === 0 ? (
         <p className="mt-6 text-sm text-gray-500">No store forms available yet.</p>

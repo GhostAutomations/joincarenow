@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Search, MapPin, Users } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 type EmployeeRow = {
   id: string;
@@ -72,10 +73,10 @@ export default async function EmployeesPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Employees</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        The master record for everyone hired through Join Care Now. Created automatically when an applicant reaches Hired.
-      </p>
+      <PageHeader
+        title="Employees"
+        subtitle="The master record for everyone hired through Join Care Now — created automatically when an applicant reaches Hired."
+      />
 
       {branches.length > 0 && (
         <div className="mt-6">

@@ -17,10 +17,10 @@ type Row = {
 };
 
 const BLOCK: Record<string, string> = {
-  proposed: "border-blue-300 bg-blue-50 text-blue-900",
-  confirmed: "border-green-300 bg-green-50 text-green-900",
-  reschedule_requested: "border-amber-300 bg-amber-50 text-amber-900",
-  declined: "border-red-200 bg-red-50 text-red-800",
+  proposed: "border-blue-400 border-l-4 border-l-blue-500 bg-blue-100 text-blue-900",
+  confirmed: "border-green-400 border-l-4 border-l-green-600 bg-green-100 text-green-900",
+  reschedule_requested: "border-amber-400 border-l-4 border-l-amber-500 bg-amber-100 text-amber-900",
+  declined: "border-red-400 border-l-4 border-l-red-500 bg-red-100 text-red-900",
 };
 
 /** London "YYYY-MM-DD" for a Date. */
@@ -148,9 +148,20 @@ export default async function InterviewsPage({
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-gray-400">
-        Times shown in UK time. Tap an interview to open the applicant.
-      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-white/80">
+        {[
+          ["bg-blue-500", "Awaiting reply"],
+          ["bg-green-600", "Confirmed"],
+          ["bg-amber-500", "New time requested"],
+          ["bg-red-500", "Declined"],
+        ].map(([dot, label]) => (
+          <span key={label} className="inline-flex items-center gap-1.5">
+            <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
+            {label}
+          </span>
+        ))}
+        <span className="ml-auto text-white/70">Times in UK time · tap to open the applicant.</span>
+      </div>
     </div>
   );
 }

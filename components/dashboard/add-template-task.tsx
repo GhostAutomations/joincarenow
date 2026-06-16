@@ -39,17 +39,26 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
       </div>
 
       {type === "form" && (
-        <label className="block text-xs font-medium text-gray-600">
+        <div className="text-xs font-medium text-gray-600">
           Form(s) to complete
-          <select name="formId" multiple className={`${cls} h-auto min-h-[6rem]`}>
-            {forms.map((f) => (
-              <option key={f.id} value={f.id} className="py-0.5">{f.name}</option>
-            ))}
-          </select>
+          {forms.length === 0 ? (
+            <p className="mt-1 font-normal text-gray-400">
+              No forms yet — create one in Forms first.
+            </p>
+          ) : (
+            <div className="mt-1 max-h-48 space-y-1 overflow-y-auto rounded-md border border-gray-300 bg-white p-2">
+              {forms.map((f) => (
+                <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
+                  <input type="checkbox" name="formId" value={f.id} className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+                  {f.name}
+                </label>
+              ))}
+            </div>
+          )}
           <span className="mt-1 block text-[11px] font-normal text-gray-400">
-            Hold {typeof navigator !== "undefined" && navigator.platform.includes("Mac") ? "Cmd" : "Ctrl"} to select more than one. Each becomes its own task.
+            Tick one or more. Each becomes its own task.
           </span>
-        </label>
+        </div>
       )}
 
       <label className="block text-xs font-medium text-gray-600">

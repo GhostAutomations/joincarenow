@@ -59,7 +59,7 @@ export default async function OnboardingBoardPage() {
   const people = [...byPerson.values()];
 
   return (
-    <div>
+    <div className="mx-auto max-w-3xl">
       <PageHeader
         title="Workflow"
         subtitle="Build a checklist of tasks and forms, and choose the point in the pipeline each one is sent to the applicant."

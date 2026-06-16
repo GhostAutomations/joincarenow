@@ -247,7 +247,8 @@ export function MondayFormBuilder({
 
   return (
     <>
-    <div className="mb-3 flex justify-end">
+    {/* Small screens: Preview sits above the form (no side gutters there). */}
+    <div className="mb-3 flex justify-end xl:hidden">
       <button
         type="button"
         onClick={() => setShowPreview(true)}
@@ -257,8 +258,17 @@ export function MondayFormBuilder({
       </button>
     </div>
     {/* Centred form canvas (page-centre, aligned with the dock); the content
-        outline floats into the left gutter on wide screens. */}
+        outline floats into the left gutter and Preview into the right gutter,
+        both level with the top of the form, on wide screens. */}
     <div className="relative mx-auto w-full max-w-2xl pb-4">
+      {/* RIGHT gutter: Preview, level with the top of the form. */}
+      <button
+        type="button"
+        onClick={() => setShowPreview(true)}
+        className="absolute left-full top-0 ml-6 hidden items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 xl:inline-flex"
+      >
+        <Eye className="h-4 w-4" /> Preview form
+      </button>
       {/* LEFT: content outline */}
       <aside className="absolute right-full top-0 mr-6 hidden h-max w-44 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-3 xl:block">
         <p className="mb-2 text-xs font-medium text-gray-900">Content</p>

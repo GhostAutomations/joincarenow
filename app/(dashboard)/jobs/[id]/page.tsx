@@ -71,7 +71,7 @@ export default async function EditJobPage({
       </div>
 
       {/* Status controls */}
-      <div className="mt-4 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-4">
+      <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-4">
         <div className="flex flex-wrap items-center gap-3">
           {job.status !== "published" && (
             <form action={setJobStatus}>
@@ -117,7 +117,7 @@ export default async function EditJobPage({
         )}
       </div>
 
-      <div className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
         <JobForm
           action={updateJob}
           submitLabel="Save changes"

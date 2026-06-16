@@ -46,7 +46,7 @@ export function TemplatesManager({ templates }: { templates: Template[] }) {
   return (
     <div className="space-y-8">
       {/* Editor */}
-      <section className="rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
+      <section className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
         <h2 className="text-base font-medium text-gray-900">
           {editing ? "Edit template" : "New template"}
         </h2>
@@ -136,7 +136,7 @@ function TemplateList({
       {items.length === 0 ? (
         <p className="mt-2 text-sm text-gray-500">No templates yet.</p>
       ) : (
-        <ul className="mt-3 divide-y divide-gray-100 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm">
+        <ul className="mt-3 divide-y divide-gray-100 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
           {items.map((t) => (
             <li key={t.id} className="flex items-start justify-between gap-3 p-4">
               <div className="min-w-0">

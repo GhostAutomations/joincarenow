@@ -205,7 +205,7 @@ export function PipelineBoard({
                   if (dragId) move(dragId, col.key);
                   setDragId(null);
                 }}
-                className="rounded-2xl border border-white/60 bg-white/55 p-2.5 shadow-sm backdrop-blur-sm"
+                className="rounded-2xl border border-slate-200 bg-slate-100 p-2.5 shadow-sm"
               >
                 <div className="flex items-center gap-2 px-2 py-1.5">
                   <span className={`h-2 w-2 rounded-full ${col.dot}`} />
@@ -254,7 +254,7 @@ export function PipelineBoard({
       )}
 
       {apps.length > 0 && view === "table" && (
-        <div className="mt-6 overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm">
+        <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
           <table className="min-w-full divide-y divide-gray-100 text-sm">
             <thead className="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
               <tr>

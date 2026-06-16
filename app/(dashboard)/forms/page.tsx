@@ -51,7 +51,7 @@ export default async function FormsPage() {
                 <li key={f.id}>
                   <Link
                     href={`/forms/${f.id}`}
-                    className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-4 hover:border-brand-300"
+                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-4 hover:border-brand-300"
                   >
                     <span className="font-medium text-gray-900">{f.name}</span>
                     <span className="text-xs text-gray-500">

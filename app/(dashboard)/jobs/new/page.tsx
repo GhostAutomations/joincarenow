@@ -29,7 +29,7 @@ export default async function NewJobPage() {
         job page once you&apos;re happy with it.
       </p>
 
-      <div className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
         <JobForm action={createJob} submitLabel="Save draft" forms={forms ?? []} branches={branches ?? []} roles={roles ?? []} />
       </div>
     </div>

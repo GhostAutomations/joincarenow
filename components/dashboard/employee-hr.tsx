@@ -60,7 +60,7 @@ export function EmployeeHr({
   const [tab, setTab] = useState<Tab>("Absences");
 
   return (
-    <section className="rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm">
+    <section className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
       <div className="flex items-center gap-1 border-b border-gray-100 px-3 pt-3">
         {TABS.map((t) => {
           const count = t === "Absences" ? absences.length : t === "Warnings" ? warnings.length : documents.length;

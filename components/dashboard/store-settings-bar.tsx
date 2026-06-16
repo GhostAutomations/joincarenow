@@ -25,7 +25,7 @@ export function StoreSettingsBar({
   const [state, action] = useActionState<DetailsState, FormData>(saveStoreSettings, undefined);
 
   return (
-    <form action={action} className="rounded-xl border border-gray-200 bg-white p-4">
+    <form action={action} className="rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-4">
       <input type="hidden" name="id" value={formId} />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <label className="text-sm font-medium text-gray-700">

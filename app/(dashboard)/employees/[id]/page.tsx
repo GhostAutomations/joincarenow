@@ -125,7 +125,7 @@ export default async function EmployeeDetailPage({
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Master record (read-only summary) */}
-        <section className="rounded-xl border border-gray-200 bg-white p-6">
+        <section className="rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
           <h2 className="text-base font-medium text-gray-900">Master profile</h2>
           <p className="mt-1 text-xs text-gray-400">
             The source of truth shared with connected systems.
@@ -167,7 +167,7 @@ export default async function EmployeeDetailPage({
         </section>
 
         {/* Editable fields */}
-        <section className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6">
+        <section className="lg:col-span-2 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
           <h2 className="text-base font-medium text-gray-900">Employment details</h2>
           <p className="mt-1 text-xs text-gray-400">
             These feed the Carer.Academy sync and future connected systems.

@@ -100,7 +100,7 @@ export default async function InterviewsPage({
         </div>
       </div>
 
-      <div className="mt-5 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="mt-5 overflow-x-auto rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm">
         <div className="min-w-[820px]">
           {/* Header row */}
           <div className="grid grid-cols-[160px_repeat(7,1fr)] border-b border-gray-200 bg-gray-50 text-xs font-medium text-gray-500">

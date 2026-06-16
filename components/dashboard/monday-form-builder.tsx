@@ -181,7 +181,7 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
     </div>
     <div className="grid grid-cols-[180px_1fr] gap-4">
       {/* LEFT: content outline */}
-      <aside className="h-max rounded-xl border border-gray-200 bg-white p-3">
+      <aside className="h-max rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-3">
         <p className="mb-2 text-xs font-medium text-gray-900">Content</p>
         <button
           onClick={() => setSelected("title")}
@@ -204,7 +204,7 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
       </aside>
 
       {/* RIGHT: canvas */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
+      <div className="rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6 sm:p-8">
         {/* logo */}
         <div className="mb-3">
           {logoUrl ? (

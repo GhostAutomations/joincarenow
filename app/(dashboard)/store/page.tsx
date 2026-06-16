@@ -47,7 +47,7 @@ export default async function StorePage() {
             const fieldCount = f.form_fields?.[0]?.count ?? 0;
             const unlocked = tierRank(companyTier) >= tierRank(f.store_tier);
             return (
-              <div key={f.id} className="flex flex-col rounded-xl border border-gray-200 bg-white p-5">
+              <div key={f.id} className="flex flex-col rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-medium text-gray-900">{f.name}</p>

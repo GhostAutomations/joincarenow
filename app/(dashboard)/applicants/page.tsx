@@ -97,7 +97,7 @@ export default async function ApplicantsPage({
           {q ? "No applicants match your search." : "No applicants yet."}
         </p>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <div className="mt-6 overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm">
           <table className="min-w-full divide-y divide-gray-100 text-sm">
             <thead className="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
               <tr>

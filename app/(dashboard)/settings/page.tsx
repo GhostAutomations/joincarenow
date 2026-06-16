@@ -55,7 +55,7 @@ export default async function SettingsPage() {
     <div>
       <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
 
-      <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+      <section className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
         <h2 className="text-base font-medium text-gray-900">Company</h2>
         <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
           <div>
@@ -74,7 +74,7 @@ export default async function SettingsPage() {
       </section>
 
       {isAdmin && (
-        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <section className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
           <h2 className="text-base font-medium text-gray-900">Navigation</h2>
           <p className="mt-1 text-sm text-gray-500">
             Choose how your team moves around the platform.
@@ -84,7 +84,7 @@ export default async function SettingsPage() {
       )}
 
       {isAdmin && (
-        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <section className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
           <h2 className="text-base font-medium text-gray-900">Branches</h2>
           <p className="mt-1 text-sm text-gray-500">
             Set up your branches once. They become selectable on jobs and follow
@@ -97,7 +97,7 @@ export default async function SettingsPage() {
       )}
 
       {isAdmin && (
-        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <section className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
           <h2 className="text-base font-medium text-gray-900">Roles</h2>
           <p className="mt-1 text-sm text-gray-500">
             Define your roles once (e.g. Walker, Driver). They become selectable
@@ -110,7 +110,7 @@ export default async function SettingsPage() {
       )}
 
       {isAdmin && (
-        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <section className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
           <h2 className="text-base font-medium text-gray-900">Employee numbers</h2>
           <p className="mt-1 text-sm text-gray-500">
             Choose how each new hire&apos;s Employee ID is set.
@@ -124,7 +124,7 @@ export default async function SettingsPage() {
       )}
 
       {isAdmin && (
-        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <section className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
           <h2 className="text-base font-medium text-gray-900">
             Interview address
           </h2>
@@ -140,7 +140,7 @@ export default async function SettingsPage() {
       )}
 
       {isAdmin && (
-        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <section className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
           <h2 className="text-base font-medium text-gray-900">Opening hours</h2>
           <p className="mt-1 text-sm text-gray-500">
             Set the days and hours your office is open. Interviews can only be
@@ -151,7 +151,7 @@ export default async function SettingsPage() {
       )}
 
       {isAdmin && (
-        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <section className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
           <h2 className="text-base font-medium text-gray-900">
             Invite a team member
           </h2>
@@ -176,7 +176,7 @@ export default async function SettingsPage() {
         </section>
       )}
 
-      <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+      <section className="mt-6 rounded-2xl border border-white/60 bg-white/70 shadow-sm backdrop-blur-sm p-6">
         <h2 className="text-base font-medium text-gray-900">Team members</h2>
         <ul className="mt-4 divide-y divide-gray-100">
           {(members ?? []).map((m) => {

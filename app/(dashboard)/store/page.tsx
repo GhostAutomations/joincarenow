@@ -16,14 +16,23 @@ export default async function StorePage() {
   const { supabase, current } = await requireCompany();
   const isAdmin = current.role === "admin";
 
-  const [{ data: company }, { data: forms }] = await Promise.all([
+  const [{ data: company }, { data: forms }, { data: mine }] = await Promise.all([
     supabase.from("companies").select("subscription_tier").eq("id", current.company_id).single(),
     supabase
       .from("forms")
       .select("id, name, description, category, store_tier, form_fields(count)")
       .eq("is_store", true)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("forms")
+      .select("source_form_id")
+      .eq("company_id", current.company_id)
+      .not("source_form_id", "is", null),
   ]);
+
+  const acquiredIds = new Set(
+    (mine ?? []).map((m) => m.source_form_id as string).filter(Boolean)
+  );
 
   const companyTier = company?.subscription_tier ?? "free";
   const list = (forms ?? []) as unknown as StoreForm[];
@@ -34,6 +43,7 @@ export default async function StorePage() {
     category: f.category,
     store_tier: f.store_tier,
     fieldCount: f.form_fields?.[0]?.count ?? 0,
+    acquired: acquiredIds.has(f.id),
   }));
 
   return (

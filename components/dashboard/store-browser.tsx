@@ -20,6 +20,7 @@ export type StoreCard = {
   category: string;
   store_tier: string;
   fieldCount: number;
+  acquired: boolean;
 };
 
 type PreviewData = {
@@ -115,7 +116,7 @@ export function StoreBrowser({
           return (
             <div key={f.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                {isAdmin && (
+                {isAdmin && !f.acquired && (
                   <input
                     type="checkbox"
                     checked={selected.has(f.id)}
@@ -132,13 +133,19 @@ export function StoreBrowser({
                         {f.category} · {f.fieldCount} field{f.fieldCount === 1 ? "" : "s"}
                       </p>
                     </div>
-                    <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                        f.store_tier === "free" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {TIER_LABEL[f.store_tier] ?? f.store_tier}
-                    </span>
+                    {f.acquired ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                        <Check className="h-3 w-3" /> In your forms
+                      </span>
+                    ) : (
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                          f.store_tier === "free" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+                        }`}
+                      >
+                        {TIER_LABEL[f.store_tier] ?? f.store_tier}
+                      </span>
+                    )}
                   </div>
                   {f.description && (
                     <p className="mt-1.5 line-clamp-2 text-sm text-gray-600">{f.description}</p>
@@ -153,7 +160,7 @@ export function StoreBrowser({
                       <Eye className="h-4 w-4" /> Preview
                     </button>
 
-                    {isAdmin && (
+                    {isAdmin && !f.acquired && (
                       unlocked ? (
                         <>
                           <button

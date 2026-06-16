@@ -225,7 +225,7 @@ export function AddTemplateTask({
         disabled={saving}
         className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
       >
-        {saving ? "Adding…" : tasks.length > 1 ? `Add ${tasks.length} tasks to checklist` : "Add to checklist"}
+        {saving ? "Creating…" : "Create Workflow"}
       </button>
     </div>
   );

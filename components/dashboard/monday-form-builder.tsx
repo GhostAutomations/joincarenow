@@ -114,10 +114,10 @@ export function MondayFormBuilder({
   const dragId = useRef<string | null>(null);
   const headerMounted = useRef(false);
 
-  useEffect(() => {
-    setFlds(fields);
-    setOrder(fields.map((f) => f.id));
-  }, [fields]);
+  // Note: we intentionally do NOT resync from `fields` props after mount.
+  // The builder owns its state optimistically; resyncing on every server
+  // round-trip caused the page to re-render and jump. Fresh data is picked up
+  // on a full mount (e.g. switching back from the PDF import tab).
 
   useEffect(() => {
     if (!headerMounted.current) {
@@ -145,42 +145,60 @@ export function MondayFormBuilder({
   const byId = new Map(flds.map((f) => [f.id, f]));
   const ordered = order.map((id) => byId.get(id)).filter(Boolean) as BuilderField[];
 
+  /** Swap a temporary field id for the real one returned by the server. */
+  function reconcileId(tempId: string, realId: string | null) {
+    if (!realId) {
+      // Persist failed — roll the optimistic field back out.
+      setFlds((prev) => prev.filter((f) => f.id !== tempId));
+      setOrder((prev) => prev.filter((x) => x !== tempId));
+      setSelected((s) => (s === tempId ? null : s));
+      return;
+    }
+    setFlds((prev) => prev.map((f) => (f.id === tempId ? { ...f, id: realId } : f)));
+    setOrder((prev) => prev.map((x) => (x === tempId ? realId : x)));
+    setSelected((s) => (s === tempId ? realId : s));
+  }
+
   async function addAt(afterId: string, type: string) {
+    // Insert instantly with a temp id (no awaiting), then persist + reconcile.
+    // This keeps the field exactly where the "+" was — no scroll jump.
+    const tempId = `temp-${Math.random().toString(36).slice(2)}`;
+    setFlds((prev) => [...prev, clientDefault(tempId, type)]);
+    setOrder((prev) => {
+      const next = [...prev];
+      const idx = afterId ? next.indexOf(afterId) + 1 : next.length;
+      next.splice(idx, 0, tempId);
+      return next;
+    });
     setOpenPlus(null);
+    setSelected(tempId);
+
     const fd = new FormData();
     fd.append("formId", form.id);
     fd.append("afterId", afterId);
     fd.append("fieldType", type);
-    const id = await addFieldOfType(fd);
-    if (!id) return;
-    // Insert optimistically — no full refresh, so it slides in smoothly.
-    const field = clientDefault(id, type);
-    setFlds((prev) => [...prev, field]);
-    setOrder((prev) => {
-      const next = [...prev];
-      const idx = afterId ? next.indexOf(afterId) + 1 : next.length;
-      next.splice(idx, 0, id);
-      return next;
-    });
-    setSelected(id);
+    reconcileId(tempId, await addFieldOfType(fd));
   }
 
   async function addFollowUp(parentId: string, value: string, type: string) {
+    const tempId = `temp-${Math.random().toString(36).slice(2)}`;
+    setFlds((prev) => [
+      ...prev,
+      { ...clientDefault(tempId, type), parent_field_id: parentId, parent_value: value },
+    ]);
+    setOrder((prev) => {
+      const next = [...prev];
+      next.splice(next.indexOf(parentId) + 1, 0, tempId);
+      return next;
+    });
+    setSelected(tempId);
+
     const fd = new FormData();
     fd.append("formId", form.id);
     fd.append("parentFieldId", parentId);
     fd.append("parentValue", value);
     fd.append("fieldType", type);
-    const id = await addFieldOfType(fd);
-    if (!id) return;
-    const field = { ...clientDefault(id, type), parent_field_id: parentId, parent_value: value };
-    setFlds((prev) => [...prev, field]);
-    setOrder((prev) => {
-      const next = [...prev];
-      next.splice(next.indexOf(parentId) + 1, 0, id);
-      return next;
-    });
-    setSelected(id);
+    reconcileId(tempId, await addFieldOfType(fd));
   }
 
   function removeField(id: string) {

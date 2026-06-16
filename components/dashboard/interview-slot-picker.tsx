@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { slotsForDate, isoWeekday, DAYS, type OpeningHours } from "@/lib/opening-hours";
+import { slotsForDate, isoWeekday, type OpeningHours } from "@/lib/opening-hours";
 
 export type BookedInterview = {
   scheduled_at: string;
@@ -9,9 +9,12 @@ export type BookedInterview = {
   interviewer_id: string | null;
 };
 
-/** Calendar-style slot picker: next open days, 30-min blocks within opening
- *  hours, with the chosen interviewer's existing interviews shown as booked.
- *  Emits "YYYY-MM-DDTHH:MM" in a hidden input named `name`. */
+const toMin = (hm: string) => parseInt(hm.slice(0, 2)) * 60 + parseInt(hm.slice(3, 5));
+const fromMin = (m: number) =>
+  `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+
+/** Week-grid slot picker: open days as columns, 30-min time rows. The chosen
+ *  interviewer's existing interviews are blocked out. Emits "YYYY-MM-DDTHH:MM". */
 export function InterviewSlotPicker({
   name,
   openingHours,
@@ -29,7 +32,7 @@ export function InterviewSlotPicker({
   stepMin?: number;
   daysToShow?: number;
 }) {
-  // Build the next N open days (skipping closed days), starting today.
+  // Next N open days (skip closed days).
   const openDays: string[] = [];
   const cursor = new Date();
   for (let i = 0; i < 60 && openDays.length < daysToShow; i++) {
@@ -38,35 +41,7 @@ export function InterviewSlotPicker({
     cursor.setDate(cursor.getDate() + 1);
   }
 
-  const initDate = defaultValue ? defaultValue.slice(0, 10) : openDays[0] ?? "";
-  const [date, setDate] = useState(openDays.includes(initDate) ? initDate : openDays[0] ?? "");
-  const [slot, setSlot] = useState(defaultValue ? defaultValue.slice(11, 16) : "");
-
-  const slots = date ? slotsForDate(openingHours, date, stepMin) : [];
-
-  // Minutes the chosen interviewer is busy on the selected day.
-  const busy = new Set<string>();
-  if (interviewerId && date) {
-    for (const iv of interviews) {
-      if (iv.interviewer_id !== interviewerId) continue;
-      const start = new Date(iv.scheduled_at);
-      const startDate = start.toLocaleDateString("en-CA", { timeZone: "Europe/London" }); // YYYY-MM-DD
-      if (startDate !== date) continue;
-      const hm = start.toLocaleTimeString("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
-      const startMin = parseInt(hm.slice(0, 2)) * 60 + parseInt(hm.slice(3, 5));
-      for (let m = startMin; m < startMin + (iv.duration_minutes || 30); m += stepMin) {
-        busy.add(`${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`);
-      }
-    }
-  }
-
-  const value = date && slot ? `${date}T${slot}` : "";
-
-  function dayLabel(ds: string) {
-    const d = new Date(`${ds}T00:00:00Z`);
-    const wd = DAYS.find((x) => x.iso === isoWeekday(ds))?.label.slice(0, 3) ?? "";
-    return { wd, num: d.getUTCDate(), mon: d.toLocaleString("en-GB", { month: "short", timeZone: "UTC" }) };
-  }
+  const [value, setValue] = useState(defaultValue ?? "");
 
   if (openDays.length === 0) {
     return (
@@ -76,59 +51,121 @@ export function InterviewSlotPicker({
     );
   }
 
+  // Per-day open/close minutes, and overall time-row range across shown days.
+  const dayHours = openDays.map((ds) => {
+    const h = openingHours[isoWeekday(ds)];
+    return { ds, open: h ? toMin(h.open) : null, close: h ? toMin(h.close) : null };
+  });
+  const minOpen = Math.min(...dayHours.map((d) => d.open ?? 24 * 60));
+  const maxClose = Math.max(...dayHours.map((d) => d.close ?? 0));
+  const rows: number[] = [];
+  for (let m = minOpen; m < maxClose; m += stepMin) rows.push(m);
+
+  // Busy minutes per day for the chosen interviewer.
+  const busy = new Map<string, Set<number>>();
+  if (interviewerId) {
+    for (const iv of interviews) {
+      if (iv.interviewer_id !== interviewerId) continue;
+      const start = new Date(iv.scheduled_at);
+      const ds = start.toLocaleDateString("en-CA", { timeZone: "Europe/London" });
+      const hm = start.toLocaleTimeString("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
+      const s = toMin(hm);
+      const set = busy.get(ds) ?? new Set<number>();
+      for (let m = s; m < s + (iv.duration_minutes || stepMin); m += stepMin) set.add(m);
+      busy.set(ds, set);
+    }
+  }
+
+  function label(ds: string) {
+    const d = new Date(`${ds}T00:00:00Z`);
+    return {
+      wd: d.toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" }),
+      num: d.getUTCDate(),
+    };
+  }
+
   return (
-    <div className="space-y-3">
-      {/* Day chips */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1">
+    <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <div
+        className="min-w-[460px]"
+        style={{ display: "grid", gridTemplateColumns: `48px repeat(${openDays.length}, minmax(56px,1fr))` }}
+      >
+        {/* Header */}
+        <div className="border-b border-gray-200 bg-gray-50" />
         {openDays.map((ds) => {
-          const { wd, num, mon } = dayLabel(ds);
-          const active = ds === date;
+          const { wd, num } = label(ds);
           return (
-            <button
-              key={ds}
-              type="button"
-              onClick={() => { setDate(ds); setSlot(""); }}
-              className={`flex shrink-0 flex-col items-center rounded-lg border px-2.5 py-1.5 text-xs ${
-                active ? "border-brand-500 bg-brand-50 text-brand-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <span>{wd}</span>
-              <span className="text-sm font-semibold">{num}</span>
-              <span className="text-[10px] text-gray-400">{mon}</span>
-            </button>
+            <div key={ds} className="border-b border-l border-gray-200 bg-gray-50 px-1 py-1 text-center text-[11px] text-gray-600">
+              {wd} <span className="font-semibold text-gray-900">{num}</span>
+            </div>
           );
         })}
-      </div>
 
-      {/* Time blocks */}
-      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4">
-        {slots.map((s) => {
-          const isBusy = busy.has(s);
-          const selected = s === slot;
-          return (
-            <button
-              key={s}
-              type="button"
-              disabled={isBusy}
-              onClick={() => setSlot(s)}
-              className={`rounded-md border px-2 py-1.5 text-xs font-medium ${
-                selected
-                  ? "border-brand-600 bg-brand-600 text-white"
-                  : isBusy
-                    ? "cursor-not-allowed border-gray-100 bg-gray-100 text-gray-300 line-through"
-                    : "border-gray-200 text-gray-700 hover:border-brand-300 hover:bg-brand-50"
-              }`}
-            >
-              {s}
-            </button>
-          );
-        })}
+        {/* Rows */}
+        {rows.map((m) => (
+          <RowCells
+            key={m}
+            m={m}
+            openDays={openDays}
+            dayHours={dayHours}
+            busy={busy}
+            value={value}
+            setValue={setValue}
+          />
+        ))}
       </div>
-      {interviewerId === "" && (
-        <p className="text-[11px] text-gray-400">Pick an interviewer to see their existing bookings.</p>
-      )}
-
       <input type="hidden" name={name} value={value} />
     </div>
+  );
+}
+
+function RowCells({
+  m, openDays, dayHours, busy, value, setValue,
+}: {
+  m: number;
+  openDays: string[];
+  dayHours: { ds: string; open: number | null; close: number | null }[];
+  busy: Map<string, Set<number>>;
+  value: string;
+  setValue: (v: string) => void;
+}) {
+  const time = fromMin(m);
+  return (
+    <>
+      <div className="border-b border-gray-100 px-1 py-1.5 text-right text-[10px] text-gray-400">{time}</div>
+      {openDays.map((ds, i) => {
+        const dh = dayHours[i];
+        const inHours = dh.open != null && dh.close != null && m >= dh.open && m < dh.close;
+        const isBusy = busy.get(ds)?.has(m);
+        const slotVal = `${ds}T${time}`;
+        const selected = value === slotVal;
+
+        if (!inHours) {
+          return <div key={ds} className="border-b border-l border-gray-100 bg-gray-50/60" />;
+        }
+        return (
+          <button
+            key={ds}
+            type="button"
+            disabled={isBusy}
+            onClick={() => setValue(slotVal)}
+            className={`border-b border-l border-gray-100 ${
+              selected
+                ? "bg-brand-600"
+                : isBusy
+                  ? "cursor-not-allowed bg-gray-200"
+                  : "hover:bg-brand-50"
+            }`}
+            title={isBusy ? "Already booked" : time}
+          >
+            {selected ? (
+              <span className="block text-center text-[10px] font-semibold text-white">✓</span>
+            ) : isBusy ? (
+              <span className="block text-center text-[9px] text-gray-400">busy</span>
+            ) : null}
+          </button>
+        );
+      })}
+    </>
   );
 }

@@ -641,13 +641,19 @@ function InterviewSection({
 
           <div className="space-y-1">
             <p className="text-xs text-gray-600">Pick a slot</p>
-            <InterviewSlotPicker
-              name="scheduledAt"
-              openingHours={openingHours ?? {}}
-              interviews={bookedInterviews}
-              interviewerId={interviewerId}
-              defaultValue={defaultDt}
-            />
+            {interviewerId ? (
+              <InterviewSlotPicker
+                name="scheduledAt"
+                openingHours={openingHours ?? {}}
+                interviews={bookedInterviews}
+                interviewerId={interviewerId}
+                defaultValue={defaultDt}
+              />
+            ) : (
+              <p className="rounded-md border border-dashed border-gray-300 px-3 py-2 text-xs text-gray-500">
+                Choose who the interview is with above to see their availability.
+              </p>
+            )}
           </div>
 
           <label className="block text-xs text-gray-600">

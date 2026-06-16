@@ -37,12 +37,12 @@ export function Sidebar({ companyName }: { companyName: string }) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex w-60 flex-col border-r border-gray-200 bg-white">
-      <div className="px-5 py-5 border-b border-gray-100">
-        <Link href="/dashboard" className="text-lg font-bold text-brand-700">
+    <aside className="hidden md:flex w-60 flex-col bg-gradient-to-b from-teal-600 via-cyan-700 to-indigo-800 text-white">
+      <div className="px-5 py-5 border-b border-white/15">
+        <Link href="/dashboard" className="text-lg font-bold text-white">
           Join Care Now
         </Link>
-        <p className="mt-0.5 truncate text-xs text-gray-500">{companyName}</p>
+        <p className="mt-0.5 truncate text-xs text-white/60">{companyName}</p>
       </div>
       <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
         {NAV.map(({ href, label, icon: Icon }) => {
@@ -54,10 +54,10 @@ export function Sidebar({ companyName }: { companyName: string }) {
               href={href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",
+                "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-brand-50 text-brand-700"
-                  : "text-gray-700 hover:bg-gray-100"
+                  ? "bg-white/20 text-white shadow-sm backdrop-blur-sm"
+                  : "text-white/75 hover:bg-white/10 hover:text-white"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden />

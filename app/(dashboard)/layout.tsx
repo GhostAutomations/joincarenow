@@ -10,7 +10,7 @@ export default async function DashboardLayout({
   const { profile, current } = await requireCompany();
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-teal-50">
       <Sidebar companyName={current.companies.name} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar userName={profile?.full_name || profile?.email || ""} />

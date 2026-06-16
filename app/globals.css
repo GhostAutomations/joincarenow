@@ -57,3 +57,10 @@ body {
 }
 .jcn-blob-2 { animation-duration: 26s; animation-delay: -7s; }
 .jcn-blob-3 { animation-duration: 32s; animation-delay: -13s; }
+
+/* Field cards slide in when added in the form builder (newly mounted only). */
+@keyframes jcn-field-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+.jcn-field-in { animation: jcn-field-in 180ms ease-out; }

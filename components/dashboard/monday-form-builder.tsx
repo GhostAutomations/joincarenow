@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
 import {
   Lock, Trash2, Plus, GripVertical, ImagePlus, X, GitBranch, Eye,
   AlignLeft, AlignCenter, AlignRight,
@@ -28,6 +27,24 @@ export type BuilderField = {
 const CHOICE_FIELD = ["dropdown", "radio", "checkboxes", "yes_no"];
 function optionsFor(f: BuilderField): string[] {
   return f.field_type === "yes_no" ? ["Yes", "No"] : f.options ?? [];
+}
+
+/** Client-side default for a freshly added field, mirroring the server's
+ *  defaultField() so we can show it instantly (optimistic) without a refresh. */
+function clientDefault(id: string, type: string): BuilderField {
+  const base: BuilderField = {
+    id, field_type: type, label: "Untitled question", required: false,
+    options: [], help_text: null, config: null, parent_field_id: null, parent_value: null,
+  };
+  if (type === "body_text")
+    return { ...base, label: "Information", config: { text: "Add your text here", size: "normal", color: "#374151" } };
+  if (CHOICE_FIELD.includes(type)) return { ...base, options: ["Option 1"] };
+  if (type === "address") return { ...base, label: "Address" };
+  if (type === "page_break") return { ...base, label: "Page break" };
+  if (type === "branch") return { ...base, label: "Branch" };
+  if (type === "role") return { ...base, label: "Role" };
+  if (type === "transport") return { ...base, label: "Transport" };
+  return base;
 }
 
 type FormMeta = {
@@ -79,7 +96,6 @@ export function MondayFormBuilder({
   fields: BuilderField[];
   managed?: { branch: string[]; role: string[] };
 }) {
-  const router = useRouter();
   const [name, setName] = useState(form.name === "Untitled form" ? "" : form.name);
   const [desc, setDesc] = useState(form.description);
   const [tColor, setTColor] = useState(form.style.title?.color ?? "#111827");
@@ -93,11 +109,15 @@ export function MondayFormBuilder({
   const [selected, setSelected] = useState<string | null>(null);
   const [openPlus, setOpenPlus] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [flds, setFlds] = useState<BuilderField[]>(fields);
   const [order, setOrder] = useState<string[]>(fields.map((f) => f.id));
   const dragId = useRef<string | null>(null);
   const headerMounted = useRef(false);
 
-  useEffect(() => setOrder(fields.map((f) => f.id)), [fields]);
+  useEffect(() => {
+    setFlds(fields);
+    setOrder(fields.map((f) => f.id));
+  }, [fields]);
 
   useEffect(() => {
     if (!headerMounted.current) {
@@ -105,6 +125,8 @@ export function MondayFormBuilder({
       return;
     }
     const t = setTimeout(() => {
+      // Persist quietly; local state already reflects these, so no refresh
+      // (a refresh here causes a jarring full re-render of the builder).
       updateFormHeader({
         id: form.id,
         name,
@@ -114,24 +136,33 @@ export function MondayFormBuilder({
           description: { color: dColor, size: dSize, align: dAlign },
           logo_url: logoUrl,
         },
-      }).then(() => router.refresh());
+      });
     }, 700);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, desc, tColor, tSize, tAlign, dColor, dSize, dAlign, logoUrl]);
 
-  const byId = new Map(fields.map((f) => [f.id, f]));
+  const byId = new Map(flds.map((f) => [f.id, f]));
   const ordered = order.map((id) => byId.get(id)).filter(Boolean) as BuilderField[];
 
   async function addAt(afterId: string, type: string) {
+    setOpenPlus(null);
     const fd = new FormData();
     fd.append("formId", form.id);
     fd.append("afterId", afterId);
     fd.append("fieldType", type);
     const id = await addFieldOfType(fd);
-    setOpenPlus(null);
-    if (id) setSelected(id);
-    router.refresh();
+    if (!id) return;
+    // Insert optimistically — no full refresh, so it slides in smoothly.
+    const field = clientDefault(id, type);
+    setFlds((prev) => [...prev, field]);
+    setOrder((prev) => {
+      const next = [...prev];
+      const idx = afterId ? next.indexOf(afterId) + 1 : next.length;
+      next.splice(idx, 0, id);
+      return next;
+    });
+    setSelected(id);
   }
 
   async function addFollowUp(parentId: string, value: string, type: string) {
@@ -141,8 +172,25 @@ export function MondayFormBuilder({
     fd.append("parentValue", value);
     fd.append("fieldType", type);
     const id = await addFieldOfType(fd);
-    if (id) setSelected(id);
-    router.refresh();
+    if (!id) return;
+    const field = { ...clientDefault(id, type), parent_field_id: parentId, parent_value: value };
+    setFlds((prev) => [...prev, field]);
+    setOrder((prev) => {
+      const next = [...prev];
+      next.splice(next.indexOf(parentId) + 1, 0, id);
+      return next;
+    });
+    setSelected(id);
+  }
+
+  function removeField(id: string) {
+    setSelected(null);
+    setFlds((prev) => prev.filter((f) => f.id !== id));
+    setOrder((prev) => prev.filter((x) => x !== id));
+    const fd = new FormData();
+    fd.append("id", id);
+    fd.append("formId", form.id);
+    deleteField(fd);
   }
 
   async function onLogo(e: ChangeEvent<HTMLInputElement>) {
@@ -163,7 +211,7 @@ export function MondayFormBuilder({
     next.splice(next.indexOf(from), 1);
     next.splice(next.indexOf(targetId), 0, from);
     setOrder(next);
-    reorderFields(form.id, next).then(() => router.refresh());
+    reorderFields(form.id, next); // persist quietly; order already updated locally
   }
 
   const previewFields: FormField[] = ordered.map((f) => ({
@@ -288,16 +336,14 @@ export function MondayFormBuilder({
                 <span className="text-xs font-medium uppercase tracking-wide text-brand-600">
                   Page break
                 </span>
-                <form action={deleteField}>
-                  <input type="hidden" name="id" value={f.id} />
-                  <input type="hidden" name="formId" value={form.id} />
-                  <button
-                    aria-label="Remove page break"
-                    className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </form>
+                <button
+                  type="button"
+                  onClick={() => removeField(f.id)}
+                  aria-label="Remove page break"
+                  className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
                 <div className="h-px flex-1 bg-brand-200" />
               </div>
               <PlusRow
@@ -316,7 +362,7 @@ export function MondayFormBuilder({
               onDragStart={() => (dragId.current = f.id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => onDrop(f.id)}
-              className={`rounded-lg border bg-white ${selected === f.id ? "border-brand-400 ring-1 ring-brand-200" : "border-gray-200"} ${f.parent_field_id ? "ml-6 border-l-2 border-l-brand-200" : ""}`}
+              className={`jcn-field-in rounded-xl border bg-white shadow-sm transition-shadow hover:shadow-md ${selected === f.id ? "border-brand-400 ring-2 ring-brand-200" : "border-gray-200"} ${f.parent_field_id ? "ml-6 border-l-2 border-l-brand-200" : ""}`}
             >
               {selected === f.id ? (
                 <div className="p-4">
@@ -334,13 +380,13 @@ export function MondayFormBuilder({
                     />
                   )}
                   <div className="mt-3 flex border-t border-gray-100 pt-3">
-                    <form action={deleteField} className="ml-auto">
-                      <input type="hidden" name="id" value={f.id} />
-                      <input type="hidden" name="formId" value={form.id} />
-                      <button className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-red-50 hover:text-red-600">
-                        <Trash2 className="h-3.5 w-3.5" /> Delete
-                      </button>
-                    </form>
+                    <button
+                      type="button"
+                      onClick={() => removeField(f.id)}
+                      className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                    </button>
                   </div>
                 </div>
               ) : (

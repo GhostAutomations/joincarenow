@@ -55,10 +55,16 @@ const STAGES: { key: string; label: string; dot: string }[] = [
 
 // Interview response → card colour
 const IV_CARD: Record<string, string> = {
-  proposed: "border-blue-300 bg-blue-50",
-  confirmed: "border-green-300 bg-green-50",
-  reschedule_requested: "border-amber-300 bg-amber-50",
-  declined: "border-red-300 bg-red-50",
+  proposed: "border-blue-400 border-l-4 border-l-blue-500 bg-blue-100",
+  confirmed: "border-green-400 border-l-4 border-l-green-600 bg-green-100",
+  reschedule_requested: "border-amber-400 border-l-4 border-l-amber-500 bg-amber-100",
+  declined: "border-red-400 border-l-4 border-l-red-500 bg-red-100",
+};
+const IV_TEXT: Record<string, string> = {
+  proposed: "text-blue-800",
+  confirmed: "text-green-800",
+  reschedule_requested: "text-amber-800",
+  declined: "text-red-800",
 };
 const IV_LABEL: Record<string, string> = {
   proposed: "Invite sent — awaiting reply",
@@ -239,7 +245,7 @@ export function PipelineBoard({
                           )}
                         </div>
                         {a.stage === "interview" && a.interview && (
-                          <p className="mt-2 text-xs font-medium text-gray-600">
+                          <p className={`mt-2 text-xs font-semibold ${IV_TEXT[a.interview.status] ?? "text-gray-600"}`}>
                             {IV_LABEL[a.interview.status]}
                           </p>
                         )}

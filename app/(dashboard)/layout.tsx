@@ -2,6 +2,12 @@ import { requireCompany } from "@/modules/auth/queries";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Dock } from "@/components/dashboard/dock";
+import { BrandStyle, type Brand } from "@/components/dashboard/brand-style";
+
+type CompanySettings = {
+  show_sidebar?: boolean;
+  brand?: Brand & { logo_url?: string | null };
+};
 
 export default async function DashboardLayout({
   children,
@@ -12,17 +18,21 @@ export default async function DashboardLayout({
 
   const { data: companyRow } = await supabase
     .from("companies").select("settings").eq("id", current.company_id).single();
+  const settings = (companyRow?.settings as CompanySettings | null) ?? null;
   // Sidebar is OFF by default (iPad-style launcher); admins can switch it on.
-  const showSidebar =
-    (companyRow?.settings as { show_sidebar?: boolean } | null)?.show_sidebar === true;
+  const showSidebar = settings?.show_sidebar === true;
+  const brand = settings?.brand ?? null;
+  const logoUrl = brand?.logo_url ?? null;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-teal-600 via-cyan-700 to-indigo-800">
-      {showSidebar && <Sidebar companyName={current.companies.name} />}
+    <div className="flex h-screen overflow-hidden jcn-app-bg">
+      <BrandStyle brand={brand} />
+      {showSidebar && <Sidebar companyName={current.companies.name} logoUrl={logoUrl} />}
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar
           userName={profile?.full_name || profile?.email || ""}
           showHome={!showSidebar}
+          logoUrl={logoUrl}
         />
         <main className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24">{children}</main>
       </div>

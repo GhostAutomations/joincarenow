@@ -1,183 +1,62 @@
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
-import { CompanyForm } from "@/components/dashboard/company-form";
-import { InviteForm } from "@/components/dashboard/invite-form";
-import { PendingInvites } from "@/components/dashboard/pending-invites";
-import { setCompanyTier } from "@/modules/forms/actions";
-import { TIERS, TIER_LABEL } from "@/modules/forms/tiers";
+import { FounderAppGrid } from "@/components/dashboard/founder-app-grid";
 
-type AdminRow = {
-  company_id: string;
-  profiles: { full_name: string | null; email: string } | null;
-};
+export default async function FounderHomePage() {
+  const { supabase, profile } = await requirePlatformAdmin();
 
-export default async function AdminConsolePage() {
-  const { supabase } = await requirePlatformAdmin();
-
-  const [{ data: companies }, { data: admins }, { data: adminInvites }, { data: smsUsage }] =
-    await Promise.all([
-      supabase.from("companies").select("id, name, slug, subscription_tier").order("name"),
-      supabase
-        .from("company_users")
-        .select("company_id, profiles ( full_name, email )")
-        .eq("role", "admin"),
-      supabase
-        .from("invitations")
-        .select("id, company_id, email, role, expires_at")
-        .eq("status", "pending")
-        .eq("role", "admin")
-        .order("created_at", { ascending: false }),
-      supabase.rpc("get_sms_usage"),
-    ]);
+  const [{ count: companyCount }, { data: smsUsage }] = await Promise.all([
+    supabase.from("companies").select("id", { count: "exact", head: true }),
+    supabase.rpc("get_sms_usage"),
+  ]);
 
   const smsThisMonth = (smsUsage ?? []).reduce(
     (sum: number, r: { sms_this_month: number }) => sum + Number(r.sms_this_month),
     0
   );
 
-  const adminsByCompany = new Map<string, AdminRow[]>();
-  for (const a of (admins ?? []) as unknown as AdminRow[]) {
-    const list = adminsByCompany.get(a.company_id) ?? [];
-    list.push(a);
-    adminsByCompany.set(a.company_id, list);
-  }
-
-  const invitesByCompany = new Map<
-    string,
-    { id: string; email: string; role: string; expires_at: string }[]
-  >();
-  for (const i of adminInvites ?? []) {
-    const list = invitesByCompany.get(i.company_id) ?? [];
-    list.push(i);
-    invitesByCompany.set(i.company_id, list);
-  }
+  const first = profile?.full_name?.split(" ")[0] ?? "there";
+  const hour = Number(
+    new Date().toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/London" })
+  );
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Founder console</h1>
-      <p className="mt-1 text-sm text-white/80">
-        Create care companies and invite their first administrator. Admins then
-        invite their own managers and recruiters.
-      </p>
+    <div className="relative -mx-4 -mt-4 -mb-24 flex min-h-[calc(100dvh-3.5rem)] flex-col overflow-hidden p-6 text-white sm:-mx-6 sm:-mt-6 sm:p-10">
+      {/* fluid colour blobs */}
+      <div className="jcn-blob pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-teal-300/40 blur-3xl" />
+      <div className="jcn-blob jcn-blob-2 pointer-events-none absolute left-1/2 top-1/3 h-72 w-72 rounded-full bg-fuchsia-400/30 blur-3xl" />
+      <div className="jcn-blob jcn-blob-3 pointer-events-none absolute -bottom-24 right-0 h-96 w-96 rounded-full bg-indigo-400/40 blur-3xl" />
 
-      <Link
-        href="/admin/sms"
-        className="mt-6 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm hover:border-brand-300 hover:shadow-md"
-      >
-        <div className="flex items-center gap-3">
-          <span className="rounded-lg bg-brand-50 p-2 text-brand-600">
-            <MessageSquare className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="text-sm text-gray-500">SMS sent this month</p>
-            <p className="text-2xl font-semibold text-gray-900">{smsThisMonth.toLocaleString()}</p>
-          </div>
+      <div className="relative">
+        <h1 className="text-3xl font-semibold">{greeting}, {first} 👋</h1>
+        <p className="mt-1 text-white/70">Founder console · manage every company on the platform.</p>
+
+        {/* stat cards */}
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:max-w-md">
+          <Link
+            href="/admin/companies"
+            className="rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/25"
+          >
+            <p className="text-sm text-white/70">Companies</p>
+            <p className="mt-1 text-3xl font-semibold">{companyCount ?? 0}</p>
+          </Link>
+          <Link
+            href="/admin/sms"
+            className="rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/25"
+          >
+            <p className="flex items-center gap-1.5 text-sm text-white/70">
+              <MessageSquare className="h-3.5 w-3.5" /> SMS this month
+            </p>
+            <p className="mt-1 text-3xl font-semibold">{smsThisMonth.toLocaleString()}</p>
+          </Link>
         </div>
-        <span className="text-sm font-medium text-brand-600">View by company →</span>
-      </Link>
 
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
-        <h2 className="text-base font-medium text-gray-900">Add a company</h2>
-        <div className="mt-4">
-          <CompanyForm />
-        </div>
-      </section>
-
-      <section className="mt-6">
-        <h2 className="text-base font-medium text-white drop-shadow-sm">
-          Companies ({companies?.length ?? 0})
-        </h2>
-
-        {(companies ?? []).length === 0 && (
-          <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
-            No companies yet. Create your first one above.
-          </div>
-        )}
-
-        <div className="mt-4 space-y-4">
-          {(companies ?? []).map((c) => {
-            const companyAdmins = adminsByCompany.get(c.id) ?? [];
-            const pending = invitesByCompany.get(c.id) ?? [];
-            return (
-              <div
-                key={c.id}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-base font-semibold text-gray-900">
-                      {c.name}
-                    </h3>
-                    <p className="text-xs text-gray-500">
-                      joincarenow.com/careers/{c.slug}
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-                    {companyAdmins.length} admin
-                    {companyAdmins.length === 1 ? "" : "s"}
-                  </span>
-                </div>
-
-                {companyAdmins.length > 0 && (
-                  <ul className="mt-3 space-y-1">
-                    {companyAdmins.map((a, idx) => (
-                      <li key={idx} className="text-sm text-gray-700">
-                        {a.profiles?.full_name || a.profiles?.email}{" "}
-                        <span className="text-gray-400">
-                          ({a.profiles?.email})
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                <form
-                  action={setCompanyTier}
-                  className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3"
-                >
-                  <input type="hidden" name="companyId" value={c.id} />
-                  <label className="text-sm text-gray-600">Subscription plan</label>
-                  <select
-                    name="tier"
-                    defaultValue={
-                      (c as { subscription_tier?: string }).subscription_tier ?? "free"
-                    }
-                    className="rounded-lg border border-gray-300 px-2 py-1 text-sm"
-                  >
-                    {TIERS.map((t) => (
-                      <option key={t} value={t}>{TIER_LABEL[t]}</option>
-                    ))}
-                  </select>
-                  <button className="rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-100">
-                    Save plan
-                  </button>
-                </form>
-
-                <div className="mt-4 border-t border-gray-100 pt-4">
-                  <p className="text-sm font-medium text-gray-900">
-                    Invite an administrator
-                  </p>
-                  <div className="mt-3">
-                    <InviteForm
-                      companyId={c.id}
-                      roles={[{ value: "admin", label: "Administrator" }]}
-                    />
-                  </div>
-                  {pending.length > 0 && (
-                    <>
-                      <p className="mt-6 text-sm font-medium text-gray-900">
-                        Pending admin invitations
-                      </p>
-                      <PendingInvites invites={pending} />
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+        {/* app grid */}
+        <p className="mt-8 text-sm font-medium text-white/70">Your workspace</p>
+        <FounderAppGrid />
+      </div>
     </div>
   );
 }

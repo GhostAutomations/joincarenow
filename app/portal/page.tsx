@@ -61,7 +61,7 @@ export default async function PortalPage({
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-teal-600 via-cyan-700 to-indigo-800">
+    <main className="min-h-screen jcn-app-bg">
       <header className="flex h-14 items-center justify-between border-b border-white/20 bg-white/70 px-4 backdrop-blur-md sm:px-6">
         <span className="text-base font-bold text-brand-700">Join Care Now</span>
         <div className="flex items-center gap-4">

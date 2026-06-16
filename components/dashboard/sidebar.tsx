@@ -33,14 +33,25 @@ const NAV = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function Sidebar({ companyName }: { companyName: string }) {
+export function Sidebar({
+  companyName,
+  logoUrl = null,
+}: {
+  companyName: string;
+  logoUrl?: string | null;
+}) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex w-60 flex-col bg-gradient-to-b from-teal-600 via-cyan-700 to-indigo-800 text-white">
+    <aside className="hidden md:flex w-60 flex-col jcn-rail-bg text-white">
       <div className="px-5 py-5 border-b border-white/15">
-        <Link href="/dashboard" className="text-lg font-bold text-white">
-          Join Care Now
+        <Link href="/dashboard" className="block">
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={companyName} className="h-8 w-auto max-w-[160px] object-contain" />
+          ) : (
+            <span className="text-lg font-bold text-white">Join Care Now</span>
+          )}
         </Link>
         <p className="mt-0.5 truncate text-xs text-white/60">{companyName}</p>
       </div>

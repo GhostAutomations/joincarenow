@@ -14,7 +14,7 @@ export function FounderSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex w-60 flex-col bg-gradient-to-b from-teal-600 via-cyan-700 to-indigo-800 text-white">
+    <aside className="hidden md:flex w-60 flex-col jcn-rail-bg text-white">
       <div className="border-b border-white/15 px-5 py-5">
         <Link href="/admin" className="text-lg font-bold text-white">
           Join Care Now

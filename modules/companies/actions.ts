@@ -14,9 +14,19 @@ async function acceptUrl(token: string): Promise<string> {
   return `${proto}://${host}/accept-invite?token=${token}`;
 }
 
+const HEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+const optionalHex = z
+  .string()
+  .trim()
+  .refine((v) => v === "" || HEX.test(v), "Enter a valid colour")
+  .optional();
+
 const createCompanySchema = z.object({
   name: z.string().min(2, "Company name must be at least 2 characters").max(120),
   adminEmail: z.string().email("Enter a valid admin email address"),
+  brandPrimary: optionalHex,
+  brandSecondary: optionalHex,
+  brandAccent: optionalHex,
 });
 
 export type CompanyState =
@@ -32,6 +42,9 @@ export async function createCompany(
   const parsed = createCompanySchema.safeParse({
     name: formData.get("name"),
     adminEmail: formData.get("adminEmail"),
+    brandPrimary: formData.get("brandPrimary") ?? undefined,
+    brandSecondary: formData.get("brandSecondary") ?? undefined,
+    brandAccent: formData.get("brandAccent") ?? undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.errors[0].message };
@@ -64,6 +77,39 @@ export async function createCompany(
   }
   if (!companyId) {
     return { error: "Could not generate a unique web address. Try a different name." };
+  }
+
+  // 1b. Brand: colours + optional logo upload. Stored in companies.settings.brand.
+  const brand: Record<string, string> = {};
+  if (parsed.data.brandPrimary) brand.primary = parsed.data.brandPrimary;
+  if (parsed.data.brandSecondary) brand.secondary = parsed.data.brandSecondary;
+  if (parsed.data.brandAccent) brand.accent = parsed.data.brandAccent;
+
+  const logo = formData.get("logo");
+  if (logo instanceof File && logo.size > 0) {
+    if (logo.size > 2 * 1024 * 1024) {
+      return { error: "Logo must be under 2MB." };
+    }
+    const ext = (logo.name.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const path = `${companyId}/logo.${ext || "png"}`;
+    const { error: uploadError } = await supabase.storage
+      .from("company-logos")
+      .upload(path, logo, { upsert: true, contentType: logo.type || undefined });
+    if (uploadError) {
+      return { error: `Company created, but the logo upload failed: ${uploadError.message}` };
+    }
+    const { data: pub } = supabase.storage.from("company-logos").getPublicUrl(path);
+    if (pub?.publicUrl) brand.logo_url = pub.publicUrl;
+  }
+
+  if (Object.keys(brand).length > 0) {
+    const { data: companyRow } = await supabase
+      .from("companies").select("settings").eq("id", companyId).single();
+    const settings = {
+      ...((companyRow?.settings as Record<string, unknown>) ?? {}),
+      brand,
+    };
+    await supabase.from("companies").update({ settings }).eq("id", companyId);
   }
 
   // 2. Invite the first admin for that company.

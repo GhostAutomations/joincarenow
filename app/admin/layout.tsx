@@ -1,6 +1,8 @@
+import Link from "next/link";
+import { LayoutGrid } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { signOut } from "@/modules/auth/actions";
-import { FounderSidebar } from "@/components/dashboard/founder-sidebar";
+import { FounderDock } from "@/components/dashboard/founder-dock";
 
 export default async function AdminLayout({
   children,
@@ -10,32 +12,33 @@ export default async function AdminLayout({
   const { profile } = await requirePlatformAdmin();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-teal-600 via-cyan-700 to-indigo-800">
-      <FounderSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 items-center justify-between border-b border-white/20 bg-white/70 px-4 backdrop-blur-md sm:px-6">
-          <span className="md:hidden text-base font-bold text-brand-700">
-            Join Care Now
+    <div className="flex h-screen flex-col overflow-hidden jcn-app-bg">
+      <header className="flex h-14 items-center justify-between border-b border-white/20 bg-white/70 px-4 backdrop-blur-md sm:px-6">
+        <Link
+          href="/admin"
+          className="flex items-center gap-2 text-base font-bold text-brand-700 hover:text-brand-800"
+        >
+          <LayoutGrid className="h-5 w-5" aria-hidden />
+          Join Care Now
+        </Link>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-700">
+            {profile?.full_name || profile?.email}
           </span>
-          <div className="hidden md:block" />
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-700">
-              {profile?.full_name || profile?.email}
-            </span>
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="rounded-lg border border-gray-300 bg-white/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-white"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
-        </header>
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <div className="mx-auto max-w-5xl">{children}</div>
-        </main>
-      </div>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="rounded-lg border border-gray-300 bg-white/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-white"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
+      </header>
+      <main className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24">
+        <div className="mx-auto max-w-5xl">{children}</div>
+      </main>
+      <FounderDock />
     </div>
   );
 }

@@ -1,12 +1,13 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutGrid, Building2, Store, MessageSquareText } from "lucide-react";
+import { LayoutGrid, Building2, Store, MessageSquareText, ListChecks } from "lucide-react";
 
 const ITEMS = [
   { href: "/admin", label: "Home", icon: LayoutGrid, grad: "from-slate-500 to-slate-700" },
   { href: "/admin/companies", label: "Companies", icon: Building2, grad: "from-teal-400 to-teal-600" },
   { href: "/admin/forms", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
+  { href: "/admin/questions", label: "Question Bank", icon: ListChecks, grad: "from-amber-400 to-amber-500" },
   { href: "/admin/sms", label: "SMS Usage", icon: MessageSquareText, grad: "from-pink-400 to-pink-600" },
 ];
 

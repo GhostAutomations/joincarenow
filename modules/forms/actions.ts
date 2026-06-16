@@ -376,6 +376,55 @@ export async function addFieldOfType(formData: FormData): Promise<string | null>
   return created.id;
 }
 
+/** Insert a field pre-filled from a question-bank template. Returns the id. */
+export async function addFieldFromTemplate(formData: FormData): Promise<string | null> {
+  const formId = String(formData.get("formId") ?? "");
+  const afterId = String(formData.get("afterId") ?? "");
+  const templateId = String(formData.get("templateId") ?? "");
+  if (!formId || !templateId) return null;
+
+  const { supabase } = await requireUser();
+  const { data: form } = await supabase.from("forms").select("id").eq("id", formId).single();
+  if (!form) return null;
+
+  const { data: tpl } = await supabase
+    .from("question_templates")
+    .select("label, field_type, options, help_text")
+    .eq("id", templateId)
+    .single();
+  if (!tpl) return null;
+
+  const { data: existing } = await supabase
+    .from("form_fields")
+    .select("id")
+    .eq("form_id", formId)
+    .order("position", { ascending: true });
+  const ids = (existing ?? []).map((e) => e.id);
+
+  const { data: created, error } = await supabase
+    .from("form_fields")
+    .insert({
+      form_id: formId,
+      label: tpl.label,
+      field_type: tpl.field_type,
+      options: tpl.options ?? [],
+      help_text: tpl.help_text,
+      required: false,
+      config: {},
+      position: ids.length,
+    })
+    .select("id")
+    .single();
+  if (error || !created) return null;
+
+  const idx = afterId ? ids.indexOf(afterId) + 1 : ids.length;
+  ids.splice(idx, 0, created.id);
+  await Promise.all(
+    ids.map((fid, i) => supabase.from("form_fields").update({ position: i }).eq("id", fid))
+  );
+  return created.id;
+}
+
 /** Persist a new field order (from drag-and-drop). */
 export async function reorderFields(formId: string, orderedIds: string[]) {
   if (!formId || !Array.isArray(orderedIds)) return;

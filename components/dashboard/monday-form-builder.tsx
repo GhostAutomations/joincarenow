@@ -6,8 +6,17 @@ import {
   AlignLeft, AlignCenter, AlignRight,
 } from "lucide-react";
 import {
-  addFieldOfType, deleteField, reorderFields, updateFormHeader, uploadFormLogo,
+  addFieldOfType, addFieldFromTemplate, deleteField, reorderFields, updateFormHeader, uploadFormLogo,
 } from "@/modules/forms/actions";
+
+export type QuestionBankItem = {
+  id: string;
+  label: string;
+  field_type: string;
+  options: string[];
+  help_text: string | null;
+  category: string;
+};
 import { FieldForm, type FieldDefaults } from "@/components/dashboard/field-form";
 import { FormPreview } from "@/components/dashboard/form-preview";
 import { type FormField } from "@/components/careers/apply-form";
@@ -91,10 +100,12 @@ export function MondayFormBuilder({
   form,
   fields,
   managed,
+  questionBank = [],
 }: {
   form: FormMeta;
   fields: BuilderField[];
   managed?: { branch: string[]; role: string[] };
+  questionBank?: QuestionBankItem[];
 }) {
   const [name, setName] = useState(form.name === "Untitled form" ? "" : form.name);
   const [desc, setDesc] = useState(form.description);
@@ -178,6 +189,36 @@ export function MondayFormBuilder({
     fd.append("afterId", afterId);
     fd.append("fieldType", type);
     reconcileId(tempId, await addFieldOfType(fd));
+  }
+
+  async function addFromTemplate(afterId: string, tpl: QuestionBankItem) {
+    const tempId = `temp-${Math.random().toString(36).slice(2)}`;
+    const field: BuilderField = {
+      id: tempId,
+      label: tpl.label,
+      field_type: tpl.field_type,
+      required: false,
+      options: tpl.options ?? [],
+      help_text: tpl.help_text,
+      config: null,
+      parent_field_id: null,
+      parent_value: null,
+    };
+    setFlds((prev) => [...prev, field]);
+    setOrder((prev) => {
+      const next = [...prev];
+      const idx = afterId ? next.indexOf(afterId) + 1 : next.length;
+      next.splice(idx, 0, tempId);
+      return next;
+    });
+    setOpenPlus(null);
+    setSelected(tempId);
+
+    const fd = new FormData();
+    fd.append("formId", form.id);
+    fd.append("afterId", afterId);
+    fd.append("templateId", tpl.id);
+    reconcileId(tempId, await addFieldFromTemplate(fd));
   }
 
   async function addFollowUp(parentId: string, value: string, type: string) {
@@ -348,6 +389,8 @@ export function MondayFormBuilder({
             setOpenPlus(openPlus === "" ? null : "");
           }}
           onPick={(t) => addAt("", t)}
+          bank={questionBank}
+          onPickTemplate={(tpl) => addFromTemplate("", tpl)}
         />
 
         {ordered.map((f) =>
@@ -375,6 +418,8 @@ export function MondayFormBuilder({
                   setOpenPlus(openPlus === f.id ? null : f.id);
                 }}
                 onPick={(t) => addAt(f.id, t)}
+                bank={questionBank}
+                onPickTemplate={(tpl) => addFromTemplate(f.id, tpl)}
               />
             </div>
           ) : (
@@ -394,6 +439,11 @@ export function MondayFormBuilder({
                       id: f.id, label: f.label, fieldType: f.field_type, required: f.required,
                       options: f.options ?? [], helpText: f.help_text ?? "", config: f.config ?? null,
                     } as FieldDefaults}
+                    onPatch={(patch) =>
+                      setFlds((prev) =>
+                        prev.map((x) => (x.id === f.id ? { ...x, ...patch } : x))
+                      )
+                    }
                   />
                   {CHOICE_FIELD.includes(f.field_type) && (
                     <LogicPanel
@@ -442,6 +492,8 @@ export function MondayFormBuilder({
                 setOpenPlus(openPlus === f.id ? null : f.id);
               }}
               onPick={(t) => addAt(f.id, t)}
+              bank={questionBank}
+              onPickTemplate={(tpl) => addFromTemplate(f.id, tpl)}
             />
           </div>
         ))}
@@ -471,7 +523,27 @@ export function MondayFormBuilder({
   );
 }
 
-function PlusRow({ open, onToggle, onPick }: { open: boolean; onToggle: () => void; onPick: (t: string) => void }) {
+function PlusRow({
+  open,
+  onToggle,
+  onPick,
+  bank = [],
+  onPickTemplate,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  onPick: (t: string) => void;
+  bank?: QuestionBankItem[];
+  onPickTemplate?: (tpl: QuestionBankItem) => void;
+}) {
+  // Group bank questions by category for the picker.
+  const byCat = new Map<string, QuestionBankItem[]>();
+  for (const q of bank) {
+    const list = byCat.get(q.category) ?? [];
+    list.push(q);
+    byCat.set(q.category, list);
+  }
+
   return (
     <div className="py-2">
       <div className="flex justify-center">
@@ -484,16 +556,48 @@ function PlusRow({ open, onToggle, onPick }: { open: boolean; onToggle: () => vo
         </button>
       </div>
       {open && (
-        <div className="mx-auto mt-2 grid max-w-md grid-cols-2 gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:grid-cols-3">
-          {PALETTE.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => onPick(t.value)}
-              className="rounded-md border border-gray-200 px-2 py-1.5 text-left text-xs text-gray-700 hover:border-brand-300 hover:bg-brand-50"
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="mx-auto mt-2 max-w-md rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
+          <p className="px-1 pb-1 text-[11px] font-medium uppercase tracking-wide text-gray-400">
+            New field
+          </p>
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
+            {PALETTE.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => onPick(t.value)}
+                className="rounded-md border border-gray-200 px-2 py-1.5 text-left text-xs text-gray-700 hover:border-brand-300 hover:bg-brand-50"
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {bank.length > 0 && onPickTemplate && (
+            <div className="mt-2 border-t border-gray-100 pt-2">
+              <p className="px-1 pb-1 text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                From question bank
+              </p>
+              <div className="max-h-56 space-y-2 overflow-y-auto">
+                {[...byCat.entries()].map(([cat, list]) => (
+                  <div key={cat}>
+                    <p className="px-1 text-[11px] font-semibold text-gray-500">{cat}</p>
+                    <div className="mt-0.5 space-y-0.5">
+                      {list.map((q) => (
+                        <button
+                          key={q.id}
+                          onClick={() => onPickTemplate(q)}
+                          className="block w-full truncate rounded-md px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-brand-50"
+                          title={q.label}
+                        >
+                          {q.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

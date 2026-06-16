@@ -35,6 +35,12 @@ export default async function FounderFormBuildPage({
     .order("position", { ascending: true });
   const fields = (fieldsData ?? []) as BuilderField[];
 
+  const { data: bank } = await supabase
+    .from("question_templates")
+    .select("id, label, field_type, options, help_text, category")
+    .order("category")
+    .order("position");
+
   const builder = (
     <MondayFormBuilder
       form={{
@@ -44,6 +50,7 @@ export default async function FounderFormBuildPage({
         style: (form as { style?: Record<string, unknown> }).style ?? {},
       }}
       fields={fields}
+      questionBank={(bank ?? []) as never}
     />
   );
 

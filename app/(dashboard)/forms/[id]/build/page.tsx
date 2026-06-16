@@ -33,9 +33,14 @@ export default async function FormBuildPage({
     .order("position", { ascending: true });
   const fields = (fieldsData ?? []) as BuilderField[];
 
-  const [{ data: branchRows }, { data: roleRows }] = await Promise.all([
+  const [{ data: branchRows }, { data: roleRows }, { data: bank }] = await Promise.all([
     supabase.from("branches").select("name").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("name").eq("company_id", current.company_id).order("name"),
+    supabase
+      .from("question_templates")
+      .select("id, label, field_type, options, help_text, category")
+      .order("category")
+      .order("position"),
   ]);
   const managed = {
     branch: (branchRows ?? []).map((b) => b.name as string),
@@ -52,6 +57,7 @@ export default async function FormBuildPage({
       }}
       fields={fields}
       managed={managed}
+      questionBank={(bank ?? []) as never}
     />
   );
 

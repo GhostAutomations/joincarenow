@@ -37,10 +37,20 @@ export type FieldDefaults = {
 export function FieldForm({
   formId,
   defaults,
+  onPatch,
 }: {
   formId: string;
   defaults?: FieldDefaults;
   onSaved?: () => void;
+  /** Report edits back to the builder so the outline/canvas update live. */
+  onPatch?: (patch: {
+    label: string;
+    field_type: string;
+    required: boolean;
+    options: string[];
+    help_text: string | null;
+    config: { text?: string; size?: string; color?: string } | null;
+  }) => void;
 }) {
   const isEdit = !!defaults;
   const router = useRouter();
@@ -88,7 +98,16 @@ export function FieldForm({
       if (res?.error) setError(res.error);
       else {
         setError(null);
-        router.refresh();
+        // Update the builder's local copy so the outline/canvas reflect the
+        // edit immediately — no full refresh (which caused the page to jump).
+        onPatch?.({
+          label,
+          field_type: type,
+          required,
+          options,
+          help_text: helpText || null,
+          config: isBody ? { text: content, size, color } : null,
+        });
       }
     }, 600);
     return () => {
@@ -124,7 +143,13 @@ export function FieldForm({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="text-xs font-medium text-gray-600">
           {isBody ? "Heading (optional)" : "Question / label"}
-          <input value={label} onChange={(e) => setLabel(e.target.value)} className={cls} />
+          <input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            onFocus={(e) => e.currentTarget.select()}
+            placeholder="Untitled question"
+            className={cls}
+          />
         </label>
         <label className="text-xs font-medium text-gray-600">
           Field type
@@ -232,6 +257,7 @@ function OptionsEditor({
               onChange={(e) =>
                 setOptions((arr) => arr.map((x, idx) => (idx === i ? e.target.value : x)))
               }
+              onFocus={(e) => e.currentTarget.select()}
               placeholder={`Option ${i + 1}`}
               className="flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />

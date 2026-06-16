@@ -35,7 +35,7 @@ export type AppCard = {
   cv_path: string | null;
   answers: { right_to_work?: boolean } | null;
   job_title: string;
-  region: string | null;
+  branch: string | null;
   worker_category: string | null;
   first_name: string | null;
   last_name: string | null;
@@ -541,9 +541,9 @@ function ApplicantPanel({
               {new Date(app.created_at).toLocaleDateString("en-GB")}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {app.region && (
+              {app.branch && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
-                  <MapPin className="h-3 w-3 text-gray-400" /> {app.region}
+                  <MapPin className="h-3 w-3 text-gray-400" /> {app.branch}
                 </span>
               )}
               {app.worker_category && (

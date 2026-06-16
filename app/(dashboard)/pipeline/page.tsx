@@ -148,7 +148,7 @@ export default async function PipelinePage({
     cv_path: r.cv_path,
     answers: r.answers,
     job_title: r.jobs?.title ?? "—",
-    region: r.jobs?.branches?.name ?? r.jobs?.region ?? null,
+    branch: r.jobs?.branches?.name ?? r.jobs?.region ?? null,
     worker_category: r.jobs?.roles?.name ?? r.jobs?.worker_category ?? null,
     first_name: r.applicants?.first_name ?? null,
     last_name: r.applicants?.last_name ?? null,

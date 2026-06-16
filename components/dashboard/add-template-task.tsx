@@ -23,17 +23,29 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
       {state?.error && (
         <p className="rounded-md bg-red-50 px-2 py-1 text-xs text-red-700">{state.error}</p>
       )}
+      <label className="block text-xs font-medium text-gray-600">
+        Workflow title
+        <input name="title" placeholder="e.g. Right to Work check" className={cls} />
+      </label>
+
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="text-xs font-medium text-gray-600">
-          Workflow title
-          <input name="title" placeholder="e.g. Right to Work check" className={cls} />
-        </label>
         <label className="text-xs font-medium text-gray-600">
           Type
           <select name="taskType" value={type} onChange={(e) => setType(e.target.value)} className={cls}>
             <option value="document">Upload a document</option>
             <option value="form">Fill in a form</option>
             <option value="acknowledge">Read &amp; confirm</option>
+          </select>
+        </label>
+        <label className="text-xs font-medium text-gray-600">
+          Send this to the applicant when…
+          <select name="triggerStage" defaultValue="" className={cls}>
+            <option value="" disabled>Select one…</option>
+            <option value="on_application">They submit their application</option>
+            <option value="reviewing">They reach Reviewing</option>
+            <option value="interview">They reach Interview</option>
+            <option value="offer">They reach Offer</option>
+            <option value="hired">They are Hired</option>
           </select>
         </label>
       </div>
@@ -61,23 +73,6 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
         </div>
       )}
 
-      <label className="block text-xs font-medium text-gray-600">
-        Send this to the applicant when…
-        <select name="triggerStage" defaultValue="" className={cls}>
-          <option value="" disabled>Select one…</option>
-          <option value="on_application">They submit their application</option>
-          <option value="reviewing">They reach Reviewing</option>
-          <option value="interview">They reach Interview</option>
-          <option value="offer">They reach Offer</option>
-          <option value="hired">They are Hired</option>
-        </select>
-      </label>
-
-      <label className="block text-xs font-medium text-gray-600">
-        {type === "acknowledge" ? "Text to read & confirm" : "Instructions (optional)"}
-        <textarea name="body" rows={2} className={cls} />
-      </label>
-
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="text-xs font-medium text-gray-600">
           Due within (days)
@@ -88,6 +83,11 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
           Required
         </label>
       </div>
+
+      <label className="block text-xs font-medium text-gray-600">
+        {type === "acknowledge" ? "Text to read & confirm" : "Instructions (optional)"}
+        <textarea name="body" rows={2} className={cls} />
+      </label>
 
       <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">
         Add to checklist

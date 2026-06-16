@@ -32,14 +32,29 @@ export type FormField = {
   field_position: number;
 };
 
+/** Options for the managed-list field types, resolved per company. */
+export type ManagedOptions = { branch: string[]; role: string[] };
+export const TRANSPORT_OPTIONS = ["Driver", "Walker"];
+
+/** Resolve the dropdown options for any field, including managed types. */
+export function fieldOptions(field: FormField, managed?: ManagedOptions): string[] {
+  if (field.field_type === "transport") return TRANSPORT_OPTIONS;
+  if (field.field_type === "branch") return managed?.branch ?? [];
+  if (field.field_type === "role") return managed?.role ?? [];
+  if (field.field_type === "yes_no") return ["Yes", "No"];
+  return field.options;
+}
+
 export function ApplyForm({
   jobId,
   defaults,
   formFields = [],
+  managed,
 }: {
   jobId: string;
   defaults?: ApplyDefaults;
   formFields?: FormField[];
+  managed?: ManagedOptions;
 }) {
   const [state, action] = useActionState(applyToJob, undefined);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
@@ -148,7 +163,7 @@ export function ApplyForm({
         <div key={idx} data-page={idx} className={idx === page ? "space-y-5" : "hidden"}>
           {idx === 0 && basics}
           {pageFields.filter(visible).map((f) => (
-            <DynamicField key={f.field_id} field={f} />
+            <DynamicField key={f.field_id} field={f} managed={managed} />
           ))}
           {idx === lastPage && rightToWork}
         </div>
@@ -194,7 +209,13 @@ const SIZE_CLASS: Record<string, string> = {
   xl: "text-2xl",
 };
 
-export function DynamicField({ field }: { field: FormField }) {
+export function DynamicField({
+  field,
+  managed,
+}: {
+  field: FormField;
+  managed?: ManagedOptions;
+}) {
   const name = `field_${field.field_id}`;
   const req = field.required;
 
@@ -238,16 +259,24 @@ export function DynamicField({ field }: { field: FormField }) {
       </label>
     );
   }
-  if (field.field_type === "dropdown") {
+  if (
+    field.field_type === "dropdown" ||
+    field.field_type === "branch" ||
+    field.field_type === "role" ||
+    field.field_type === "transport"
+  ) {
+    const opts = fieldOptions(field, managed);
+    const managedEmpty =
+      (field.field_type === "branch" || field.field_type === "role") && opts.length === 0;
     return (
       <label className="block">
         {label}
         {help}
-        <select name={name} required={req} defaultValue="" className={inputClass}>
+        <select name={name} required={req} defaultValue="" className={inputClass} disabled={managedEmpty}>
           <option value="" disabled>
-            Select…
+            {managedEmpty ? "Set per company in Settings" : "Select…"}
           </option>
-          {field.options.map((o) => (
+          {opts.map((o) => (
             <option key={o} value={o}>
               {o}
             </option>

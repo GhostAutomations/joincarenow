@@ -51,6 +51,9 @@ const PALETTE: { value: string; label: string }[] = [
   { value: "radio", label: "Single select" },
   { value: "checkboxes", label: "Multi select" },
   { value: "yes_no", label: "Yes / No" },
+  { value: "branch", label: "Branch (company list)" },
+  { value: "role", label: "Role (company list)" },
+  { value: "transport", label: "Transport (Driver / Walker)" },
   { value: "file", label: "File upload" },
   { value: "signature", label: "Signature" },
   { value: "address", label: "Address" },
@@ -67,7 +70,15 @@ const DESC_SIZES = ["sm", "base", "lg", "xl"];
 const alignCls = (a?: string) =>
   a === "center" ? "text-center" : a === "right" ? "text-right" : "text-left";
 
-export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: BuilderField[] }) {
+export function MondayFormBuilder({
+  form,
+  fields,
+  managed,
+}: {
+  form: FormMeta;
+  fields: BuilderField[];
+  managed?: { branch: string[]; role: string[] };
+}) {
   const router = useRouter();
   const [name, setName] = useState(form.name === "Untitled form" ? "" : form.name);
   const [desc, setDesc] = useState(form.description);
@@ -373,6 +384,7 @@ export function MondayFormBuilder({ form, fields }: { form: FormMeta; fields: Bu
         form={{ name, description: desc, style: { title: { color: tColor, size: tSize, align: tAlign }, description: { color: dColor, size: dSize, align: dAlign }, logo_url: logoUrl } }}
         fields={previewFields}
         onClose={() => setShowPreview(false)}
+        managed={managed}
       />
     )}
     </>

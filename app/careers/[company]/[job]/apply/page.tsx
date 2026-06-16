@@ -56,9 +56,16 @@ export default async function ApplyPage({
   });
   const formFields = (fieldsData ?? []) as FormField[];
 
-  const { data: profile } = await supabase
-    .rpc("get_company_public_profile", { p_slug: company })
-    .maybeSingle<PublicProfile>();
+  const [{ data: profile }, { data: opts }] = await Promise.all([
+    supabase.rpc("get_company_public_profile", { p_slug: company }).maybeSingle<PublicProfile>(),
+    supabase
+      .rpc("get_company_field_options", { p_slug: company })
+      .maybeSingle<{ branches: string[]; roles: string[] }>(),
+  ]);
+  const managed = {
+    branch: opts?.branches ?? [],
+    role: opts?.roles ?? [],
+  };
   const brand = profile
     ? {
         primary: profile.brand_primary,
@@ -94,6 +101,7 @@ export default async function ApplyPage({
           <ApplyForm
             jobId={jobData.job_id}
             formFields={formFields}
+            managed={managed}
             defaults={{
               firstName: applicant?.first_name ?? "",
               lastName: applicant?.last_name ?? "",

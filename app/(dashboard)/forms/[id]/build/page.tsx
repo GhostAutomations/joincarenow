@@ -33,6 +33,15 @@ export default async function FormBuildPage({
     .order("position", { ascending: true });
   const fields = (fieldsData ?? []) as BuilderField[];
 
+  const [{ data: branchRows }, { data: roleRows }] = await Promise.all([
+    supabase.from("branches").select("name").eq("company_id", current.company_id).order("name"),
+    supabase.from("roles").select("name").eq("company_id", current.company_id).order("name"),
+  ]);
+  const managed = {
+    branch: (branchRows ?? []).map((b) => b.name as string),
+    role: (roleRows ?? []).map((r) => r.name as string),
+  };
+
   const builder = (
     <MondayFormBuilder
       form={{
@@ -42,6 +51,7 @@ export default async function FormBuildPage({
         style: (form as { style?: Record<string, unknown> }).style ?? {},
       }}
       fields={fields}
+      managed={managed}
     />
   );
 

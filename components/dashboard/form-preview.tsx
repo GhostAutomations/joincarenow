@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { DynamicField, type FormField } from "@/components/careers/apply-form";
+import { DynamicField, type FormField, type ManagedOptions } from "@/components/careers/apply-form";
 
 type FormMeta = {
   name: string;
@@ -29,10 +29,12 @@ export function FormPreview({
   form,
   fields,
   onClose,
+  managed,
 }: {
   form: FormMeta;
   fields: FormField[];
   onClose: () => void;
+  managed?: ManagedOptions;
 }) {
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [page, setPage] = useState(0);
@@ -121,7 +123,7 @@ export function FormPreview({
                 </div>
               )}
               {pf.filter(visible).map((f) => (
-                <DynamicField key={f.field_id} field={f} />
+                <DynamicField key={f.field_id} field={f} managed={managed} />
               ))}
             </div>
           ))}

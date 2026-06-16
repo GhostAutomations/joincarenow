@@ -15,6 +15,7 @@ export type TaskDraft = {
   required: boolean;
   body: string;
   triggerStage: string;
+  roleId: string;
 };
 
 /** Add one or more workflow tasks at once. Each form task expands to one task
@@ -63,6 +64,7 @@ export async function addTemplateTasks(
   for (const d of drafts) {
     const dueDays = d.dueDays === "" ? null : Math.max(0, parseInt(d.dueDays, 10) || 0);
     const body = (d.body ?? "").trim() || null;
+    const roleId = d.roleId || null;
     if (d.taskType === "form") {
       const multi = d.formIds.length > 1;
       for (const fid of d.formIds) {
@@ -75,6 +77,7 @@ export async function addTemplateTasks(
           required: d.required,
           due_days: dueDays,
           trigger_stage: d.triggerStage,
+          role_id: roleId,
           position: pos++,
         });
       }
@@ -88,6 +91,7 @@ export async function addTemplateTasks(
         required: d.required,
         due_days: dueDays,
         trigger_stage: d.triggerStage,
+        role_id: roleId,
         position: pos++,
       });
     }

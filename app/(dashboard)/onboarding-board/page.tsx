@@ -29,13 +29,14 @@ export default async function OnboardingBoardPage() {
   const { supabase, current } = await requireCompany();
   const isAdmin = current.role === "admin";
 
-  const [{ data: templates }, { data: forms }, { data: tasks }] = await Promise.all([
+  const [{ data: templates }, { data: forms }, { data: roles }, { data: tasks }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, required, due_days, trigger_stage, position")
+      .select("id, title, task_type, required, due_days, trigger_stage, role_id, position")
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase
       .from("onboarding_tasks")
       .select(
@@ -44,6 +45,8 @@ export default async function OnboardingBoardPage() {
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
   ]);
+
+  const roleName = new Map((roles ?? []).map((r) => [r.id as string, r.name as string]));
 
   // Group tasks by person.
   const byPerson = new Map<string, { name: string; tasks: OnbTask[] }>();
@@ -81,6 +84,7 @@ export default async function OnboardingBoardPage() {
                     <span className="ml-2 text-xs text-gray-400">
                       {TYPE_LABEL[t.task_type] ?? t.task_type}
                       {t.trigger_stage && ` · ${TRIGGER_LABEL[t.trigger_stage] ?? t.trigger_stage}`}
+                      {t.role_id && ` · ${roleName.get(t.role_id) ?? "role"} only`}
                       {t.due_days != null && ` · due within ${t.due_days} day${t.due_days === 1 ? "" : "s"}`}
                       {!t.required && " · optional"}
                     </span>
@@ -97,7 +101,7 @@ export default async function OnboardingBoardPage() {
           )}
 
           <div className="mt-4 rounded-lg border border-dashed border-gray-300 p-4">
-            <AddTemplateTask forms={forms ?? []} />
+            <AddTemplateTask forms={forms ?? []} roles={roles ?? []} />
           </div>
         </section>
       )}

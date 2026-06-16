@@ -16,9 +16,16 @@ const blank = (): TaskDraft => ({
   required: true,
   body: "",
   triggerStage: "",
+  roleId: "",
 });
 
-export function AddTemplateTask({ forms }: { forms: { id: string; name: string }[] }) {
+export function AddTemplateTask({
+  forms,
+  roles,
+}: {
+  forms: { id: string; name: string }[];
+  roles: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const [tasks, setTasks] = useState<TaskDraft[]>([blank()]);
   const [error, setError] = useState<string | null>(null);
@@ -63,15 +70,30 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
 
       {tasks.map((t, i) => (
         <div key={i} className="space-y-3">
-          <label className="block text-xs font-medium text-gray-600">
-            Workflow title
-            <input
-              value={t.title}
-              onChange={(e) => update(i, { title: e.target.value })}
-              placeholder="e.g. Right to Work check"
-              className={cls}
-            />
-          </label>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="text-xs font-medium text-gray-600">
+              Workflow title
+              <input
+                value={t.title}
+                onChange={(e) => update(i, { title: e.target.value })}
+                placeholder="e.g. Right to Work check"
+                className={cls}
+              />
+            </label>
+            <label className="text-xs font-medium text-gray-600">
+              Role association
+              <select
+                value={t.roleId}
+                onChange={(e) => update(i, { roleId: e.target.value })}
+                className={cls}
+              >
+                <option value="">All roles</option>
+                {roles.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                ))}
+              </select>
+            </label>
+          </div>
 
           <div className="relative space-y-3 rounded-lg border border-gray-200 bg-white p-3">
             {tasks.length > 1 && (

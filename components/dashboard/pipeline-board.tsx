@@ -7,6 +7,7 @@ import { changeStage, getCvUrl } from "@/modules/applications/actions";
 import { scheduleInterview } from "@/modules/interviews/actions";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
+import { createClient } from "@/lib/supabase/client";
 
 export type Interview = {
   id: string;
@@ -74,10 +75,12 @@ export function PipelineBoard({
   initial,
   interviewAddress,
   openId = null,
+  companyId,
 }: {
   initial: AppCard[];
   interviewAddress: string;
   openId?: string | null;
+  companyId: string;
 }) {
   const router = useRouter();
   const [apps, setApps] = useState(initial);
@@ -94,14 +97,40 @@ export function PipelineBoard({
     if (openId) setSelectedId(openId);
   }, [openId]);
 
-  // Quietly pull fresh data every 30s so responses/new applicants appear
-  // without a manual refresh (only while the tab is visible).
+  // Live updates: Supabase pushes any change to this company's applications
+  // or interviews and we refresh the board instantly (no polling). A slow
+  // 60s poll is kept purely as a safety net if the socket drops.
   useEffect(() => {
+    const supabase = createClient();
+    let pending: ReturnType<typeof setTimeout> | null = null;
+    const refresh = () => {
+      if (pending) clearTimeout(pending);
+      pending = setTimeout(() => router.refresh(), 400);
+    };
+    const channel = supabase
+      .channel(`pipeline-${companyId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "applications", filter: `company_id=eq.${companyId}` },
+        refresh
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "interviews", filter: `company_id=eq.${companyId}` },
+        refresh
+      )
+      .subscribe();
+
     const t = setInterval(() => {
       if (!document.hidden) router.refresh();
-    }, 30000);
-    return () => clearInterval(t);
-  }, [router]);
+    }, 60000);
+
+    return () => {
+      if (pending) clearTimeout(pending);
+      clearInterval(t);
+      supabase.removeChannel(channel);
+    };
+  }, [companyId, router]);
 
   const selected = apps.find((a) => a.id === selectedId) ?? null;
 

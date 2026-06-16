@@ -132,5 +132,12 @@ export default async function PipelinePage({
     customAnswers: answersByApp.get(r.id) ?? [],
   }));
 
-  return <PipelineBoard initial={apps} interviewAddress={interviewAddress} openId={open ?? null} />;
+  return (
+    <PipelineBoard
+      initial={apps}
+      interviewAddress={interviewAddress}
+      openId={open ?? null}
+      companyId={current.company_id}
+    />
+  );
 }

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { deleteStoreForm } from "@/modules/forms/actions";
 import { MondayFormBuilder, type BuilderField } from "@/components/dashboard/monday-form-builder";
 import { StoreSettingsBar } from "@/components/dashboard/store-settings-bar";
+import { DeleteFormButton } from "@/components/dashboard/delete-form-button";
 import { BuildTabs } from "@/components/dashboard/build-tabs";
 import { PdfImport } from "@/components/dashboard/pdf-import";
 
@@ -68,12 +69,7 @@ export default async function FounderFormBuildPage({
         >
           <ArrowLeft className="h-4 w-4" aria-hidden /> Back to Form Store
         </Link>
-        <form action={deleteStoreForm}>
-          <input type="hidden" name="id" value={form.id} />
-          <button className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/15 px-3 py-1.5 text-sm text-white backdrop-blur-sm hover:bg-white/25">
-            <Trash2 className="h-4 w-4" /> Delete
-          </button>
-        </form>
+        <DeleteFormButton action={deleteStoreForm} formId={form.id} fieldCount={fields.length} />
       </div>
 
       <h1 className="mt-2 text-2xl font-semibold text-white drop-shadow-sm">

@@ -370,7 +370,7 @@ function ApplicantPanel({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop — intentionally does NOT close on click. */}
       <div className="absolute inset-0 bg-black/40" aria-hidden />
-      <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
           <h2 className="text-lg font-semibold text-gray-900">{fullName(app)}</h2>
           <button
@@ -382,6 +382,7 @@ function ApplicantPanel({
           </button>
         </div>
 
+        <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-2">
         <div className="space-y-5 overflow-y-auto px-5 py-5">
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-400">Applied for</p>
@@ -479,9 +480,12 @@ function ApplicantPanel({
             {cvError && <p className="mt-1 text-xs text-red-600">{cvError}</p>}
           </div>
 
-          <div className="border-t border-gray-100 pt-5">
-            <ApplicantComms applicationId={app.id} email={app.email} phone={app.phone} />
-          </div>
+        </div>
+
+        {/* Right column: Inbox (messages + composer) */}
+        <div className="flex min-h-[50vh] flex-col overflow-hidden border-t border-gray-200 lg:min-h-0 lg:border-l lg:border-t-0">
+          <ApplicantComms applicationId={app.id} email={app.email} phone={app.phone} />
+        </div>
         </div>
       </div>
     </div>

@@ -55,7 +55,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-cyan-700 to-indigo-800 p-6 text-white shadow-xl sm:p-8">
+    <div className="relative flex min-h-full flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-cyan-700 to-indigo-800 p-6 text-white shadow-xl sm:p-8">
       {/* soft colour blobs */}
       <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-teal-300/30 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 right-0 h-72 w-72 rounded-full bg-indigo-400/30 blur-3xl" />

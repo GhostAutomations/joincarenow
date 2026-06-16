@@ -4,7 +4,7 @@ import { useState, useEffect, useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, X, Phone, Mail, MapPin, CalendarClock } from "lucide-react";
 import { changeStage, getCvUrl } from "@/modules/applications/actions";
-import { scheduleInterview } from "@/modules/interviews/actions";
+import { scheduleInterview, acceptInterviewTime } from "@/modules/interviews/actions";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { createClient } from "@/lib/supabase/client";
@@ -449,6 +449,14 @@ function InterviewSection({
   const iv = app.interview;
   const [state, action] = useActionState(scheduleInterview, undefined);
   const [editing, setEditing] = useState(!iv);
+  const [accepting, setAccepting] = useState(false);
+
+  async function accept() {
+    setAccepting(true);
+    const res = await acceptInterviewTime(app.id);
+    setAccepting(false);
+    if (!res.error) router.refresh();
+  }
 
   // Type (in person / phone / video) + location, so "in person" can
   // pre-fill the company's saved interview address.
@@ -524,12 +532,31 @@ function InterviewSection({
           {iv.status === "declined" && iv.applicant_note && (
             <p className="text-red-700">“{iv.applicant_note}”</p>
           )}
-          <button
-            onClick={() => setEditing(true)}
-            className="mt-1 text-sm font-medium text-brand-600 hover:underline"
-          >
-            {iv.status === "reschedule_requested" ? "Propose new time" : "Reschedule"}
-          </button>
+
+          {iv.status === "reschedule_requested" && iv.requested_time ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                onClick={accept}
+                disabled={accepting}
+                className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-60"
+              >
+                {accepting ? "Confirming…" : `Accept ${formatRequested(iv.requested_time)}`}
+              </button>
+              <button
+                onClick={() => setEditing(true)}
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Propose new time
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setEditing(true)}
+              className="mt-1 text-sm font-medium text-brand-600 hover:underline"
+            >
+              Reschedule
+            </button>
+          )}
         </div>
       )}
 

@@ -80,12 +80,13 @@ type IvRow = {
   location: string | null;
 };
 
-/** Email/SMS the applicant their interview invite + one-tap response link. */
+/** Email/SMS the applicant their interview invite (or a confirmation). */
 async function sendInterviewInvite(
   supabase: Awaited<ReturnType<typeof createClient>>,
   applicationId: string,
   iv: IvRow | null,
-  channel: string
+  channel: string,
+  variant: "invite" | "confirmed" = "invite"
 ) {
   if (!iv?.respond_token) return;
   try {
@@ -109,13 +110,22 @@ async function sendInterviewInvite(
     const modeText = iv.mode === "phone" ? "by phone" : iv.mode === "video" ? "by video call" : "in person";
     const whereLine = iv.location ? `\nWhere: ${iv.location}` : "";
 
+    const emailSubject =
+      variant === "confirmed"
+        ? `Your interview with ${company} is confirmed`
+        : `Interview invitation from ${company}`;
     const emailBody =
-      `Hi ${first},\n\n${company} would like to invite you to an interview.\n\n` +
-      `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n\n` +
-      `Please confirm, ask to change the time, or decline here:\n${link}\n\nThank you,\n${company}`;
+      variant === "confirmed"
+        ? `Hi ${first},\n\nGood news — your interview with ${company} is confirmed.\n\n` +
+          `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n\n` +
+          `If you need to change anything, use this link:\n${link}\n\nSee you then,\n${company}`
+        : `Hi ${first},\n\n${company} would like to invite you to an interview.\n\n` +
+          `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n\n` +
+          `Please confirm, ask to change the time, or decline here:\n${link}\n\nThank you,\n${company}`;
     const smsBody =
-      `Hi ${first}, ${company} would like to interview you on ${when} (${modeText}). ` +
-      `Confirm/change/decline: ${link}`;
+      variant === "confirmed"
+        ? `Hi ${first}, your interview with ${company} is confirmed for ${when} (${modeText}). Need to change it? ${link}`
+        : `Hi ${first}, ${company} would like to interview you on ${when} (${modeText}). Confirm/change/decline: ${link}`;
 
     async function log(ch: "email" | "sms", to: string, subject: string | null, body: string, status: string, providerId?: string, err?: string) {
       await supabase.from("messages").insert({
@@ -135,8 +145,8 @@ async function sendInterviewInvite(
     }
 
     if ((channel === "email" || channel === "both") && ap?.email) {
-      const r = await sendEmail({ to: ap.email, subject: `Interview invitation from ${company}`, text: emailBody });
-      await log("email", ap.email, `Interview invitation from ${company}`, emailBody, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);
+      const r = await sendEmail({ to: ap.email, subject: emailSubject, text: emailBody });
+      await log("email", ap.email, emailSubject, emailBody, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);
     }
     if ((channel === "sms" || channel === "both")) {
       const phone = ukPhone(ap?.phone ?? null);
@@ -148,6 +158,34 @@ async function sendInterviewInvite(
   } catch {
     /* don't fail scheduling if the invite send hiccups */
   }
+}
+
+/** Staff: accept the applicant's proposed time in one click (confirms it). */
+export async function acceptInterviewTime(
+  applicationId: string
+): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data: iv } = await supabase
+    .from("interviews")
+    .select("requested_time")
+    .eq("application_id", applicationId)
+    .single();
+  if (!iv?.requested_time) return { error: "No proposed time to accept" };
+
+  const d = new Date(iv.requested_time);
+  if (isNaN(d.getTime())) return { error: "Couldn't read the proposed time" };
+
+  const { data: row, error } = await supabase.rpc("confirm_interview_at", {
+    p_application_id: applicationId,
+    p_scheduled_at: d.toISOString(),
+  });
+  if (error) return { error: error.message };
+
+  // Send the applicant a confirmation for the agreed time.
+  await sendInterviewInvite(supabase, applicationId, row, (row as IvRow & { channel?: string }).channel ?? "email", "confirmed");
+
+  revalidatePath("/pipeline");
+  return { ok: true };
 }
 
 /** Public (token) interview response — used by the one-tap link, no login. */

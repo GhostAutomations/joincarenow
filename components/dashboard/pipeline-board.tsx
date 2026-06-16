@@ -205,7 +205,7 @@ export function PipelineBoard({
                   if (dragId) move(dragId, col.key);
                   setDragId(null);
                 }}
-                className="rounded-xl bg-gray-100/70 p-2"
+                className="rounded-2xl border border-white/60 bg-white/55 p-2.5 shadow-sm backdrop-blur-sm"
               >
                 <div className="flex items-center gap-2 px-2 py-1.5">
                   <span className={`h-2 w-2 rounded-full ${col.dot}`} />

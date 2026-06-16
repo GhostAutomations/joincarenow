@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutGrid, Briefcase, KanbanSquare, CalendarClock, Users, ClipboardCheck,
   IdCard, FileText, Store, MessageSquareText, BarChart3, Settings,
@@ -24,7 +23,7 @@ const ITEMS = [
 
 export function Dock() {
   const pathname = usePathname();
-  // Hidden on the home screen — the full app grid is the launcher there.
+  const router = useRouter();
   if (pathname === "/dashboard") return null;
 
   return (
@@ -33,17 +32,19 @@ export function Dock() {
         {ITEMS.map(({ href, label, icon: Icon, grad }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (
-            <Link
+            <button
               key={href}
-              href={href}
-              title={label}
+              onClick={() => router.push(href)}
               aria-label={label}
               className={`group relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${grad} text-white shadow transition-transform hover:-translate-y-1 ${
                 active ? "ring-2 ring-brand-600 ring-offset-2 ring-offset-white/60" : ""
               }`}
             >
               <Icon className="h-5 w-5" strokeWidth={1.9} />
-            </Link>
+              <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white opacity-0 shadow transition-opacity duration-75 group-hover:opacity-100">
+                {label}
+              </span>
+            </button>
           );
         })}
       </div>

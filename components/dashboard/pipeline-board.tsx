@@ -505,6 +505,7 @@ function InterviewSection({
   const [editing, setEditing] = useState(!iv);
   const [accepting, setAccepting] = useState(false);
   const [interviewerId, setInterviewerId] = useState(iv?.interviewer_id ?? "");
+  const [channel, setChannel] = useState(iv?.channel ?? "email");
 
   async function accept() {
     setAccepting(true);
@@ -722,7 +723,8 @@ function InterviewSection({
                     type="radio"
                     name="channel"
                     value={c}
-                    defaultChecked={(iv?.channel ?? "email") === c}
+                    checked={channel === c}
+                    onChange={() => setChannel(c)}
                   />
                   {channelLabel(c)}
                 </label>

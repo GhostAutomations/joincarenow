@@ -247,7 +247,7 @@ export function MondayFormBuilder({
 
   return (
     <>
-    <div className="mb-3 flex justify-end">
+    <div className="mx-auto mb-3 flex max-w-2xl justify-end">
       <button
         type="button"
         onClick={() => setShowPreview(true)}
@@ -256,9 +256,11 @@ export function MondayFormBuilder({
         <Eye className="h-4 w-4" /> Preview form
       </button>
     </div>
-    <div className="grid grid-cols-[180px_1fr] gap-4">
+    {/* Centred form canvas (page-centre, aligned with the dock); the content
+        outline floats into the left gutter on wide screens. */}
+    <div className="relative mx-auto w-full max-w-2xl pb-4">
       {/* LEFT: content outline */}
-      <aside className="h-max rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-3">
+      <aside className="absolute right-full top-0 mr-6 hidden h-max w-44 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-3 xl:block">
         <p className="mb-2 text-xs font-medium text-gray-900">Content</p>
         <button
           onClick={() => setSelected("title")}

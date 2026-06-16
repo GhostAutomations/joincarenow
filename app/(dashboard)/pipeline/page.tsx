@@ -12,7 +12,13 @@ type Row = {
   cover_message: string | null;
   cv_path: string | null;
   answers: { right_to_work?: boolean } | null;
-  jobs: { title: string } | null;
+  jobs: {
+    title: string;
+    region: string | null;
+    worker_category: string | null;
+    branches: { name: string } | null;
+    roles: { name: string } | null;
+  } | null;
   applicants: {
     first_name: string | null;
     last_name: string | null;
@@ -36,7 +42,7 @@ export default async function PipelinePage({
     supabase
       .from("applications")
       .select(
-        "id, stage, created_at, cover_message, cv_path, answers, jobs(title), applicants(first_name, last_name, email, phone, postcode)"
+        "id, stage, created_at, cover_message, cv_path, answers, jobs(title, region, worker_category, branches(name), roles(name)), applicants(first_name, last_name, email, phone, postcode)"
       )
       .eq("company_id", current.company_id)
       .order("created_at", { ascending: false }),
@@ -142,6 +148,8 @@ export default async function PipelinePage({
     cv_path: r.cv_path,
     answers: r.answers,
     job_title: r.jobs?.title ?? "—",
+    region: r.jobs?.branches?.name ?? r.jobs?.region ?? null,
+    worker_category: r.jobs?.roles?.name ?? r.jobs?.worker_category ?? null,
     first_name: r.applicants?.first_name ?? null,
     last_name: r.applicants?.last_name ?? null,
     email: r.applicants?.email ?? null,

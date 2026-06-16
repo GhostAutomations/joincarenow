@@ -35,6 +35,8 @@ export type AppCard = {
   cv_path: string | null;
   answers: { right_to_work?: boolean } | null;
   job_title: string;
+  region: string | null;
+  worker_category: string | null;
   first_name: string | null;
   last_name: string | null;
   email: string | null;
@@ -496,6 +498,14 @@ function ApplicantPanel({
 }) {
   const [cvLoading, setCvLoading] = useState(false);
   const [cvError, setCvError] = useState<string | null>(null);
+  const [tasks, setTasks] = useState<HireChecklistItem[] | null>(null);
+
+  useEffect(() => {
+    getHireChecklist(app.id).then((r) => setTasks(r.items));
+  }, [app.id]);
+
+  const forms = (tasks ?? []).filter((t) => t.task_type === "form");
+  const formsDone = forms.filter((f) => f.status === "approved").length;
 
   async function openCv() {
     setCvError(null);
@@ -530,6 +540,18 @@ function ApplicantPanel({
             <p className="text-xs text-gray-500">
               {new Date(app.created_at).toLocaleDateString("en-GB")}
             </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {app.region && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+                  <MapPin className="h-3 w-3 text-gray-400" /> {app.region}
+                </span>
+              )}
+              {app.worker_category && (
+                <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                  {app.worker_category}
+                </span>
+              )}
+            </div>
           </div>
 
           <div>
@@ -576,6 +598,43 @@ function ApplicantPanel({
             <p className="mt-0.5 text-sm text-gray-900">
               {app.answers?.right_to_work ? "Confirmed" : "Not confirmed"}
             </p>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs uppercase tracking-wide text-gray-400">Forms</p>
+              {forms.length > 0 && (
+                <span className="text-xs text-gray-500">
+                  {formsDone}/{forms.length} completed
+                </span>
+              )}
+            </div>
+            {tasks === null ? (
+              <p className="mt-1 text-sm text-gray-400">Loading…</p>
+            ) : forms.length === 0 ? (
+              <p className="mt-0.5 text-sm text-gray-500">No workflow forms assigned.</p>
+            ) : (
+              <ul className="mt-1.5 space-y-1">
+                {forms.map((f) => {
+                  const done = f.status === "approved";
+                  return (
+                    <li key={f.id} className="flex items-center gap-2 text-sm">
+                      {done ? (
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+                      )}
+                      <span className="text-gray-800">{f.title}</span>
+                      {!done && (
+                        <span className="ml-auto text-xs capitalize text-amber-600">
+                          {f.status === "pending" ? "outstanding" : f.status}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
 
           {app.cover_message && (

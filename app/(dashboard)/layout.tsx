@@ -1,6 +1,7 @@
 import { requireCompany } from "@/modules/auth/queries";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Topbar } from "@/components/dashboard/topbar";
+import { Dock } from "@/components/dashboard/dock";
 
 export default async function DashboardLayout({
   children,
@@ -23,8 +24,9 @@ export default async function DashboardLayout({
           userName={profile?.full_name || profile?.email || ""}
           showHome={!showSidebar}
         />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24">{children}</main>
       </div>
+      {!showSidebar && <Dock />}
     </div>
   );
 }

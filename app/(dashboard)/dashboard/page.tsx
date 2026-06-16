@@ -55,7 +55,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="relative -m-4 flex min-h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-gradient-to-br from-teal-600 via-cyan-700 to-indigo-800 p-6 text-white sm:-m-6 sm:p-10">
+    <div className="relative -mx-4 -mt-4 -mb-24 flex min-h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-gradient-to-br from-teal-600 via-cyan-700 to-indigo-800 p-6 text-white sm:-mx-6 sm:-mt-6 sm:p-10">
       {/* fluid colour blobs */}
       <div className="jcn-blob pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-teal-300/40 blur-3xl" />
       <div className="jcn-blob jcn-blob-2 pointer-events-none absolute left-1/2 top-1/3 h-72 w-72 rounded-full bg-fuchsia-400/30 blur-3xl" />

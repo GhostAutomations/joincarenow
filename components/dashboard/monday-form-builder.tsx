@@ -42,7 +42,7 @@ function optionsFor(f: BuilderField): string[] {
  *  defaultField() so we can show it instantly (optimistic) without a refresh. */
 function clientDefault(id: string, type: string): BuilderField {
   const base: BuilderField = {
-    id, field_type: type, label: "Untitled question", required: false,
+    id, field_type: type, label: "", required: false,
     options: [], help_text: null, config: null, parent_field_id: null, parent_value: null,
   };
   if (type === "body_text")
@@ -320,7 +320,9 @@ export function MondayFormBuilder({
               selected === f.id ? "bg-brand-50 text-brand-700" : "text-gray-600 hover:bg-gray-100"
             }`}
           >
-            {f.field_type === "body_text" ? f.config?.text || "Body text" : f.label}
+            {f.field_type === "body_text"
+              ? f.config?.text || "Body text"
+              : f.label || "Untitled question"}
           </button>
         ))}
       </aside>
@@ -475,7 +477,7 @@ export function MondayFormBuilder({
                     ) : (
                       <>
                         <span className="block text-sm font-medium text-gray-900">
-                          {f.label}
+                          {f.label || <span className="text-gray-400">Untitled question</span>}
                           {f.required && <span className="ml-1 text-red-500">*</span>}
                         </span>
                         <span className="block text-xs text-gray-400">{TYPE_LABEL[f.field_type] ?? f.field_type}</span>

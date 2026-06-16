@@ -290,7 +290,7 @@ function defaultField(ft: FieldType): FieldData {
   }
   if (CHOICE_TYPES.includes(ft)) {
     return {
-      label: "Untitled question",
+      label: "",
       field_type: ft,
       required: false,
       options: ["Option 1"],
@@ -315,7 +315,7 @@ function defaultField(ft: FieldType): FieldData {
     return { label: "Transport", field_type: ft, required: false, options: [], help_text: null, config: {} };
   }
   return {
-    label: "Untitled question",
+    label: "",
     field_type: ft,
     required: false,
     options: [],

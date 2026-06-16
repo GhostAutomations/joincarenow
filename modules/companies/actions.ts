@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/utils";
 
 /** Build an absolute accept-invite URL from the incoming request host. */
@@ -92,13 +93,16 @@ export async function createCompany(
     }
     const ext = (logo.name.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "");
     const path = `${companyId}/logo.${ext || "png"}`;
-    const { error: uploadError } = await supabase.storage
+    // Use the service-role client so the upload bypasses storage RLS (no
+    // storage.objects policies needed). Public read works via the public bucket.
+    const admin = createAdminClient();
+    const { error: uploadError } = await admin.storage
       .from("company-logos")
       .upload(path, logo, { upsert: true, contentType: logo.type || undefined });
     if (uploadError) {
       return { error: `Company created, but the logo upload failed: ${uploadError.message}` };
     }
-    const { data: pub } = supabase.storage.from("company-logos").getPublicUrl(path);
+    const { data: pub } = admin.storage.from("company-logos").getPublicUrl(path);
     if (pub?.publicUrl) brand.logo_url = pub.publicUrl;
   }
 

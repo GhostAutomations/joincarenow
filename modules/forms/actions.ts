@@ -166,7 +166,8 @@ export async function updateFormHeader(payload: {
     })
     .eq("id", payload.id);
   if (error) return { ok: false };
-  revalidatePath(`/forms/${payload.id}/build`);
+  // No revalidatePath: the builder manages its own state optimistically, and a
+  // revalidation here would re-render the whole page and cause a visible jump.
   return { ok: true };
 }
 
@@ -371,7 +372,7 @@ export async function addFieldOfType(formData: FormData): Promise<string | null>
     )
   );
 
-  revalidatePath(`/forms/${formId}/build`);
+  // No revalidatePath — keeps the builder from re-rendering/jumping on add.
   return created.id;
 }
 
@@ -390,7 +391,7 @@ export async function reorderFields(formId: string, orderedIds: string[]) {
       supabase.from("form_fields").update({ position: i }).eq("id", fid).eq("form_id", formId)
     )
   );
-  revalidatePath(`/forms/${formId}/build`);
+  // No revalidatePath — reorder is reflected in the builder's local state.
 }
 
 export async function deleteField(formData: FormData) {

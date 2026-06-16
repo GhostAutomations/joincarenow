@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CalendarClock } from "lucide-react";
 import { respondToInterview } from "@/modules/interviews/actions";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
+import { formatLondon } from "@/lib/time";
 
 export type PortalInterview = {
   interview_id: string;
@@ -30,10 +31,7 @@ function modeLabel(m: string | null) {
 
 export function InterviewInvite({ interview }: { interview: PortalInterview }) {
   const [mode, setMode] = useState<"none" | "reschedule">("none");
-  const when = new Date(interview.scheduled_at).toLocaleString("en-GB", {
-    dateStyle: "full",
-    timeStyle: "short",
-  });
+  const when = formatLondon(interview.scheduled_at);
 
   return (
     <div className="mt-3 rounded-lg border border-brand-200 bg-brand-50/50 p-4">

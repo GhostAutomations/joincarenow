@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CalendarClock, Check, X, Clock } from "lucide-react";
 import { respondToInterviewByToken } from "@/modules/interviews/actions";
+import { formatLondon } from "@/lib/time";
 
 export type TokenInterview = {
   token: string;
@@ -37,10 +38,7 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const when = new Date(interview.scheduled_at).toLocaleString("en-GB", {
-    dateStyle: "full",
-    timeStyle: "short",
-  });
+  const when = formatLondon(interview.scheduled_at);
   const alreadyResponded = ["confirmed", "reschedule_requested", "declined"].includes(status);
 
   async function respond(response: string, extra?: { requestedTime?: string; note?: string }) {

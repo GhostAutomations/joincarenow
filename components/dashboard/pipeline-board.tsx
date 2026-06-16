@@ -8,6 +8,7 @@ import { scheduleInterview, acceptInterviewTime } from "@/modules/interviews/act
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { createClient } from "@/lib/supabase/client";
+import { formatLondon, londonToUtcIso } from "@/lib/time";
 
 export type Interview = {
   id: string;
@@ -522,10 +523,7 @@ function InterviewSection({
         <div className="mt-3 space-y-1.5 text-sm text-gray-700">
           <p>
             <span className="text-gray-500">When:</span>{" "}
-            {new Date(iv.scheduled_at).toLocaleString("en-GB", {
-              dateStyle: "medium",
-              timeStyle: "short",
-            })}{" "}
+            {formatLondon(iv.scheduled_at, { dateStyle: "medium", timeStyle: "short" })}{" "}
             ({iv.duration_minutes} min)
           </p>
           {iv.mode && (
@@ -704,10 +702,11 @@ function modeLabel(m: string) {
   return m === "in_person" ? "In person" : m === "phone" ? "Phone" : "Video call";
 }
 function formatRequested(v: string) {
-  const d = new Date(v);
-  return isNaN(d.getTime())
-    ? v
-    : d.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
+  try {
+    return formatLondon(londonToUtcIso(v), { dateStyle: "medium", timeStyle: "short" });
+  } catch {
+    return v;
+  }
 }
 function channelLabel(c: string) {
   return c === "both" ? "Email & SMS" : c === "sms" ? "SMS" : "Email";

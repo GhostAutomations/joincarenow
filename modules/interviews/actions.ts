@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, sendSms } from "@/lib/comms/send";
+import { londonToUtcIso, formatLondon } from "@/lib/time";
 
 const BASE_URL = "https://www.joincarenow.com";
 
@@ -57,7 +58,7 @@ export async function scheduleInterview(
   const supabase = await createClient();
   const { data: iv, error } = await supabase.rpc("schedule_interview", {
     p_application_id: parsed.data.applicationId,
-    p_scheduled_at: new Date(parsed.data.scheduledAt).toISOString(),
+    p_scheduled_at: londonToUtcIso(parsed.data.scheduledAt),
     p_duration_minutes: parsed.data.durationMinutes,
     p_mode: parsed.data.mode,
     p_location: parsed.data.location || null,
@@ -103,9 +104,7 @@ async function sendInterviewInvite(
     } | null;
     const company = (app.companies as unknown as { name: string | null } | null)?.name ?? "the team";
     const link = `${BASE_URL}/interview/${iv.respond_token}`;
-    const when = new Date(iv.scheduled_at).toLocaleString("en-GB", {
-      dateStyle: "full", timeStyle: "short",
-    });
+    const when = formatLondon(iv.scheduled_at);
     const first = ap?.first_name || "there";
     const modeText = iv.mode === "phone" ? "by phone" : iv.mode === "video" ? "by video call" : "in person";
     const whereLine = iv.location ? `\nWhere: ${iv.location}` : "";
@@ -172,12 +171,16 @@ export async function acceptInterviewTime(
     .single();
   if (!iv?.requested_time) return { error: "No proposed time to accept" };
 
-  const d = new Date(iv.requested_time);
-  if (isNaN(d.getTime())) return { error: "Couldn't read the proposed time" };
+  let iso: string;
+  try {
+    iso = londonToUtcIso(iv.requested_time);
+  } catch {
+    return { error: "Couldn't read the proposed time" };
+  }
 
   const { data: row, error } = await supabase.rpc("confirm_interview_at", {
     p_application_id: applicationId,
-    p_scheduled_at: d.toISOString(),
+    p_scheduled_at: iso,
   });
   if (error) return { error: error.message };
 

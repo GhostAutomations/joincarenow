@@ -34,41 +34,27 @@ export default async function FounderFormBuildPage({
     .order("position", { ascending: true });
   const fields = (fieldsData ?? []) as BuilderField[];
 
-  const settings = (
-    <StoreSettingsBar
-      formId={form.id}
-      category={(form as { category?: string }).category ?? "recruitment"}
-      storeTier={(form as { store_tier?: string }).store_tier ?? "free"}
+  const builder = (
+    <MondayFormBuilder
+      form={{
+        id: form.id,
+        name: form.name,
+        description: (form as { description?: string | null }).description ?? "",
+        style: (form as { style?: Record<string, unknown> }).style ?? {},
+      }}
+      fields={fields}
     />
   );
 
-  const builder = (
-    <div className="space-y-4">
-      {settings}
-      <MondayFormBuilder
-        form={{
-          id: form.id,
-          name: form.name,
-          description: (form as { description?: string | null }).description ?? "",
-          style: (form as { style?: Record<string, unknown> }).style ?? {},
-        }}
-        fields={fields}
-      />
-    </div>
-  );
-
   const importer = (
-    <div className="space-y-4">
-      {settings}
-      <div className="mx-auto max-w-2xl rounded-xl border border-dashed border-gray-300 bg-white p-5">
-        <h2 className="text-sm font-medium text-gray-900">Import questions from a PDF</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Upload an existing form (PDF) and we&apos;ll read it and add the
-          questions for you to review and edit.
-        </p>
-        <div className="mt-3">
-          <PdfImport formId={form.id} />
-        </div>
+    <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+      <h2 className="text-base font-medium text-gray-900">Import questions from a PDF</h2>
+      <p className="mt-1 text-sm text-gray-500">
+        Upload an existing form (PDF) and we&apos;ll read it and add the
+        questions for you to review and edit.
+      </p>
+      <div className="mt-3">
+        <PdfImport formId={form.id} />
       </div>
     </div>
   );
@@ -78,16 +64,30 @@ export default async function FounderFormBuildPage({
       <div className="flex items-center justify-between gap-4">
         <Link
           href="/admin/forms"
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
+          className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden /> Back to Form Store
         </Link>
         <form action={deleteStoreForm}>
           <input type="hidden" name="id" value={form.id} />
-          <button className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600">
+          <button className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/15 px-3 py-1.5 text-sm text-white backdrop-blur-sm hover:bg-white/25">
             <Trash2 className="h-4 w-4" /> Delete
           </button>
         </form>
+      </div>
+
+      <h1 className="mt-2 text-2xl font-semibold text-white drop-shadow-sm">
+        {form.name || "Untitled form"}
+      </h1>
+      <p className="text-sm text-white/80">Store form · set its category and plan below.</p>
+
+      {/* Store settings shown once, above the tabs (matches the admin flow). */}
+      <div className="mt-4">
+        <StoreSettingsBar
+          formId={form.id}
+          category={(form as { category?: string }).category ?? "recruitment"}
+          storeTier={(form as { store_tier?: string }).store_tier ?? "free"}
+        />
       </div>
 
       <div className="mt-4">

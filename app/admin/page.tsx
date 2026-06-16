@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { MessageSquare } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { CompanyForm } from "@/components/dashboard/company-form";
 import { InviteForm } from "@/components/dashboard/invite-form";
@@ -13,7 +15,7 @@ type AdminRow = {
 export default async function AdminConsolePage() {
   const { supabase } = await requirePlatformAdmin();
 
-  const [{ data: companies }, { data: admins }, { data: adminInvites }] =
+  const [{ data: companies }, { data: admins }, { data: adminInvites }, { data: smsUsage }] =
     await Promise.all([
       supabase.from("companies").select("id, name, slug, subscription_tier").order("name"),
       supabase
@@ -26,7 +28,13 @@ export default async function AdminConsolePage() {
         .eq("status", "pending")
         .eq("role", "admin")
         .order("created_at", { ascending: false }),
+      supabase.rpc("get_sms_usage"),
     ]);
+
+  const smsThisMonth = (smsUsage ?? []).reduce(
+    (sum: number, r: { sms_this_month: number }) => sum + Number(r.sms_this_month),
+    0
+  );
 
   const adminsByCompany = new Map<string, AdminRow[]>();
   for (const a of (admins ?? []) as unknown as AdminRow[]) {
@@ -52,6 +60,22 @@ export default async function AdminConsolePage() {
         Create care companies and invite their first administrator. Admins then
         invite their own managers and recruiters.
       </p>
+
+      <Link
+        href="/admin/sms"
+        className="mt-6 flex items-center justify-between rounded-xl border border-gray-200 bg-white p-5 hover:border-brand-300 hover:shadow-sm"
+      >
+        <div className="flex items-center gap-3">
+          <span className="rounded-lg bg-brand-50 p-2 text-brand-600">
+            <MessageSquare className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-sm text-gray-500">SMS sent this month</p>
+            <p className="text-2xl font-semibold text-gray-900">{smsThisMonth.toLocaleString()}</p>
+          </div>
+        </div>
+        <span className="text-sm font-medium text-brand-600">View by company →</span>
+      </Link>
 
       <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="text-base font-medium text-gray-900">Add a company</h2>

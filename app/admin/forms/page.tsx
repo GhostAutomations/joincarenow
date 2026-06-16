@@ -16,21 +16,21 @@ export default async function FounderFormsPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Form Store</h1>
+        <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Form Store</h1>
         <form action={createBlankStoreForm}>
           <button className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
             <Plus className="h-4 w-4" aria-hidden /> Create form
           </button>
         </form>
       </div>
-      <p className="mt-1 text-sm text-gray-500">
+      <p className="mt-1 text-sm text-white/80">
         Templates you create here appear in every company&apos;s Form Store.
         Admins can add them to their own forms, gated by their subscription plan.
       </p>
 
       <div className="mt-6">
         {(forms ?? []).length === 0 ? (
-          <p className="text-sm text-gray-500">No store forms yet.</p>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">No store forms yet.</div>
         ) : (
           <ul className="space-y-2">
             {(forms ?? []).map((f) => {
@@ -40,7 +40,7 @@ export default async function FounderFormsPage() {
                 <li key={f.id}>
                   <Link
                     href={`/admin/forms/${f.id}/build`}
-                    className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 hover:border-brand-300"
+                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm hover:border-brand-300"
                   >
                     <div>
                       <span className="font-medium text-gray-900">{f.name}</span>

@@ -55,15 +55,15 @@ export default async function AdminConsolePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Founder console</h1>
-      <p className="mt-1 text-sm text-gray-600">
+      <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Founder console</h1>
+      <p className="mt-1 text-sm text-white/80">
         Create care companies and invite their first administrator. Admins then
         invite their own managers and recruiters.
       </p>
 
       <Link
         href="/admin/sms"
-        className="mt-6 flex items-center justify-between rounded-xl border border-gray-200 bg-white p-5 hover:border-brand-300 hover:shadow-sm"
+        className="mt-6 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm hover:border-brand-300 hover:shadow-md"
       >
         <div className="flex items-center gap-3">
           <span className="rounded-lg bg-brand-50 p-2 text-brand-600">
@@ -77,7 +77,7 @@ export default async function AdminConsolePage() {
         <span className="text-sm font-medium text-brand-600">View by company →</span>
       </Link>
 
-      <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
         <h2 className="text-base font-medium text-gray-900">Add a company</h2>
         <div className="mt-4">
           <CompanyForm />
@@ -85,14 +85,14 @@ export default async function AdminConsolePage() {
       </section>
 
       <section className="mt-6">
-        <h2 className="text-base font-medium text-gray-900">
+        <h2 className="text-base font-medium text-white drop-shadow-sm">
           Companies ({companies?.length ?? 0})
         </h2>
 
         {(companies ?? []).length === 0 && (
-          <p className="mt-3 text-sm text-gray-500">
+          <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
             No companies yet. Create your first one above.
-          </p>
+          </div>
         )}
 
         <div className="mt-4 space-y-4">
@@ -102,7 +102,7 @@ export default async function AdminConsolePage() {
             return (
               <div
                 key={c.id}
-                className="rounded-xl border border-gray-200 bg-white p-6"
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>

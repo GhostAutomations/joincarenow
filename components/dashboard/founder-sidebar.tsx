@@ -14,12 +14,12 @@ export function FounderSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex w-60 flex-col border-r border-gray-200 bg-white">
-      <div className="border-b border-gray-100 px-5 py-5">
-        <Link href="/admin" className="text-lg font-bold text-brand-700">
+    <aside className="hidden md:flex w-60 flex-col bg-gradient-to-b from-teal-600 via-cyan-700 to-indigo-800 text-white">
+      <div className="border-b border-white/15 px-5 py-5">
+        <Link href="/admin" className="text-lg font-bold text-white">
           Join Care Now
         </Link>
-        <p className="mt-0.5 text-xs font-medium text-brand-600">Founder</p>
+        <p className="mt-0.5 text-xs font-medium text-white/60">Founder</p>
       </div>
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
         {NAV.map(({ href, label, icon: Icon, exact }) => {
@@ -30,8 +30,10 @@ export function FounderSidebar() {
               href={href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",
-                active ? "bg-brand-50 text-brand-700" : "text-gray-700 hover:bg-gray-100"
+                "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                active
+                  ? "bg-white/20 text-white shadow-sm backdrop-blur-sm"
+                  : "text-white/75 hover:bg-white/10 hover:text-white"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden />

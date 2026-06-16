@@ -10,10 +10,10 @@ export default async function AdminLayout({
   const { profile } = await requirePlatformAdmin();
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-teal-600 via-cyan-700 to-indigo-800">
       <FounderSidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6">
+        <header className="flex h-14 items-center justify-between border-b border-white/20 bg-white/70 px-4 backdrop-blur-md sm:px-6">
           <span className="md:hidden text-base font-bold text-brand-700">
             Join Care Now
           </span>
@@ -25,7 +25,7 @@ export default async function AdminLayout({
             <form action={signOut}>
               <button
                 type="submit"
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                className="rounded-lg border border-gray-300 bg-white/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-white"
               >
                 Sign out
               </button>

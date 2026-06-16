@@ -1,7 +1,7 @@
 import { requireCompany } from "@/modules/auth/queries";
-import { acquireStoreForm } from "@/modules/forms/actions";
-import { TIER_LABEL, tierRank } from "@/modules/forms/tiers";
+import { TIER_LABEL } from "@/modules/forms/tiers";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { StoreBrowser, type StoreCard } from "@/components/dashboard/store-browser";
 
 type StoreForm = {
   id: string;
@@ -27,73 +27,35 @@ export default async function StorePage() {
 
   const companyTier = company?.subscription_tier ?? "free";
   const list = (forms ?? []) as unknown as StoreForm[];
+  const cards: StoreCard[] = list.map((f) => ({
+    id: f.id,
+    name: f.name,
+    description: f.description,
+    category: f.category,
+    store_tier: f.store_tier,
+    fieldCount: f.form_fields?.[0]?.count ?? 0,
+  }));
 
   return (
     <div>
       <PageHeader
         title="Form Store"
-        subtitle="Ready-made forms. Add one to your Forms to edit it and assign it to jobs."
+        subtitle="Ready-made forms. Preview, add to your Forms, or customise before adding."
       >
         <span className="rounded-full border border-white/40 bg-white/20 px-3 py-1 text-xs font-medium text-white">
           Your plan: {TIER_LABEL[companyTier] ?? companyTier}
         </span>
       </PageHeader>
 
-      {list.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">No store forms available yet.</div>
-      ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {list.map((f) => {
-            const fieldCount = f.form_fields?.[0]?.count ?? 0;
-            const unlocked = tierRank(companyTier) >= tierRank(f.store_tier);
-            return (
-              <div key={f.id} className="flex flex-col rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium text-gray-900">{f.name}</p>
-                    <p className="text-xs capitalize text-gray-400">{f.category}</p>
-                  </div>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      f.store_tier === "free"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-amber-100 text-amber-800"
-                    }`}
-                  >
-                    {TIER_LABEL[f.store_tier] ?? f.store_tier}
-                  </span>
-                </div>
-                {f.description && (
-                  <p className="mt-2 line-clamp-2 text-sm text-gray-600">{f.description}</p>
-                )}
-                <p className="mt-2 text-xs text-gray-400">
-                  {fieldCount} field{fieldCount === 1 ? "" : "s"}
-                </p>
-
-                <div className="mt-4">
-                  {!isAdmin ? (
-                    <p className="text-xs text-gray-400">Only admins can add store forms.</p>
-                  ) : unlocked ? (
-                    <form action={acquireStoreForm}>
-                      <input type="hidden" name="storeFormId" value={f.id} />
-                      <button className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-                        Add to my forms
-                      </button>
-                    </form>
-                  ) : (
-                    <button
-                      disabled
-                      className="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-400"
-                    >
-                      Requires {TIER_LABEL[f.store_tier] ?? f.store_tier} plan
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <div className="mt-6">
+        {cards.length === 0 ? (
+          <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+            No store forms available yet.
+          </div>
+        ) : (
+          <StoreBrowser forms={cards} companyTier={companyTier} isAdmin={isAdmin} />
+        )}
+      </div>
     </div>
   );
 }

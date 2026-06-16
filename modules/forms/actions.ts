@@ -578,13 +578,11 @@ export async function setCompanyTier(formData: FormData) {
   revalidatePath("/admin");
 }
 
-/** Admin: copy a store template into the company's own forms (tier-gated). */
-export async function acquireStoreForm(formData: FormData) {
-  const storeId = formData.get("storeFormId");
-  if (typeof storeId !== "string") return;
-
+/** Copy one store template into the company's own forms (tier-gated).
+ *  Returns the new form id, or null if not allowed / not found. */
+async function acquireOne(storeId: string): Promise<string | null> {
   const { supabase, user, current } = await requireCompany();
-  if (current.role !== "admin") return;
+  if (current.role !== "admin") return null;
 
   const { data: company } = await supabase
     .from("companies")
@@ -597,8 +595,8 @@ export async function acquireStoreForm(formData: FormData) {
     .eq("id", storeId)
     .eq("is_store", true)
     .single();
-  if (!store) return;
-  if (tierRank(company?.subscription_tier ?? "free") < tierRank(store.store_tier)) return;
+  if (!store) return null;
+  if (tierRank(company?.subscription_tier ?? "free") < tierRank(store.store_tier)) return null;
 
   const { data: copy } = await supabase
     .from("forms")
@@ -614,7 +612,7 @@ export async function acquireStoreForm(formData: FormData) {
     })
     .select("id")
     .single();
-  if (!copy) return;
+  if (!copy) return null;
 
   const { data: fields } = await supabase
     .from("form_fields")
@@ -626,9 +624,75 @@ export async function acquireStoreForm(formData: FormData) {
       .from("form_fields")
       .insert(fields.map((f) => ({ ...f, form_id: copy.id })));
   }
+  return copy.id;
+}
 
+/** Admin: "Customise and add" — copy then open the builder. */
+export async function acquireStoreForm(formData: FormData) {
+  const storeId = formData.get("storeFormId");
+  if (typeof storeId !== "string") return;
+  const id = await acquireOne(storeId);
   revalidatePath("/forms");
-  redirect(`/forms/${copy.id}/build`);
+  if (id) redirect(`/forms/${id}/build`);
+}
+
+/** Admin: "Add to my forms" — copy without leaving the store. */
+export async function addStoreForm(
+  _prev: { ok?: boolean; error?: string } | undefined,
+  formData: FormData
+): Promise<{ ok?: boolean; error?: string }> {
+  const storeId = formData.get("storeFormId");
+  if (typeof storeId !== "string") return { error: "Missing form" };
+  const id = await acquireOne(storeId);
+  if (!id) return { error: "Could not add this form (check your plan)." };
+  revalidatePath("/forms");
+  return { ok: true };
+}
+
+/** Admin: add several store forms at once. */
+export async function addStoreFormsBulk(ids: string[]): Promise<{ added: number }> {
+  let added = 0;
+  for (const id of ids) {
+    const made = await acquireOne(id);
+    if (made) added++;
+  }
+  revalidatePath("/forms");
+  return { added };
+}
+
+/** Fields + meta for previewing a store form (read-only). */
+export async function getStoreFormPreview(storeId: string) {
+  const { supabase } = await requireCompany();
+  const { data: form } = await supabase
+    .from("forms")
+    .select("name, description, style")
+    .eq("id", storeId)
+    .eq("is_store", true)
+    .single();
+  const { data: fields } = await supabase
+    .from("form_fields")
+    .select("id, label, field_type, required, options, help_text, config, parent_field_id, parent_value, position")
+    .eq("form_id", storeId)
+    .order("position", { ascending: true });
+  return {
+    form: {
+      name: form?.name ?? "Form",
+      description: (form as { description?: string } | null)?.description ?? "",
+      style: ((form as { style?: Record<string, unknown> } | null)?.style ?? {}) as never,
+    },
+    fields: (fields ?? []).map((f) => ({
+      field_id: f.id as string,
+      label: f.label as string,
+      field_type: f.field_type as string,
+      required: f.required as boolean,
+      options: (f.options ?? []) as string[],
+      help_text: (f.help_text as string | null) ?? null,
+      config: (f.config ?? null) as { text?: string; size?: string; color?: string } | null,
+      parent_field_id: (f.parent_field_id as string | null) ?? null,
+      parent_value: (f.parent_value as string | null) ?? null,
+      field_position: (f.position as number) ?? 0,
+    })),
+  };
 }
 
 export async function moveField(formData: FormData) {

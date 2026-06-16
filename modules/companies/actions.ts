@@ -179,6 +179,36 @@ export async function setInterviewAddress(
   return { ok: true };
 }
 
+/** Admins edit their public careers-page copy: an intro/about blurb and a
+ *  list of benefits. Stored in companies.settings.careers. */
+export async function setCareersContent(
+  _prev: SettingsState,
+  formData: FormData
+): Promise<SettingsState> {
+  const companyId = formData.get("companyId");
+  if (typeof companyId !== "string") return { error: "Missing company" };
+
+  const intro = (formData.get("intro")?.toString() ?? "").slice(0, 2000);
+  const benefits = (formData.get("benefits")?.toString() ?? "")
+    .split("\n")
+    .map((b) => b.trim())
+    .filter(Boolean)
+    .slice(0, 12);
+
+  const supabase = await createClient();
+  const { data: company } = await supabase
+    .from("companies").select("settings").eq("id", companyId).single();
+  const settings = {
+    ...((company?.settings as Record<string, unknown>) ?? {}),
+    careers: { intro, benefits },
+  };
+  const { error } = await supabase.from("companies").update({ settings }).eq("id", companyId);
+  if (error) return { error: "Could not save. Please try again." };
+
+  revalidatePath("/settings");
+  return { ok: true };
+}
+
 /** Admins choose whether to show the left sidebar (off = iPad-style launcher). */
 export async function setShowSidebar(
   _prev: SettingsState,

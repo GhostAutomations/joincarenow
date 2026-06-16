@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ApplyForm, type FormField } from "@/components/careers/apply-form";
+import { BrandStyle } from "@/components/dashboard/brand-style";
 
 type PublicJob = {
   company_name: string;
@@ -10,6 +11,12 @@ type PublicJob = {
   job_id: string;
   job_slug: string;
   title: string;
+};
+
+type PublicProfile = {
+  brand_primary: string | null;
+  brand_secondary: string | null;
+  brand_accent: string | null;
 };
 
 export default async function ApplyPage({
@@ -49,16 +56,32 @@ export default async function ApplyPage({
   });
   const formFields = (fieldsData ?? []) as FormField[];
 
+  const { data: profile } = await supabase
+    .rpc("get_company_public_profile", { p_slug: company })
+    .maybeSingle<PublicProfile>();
+  const brand = profile
+    ? {
+        primary: profile.brand_primary,
+        secondary: profile.brand_secondary,
+        accent: profile.brand_accent,
+      }
+    : null;
+
   return (
     <main className="min-h-screen bg-gray-50">
+      <BrandStyle brand={brand} />
+      <div className="jcn-app-bg">
+        <div className="mx-auto max-w-2xl px-6 py-4">
+          <Link
+            href={`/careers/${jobData.company_slug}/${jobData.job_slug}`}
+            className="inline-flex items-center gap-1.5 text-sm text-white/90 hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            Back to job
+          </Link>
+        </div>
+      </div>
       <div className="mx-auto max-w-2xl px-6 py-8">
-        <Link
-          href={`/careers/${jobData.company_slug}/${jobData.job_slug}`}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Back to job
-        </Link>
 
         <h1 className="mt-4 text-2xl font-bold tracking-tight text-gray-900">
           Apply: {jobData.title}

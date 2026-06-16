@@ -2,7 +2,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Briefcase, Users, CalendarClock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { BrandStyle } from "@/components/dashboard/brand-style";
 import type { Metadata } from "next";
+
+type PublicProfile = {
+  logo_url: string | null;
+  brand_primary: string | null;
+  brand_secondary: string | null;
+  brand_accent: string | null;
+};
+
+async function loadProfile(slug: string): Promise<PublicProfile | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .rpc("get_company_public_profile", { p_slug: slug })
+    .maybeSingle<PublicProfile>();
+  return data ?? null;
+}
 
 type PublicJob = {
   company_id: string;
@@ -53,19 +69,35 @@ export default async function PublicJobPage({
   params: Promise<{ company: string; job: string }>;
 }) {
   const { company, job } = await params;
-  const data = await loadJob(company, job);
+  const [data, profile] = await Promise.all([loadJob(company, job), loadProfile(company)]);
   if (!data) notFound();
+
+  const brand = profile
+    ? {
+        primary: profile.brand_primary,
+        secondary: profile.brand_secondary,
+        accent: profile.brand_accent,
+      }
+    : null;
 
   return (
     <main className="min-h-screen bg-gray-50">
+      <BrandStyle brand={brand} />
+
+      {/* Branded ribbon */}
+      <div className="jcn-app-bg">
+        <div className="mx-auto max-w-3xl px-6 py-4">
+          <Link
+            href={`/careers/${data.company_slug}`}
+            className="inline-flex items-center gap-1.5 text-sm text-white/90 hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            All roles at {data.company_name}
+          </Link>
+        </div>
+      </div>
+
       <div className="mx-auto max-w-3xl px-6 py-8">
-        <Link
-          href={`/careers/${data.company_slug}`}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          All roles at {data.company_name}
-        </Link>
 
         <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
           <p className="text-xs font-medium uppercase tracking-wide text-brand-600">

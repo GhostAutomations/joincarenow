@@ -540,17 +540,20 @@ function ApplicantPanel({
             <p className="text-xs text-gray-500">
               {new Date(app.created_at).toLocaleDateString("en-GB")}
             </p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {app.branch && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
-                  <MapPin className="h-3 w-3 text-gray-400" /> {app.branch}
-                </span>
-              )}
-              {app.worker_category && (
-                <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
-                  {app.worker_category}
-                </span>
-              )}
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-wide text-gray-400">Branch</p>
+                <p className="mt-0.5 flex items-center gap-1 text-sm text-gray-800">
+                  <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                  {app.branch || <span className="text-gray-400">Not set</span>}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wide text-gray-400">Worker type</p>
+                <p className="mt-0.5 text-sm text-gray-800">
+                  {app.worker_category || <span className="text-gray-400">Not set</span>}
+                </p>
+              </div>
             </div>
           </div>
 

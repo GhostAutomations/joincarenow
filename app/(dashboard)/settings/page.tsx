@@ -7,6 +7,7 @@ import { RolesManager } from "@/components/dashboard/roles-manager";
 import { EmployeeNumberSettings } from "@/components/dashboard/employee-number-settings";
 import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
 import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
+import { CareersContentForm } from "@/components/dashboard/careers-content-form";
 import { PageHeader } from "@/components/dashboard/page-header";
 import type { OpeningHours } from "@/lib/opening-hours";
 
@@ -41,6 +42,8 @@ export default async function SettingsPage() {
     ((companyRow?.settings as { opening_hours?: OpeningHours } | null)?.opening_hours) ?? {};
   const showSidebar =
     ((companyRow?.settings as { show_sidebar?: boolean } | null)?.show_sidebar) === true;
+  const careers =
+    ((companyRow?.settings as { careers?: { intro?: string; benefits?: string[] } } | null)?.careers) ?? {};
 
   // Admins manage invitations. RLS only returns this company's invites.
   const { data: invites } = isAdmin
@@ -81,6 +84,21 @@ export default async function SettingsPage() {
             Choose how your team moves around the platform.
           </p>
           <SidebarToggle companyId={current.company_id} show={showSidebar} />
+        </section>
+      )}
+
+      {isAdmin && (
+        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
+          <h2 className="text-base font-medium text-gray-900">Careers page</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            The intro and benefits shown to candidates on your public careers
+            page at joincarenow.com/careers/{current.companies.slug}.
+          </p>
+          <CareersContentForm
+            companyId={current.company_id}
+            intro={careers.intro ?? ""}
+            benefits={careers.benefits ?? []}
+          />
         </section>
       )}
 

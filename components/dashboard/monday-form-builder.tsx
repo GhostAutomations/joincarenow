@@ -257,20 +257,12 @@ export function MondayFormBuilder({
         <Eye className="h-4 w-4" /> Preview form
       </button>
     </div>
-    {/* Centred form canvas (page-centre, aligned with the dock); the content
-        outline floats into the left gutter and Preview into the right gutter,
-        both level with the top of the form, on wide screens. */}
-    <div className="relative mx-auto w-full max-w-2xl pb-4">
-      {/* RIGHT gutter: Preview, level with the top of the form. */}
-      <button
-        type="button"
-        onClick={() => setShowPreview(true)}
-        className="absolute left-full top-0 ml-6 hidden w-max items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 xl:inline-flex"
-      >
-        <Eye className="h-4 w-4" /> Preview form
-      </button>
+    {/* Three columns: content outline | centred form | Preview. The side
+        columns are equal width so the form stays page-centred (dock-aligned),
+        and items-start makes all three tops share one line. */}
+    <div className="flex items-start justify-center gap-6 pb-4">
       {/* LEFT: content outline */}
-      <aside className="absolute right-full top-0 mr-6 hidden h-max w-44 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-3 xl:block">
+      <aside className="hidden h-max w-44 shrink-0 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-3 xl:block">
         <p className="mb-2 text-xs font-medium text-gray-900">Content</p>
         <button
           onClick={() => setSelected("title")}
@@ -292,8 +284,8 @@ export function MondayFormBuilder({
         ))}
       </aside>
 
-      {/* RIGHT: canvas */}
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6 sm:p-8">
+      {/* MIDDLE: canvas */}
+      <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6 sm:p-8">
         {/* logo */}
         <div className="mb-3">
           {logoUrl ? (
@@ -453,6 +445,18 @@ export function MondayFormBuilder({
             />
           </div>
         ))}
+      </div>
+
+      {/* RIGHT: Preview, top-aligned with the form (equal width to the
+          content outline keeps the form centred). */}
+      <div className="hidden w-44 shrink-0 justify-end xl:flex">
+        <button
+          type="button"
+          onClick={() => setShowPreview(true)}
+          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+        >
+          <Eye className="h-4 w-4" /> Preview form
+        </button>
       </div>
     </div>
     {showPreview && (

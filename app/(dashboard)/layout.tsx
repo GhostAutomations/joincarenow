@@ -17,7 +17,7 @@ export default async function DashboardLayout({
     (companyRow?.settings as { show_sidebar?: boolean } | null)?.show_sidebar === true;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-teal-50">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-teal-100 via-cyan-50 to-indigo-100">
       {showSidebar && <Sidebar companyName={current.companies.name} />}
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar

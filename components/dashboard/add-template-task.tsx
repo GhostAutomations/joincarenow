@@ -189,6 +189,24 @@ export function AddTemplateTask({
             </div>
           </div>
 
+          {/* Add another task box (inserts right after this one). */}
+          <div className="flex justify-center py-1">
+            <button
+              type="button"
+              onClick={() =>
+                setTasks((ts) => {
+                  const next = [...ts];
+                  next.splice(i + 1, 0, blank());
+                  return next;
+                })
+              }
+              aria-label="Add another task"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:border-brand-400 hover:text-brand-600"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+
           <label className="block text-xs font-medium text-gray-600">
             {t.taskType === "acknowledge" ? "Text to read & confirm" : "Instructions (optional)"}
             <textarea
@@ -200,18 +218,6 @@ export function AddTemplateTask({
           </label>
         </div>
       ))}
-
-      {/* Add another task box */}
-      <div className="flex justify-center py-1">
-        <button
-          type="button"
-          onClick={() => setTasks((ts) => [...ts, blank()])}
-          aria-label="Add another task"
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:border-brand-400 hover:text-brand-600"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      </div>
 
       <button
         type="button"

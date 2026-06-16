@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { SubmitButton, FormError } from "@/components/ui/form";
 import type { JobState } from "@/modules/jobs/actions";
 
@@ -13,6 +13,7 @@ export type JobDefaults = {
   employment_type?: string;
   branch_id?: string;
   role_id?: string;
+  workflow_role_id?: string;
   salary?: string;
   vacancies?: number;
   closing_date?: string;
@@ -46,6 +47,13 @@ export function JobForm({
   roles?: { id: string; name: string }[];
 }) {
   const [state, formAction] = useActionState<JobState, FormData>(action, undefined);
+
+  // Role drives the default workflow; the workflow can then be changed.
+  const [roleId, setRoleId] = useState(defaults?.role_id ?? "");
+  const [workflowRoleId, setWorkflowRoleId] = useState(
+    defaults?.workflow_role_id ?? defaults?.role_id ?? ""
+  );
+  const [wfTouched, setWfTouched] = useState(false);
 
   return (
     <form action={formAction} className="space-y-5">
@@ -114,7 +122,11 @@ export function JobForm({
           <select
             id="role_id"
             name="role_id"
-            defaultValue={defaults?.role_id ?? ""}
+            value={roleId}
+            onChange={(e) => {
+              setRoleId(e.target.value);
+              if (!wfTouched) setWorkflowRoleId(e.target.value);
+            }}
             className={inputClass}
           >
             <option value="">Select a role…</option>
@@ -128,6 +140,31 @@ export function JobForm({
             {roles.length === 0
               ? "Add roles in Settings first."
               : "Follows the hire onto their employee record and drives the breakdown."}
+          </p>
+        </div>
+        <div>
+          <label htmlFor="workflow_role_id" className="block text-sm font-medium text-gray-700">
+            Workflow
+          </label>
+          <select
+            id="workflow_role_id"
+            name="workflow_role_id"
+            value={workflowRoleId}
+            onChange={(e) => {
+              setWfTouched(true);
+              setWorkflowRoleId(e.target.value);
+            }}
+            className={inputClass}
+          >
+            <option value="">Match role</option>
+            {roles.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            Which role&apos;s workflow tasks apply to applicants. Defaults to the role above — change if needed.
           </p>
         </div>
         <div>

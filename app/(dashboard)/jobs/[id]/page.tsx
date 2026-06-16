@@ -23,7 +23,7 @@ export default async function EditJobPage({
     supabase
       .from("jobs")
       .select(
-        "id, title, slug, description, employment_type, branch_id, role_id, salary, vacancies, closing_date, status, application_form_id"
+        "id, title, slug, description, employment_type, branch_id, role_id, workflow_role_id, salary, vacancies, closing_date, status, application_form_id"
       )
       .eq("id", id)
       .eq("company_id", current.company_id)
@@ -131,6 +131,7 @@ export default async function EditJobPage({
             employment_type: job.employment_type ?? "",
             branch_id: job.branch_id ?? "",
             role_id: job.role_id ?? "",
+            workflow_role_id: (job as { workflow_role_id?: string | null }).workflow_role_id ?? "",
             salary: job.salary ?? "",
             vacancies: job.vacancies,
             closing_date: job.closing_date ?? "",

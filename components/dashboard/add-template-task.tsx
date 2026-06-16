@@ -28,6 +28,7 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
         <input name="title" placeholder="e.g. Right to Work check" className={cls} />
       </label>
 
+      <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="text-xs font-medium text-gray-600">
           Type
@@ -82,6 +83,7 @@ export function AddTemplateTask({ forms }: { forms: { id: string; name: string }
           <input type="checkbox" name="required" defaultChecked className="h-4 w-4 rounded border-gray-300 text-brand-600" />
           Required
         </label>
+      </div>
       </div>
 
       <label className="block text-xs font-medium text-gray-600">

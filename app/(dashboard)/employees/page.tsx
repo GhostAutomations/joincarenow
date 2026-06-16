@@ -119,15 +119,15 @@ export default async function EmployeesPage({
             name="q"
             defaultValue={q ?? ""}
             placeholder="Search by name, email or ID"
-            className="block w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </div>
       </form>
 
       {employees.length === 0 ? (
-        <p className="mt-6 text-sm text-gray-500">
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
           {q ? "No employees match your search." : "No employees yet. Hire an applicant on the Pipeline to create one."}
-        </p>
+        </div>
       ) : (
         <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
           <table className="min-w-full divide-y divide-gray-100 text-sm">

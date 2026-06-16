@@ -88,15 +88,15 @@ export default async function ApplicantsPage({
             name="q"
             defaultValue={q ?? ""}
             placeholder="Search by name or email"
-            className="block w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </div>
       </form>
 
       {applicants.length === 0 ? (
-        <p className="mt-6 text-sm text-gray-500">
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
           {q ? "No applicants match your search." : "No applicants yet."}
-        </p>
+        </div>
       ) : (
         <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
           <table className="min-w-full divide-y divide-gray-100 text-sm">

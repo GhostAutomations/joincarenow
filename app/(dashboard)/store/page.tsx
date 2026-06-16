@@ -40,7 +40,7 @@ export default async function StorePage() {
       </PageHeader>
 
       {list.length === 0 ? (
-        <p className="mt-6 text-sm text-gray-500">No store forms available yet.</p>
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">No store forms available yet.</div>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {list.map((f) => {

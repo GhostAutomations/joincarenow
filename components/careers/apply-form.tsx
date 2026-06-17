@@ -8,6 +8,7 @@ import {
 } from "react";
 import { applyToJob } from "@/modules/applicants/actions";
 import { SubmitButton, FormError } from "@/components/ui/form";
+import { COUNTRIES, toE164 } from "@/lib/countries";
 
 const inputClass =
   "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -245,6 +246,12 @@ export function DynamicField({
   if (field.field_type === "signature") {
     return <SignatureField name={name} label={field.label} required={req} help={field.help_text} initial={dvStr} />;
   }
+  if (field.field_type === "email") {
+    return <EmailField name={name} label={field.label} required={req} help={field.help_text} initial={dvStr} />;
+  }
+  if (field.field_type === "phone") {
+    return <PhoneField name={name} label={field.label} required={req} help={field.help_text} initial={dvStr} />;
+  }
   const label = (
     <span className="block text-sm font-medium text-gray-700">
       {field.label}
@@ -342,7 +349,14 @@ export function DynamicField({
           <input name={name} placeholder="Address line 2 (optional)" defaultValue={dvArr[1] ?? ""} className={inputClass} />
           <input name={name} placeholder="Town / city" defaultValue={dvArr[2] ?? ""} className={inputClass} />
           <input name={name} placeholder="County" defaultValue={dvArr[3] ?? ""} className={inputClass} />
-          <input name={name} placeholder="Postcode" defaultValue={dvArr[4] ?? ""} className={inputClass} />
+          <input name={name} placeholder="Postcode / ZIP" defaultValue={dvArr[4] ?? ""} className={inputClass} />
+          <select name={name} defaultValue={dvArr[5] ?? "United Kingdom"} className={inputClass} aria-label="Country">
+            {COUNTRIES.map((c) => (
+              <option key={c.iso} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </div>
       </fieldset>
     );
@@ -451,6 +465,171 @@ function SignatureField({
           Clear signature
         </button>
       </div>
+      <input type="hidden" name={name} value={value} />
+    </div>
+  );
+}
+
+const EMAIL_PROVIDERS = [
+  "gmail.com",
+  "outlook.com",
+  "hotmail.com",
+  "hotmail.co.uk",
+  "yahoo.com",
+  "yahoo.co.uk",
+  "icloud.com",
+  "live.com",
+  "live.co.uk",
+  "btinternet.com",
+  "sky.com",
+  "aol.com",
+];
+
+function FieldLabel({ label, required, help }: { label: string; required: boolean; help: string | null }) {
+  return (
+    <>
+      <span className="block text-sm font-medium text-gray-700">
+        {label}
+        {required && <span className="ml-0.5 text-red-500">*</span>}
+      </span>
+      {help && <span className="mt-0.5 block text-xs text-gray-500">{help}</span>}
+    </>
+  );
+}
+
+/** Email entry: local part + a provider picker (or a custom domain). Validates
+ *  a real domain and submits the full address as one value. */
+function EmailField({
+  name,
+  label,
+  required,
+  help,
+  initial = "",
+}: {
+  name: string;
+  label: string;
+  required: boolean;
+  help: string | null;
+  initial?: string;
+}) {
+  const at = initial.lastIndexOf("@");
+  const initLocal = at > 0 ? initial.slice(0, at) : "";
+  const initDomain = at > 0 ? initial.slice(at + 1) : "";
+  const known = EMAIL_PROVIDERS.includes(initDomain);
+
+  const [local, setLocal] = useState(initLocal);
+  const [choice, setChoice] = useState(initDomain ? (known ? initDomain : "other") : "gmail.com");
+  const [custom, setCustom] = useState(known ? "" : initDomain);
+
+  const domain = choice === "other" ? custom.trim().toLowerCase() : choice;
+  const value = local.trim() && domain ? `${local.trim()}@${domain}` : "";
+
+  return (
+    <div>
+      <FieldLabel label={label} required={required} help={help} />
+      <div className="mt-1 flex items-stretch gap-2">
+        <input
+          value={local}
+          onChange={(e) => setLocal(e.target.value)}
+          required={required}
+          placeholder="yourname"
+          aria-label="Email username"
+          className={`${inputClass} flex-1`}
+        />
+        <span className="flex items-center text-sm text-gray-500">@</span>
+        <select
+          value={choice}
+          onChange={(e) => setChoice(e.target.value)}
+          aria-label="Email provider"
+          className={`${inputClass} w-auto flex-1`}
+        >
+          {EMAIL_PROVIDERS.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+          <option value="other">Other (type domain)…</option>
+        </select>
+      </div>
+      {choice === "other" && (
+        <input
+          value={custom}
+          onChange={(e) => setCustom(e.target.value)}
+          required={required}
+          placeholder="company.com"
+          aria-label="Email domain"
+          pattern="[^@\s]+\.[^@\s]+"
+          title="Enter a valid domain, e.g. company.com"
+          className={`${inputClass} mt-2`}
+        />
+      )}
+      <input type="hidden" name={name} value={value} />
+    </div>
+  );
+}
+
+/** Phone entry: country dial-code picker + national number, submitted as E.164
+ *  (+<code><number>) so it's Twilio-ready. */
+function PhoneField({
+  name,
+  label,
+  required,
+  help,
+  initial = "",
+}: {
+  name: string;
+  label: string;
+  required: boolean;
+  help: string | null;
+  initial?: string;
+}) {
+  // Parse an existing E.164 value back into country + national number.
+  function parse(): { iso: string; national: string } {
+    const digits = initial.replace(/[^\d+]/g, "");
+    if (digits.startsWith("+")) {
+      const rest = digits.slice(1);
+      const match = [...COUNTRIES]
+        .sort((a, b) => b.dial.length - a.dial.length)
+        .find((c) => rest.startsWith(c.dial));
+      if (match) return { iso: match.iso, national: rest.slice(match.dial.length) };
+    }
+    return { iso: "GB", national: "" };
+  }
+  const parsed = parse();
+  const [iso, setIso] = useState(parsed.iso);
+  const [national, setNational] = useState(parsed.national);
+
+  const dial = COUNTRIES.find((c) => c.iso === iso)?.dial ?? "44";
+  const value = toE164(dial, national);
+
+  return (
+    <div>
+      <FieldLabel label={label} required={required} help={help} />
+      <div className="mt-1 flex items-stretch gap-2">
+        <select
+          value={iso}
+          onChange={(e) => setIso(e.target.value)}
+          aria-label="Country dialling code"
+          className={`${inputClass} w-auto max-w-[55%]`}
+        >
+          {COUNTRIES.map((c) => (
+            <option key={c.iso} value={c.iso}>
+              {c.name} (+{c.dial})
+            </option>
+          ))}
+        </select>
+        <input
+          value={national}
+          onChange={(e) => setNational(e.target.value)}
+          required={required}
+          type="tel"
+          inputMode="tel"
+          placeholder="7700 900000"
+          aria-label="Phone number"
+          className={`${inputClass} flex-1`}
+        />
+      </div>
+      {value && <p className="mt-1 text-xs text-gray-400">Will be saved as {value}</p>}
       <input type="hidden" name={name} value={value} />
     </div>
   );

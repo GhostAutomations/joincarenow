@@ -53,6 +53,8 @@ function clientDefault(id: string, type: string): BuilderField {
   if (type === "branch") return { ...base, label: "Branch" };
   if (type === "role") return { ...base, label: "Role" };
   if (type === "transport") return { ...base, label: "Transport" };
+  if (type === "email") return { ...base, label: "Email address" };
+  if (type === "phone") return { ...base, label: "Phone number" };
   return base;
 }
 
@@ -71,6 +73,8 @@ const PALETTE: { value: string; label: string }[] = [
   { value: "body_text", label: "Body text / heading" },
   { value: "short_text", label: "Short text" },
   { value: "long_text", label: "Long text" },
+  { value: "email", label: "Email address" },
+  { value: "phone", label: "Phone number" },
   { value: "number", label: "Number" },
   { value: "date", label: "Date" },
   { value: "dropdown", label: "Dropdown" },

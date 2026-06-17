@@ -23,6 +23,8 @@ const FIELD_TYPES = [
   "branch",
   "role",
   "transport",
+  "email",
+  "phone",
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 

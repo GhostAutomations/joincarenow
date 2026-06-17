@@ -611,7 +611,7 @@ function ApplicantPanel({
           ) : (
             <ApplicantForms
               forms={forms.map((f) => ({ id: f.id, title: f.title, status: f.status }))}
-              applicationAnswers={app.customAnswers}
+              applicationId={app.id}
             />
           )}
 

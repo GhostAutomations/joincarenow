@@ -231,6 +231,125 @@ export async function deleteTemplateTask(formData: FormData) {
   revalidatePath("/onboarding-board");
 }
 
+export type FormReview = {
+  title: string;
+  status: string;
+  fields: {
+    id: string;
+    label: string;
+    field_type: string;
+    options: string[];
+    config: { text?: string; size?: string; color?: string } | null;
+  }[];
+  answers: Record<string, string | string[]>;
+};
+
+/** Staff: load a form task's fields + the applicant's submitted answers,
+ *  for the review modal in the pipeline. */
+export async function getFormReview(taskId: string): Promise<FormReview | null> {
+  const { supabase } = await requireCompany();
+  const { data: task } = await supabase
+    .from("onboarding_tasks")
+    .select("title, status, form_id, submission_id")
+    .eq("id", taskId)
+    .single();
+  if (!task?.form_id) return null;
+
+  const { data: fields } = await supabase
+    .from("form_fields")
+    .select("id, label, field_type, options, config, position")
+    .eq("form_id", task.form_id)
+    .order("position", { ascending: true });
+
+  let answers: Record<string, string | string[]> = {};
+  if (task.submission_id) {
+    const { data: sub } = await supabase
+      .from("form_submissions")
+      .select("answers")
+      .eq("id", task.submission_id)
+      .single();
+    answers = (sub?.answers as Record<string, string | string[]>) ?? {};
+  }
+
+  return {
+    title: task.title,
+    status: task.status,
+    fields: (fields ?? []).map((f) => ({
+      id: f.id as string,
+      label: f.label as string,
+      field_type: f.field_type as string,
+      options: (f.options ?? []) as string[],
+      config: (f.config ?? null) as FormReview["fields"][number]["config"],
+    })),
+    answers,
+  };
+}
+
+/** Staff: load the application form (fields + answers + review status). */
+export async function getApplicationReview(
+  applicationId: string
+): Promise<(FormReview & { submissionId: string | null }) | null> {
+  const { supabase, current } = await requireCompany();
+  const { data: app } = await supabase
+    .from("applications")
+    .select("job_id")
+    .eq("id", applicationId)
+    .eq("company_id", current.company_id)
+    .single();
+  if (!app?.job_id) return null;
+  const { data: job } = await supabase
+    .from("jobs")
+    .select("application_form_id")
+    .eq("id", app.job_id)
+    .single();
+  const formId = (job as { application_form_id?: string } | null)?.application_form_id;
+  if (!formId) return null;
+
+  const [{ data: fields }, { data: sub }] = await Promise.all([
+    supabase
+      .from("form_fields")
+      .select("id, label, field_type, options, config, position")
+      .eq("form_id", formId)
+      .order("position", { ascending: true }),
+    supabase
+      .from("form_submissions")
+      .select("id, answers, review_status")
+      .eq("application_id", applicationId)
+      .eq("form_id", formId)
+      .maybeSingle(),
+  ]);
+
+  return {
+    title: "Application form",
+    status: (sub?.review_status as string) ?? "submitted",
+    submissionId: (sub?.id as string) ?? null,
+    fields: (fields ?? []).map((f) => ({
+      id: f.id as string,
+      label: f.label as string,
+      field_type: f.field_type as string,
+      options: (f.options ?? []) as string[],
+      config: (f.config ?? null) as FormReview["fields"][number]["config"],
+    })),
+    answers: (sub?.answers as Record<string, string | string[]>) ?? {},
+  };
+}
+
+/** Staff: approve / resend the application form. */
+export async function reviewApplicationForm(formData: FormData) {
+  const submissionId = formData.get("submissionId");
+  const status = formData.get("status");
+  const note = formData.get("note")?.toString() || null;
+  if (typeof submissionId !== "string") return;
+  if (status !== "approved" && status !== "rejected" && status !== "submitted") return;
+  const { supabase, current } = await requireCompany();
+  await supabase
+    .from("form_submissions")
+    .update({ review_status: status, review_note: note })
+    .eq("id", submissionId)
+    .eq("company_id", current.company_id);
+  revalidatePath("/pipeline");
+}
+
 // ---------- Staff: review a submitted task ----------
 export async function reviewTask(formData: FormData) {
   const id = formData.get("id");

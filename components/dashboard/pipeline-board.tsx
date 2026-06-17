@@ -7,6 +7,7 @@ import { changeStage, getCvUrl, getHireChecklist, type HireChecklistItem } from 
 import { scheduleInterview, acceptInterviewTime } from "@/modules/interviews/actions";
 import { InterviewSlotPicker, type BookedInterview } from "@/components/dashboard/interview-slot-picker";
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
+import { ApplicantForms } from "@/components/dashboard/applicant-forms";
 import { createClient } from "@/lib/supabase/client";
 import { formatLondon, londonToUtcIso } from "@/lib/time";
 import type { OpeningHours } from "@/lib/opening-hours";
@@ -505,7 +506,6 @@ function ApplicantPanel({
   }, [app.id]);
 
   const forms = (tasks ?? []).filter((t) => t.task_type === "form");
-  const formsDone = forms.filter((f) => f.status === "approved").length;
 
   async function openCv() {
     setCvError(null);
@@ -603,42 +603,17 @@ function ApplicantPanel({
             </p>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between">
+          {tasks === null ? (
+            <div>
               <p className="text-xs uppercase tracking-wide text-gray-400">Forms</p>
-              {forms.length > 0 && (
-                <span className="text-xs text-gray-500">
-                  {formsDone}/{forms.length} completed
-                </span>
-              )}
-            </div>
-            {tasks === null ? (
               <p className="mt-1 text-sm text-gray-400">Loading…</p>
-            ) : forms.length === 0 ? (
-              <p className="mt-0.5 text-sm text-gray-500">No workflow forms assigned.</p>
-            ) : (
-              <ul className="mt-1.5 space-y-1">
-                {forms.map((f) => {
-                  const done = f.status === "approved";
-                  return (
-                    <li key={f.id} className="flex items-center gap-2 text-sm">
-                      {done ? (
-                        <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
-                      ) : (
-                        <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
-                      )}
-                      <span className="text-gray-800">{f.title}</span>
-                      {!done && (
-                        <span className="ml-auto text-xs capitalize text-amber-600">
-                          {f.status === "pending" ? "outstanding" : f.status}
-                        </span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+            </div>
+          ) : (
+            <ApplicantForms
+              forms={forms.map((f) => ({ id: f.id, title: f.title, status: f.status }))}
+              applicationAnswers={app.customAnswers}
+            />
+          )}
 
           {app.cover_message && (
             <div>
@@ -646,22 +621,6 @@ function ApplicantPanel({
               <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
                 {app.cover_message}
               </p>
-            </div>
-          )}
-
-          {app.customAnswers.length > 0 && (
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-400">
-                Application answers
-              </p>
-              <dl className="mt-1 space-y-2">
-                {app.customAnswers.map((a, i) => (
-                  <div key={i}>
-                    <dt className="text-xs text-gray-500">{a.label}</dt>
-                    <dd className="text-sm text-gray-800">{a.value}</dd>
-                  </div>
-                ))}
-              </dl>
             </div>
           )}
 

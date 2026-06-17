@@ -136,6 +136,7 @@ export default async function PipelinePage({
   }
 
   const answersByApp = new Map<string, { label: string; value: string }[]>();
+  const transportByApp = new Map<string, string>();
   for (const s of subs ?? []) {
     if (!s.application_id) continue;
     const fields = fieldsByForm.get(s.form_id) ?? [];
@@ -144,6 +145,8 @@ export default async function PipelinePage({
     for (const f of fields) {
       const value = formatAnswer(answers[f.id], f.field_type);
       if (value) out.push({ label: f.label, value });
+      // Capture the applicant's transport (Driver / Walker) for the card.
+      if (f.field_type === "transport" && value) transportByApp.set(s.application_id, value);
     }
     answersByApp.set(s.application_id, out);
   }
@@ -168,6 +171,7 @@ export default async function PipelinePage({
     formAwaiting: formStatusByApp.get(r.id)?.awaiting ?? 0,
     formResent: formStatusByApp.get(r.id)?.resent ?? 0,
     formTotal: formStatusByApp.get(r.id)?.total ?? 0,
+    transport: transportByApp.get(r.id) ?? null,
   }));
 
   return (

@@ -48,6 +48,7 @@ export type AppCard = {
   formAwaiting: number;
   formResent: number;
   formTotal: number;
+  transport: string | null;
 };
 
 const STAGES: { key: string; label: string; dot: string }[] = [
@@ -105,8 +106,11 @@ function FormBadge({
   if (total === 0) return null;
   if (awaiting === 0 && resent === 0) {
     return (
-      <span title="All forms complete" className="shrink-0">
-        <CheckCircle2 className="h-4 w-4 text-green-600" aria-label="All forms complete" />
+      <span
+        title="All forms complete"
+        className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-sm font-semibold text-green-700"
+      >
+        <CheckCircle2 className="h-5 w-5" aria-hidden /> Complete
       </span>
     );
   }
@@ -115,17 +119,17 @@ function FormBadge({
       {awaiting > 0 && (
         <span
           title={`${awaiting} form${awaiting > 1 ? "s" : ""} awaiting review`}
-          className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700"
+          className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-sm font-semibold text-amber-700"
         >
-          <AlertTriangle className="h-3 w-3" aria-hidden /> {awaiting}
+          <AlertTriangle className="h-5 w-5" aria-hidden /> {awaiting}
         </span>
       )}
       {resent > 0 && (
         <span
           title={`${resent} resent form${resent > 1 ? "s" : ""} outstanding`}
-          className="inline-flex items-center gap-0.5 rounded-full bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-700"
+          className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-sm font-semibold text-red-700"
         >
-          <AlertTriangle className="h-3 w-3" aria-hidden /> {resent}
+          <AlertTriangle className="h-5 w-5" aria-hidden /> {resent}
         </span>
       )}
     </span>
@@ -311,6 +315,20 @@ export function PipelineBoard({
                             total={a.formTotal}
                           />
                         </div>
+                        {(a.branch || a.transport) && (
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                            {a.branch && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                                <MapPin className="h-3 w-3" aria-hidden /> {a.branch}
+                              </span>
+                            )}
+                            {a.transport && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                                {a.transport}
+                              </span>
+                            )}
+                          </div>
+                        )}
                         <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
                           <span>{new Date(a.created_at).toLocaleDateString("en-GB")}</span>
                           {a.cv_path && (

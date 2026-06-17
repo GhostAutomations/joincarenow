@@ -41,9 +41,9 @@ export default async function ReferenceTokenPage({
         </p>
 
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
-          {status === "approved" ? (
+          {status === "received" || status === "approved" ? (
             <p className="text-sm text-gray-600">
-              This reference has already been completed. Thank you.
+              This reference has already been submitted. Thank you — there&apos;s nothing more to do.
             </p>
           ) : fields.length === 0 ? (
             <p className="text-sm text-gray-500">This reference form isn&apos;t available right now.</p>

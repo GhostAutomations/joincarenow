@@ -77,6 +77,7 @@ const PALETTE: { value: string; label: string }[] = [
   { value: "phone", label: "Phone number" },
   { value: "number", label: "Number" },
   { value: "date", label: "Date" },
+  { value: "month", label: "Month & year" },
   { value: "dropdown", label: "Dropdown" },
   { value: "radio", label: "Single select" },
   { value: "checkboxes", label: "Multi select" },

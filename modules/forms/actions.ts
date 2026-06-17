@@ -25,6 +25,7 @@ const FIELD_TYPES = [
   "transport",
   "email",
   "phone",
+  "month",
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 

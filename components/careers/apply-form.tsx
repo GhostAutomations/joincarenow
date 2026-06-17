@@ -362,9 +362,15 @@ export function DynamicField({
     );
   }
 
-  // short_text, number, date
+  // short_text, number, date, month
   const type =
-    field.field_type === "number" ? "number" : field.field_type === "date" ? "date" : "text";
+    field.field_type === "number"
+      ? "number"
+      : field.field_type === "date"
+      ? "date"
+      : field.field_type === "month"
+      ? "month"
+      : "text";
   return (
     <label className="block">
       {label}

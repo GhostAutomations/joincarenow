@@ -9,6 +9,11 @@ import {
   OnboardingTaskItem,
   type PortalTask,
 } from "@/components/portal/onboarding-task-item";
+import {
+  PortalReferees,
+  type MyRef,
+  type RefApplication,
+} from "@/components/portal/portal-referees";
 
 type MyApplication = {
   application_id: string;
@@ -46,13 +51,20 @@ export default async function PortalPage({
   const { supabase, user } = await requireApplicant();
   const { applied } = await searchParams;
 
-  const [{ data }, { data: ivData }, { data: onbData }] = await Promise.all([
+  const [{ data }, { data: ivData }, { data: onbData }, { data: refData }] = await Promise.all([
     supabase.rpc("get_my_applications"),
     supabase.rpc("get_my_interviews"),
     supabase.rpc("get_my_onboarding"),
+    supabase.rpc("get_my_references"),
   ]);
   const onboarding = (onbData ?? []) as PortalTask[];
   const applications = (data ?? []) as MyApplication[];
+  const references = (refData ?? []) as MyRef[];
+  const refApplications: RefApplication[] = applications.map((a) => ({
+    application_id: a.application_id,
+    job_title: a.job_title,
+    company_name: a.company_name,
+  }));
   const interviewByApp = new Map<string, PortalInterview>();
   for (const iv of (ivData ?? []) as (PortalInterview & {
     application_id: string;
@@ -136,6 +148,17 @@ export default async function PortalPage({
                 <OnboardingTaskItem key={t.task_id} task={t} />
               ))}
             </ul>
+          </section>
+        )}
+
+        {refApplications.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-xl font-semibold text-white drop-shadow-sm">Your referees</h2>
+            <p className="mt-1 text-sm text-white/80">
+              Add the people who can provide a reference for you. We&apos;ll email them a secure link
+              to complete it.
+            </p>
+            <PortalReferees applications={refApplications} references={references} />
           </section>
         )}
       </div>

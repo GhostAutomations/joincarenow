@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutGrid, Briefcase, KanbanSquare, CalendarClock, Users, ClipboardCheck,
-  IdCard, FileText, Store, MessageSquareText, BarChart3, Settings,
+  IdCard, FileText, Store, MessageSquareText, BarChart3, Settings, ShieldCheck,
 } from "lucide-react";
 
 const ITEMS = [
@@ -13,6 +13,7 @@ const ITEMS = [
   { href: "/interviews", label: "Interviews", icon: CalendarClock, grad: "from-violet-400 to-violet-600" },
   { href: "/applicants", label: "Talent Pool", icon: Users, grad: "from-sky-400 to-sky-600" },
   { href: "/onboarding-board", label: "Workflow", icon: ClipboardCheck, grad: "from-emerald-400 to-emerald-600" },
+  { href: "/referencing", label: "Referencing", icon: ShieldCheck, grad: "from-lime-400 to-lime-600" },
   { href: "/employees", label: "Employees", icon: IdCard, grad: "from-cyan-400 to-cyan-600" },
   { href: "/forms", label: "Forms", icon: FileText, grad: "from-amber-400 to-amber-500" },
   { href: "/templates", label: "Templates", icon: MessageSquareText, grad: "from-pink-400 to-pink-600" },

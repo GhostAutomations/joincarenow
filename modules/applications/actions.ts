@@ -121,12 +121,29 @@ export async function getHireChecklist(
   applicationId: string
 ): Promise<{ items: HireChecklistItem[] }> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("onboarding_tasks")
-    .select("id, title, task_type, required, status")
-    .eq("application_id", applicationId)
-    .order("position");
-  return { items: (data ?? []) as HireChecklistItem[] };
+  const [{ data: tasks }, { data: refs }] = await Promise.all([
+    supabase
+      .from("onboarding_tasks")
+      .select("id, title, task_type, required, status")
+      .eq("application_id", applicationId)
+      .order("position"),
+    supabase
+      .from("reference_requests")
+      .select("id, referee_name, status")
+      .eq("application_id", applicationId)
+      .order("created_at"),
+  ]);
+
+  // References join the same checklist: only an approved reference counts as done.
+  const refItems: HireChecklistItem[] = (refs ?? []).map((r) => ({
+    id: `ref-${r.id as string}`,
+    title: `Reference: ${r.referee_name as string}`,
+    task_type: "reference",
+    required: true,
+    status: (r.status as string) === "approved" ? "approved" : "pending",
+  }));
+
+  return { items: [...((tasks ?? []) as HireChecklistItem[]), ...refItems] };
 }
 
 /** Mint a short-lived signed URL for an application's CV. Permission is

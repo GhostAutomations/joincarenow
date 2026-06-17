@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { CheckCircle2, AlertTriangle, Clock, Send, Eye, Trash2, Plus, UserPlus } from "lucide-react";
 import {
   addReferee,
@@ -37,11 +38,43 @@ const STATUS: Record<string, { label: string; text: string; icon: typeof CheckCi
   rejected: { label: "Changes requested", text: "text-red-600", icon: AlertTriangle, color: "text-red-500" },
 };
 
-export function ReferencingBoard({ groups }: { groups: ApplicantGroup[] }) {
+export function ReferencingBoard({
+  groups,
+  companyId,
+}: {
+  groups: ApplicantGroup[];
+  companyId: string;
+}) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [addFor, setAddFor] = useState<string | null>(null);
   const [modal, setModal] = useState<{ data: ReferenceReview } | null>(null);
+
+  // Live-update when a referee submits (or any reference changes).
+  useEffect(() => {
+    const supabase = createClient();
+    let pending: ReturnType<typeof setTimeout> | null = null;
+    const refresh = () => {
+      if (pending) clearTimeout(pending);
+      pending = setTimeout(() => router.refresh(), 400);
+    };
+    const channel = supabase
+      .channel(`referencing-${companyId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "reference_requests", filter: `company_id=eq.${companyId}` },
+        refresh
+      )
+      .subscribe();
+    const t = setInterval(() => {
+      if (!document.hidden) router.refresh();
+    }, 60000);
+    return () => {
+      if (pending) clearTimeout(pending);
+      clearInterval(t);
+      supabase.removeChannel(channel);
+    };
+  }, [companyId, router]);
 
   async function send(id: string) {
     setBusyId(id);

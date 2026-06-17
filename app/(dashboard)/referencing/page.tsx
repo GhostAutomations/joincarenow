@@ -65,7 +65,7 @@ export default async function ReferencingPage() {
         title="Referencing"
         subtitle="Request, track and approve employment references. Referees complete them online via a secure link — no login needed."
       />
-      <ReferencingBoard groups={groups} />
+      <ReferencingBoard groups={groups} companyId={current.company_id} />
     </div>
   );
 }

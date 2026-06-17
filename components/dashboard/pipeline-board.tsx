@@ -45,6 +45,9 @@ export type AppCard = {
   postcode: string | null;
   interview: Interview | null;
   customAnswers: { label: string; value: string }[];
+  formAwaiting: number;
+  formResent: number;
+  formTotal: number;
 };
 
 const STAGES: { key: string; label: string; dot: string }[] = [
@@ -84,6 +87,49 @@ const IV_BADGE: Record<string, string> = {
 
 function fullName(a: AppCard) {
   return [a.first_name, a.last_name].filter(Boolean).join(" ") || a.email || "Applicant";
+}
+
+/** Compact forms status on a pipeline card:
+ *  green tick when every form is complete, an amber count of forms awaiting
+ *  review, and a red count of resent forms still outstanding. Completed forms
+ *  are not listed individually. Shows nothing if the applicant has no forms. */
+function FormBadge({
+  awaiting,
+  resent,
+  total,
+}: {
+  awaiting: number;
+  resent: number;
+  total: number;
+}) {
+  if (total === 0) return null;
+  if (awaiting === 0 && resent === 0) {
+    return (
+      <span title="All forms complete" className="shrink-0">
+        <CheckCircle2 className="h-4 w-4 text-green-600" aria-label="All forms complete" />
+      </span>
+    );
+  }
+  return (
+    <span className="flex shrink-0 items-center gap-1.5">
+      {awaiting > 0 && (
+        <span
+          title={`${awaiting} form${awaiting > 1 ? "s" : ""} awaiting review`}
+          className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700"
+        >
+          <AlertTriangle className="h-3 w-3" aria-hidden /> {awaiting}
+        </span>
+      )}
+      {resent > 0 && (
+        <span
+          title={`${resent} resent form${resent > 1 ? "s" : ""} outstanding`}
+          className="inline-flex items-center gap-0.5 rounded-full bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-700"
+        >
+          <AlertTriangle className="h-3 w-3" aria-hidden /> {resent}
+        </span>
+      )}
+    </span>
+  );
 }
 
 export function PipelineBoard({
@@ -254,8 +300,17 @@ export function PipelineBoard({
                           ivColour || "border-gray-200 bg-white"
                         }`}
                       >
-                        <p className="text-sm font-medium text-gray-900">{fullName(a)}</p>
-                        <p className="mt-0.5 text-xs text-gray-500">{a.job_title}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900">{fullName(a)}</p>
+                            <p className="mt-0.5 text-xs text-gray-500">{a.job_title}</p>
+                          </div>
+                          <FormBadge
+                            awaiting={a.formAwaiting}
+                            resent={a.formResent}
+                            total={a.formTotal}
+                          />
+                        </div>
                         <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
                           <span>{new Date(a.created_at).toLocaleDateString("en-GB")}</span>
                           {a.cv_path && (

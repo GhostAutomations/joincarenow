@@ -127,6 +127,14 @@ export default async function PipelinePage({
     return Array.isArray(v) ? v.join(", ") : String(v);
   };
 
+  // Per-application form status counts for the card indicator.
+  const { data: formStatus } = await supabase.rpc("get_application_form_status");
+  type FormStatus = { application_id: string; awaiting: number; resent: number; total: number };
+  const formStatusByApp = new Map<string, FormStatus>();
+  for (const fsr of (formStatus ?? []) as FormStatus[]) {
+    formStatusByApp.set(fsr.application_id, fsr);
+  }
+
   const answersByApp = new Map<string, { label: string; value: string }[]>();
   for (const s of subs ?? []) {
     if (!s.application_id) continue;
@@ -157,6 +165,9 @@ export default async function PipelinePage({
     postcode: r.applicants?.postcode ?? null,
     interview: interviewByApp.get(r.id) ?? null,
     customAnswers: answersByApp.get(r.id) ?? [],
+    formAwaiting: formStatusByApp.get(r.id)?.awaiting ?? 0,
+    formResent: formStatusByApp.get(r.id)?.resent ?? 0,
+    formTotal: formStatusByApp.get(r.id)?.total ?? 0,
   }));
 
   return (

@@ -11,11 +11,8 @@ import {
 } from "@/modules/forms/actions";
 import { TIER_LABEL, tierRank } from "@/modules/forms/tiers";
 import { FormPreview } from "@/components/dashboard/form-preview";
-import {
-  CollapsibleSection,
-  categoryLabel,
-  sortCategories,
-} from "@/components/dashboard/collapsible-section";
+import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
+import { categoryLabel, sortCategories } from "@/lib/form-categories";
 import type { FormField } from "@/components/careers/apply-form";
 
 export type StoreCard = {

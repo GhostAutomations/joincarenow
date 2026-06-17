@@ -3,11 +3,8 @@ import { Plus } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createBlankStoreForm } from "@/modules/forms/actions";
 import { TIER_LABEL } from "@/modules/forms/tiers";
-import {
-  CollapsibleSection,
-  categoryLabel,
-  sortCategories,
-} from "@/components/dashboard/collapsible-section";
+import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
+import { categoryLabel, sortCategories } from "@/lib/form-categories";
 
 type StoreFormRow = {
   id: string;

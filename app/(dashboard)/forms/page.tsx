@@ -3,11 +3,8 @@ import { Plus } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { createBlankForm } from "@/modules/forms/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
-import {
-  CollapsibleSection,
-  categoryLabel,
-  sortCategories,
-} from "@/components/dashboard/collapsible-section";
+import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
+import { categoryLabel, sortCategories } from "@/lib/form-categories";
 import { StoreBadge } from "@/components/dashboard/store-badge";
 
 type FormRow = {

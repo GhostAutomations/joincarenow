@@ -9,6 +9,7 @@ const STAGES = [
   "applied",
   "reviewing",
   "interview",
+  "right_to_work",
   "offer",
   "hired",
   "rejected",
@@ -55,7 +56,7 @@ export async function changeStage(
 
   // Fire any workflow tasks set to trigger at this stage (idempotent —
   // dedups by template, so re-entering a stage won't duplicate tasks).
-  if (["reviewing", "interview", "offer", "hired"].includes(stage)) {
+  if (["reviewing", "interview", "right_to_work", "offer", "hired"].includes(stage)) {
     await supabase.rpc("create_stage_tasks", {
       p_application_id: applicationId,
       p_trigger: stage,

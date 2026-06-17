@@ -61,6 +61,7 @@ const STAGES: { key: string; label: string; dot: string }[] = [
   { key: "applied", label: "Applied", dot: "bg-blue-500" },
   { key: "reviewing", label: "Reviewing", dot: "bg-indigo-500" },
   { key: "interview", label: "Interview", dot: "bg-purple-500" },
+  { key: "right_to_work", label: "Right to work", dot: "bg-amber-500" },
   { key: "offer", label: "Offer", dot: "bg-green-500" },
   { key: "hired", label: "Hired", dot: "bg-emerald-600" },
   { key: "rejected", label: "Not progressing", dot: "bg-gray-400" },
@@ -233,8 +234,12 @@ export function PipelineBoard({
       return;
     }
     setApps((prev) => prev.map((a) => (a.id === id ? { ...a, stage } : a)));
-    // Moving into Interview opens the card so you can schedule straight away.
-    if (stage === "interview" && prevStage !== "interview") setSelectedId(id);
+    // Moving into Interview or Right to work opens the card so you can act straight away.
+    if (
+      (stage === "interview" || stage === "right_to_work") &&
+      prevStage !== stage
+    )
+      setSelectedId(id);
     changeStage(id, stage).then((res) => {
       if (res.error) router.refresh();
     });

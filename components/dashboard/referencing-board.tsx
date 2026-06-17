@@ -127,9 +127,6 @@ export function ReferencingBoard({
               <span className="text-xs font-medium text-white/80">{colCards.length}</span>
             </div>
             <div className="space-y-2">
-              {colCards.length === 0 && (
-                <p className="px-1 py-2 text-xs text-white/70">Nothing here yet.</p>
-              )}
               {colCards.map((c) => (
                 <Card
                   key={c.id}

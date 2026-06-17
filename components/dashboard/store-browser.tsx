@@ -12,6 +12,7 @@ import {
 import { TIER_LABEL, tierRank } from "@/modules/forms/tiers";
 import { FormPreview } from "@/components/dashboard/form-preview";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
+import { StoreBadge, TierBadge } from "@/components/dashboard/store-badge";
 import { categoryLabel, sortCategories } from "@/lib/form-categories";
 import type { FormField } from "@/components/careers/apply-form";
 
@@ -148,19 +149,16 @@ export function StoreBrowser({
                         {f.category} · {f.fieldCount} field{f.fieldCount === 1 ? "" : "s"}
                       </p>
                     </div>
-                    {f.acquired ? (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                        <Check className="h-3 w-3" /> In your forms
-                      </span>
-                    ) : (
-                      <span
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                          f.store_tier === "free" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {TIER_LABEL[f.store_tier] ?? f.store_tier}
-                      </span>
-                    )}
+                    <div className="flex shrink-0 items-center gap-2">
+                      <StoreBadge />
+                      {f.acquired ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                          <Check className="h-3 w-3" /> In your forms
+                        </span>
+                      ) : (
+                        <TierBadge tier={f.store_tier} />
+                      )}
+                    </div>
                   </div>
                   {f.description && (
                     <p className="mt-1.5 line-clamp-2 text-sm text-gray-600">{f.description}</p>

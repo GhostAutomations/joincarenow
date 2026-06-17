@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createBlankStoreForm } from "@/modules/forms/actions";
-import { TIER_LABEL } from "@/modules/forms/tiers";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
+import { StoreBadge, TierBadge } from "@/components/dashboard/store-badge";
 import { categoryLabel, sortCategories } from "@/lib/form-categories";
 
 type StoreFormRow = {
@@ -66,10 +66,9 @@ export default async function FounderFormsPage() {
                           className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 hover:border-brand-300"
                         >
                           <span className="font-medium text-gray-900">{f.name}</span>
-                          <div className="flex items-center gap-3 text-xs text-gray-500">
-                            <span className="rounded-full bg-brand-50 px-2 py-0.5 font-medium text-brand-700">
-                              {TIER_LABEL[f.store_tier] ?? f.store_tier}
-                            </span>
+                          <div className="flex items-center gap-2.5 text-xs text-gray-500">
+                            <StoreBadge />
+                            <TierBadge tier={f.store_tier} />
                             <span>{count} field{count === 1 ? "" : "s"}</span>
                           </div>
                         </Link>

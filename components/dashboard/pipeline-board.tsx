@@ -628,17 +628,12 @@ function ApplicantPanel({
 
         <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-3">
         <div className="space-y-4 overflow-y-auto px-5 py-5 lg:col-span-2">
-          {/* Applied-for */}
-          <div>
-            <p className="text-xs uppercase tracking-wide text-gray-400">Applied for</p>
-            <p className="mt-0.5 text-sm font-medium text-gray-900">{app.job_title}</p>
-            <p className="text-xs text-gray-500">
-              {new Date(app.created_at).toLocaleDateString("en-GB")}
-            </p>
-          </div>
-
           {/* Key facts + contact, spread across the full width */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 rounded-xl border border-gray-100 bg-gray-50/60 p-4 sm:grid-cols-3">
+            <Fact label="Applied for">
+              <span className="font-medium text-gray-900">{app.job_title}</span>
+            </Fact>
+            <Fact label="Date">{new Date(app.created_at).toLocaleDateString("en-GB")}</Fact>
             <Fact label="Branch">
               <span className="flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5 text-gray-400" />

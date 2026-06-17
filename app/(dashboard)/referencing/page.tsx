@@ -22,6 +22,10 @@ type Row = {
 export default async function ReferencingPage() {
   const { supabase, current } = await requireCompany();
 
+  // Make sure the "Your References" form exists so it shows in the Form Builder
+  // and can be selected in workflows.
+  await supabase.rpc("ensure_reference_form", { p_company_id: current.company_id });
+
   const { data } = await supabase
     .from("reference_requests")
     .select(

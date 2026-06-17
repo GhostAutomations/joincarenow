@@ -79,16 +79,21 @@ export default async function PipelinePage({
     interviewer_id: (iv.interviewer_id as string) ?? null,
   }));
 
-  // All of the company's forms can be sent ad-hoc from the pipeline panel.
+  // Forms the recruiter can send ad-hoc from the pipeline panel. Reference forms
+  // are excluded — references go out to referees via the Referencing app.
   const { data: companyForms } = await supabase
     .from("forms")
-    .select("id, name")
+    .select("id, name, category, purpose")
     .eq("company_id", current.company_id)
     .order("name", { ascending: true });
-  const availableForms = ((companyForms ?? []) as { id: string; name: string }[]).map((f) => ({
-    id: f.id,
-    name: f.name,
-  }));
+  const availableForms = ((companyForms ?? []) as {
+    id: string;
+    name: string;
+    category: string | null;
+    purpose: string | null;
+  }[])
+    .filter((f) => f.category !== "referencing" && f.purpose !== "reference")
+    .map((f) => ({ id: f.id, name: f.name }));
 
   const { data: staffRaw } = await supabase
     .from("company_users")

@@ -654,7 +654,13 @@ function ApplicantPanel({
             <Fact label="Email">
               <span className="block truncate">{app.email || <span className="text-gray-400">—</span>}</span>
             </Fact>
-            <Fact label="Right to work">{app.answers?.right_to_work ? "Confirmed" : "Not confirmed"}</Fact>
+            <Fact label="Right to work">
+              {app.rtwVerifiedAt ? (
+                <span className="font-medium text-green-600">Confirmed</span>
+              ) : (
+                <span className="font-medium text-amber-600">Awaiting</span>
+              )}
+            </Fact>
           </div>
 
           {/* Forms */}
@@ -683,15 +689,17 @@ function ApplicantPanel({
             />
           )}
 
-          <RightToWork
-            applicationId={app.id}
-            rtw={{
-              verifiedAt: app.rtwVerifiedAt,
-              shareCode: app.rtwShareCode,
-              expiry: app.rtwExpiry,
-              hasDoc: app.rtwHasDoc,
-            }}
-          />
+          {app.stage === "right_to_work" && (
+            <RightToWork
+              applicationId={app.id}
+              rtw={{
+                verifiedAt: app.rtwVerifiedAt,
+                shareCode: app.rtwShareCode,
+                expiry: app.rtwExpiry,
+                hasDoc: app.rtwHasDoc,
+              }}
+            />
+          )}
 
           {app.cover_message && (
             <div>

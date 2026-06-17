@@ -158,34 +158,24 @@ function FormBadge({
   total: number;
 }) {
   if (total === 0) return null;
-  if (awaiting === 0 && resent === 0) {
+  // One chip, matching the RTW chip style. Resent takes priority, then awaiting.
+  if (resent > 0) {
     return (
-      <span
-        title="All forms complete"
-        className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-sm font-semibold text-green-700"
-      >
-        <CheckCircle2 className="h-5 w-5" aria-hidden /> Complete
+      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+        Forms: {resent} resent
+      </span>
+    );
+  }
+  if (awaiting > 0) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+        Forms: {awaiting} awaiting
       </span>
     );
   }
   return (
-    <span className="flex shrink-0 items-center gap-1.5">
-      {awaiting > 0 && (
-        <span
-          title={`${awaiting} form${awaiting > 1 ? "s" : ""} awaiting review`}
-          className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-sm font-semibold text-amber-700"
-        >
-          <AlertTriangle className="h-5 w-5" aria-hidden /> {awaiting}
-        </span>
-      )}
-      {resent > 0 && (
-        <span
-          title={`${resent} resent form${resent > 1 ? "s" : ""} outstanding`}
-          className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-sm font-semibold text-red-700"
-        >
-          <AlertTriangle className="h-5 w-5" aria-hidden /> {resent}
-        </span>
-      )}
+    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+      Forms: Complete
     </span>
   );
 }
@@ -364,17 +354,8 @@ export function PipelineBoard({
                           ivColour || "border-gray-200 bg-white"
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-gray-900">{fullName(a)}</p>
-                            <p className="mt-0.5 text-xs text-gray-500">{a.job_title}</p>
-                          </div>
-                          <FormBadge
-                            awaiting={a.formAwaiting}
-                            resent={a.formResent}
-                            total={a.formTotal}
-                          />
-                        </div>
+                        <p className="text-sm font-medium text-gray-900">{fullName(a)}</p>
+                        <p className="mt-0.5 text-xs text-gray-500">{a.job_title}</p>
                         <div className="mt-2 flex flex-wrap items-center gap-1.5">
                           {a.branch && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
@@ -386,6 +367,11 @@ export function PipelineBoard({
                               {a.transport}
                             </span>
                           )}
+                          <FormBadge
+                            awaiting={a.formAwaiting}
+                            resent={a.formResent}
+                            total={a.formTotal}
+                          />
                           <RtwChip verifiedAt={a.rtwVerifiedAt} expiry={a.rtwExpiry} />
                         </div>
                         <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">

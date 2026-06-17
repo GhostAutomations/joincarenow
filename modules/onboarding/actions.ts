@@ -310,18 +310,37 @@ export async function getApplicationReview(
     (onb ?? []).map((o) => o.submission_id as string | null).filter(Boolean)
   );
   const sub = (subs ?? []).find((s) => !onbIds.has(s.id as string));
-  if (!sub) return null;
+
+  // Use the applicant's actual submission; if none yet, fall back to the form
+  // assigned to the job so the row still shows (awaiting submission).
+  let formId = sub?.form_id as string | undefined;
+  if (!formId) {
+    const { data: app } = await supabase
+      .from("applications")
+      .select("job_id")
+      .eq("id", applicationId)
+      .eq("company_id", current.company_id)
+      .single();
+    if (!app?.job_id) return null;
+    const { data: job } = await supabase
+      .from("jobs")
+      .select("application_form_id")
+      .eq("id", app.job_id)
+      .single();
+    formId = (job as { application_form_id?: string } | null)?.application_form_id ?? undefined;
+  }
+  if (!formId) return null;
 
   const { data: fields } = await supabase
     .from("form_fields")
     .select("id, label, field_type, options, config, position")
-    .eq("form_id", sub.form_id)
+    .eq("form_id", formId)
     .order("position", { ascending: true });
 
   return {
     title: "Application form",
-    status: (sub.review_status as string) ?? "submitted",
-    submissionId: sub.id as string,
+    status: (sub?.review_status as string) ?? (sub ? "submitted" : "pending"),
+    submissionId: (sub?.id as string) ?? null,
     fields: (fields ?? []).map((f) => ({
       id: f.id as string,
       label: f.label as string,
@@ -329,7 +348,7 @@ export async function getApplicationReview(
       options: (f.options ?? []) as string[],
       config: (f.config ?? null) as FormReview["fields"][number]["config"],
     })),
-    answers: (sub.answers as Record<string, string | string[]>) ?? {},
+    answers: (sub?.answers as Record<string, string | string[]>) ?? {},
   };
 }
 

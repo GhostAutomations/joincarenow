@@ -91,6 +91,16 @@ function fullName(a: AppCard) {
   return [a.first_name, a.last_name].filter(Boolean).join(" ") || a.email || "Applicant";
 }
 
+/** Compact labelled fact used in the applicant pop-up's top info grid. */
+function Fact({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] uppercase tracking-wide text-gray-400">{label}</p>
+      <p className="mt-0.5 text-sm text-gray-800">{children}</p>
+    </div>
+  );
+}
+
 /** Compact forms status on a pipeline card:
  *  green tick when every form is complete, an amber count of forms awaiting
  *  review, and a red count of resent forms still outstanding. Completed forms
@@ -612,76 +622,44 @@ function ApplicantPanel({
         </div>
 
         <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-3">
-        <div className="space-y-5 overflow-y-auto px-5 py-5 lg:col-span-2">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-gray-400">Applied for</p>
-            <p className="mt-0.5 text-sm font-medium text-gray-900">{app.job_title}</p>
-            <p className="text-xs text-gray-500">
-              {new Date(app.created_at).toLocaleDateString("en-GB")}
-            </p>
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-[11px] uppercase tracking-wide text-gray-400">Branch</p>
-                <p className="mt-0.5 flex items-center gap-1 text-sm text-gray-800">
-                  <MapPin className="h-3.5 w-3.5 text-gray-400" />
-                  {app.branch || <span className="text-gray-400">Not set</span>}
-                </p>
-              </div>
-              <div>
-                <p className="text-[11px] uppercase tracking-wide text-gray-400">Worker type</p>
-                <p className="mt-0.5 text-sm text-gray-800">
-                  {app.worker_category || <span className="text-gray-400">Not set</span>}
-                </p>
+        <div className="space-y-4 overflow-y-auto px-5 py-5 lg:col-span-2">
+          {/* Top: applied-for + stage selector (top-right) */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-xs uppercase tracking-wide text-gray-400">Applied for</p>
+              <p className="mt-0.5 text-sm font-medium text-gray-900">{app.job_title}</p>
+              <p className="text-xs text-gray-500">
+                {new Date(app.created_at).toLocaleDateString("en-GB")}
+              </p>
+            </div>
+            <div className="w-44 shrink-0">
+              <p className="text-xs uppercase tracking-wide text-gray-400">Stage</p>
+              <div className="mt-1">
+                <StageSelect value={app.stage} onChange={onStage} />
               </div>
             </div>
           </div>
 
-          <div>
-            <p className="text-xs uppercase tracking-wide text-gray-400">Stage</p>
-            <div className="mt-1">
-              <StageSelect value={app.stage} onChange={onStage} />
-            </div>
-          </div>
-
-          {app.stage === "interview" && (
-            <InterviewSection
-              app={app}
-              interviewAddress={interviewAddress}
-              onConfirmInterview={onConfirmInterview}
-              openingHours={openingHours}
-              staff={staff}
-              bookedInterviews={bookedInterviews}
-              onScheduled={onClose}
-            />
-          )}
-
-          <div className="space-y-1.5 text-sm text-gray-700">
+          {/* Key facts + contact, compact */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-xl border border-gray-100 bg-gray-50/60 p-3 sm:grid-cols-3">
+            <Fact label="Branch">
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                {app.branch || <span className="text-gray-400">Not set</span>}
+              </span>
+            </Fact>
+            <Fact label="Worker type">{app.worker_category || <span className="text-gray-400">Not set</span>}</Fact>
+            <Fact label="Right to work">{app.answers?.right_to_work ? "Confirmed" : "Not confirmed"}</Fact>
             {app.email && (
-              <p className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-gray-400" /> {app.email}
-              </p>
+              <Fact label="Email">
+                <span className="block truncate">{app.email}</span>
+              </Fact>
             )}
-            {app.phone && (
-              <p className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-gray-400" /> {app.phone}
-              </p>
-            )}
-            {app.postcode && (
-              <p className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-gray-400" /> {app.postcode}
-              </p>
-            )}
+            {app.phone && <Fact label="Phone">{app.phone}</Fact>}
+            {app.postcode && <Fact label="Postcode">{app.postcode}</Fact>}
           </div>
 
-          <div>
-            <p className="text-xs uppercase tracking-wide text-gray-400">
-              Right to work in UK
-            </p>
-            <p className="mt-0.5 text-sm text-gray-900">
-              {app.answers?.right_to_work ? "Confirmed" : "Not confirmed"}
-            </p>
-          </div>
-
+          {/* Forms */}
           {tasks === null ? (
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-400">Forms</p>
@@ -692,6 +670,18 @@ function ApplicantPanel({
               forms={forms.map((f) => ({ id: f.id, title: f.title, status: f.status }))}
               applicationId={app.id}
               availableForms={availableForms}
+            />
+          )}
+
+          {app.stage === "interview" && (
+            <InterviewSection
+              app={app}
+              interviewAddress={interviewAddress}
+              onConfirmInterview={onConfirmInterview}
+              openingHours={openingHours}
+              staff={staff}
+              bookedInterviews={bookedInterviews}
+              onScheduled={onClose}
             />
           )}
 
@@ -706,22 +696,22 @@ function ApplicantPanel({
 
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-400">CV</p>
-            {app.cv_path ? (
-              <button
-                onClick={openCv}
-                disabled={cvLoading}
-                className="mt-1 inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-60"
-              >
-                <FileText className="h-4 w-4" />
-                {cvLoading ? "Opening…" : "View CV"}
-              </button>
-            ) : (
-              <p className="mt-0.5 text-sm text-gray-500">No CV uploaded.</p>
-            )}
-            {cvError && <p className="mt-1 text-xs text-red-600">{cvError}</p>}
-            <div>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              {app.cv_path ? (
+                <button
+                  onClick={openCv}
+                  disabled={cvLoading}
+                  className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                >
+                  <FileText className="h-4 w-4" />
+                  {cvLoading ? "Opening…" : "View CV"}
+                </button>
+              ) : (
+                <span className="text-sm text-gray-500">No CV uploaded.</span>
+              )}
               <CvRequest applicationId={app.id} />
             </div>
+            {cvError && <p className="mt-1 text-xs text-red-600">{cvError}</p>}
           </div>
 
         </div>

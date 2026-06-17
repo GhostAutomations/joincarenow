@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   FileText,
   AlertTriangle,
-  XCircle,
   ChevronDown,
 } from "lucide-react";
 import { reviewTask } from "@/modules/onboarding/actions";
@@ -25,7 +24,7 @@ const STATUS: Record<
 > = {
   approved: { label: "Complete", text: "text-green-700", icon: CheckCircle2, iconColor: "text-green-600" },
   submitted: { label: "Submitted", text: "text-amber-600", icon: AlertTriangle, iconColor: "text-amber-500" },
-  rejected: { label: "Needs changes", text: "text-red-700", icon: XCircle, iconColor: "text-red-500" },
+  rejected: { label: "Resent", text: "text-red-600", icon: AlertTriangle, iconColor: "text-red-500" },
   pending: { label: "Outstanding", text: "text-amber-600", icon: AlertTriangle, iconColor: "text-amber-500" },
 };
 
@@ -113,38 +112,29 @@ export function ApplicantForms({
 
               {isOpen && (
                 <div className="space-y-2 border-t border-gray-100 px-3 py-2">
-                  <div className="flex flex-wrap gap-2">
-                    {f.status !== "approved" && (
-                      <button
-                        onClick={() => review(f.id, "approved")}
-                        disabled={busy}
-                        className="inline-flex items-center gap-1 rounded-md bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-60"
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Approve
-                      </button>
-                    )}
+                  {f.status !== "approved" && (
                     <button
-                      onClick={() => review(f.id, "pending")}
+                      onClick={() => review(f.id, "approved")}
                       disabled={busy}
-                      className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                      className="inline-flex items-center gap-1 rounded-md bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-60"
                     >
-                      Resend
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Approve
                     </button>
-                  </div>
+                  )}
                   <div>
                     <textarea
                       value={isOpen ? note : ""}
                       onChange={(e) => setNote(e.target.value)}
                       rows={2}
-                      placeholder="Ask for more information / reason for changes…"
+                      placeholder="Optional message — what needs changing / more info…"
                       className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
                     <button
                       onClick={() => review(f.id, "rejected")}
-                      disabled={busy || !note.trim()}
-                      className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+                      disabled={busy}
+                      className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-red-300 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-60"
                     >
-                      Request more info
+                      Resend to applicant
                     </button>
                   </div>
                 </div>

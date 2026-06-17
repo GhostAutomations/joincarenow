@@ -3,15 +3,6 @@ import { deleteTemplateTask, deleteWorkflow } from "@/modules/onboarding/actions
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AddTemplateTask } from "@/components/dashboard/add-template-task";
 import { WorkflowCard } from "@/components/dashboard/workflow-card";
-import {
-  OnboardingTaskReview,
-  type OnbTask,
-} from "@/components/dashboard/onboarding-task-review";
-
-type TaskRow = OnbTask & {
-  applicant_id: string;
-  applicants: { first_name: string | null; last_name: string | null; email: string | null } | null;
-};
 
 const TYPE_LABEL: Record<string, string> = {
   form: "Form", document: "Document", acknowledge: "Read & confirm",
@@ -29,7 +20,7 @@ export default async function OnboardingBoardPage() {
   const { supabase, current } = await requireCompany();
   const isAdmin = current.role === "admin";
 
-  const [{ data: templates }, { data: forms }, { data: roles }, { data: tasks }] = await Promise.all([
+  const [{ data: templates }, { data: forms }, { data: roles }] = await Promise.all([
     supabase
       .from("onboarding_templates")
       .select("id, title, task_type, required, due_days, trigger_stage, role_id, workflow_id, workflow_name, position")
@@ -37,13 +28,6 @@ export default async function OnboardingBoardPage() {
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("name"),
-    supabase
-      .from("onboarding_tasks")
-      .select(
-        "id, title, task_type, status, doc_path, note, required, due_date, applicant_id, applicants(first_name, last_name, email)"
-      )
-      .eq("company_id", current.company_id)
-      .order("position", { ascending: true }),
   ]);
 
   const roleName = new Map((roles ?? []).map((r) => [r.id as string, r.name as string]));
@@ -79,19 +63,6 @@ export default async function OnboardingBoardPage() {
     wfMap.set(key, g);
   }
   const workflows = [...wfMap.values()];
-
-  // Group tasks by person.
-  const byPerson = new Map<string, { name: string; tasks: OnbTask[] }>();
-  for (const t of (tasks ?? []) as unknown as TaskRow[]) {
-    const name =
-      [t.applicants?.first_name, t.applicants?.last_name].filter(Boolean).join(" ") ||
-      t.applicants?.email ||
-      "New starter";
-    const entry = byPerson.get(t.applicant_id) ?? { name, tasks: [] };
-    entry.tasks.push(t);
-    byPerson.set(t.applicant_id, entry);
-  }
-  const people = [...byPerson.values()];
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -137,31 +108,6 @@ export default async function OnboardingBoardPage() {
         </section>
       )}
 
-      {people.length > 0 && (
-        <section className="mt-6">
-          <h2 className="text-base font-medium text-gray-900">Applicants with tasks</h2>
-          <div className="mt-4 space-y-4">
-            {people.map((p, i) => {
-              const done = p.tasks.filter((t) => t.status === "approved").length;
-              return (
-                <div key={i} className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-5">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-gray-900">{p.name}</h3>
-                    <span className="text-xs text-gray-500">
-                      {done}/{p.tasks.length} complete
-                    </span>
-                  </div>
-                  <ul className="mt-3 space-y-2">
-                    {p.tasks.map((t) => (
-                      <OnboardingTaskReview key={t.id} task={t} />
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
     </div>
   );
 }

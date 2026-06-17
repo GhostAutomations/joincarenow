@@ -628,27 +628,28 @@ function ApplicantPanel({
 
         <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-3">
         <div className="space-y-4 overflow-y-auto px-5 py-5 lg:col-span-2">
-          {/* Key facts + contact, spread across the full width */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-3 rounded-xl border border-gray-100 bg-gray-50/60 p-4 sm:grid-cols-3">
+          {/* Key facts + contact — 4 columns, each stacking two facts.
+             Row order gives: [Applied for/Date] [Branch/Worker type]
+             [Phone/Email] [Postcode/Right to work]. */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3 rounded-xl border border-gray-100 bg-gray-50/60 p-4 sm:grid-cols-4">
             <Fact label="Applied for">
               <span className="font-medium text-gray-900">{app.job_title}</span>
             </Fact>
-            <Fact label="Date">{new Date(app.created_at).toLocaleDateString("en-GB")}</Fact>
             <Fact label="Branch">
               <span className="flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5 text-gray-400" />
                 {app.branch || <span className="text-gray-400">Not set</span>}
               </span>
             </Fact>
+            <Fact label="Phone">{app.phone || <span className="text-gray-400">—</span>}</Fact>
+            <Fact label="Postcode">{app.postcode || <span className="text-gray-400">—</span>}</Fact>
+
+            <Fact label="Date">{new Date(app.created_at).toLocaleDateString("en-GB")}</Fact>
             <Fact label="Worker type">{app.worker_category || <span className="text-gray-400">Not set</span>}</Fact>
+            <Fact label="Email">
+              <span className="block truncate">{app.email || <span className="text-gray-400">—</span>}</span>
+            </Fact>
             <Fact label="Right to work">{app.answers?.right_to_work ? "Confirmed" : "Not confirmed"}</Fact>
-            {app.email && (
-              <Fact label="Email">
-                <span className="block truncate">{app.email}</span>
-              </Fact>
-            )}
-            {app.phone && <Fact label="Phone">{app.phone}</Fact>}
-            {app.postcode && <Fact label="Postcode">{app.postcode}</Fact>}
           </div>
 
           {/* Forms */}

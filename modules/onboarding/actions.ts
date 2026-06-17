@@ -285,44 +285,43 @@ export async function getFormReview(taskId: string): Promise<FormReview | null> 
   };
 }
 
-/** Staff: load the application form (fields + answers + review status). */
+/** Staff: load the applicant's application form (the form they actually filled
+ *  at apply time), with fields + answers + review status. Identified as the
+ *  submission for this application that isn't tied to a workflow task. */
 export async function getApplicationReview(
   applicationId: string
 ): Promise<(FormReview & { submissionId: string | null }) | null> {
   const { supabase, current } = await requireCompany();
-  const { data: app } = await supabase
-    .from("applications")
-    .select("job_id")
-    .eq("id", applicationId)
-    .eq("company_id", current.company_id)
-    .single();
-  if (!app?.job_id) return null;
-  const { data: job } = await supabase
-    .from("jobs")
-    .select("application_form_id")
-    .eq("id", app.job_id)
-    .single();
-  const formId = (job as { application_form_id?: string } | null)?.application_form_id;
-  if (!formId) return null;
 
-  const [{ data: fields }, { data: sub }] = await Promise.all([
-    supabase
-      .from("form_fields")
-      .select("id, label, field_type, options, config, position")
-      .eq("form_id", formId)
-      .order("position", { ascending: true }),
+  const [{ data: subs }, { data: onb }] = await Promise.all([
     supabase
       .from("form_submissions")
-      .select("id, answers, review_status")
+      .select("id, form_id, answers, review_status, created_at")
       .eq("application_id", applicationId)
-      .eq("form_id", formId)
-      .maybeSingle(),
+      .eq("company_id", current.company_id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("onboarding_tasks")
+      .select("submission_id")
+      .eq("application_id", applicationId),
   ]);
+
+  const onbIds = new Set(
+    (onb ?? []).map((o) => o.submission_id as string | null).filter(Boolean)
+  );
+  const sub = (subs ?? []).find((s) => !onbIds.has(s.id as string));
+  if (!sub) return null;
+
+  const { data: fields } = await supabase
+    .from("form_fields")
+    .select("id, label, field_type, options, config, position")
+    .eq("form_id", sub.form_id)
+    .order("position", { ascending: true });
 
   return {
     title: "Application form",
-    status: (sub?.review_status as string) ?? "submitted",
-    submissionId: (sub?.id as string) ?? null,
+    status: (sub.review_status as string) ?? "submitted",
+    submissionId: sub.id as string,
     fields: (fields ?? []).map((f) => ({
       id: f.id as string,
       label: f.label as string,
@@ -330,7 +329,7 @@ export async function getApplicationReview(
       options: (f.options ?? []) as string[],
       config: (f.config ?? null) as FormReview["fields"][number]["config"],
     })),
-    answers: (sub?.answers as Record<string, string | string[]>) ?? {},
+    answers: (sub.answers as Record<string, string | string[]>) ?? {},
   };
 }
 

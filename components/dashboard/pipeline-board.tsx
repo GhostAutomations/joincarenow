@@ -610,38 +610,35 @@ function ApplicantPanel({
       {/* Backdrop — intentionally does NOT close on click. */}
       <div className="absolute inset-0 bg-black/40" aria-hidden />
       <div className="relative flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+        <div className="flex items-center justify-between gap-4 border-b border-gray-200 px-5 py-4">
           <h2 className="text-lg font-semibold text-gray-900">{fullName(app)}</h2>
-          <button
-            onClick={onClose}
-            className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="w-40 sm:w-48">
+              <StageSelect value={app.stage} onChange={onStage} />
+            </div>
+            <button
+              onClick={onClose}
+              className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-3">
         <div className="space-y-4 overflow-y-auto px-5 py-5 lg:col-span-2">
-          {/* Top: applied-for + stage selector (top-right) */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-xs uppercase tracking-wide text-gray-400">Applied for</p>
-              <p className="mt-0.5 text-sm font-medium text-gray-900">{app.job_title}</p>
-              <p className="text-xs text-gray-500">
-                {new Date(app.created_at).toLocaleDateString("en-GB")}
-              </p>
-            </div>
-            <div className="w-44 shrink-0">
-              <p className="text-xs uppercase tracking-wide text-gray-400">Stage</p>
-              <div className="mt-1">
-                <StageSelect value={app.stage} onChange={onStage} />
-              </div>
-            </div>
+          {/* Applied-for */}
+          <div>
+            <p className="text-xs uppercase tracking-wide text-gray-400">Applied for</p>
+            <p className="mt-0.5 text-sm font-medium text-gray-900">{app.job_title}</p>
+            <p className="text-xs text-gray-500">
+              {new Date(app.created_at).toLocaleDateString("en-GB")}
+            </p>
           </div>
 
-          {/* Key facts + contact, compact */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-xl border border-gray-100 bg-gray-50/60 p-3 sm:grid-cols-3">
+          {/* Key facts + contact, spread across the full width */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3 rounded-xl border border-gray-100 bg-gray-50/60 p-4 sm:grid-cols-3">
             <Fact label="Branch">
               <span className="flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5 text-gray-400" />

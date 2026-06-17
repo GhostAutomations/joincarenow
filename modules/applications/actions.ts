@@ -39,7 +39,7 @@ export async function changeStage(
 
   const { error } = await supabase
     .from("applications")
-    .update({ stage })
+    .update({ stage, ...(stage === "hired" ? { hired_at: new Date().toISOString() } : {}) })
     .eq("id", applicationId);
 
   if (error) return { error: "Could not update stage. Please try again." };

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Send, Eye, Trash2, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Send, Eye, Trash2, Clock, CheckCircle2, AlertTriangle, Archive, ArrowLeft } from "lucide-react";
 import {
   sendReferenceRequest,
   reviewReference,
@@ -33,14 +33,17 @@ const COLUMNS: { key: string; title: string; statuses: string[]; dot: string }[]
 
 export function ReferencingBoard({
   cards,
+  archived = [],
   companyId,
 }: {
   cards: RefCard[];
+  archived?: RefCard[];
   companyId: string;
 }) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [modal, setModal] = useState<{ data: ReferenceReview } | null>(null);
+  const [showArchive, setShowArchive] = useState(false);
 
   // Live-update when a referee submits (or any reference changes).
   useEffect(() => {
@@ -105,42 +108,89 @@ export function ReferencingBoard({
     router.refresh();
   }
 
-  if (cards.length === 0) {
-    return (
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
-        No references yet. When an applicant completes their &quot;Your References&quot; form, their
-        referees appear here ready to send.
-      </div>
-    );
-  }
-
   return (
-    <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {COLUMNS.map((col) => {
-        const colCards = cards.filter((c) => col.statuses.includes(c.status));
-        return (
-          <div key={col.key} className="rounded-2xl border border-white/40 bg-white/15 p-3 backdrop-blur-sm">
-            <div className="mb-2 flex items-center justify-between px-1">
-              <span className="flex items-center gap-2 text-sm font-semibold text-white drop-shadow-sm">
-                <span className={`h-2 w-2 rounded-full ${col.dot}`} /> {col.title}
-              </span>
-              <span className="text-xs font-medium text-white/80">{colCards.length}</span>
-            </div>
-            <div className="space-y-2">
-              {colCards.map((c) => (
-                <Card
-                  key={c.id}
-                  card={c}
-                  busy={busyId === c.id}
-                  onSend={() => send(c.id)}
-                  onOpen={() => open(c.id)}
-                  onRemove={() => remove(c.id)}
-                />
-              ))}
-            </div>
+    <div className="mt-6">
+      <div className="mb-3 flex justify-end">
+        <button
+          onClick={() => setShowArchive((v) => !v)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30"
+        >
+          {showArchive ? (
+            <>
+              <ArrowLeft className="h-4 w-4" /> Back to board
+            </>
+          ) : (
+            <>
+              <Archive className="h-4 w-4" /> Archive ({archived.length})
+            </>
+          )}
+        </button>
+      </div>
+
+      {showArchive ? (
+        archived.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+            Nothing archived yet. References archive once their applicant is hired.
           </div>
-        );
-      })}
+        ) : (
+          <div className="space-y-2">
+            {archived.map((c) => (
+              <div key={c.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900">{c.referee_name}</p>
+                  <p className="truncate text-xs text-gray-500">
+                    {c.referee_email}
+                    {c.referee_employer ? ` · ${c.referee_employer}` : ""} · {c.applicant_name} · {c.job_title}
+                  </p>
+                </div>
+                <span className="text-xs font-medium capitalize text-gray-500">{c.status}</span>
+                {(c.status === "received" || c.status === "approved") && (
+                  <button
+                    onClick={() => open(c.id)}
+                    disabled={busyId === c.id}
+                    className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  >
+                    <Eye className="h-3.5 w-3.5" /> View
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )
+      ) : cards.length === 0 ? (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+          No references yet. When an applicant completes their &quot;Your References&quot; form, their
+          referees appear here ready to send.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {COLUMNS.map((col) => {
+            const colCards = cards.filter((c) => col.statuses.includes(c.status));
+            return (
+              <div key={col.key} className="rounded-2xl border border-white/40 bg-white/15 p-3 backdrop-blur-sm">
+                <div className="mb-2 flex items-center justify-between px-1">
+                  <span className="flex items-center gap-2 text-sm font-semibold text-white drop-shadow-sm">
+                    <span className={`h-2 w-2 rounded-full ${col.dot}`} /> {col.title}
+                  </span>
+                  <span className="text-xs font-medium text-white/80">{colCards.length}</span>
+                </div>
+                <div className="space-y-2">
+                  {colCards.map((c) => (
+                    <Card
+                      key={c.id}
+                      card={c}
+                      busy={busyId === c.id}
+                      onSend={() => send(c.id)}
+                      onOpen={() => open(c.id)}
+                      onRemove={() => remove(c.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {modal && (
         <ReferenceReviewModal

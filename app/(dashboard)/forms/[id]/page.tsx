@@ -32,7 +32,7 @@ export default async function FormDetailsPage({
       <div className="flex items-center justify-between gap-4">
         <Link
           href="/forms"
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
+          className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back to forms
@@ -46,7 +46,7 @@ export default async function FormDetailsPage({
         />
       </div>
 
-      <h1 className="mt-3 text-2xl font-semibold text-gray-900">Form builder</h1>
+      <h1 className="mt-3 text-2xl font-semibold text-white drop-shadow-sm">Form builder</h1>
 
       <div className="mt-4">
         <FormDetailsForm

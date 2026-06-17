@@ -212,10 +212,10 @@ export function PipelineBoard({
       </PageHeader>
 
       {apps.length === 0 && (
-        <p className="mt-6 text-sm text-gray-500">
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
           No applications yet. When candidates apply through your careers page,
           they&apos;ll appear here.
-        </p>
+        </div>
       )}
 
       {apps.length > 0 && view === "board" && (

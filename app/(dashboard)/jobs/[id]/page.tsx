@@ -53,14 +53,14 @@ export default async function EditJobPage({
     <div className="mx-auto max-w-3xl">
       <Link
         href="/jobs"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
+        className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden />
         Back to jobs
       </Link>
 
       <div className="mt-3 flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-gray-900">{job.title}</h1>
+        <h1 className="text-2xl font-semibold text-white drop-shadow-sm">{job.title}</h1>
         <span
           className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
             STATUS_STYLES[job.status] ?? "bg-gray-100 text-gray-700"
@@ -111,7 +111,7 @@ export default async function EditJobPage({
           )}
         </div>
         {job.status === "published" && (
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-white/80">
             Public link: joincarenow.com{careersUrl}
           </p>
         )}

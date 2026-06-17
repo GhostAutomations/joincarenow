@@ -5,12 +5,12 @@ const CATEGORY_LABEL: Record<string, string> = {
   recruitment: "Recruitment",
   hr: "HR",
   onboarding: "Onboarding",
-  reference: "References",
+  referencing: "Referencing",
   other: "Other",
 };
 
 /** The canonical category order; unknown categories are appended. */
-export const CATEGORY_ORDER = ["recruitment", "onboarding", "hr", "reference", "other"];
+export const CATEGORY_ORDER = ["recruitment", "onboarding", "referencing", "hr", "other"];
 
 export function categoryLabel(key: string): string {
   return CATEGORY_LABEL[key] ?? key.charAt(0).toUpperCase() + key.slice(1);

@@ -5,8 +5,9 @@ import { openBuilder, type DetailsState } from "@/modules/forms/actions";
 
 const CATEGORIES: { value: string; label: string }[] = [
   { value: "recruitment", label: "Recruitment" },
-  { value: "hr", label: "HR" },
   { value: "onboarding", label: "Onboarding" },
+  { value: "referencing", label: "Referencing" },
+  { value: "hr", label: "HR" },
   { value: "other", label: "Other" },
 ];
 

@@ -8,7 +8,7 @@ import { ChevronDown } from "lucide-react";
 export function CollapsibleSection({
   title,
   count,
-  defaultOpen = true,
+  defaultOpen = false,
   children,
 }: {
   title: string;

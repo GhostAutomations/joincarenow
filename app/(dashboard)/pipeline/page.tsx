@@ -42,7 +42,7 @@ export default async function PipelinePage({
     supabase
       .from("applications")
       .select(
-        "id, stage, created_at, cover_message, cv_path, answers, jobs(title, region, worker_category, branches(name), roles(name)), applicants(first_name, last_name, email, phone, postcode)"
+        "id, stage, created_at, cover_message, cv_path, answers, jobs(title, region, worker_category, branches(name), roles!role_id(name)), applicants(first_name, last_name, email, phone, postcode)"
       )
       .eq("company_id", current.company_id)
       .order("created_at", { ascending: false }),

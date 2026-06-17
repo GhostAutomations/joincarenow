@@ -52,7 +52,14 @@ export function ApplicantForms({
   const [sendId, setSendId] = useState("");
   const [sending, setSending] = useState(false);
 
-  useEffect(() => setItems(forms), [forms]);
+  // Re-sync only when the actual form id/status content changes — not on every
+  // render. (A plain [forms] dependency changes identity each render and would
+  // clobber an optimistic "approved" back to the stale "submitted".)
+  const formsSig = forms.map((f) => `${f.id}:${f.status}`).join("|");
+  useEffect(() => {
+    setItems(forms);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formsSig]);
 
   useEffect(() => {
     getApplicationReview(applicationId).then(setAppReview);

@@ -97,6 +97,43 @@ function fullName(a: AppCard) {
   return [a.first_name, a.last_name].filter(Boolean).join(" ") || a.email || "Applicant";
 }
 
+/** Number of days until a date (negative if in the past). */
+function daysUntil(dateStr: string): number {
+  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
+}
+
+/** Right-to-work chip on a pipeline card: amber "Awaiting" until verified, then
+ *  green "Confirmed" — turning amber/red when the recorded expiry is near/past. */
+function RtwChip({ verifiedAt, expiry }: { verifiedAt: string | null; expiry: string | null }) {
+  if (!verifiedAt) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+        RTW: Awaiting
+      </span>
+    );
+  }
+  const d = expiry ? daysUntil(expiry) : null;
+  if (d !== null && d < 0) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+        RTW: Expired
+      </span>
+    );
+  }
+  if (d !== null && d <= 30) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+        RTW: Expires in {d}d
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+      RTW: Confirmed
+    </span>
+  );
+}
+
 /** Compact labelled fact used in the applicant pop-up's top info grid. */
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -338,20 +375,19 @@ export function PipelineBoard({
                             total={a.formTotal}
                           />
                         </div>
-                        {(a.branch || a.transport) && (
-                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                            {a.branch && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                                <MapPin className="h-3 w-3" aria-hidden /> {a.branch}
-                              </span>
-                            )}
-                            {a.transport && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                                {a.transport}
-                              </span>
-                            )}
-                          </div>
-                        )}
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          {a.branch && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                              <MapPin className="h-3 w-3" aria-hidden /> {a.branch}
+                            </span>
+                          )}
+                          {a.transport && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                              {a.transport}
+                            </span>
+                          )}
+                          <RtwChip verifiedAt={a.rtwVerifiedAt} expiry={a.rtwExpiry} />
+                        </div>
                         <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
                           <span>{new Date(a.created_at).toLocaleDateString("en-GB")}</span>
                           {a.cv_path && (

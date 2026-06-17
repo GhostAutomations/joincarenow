@@ -43,7 +43,11 @@ export function RightToWork({ applicationId, rtw }: { applicationId: string; rtw
   }
 
   const verified = !!rtw.verifiedAt;
-  const expired = rtw.expiry ? new Date(rtw.expiry) < new Date() : false;
+  const daysToExpiry = rtw.expiry
+    ? Math.ceil((new Date(rtw.expiry).getTime() - Date.now()) / 86400000)
+    : null;
+  const expired = daysToExpiry !== null && daysToExpiry < 0;
+  const expiringSoon = daysToExpiry !== null && daysToExpiry >= 0 && daysToExpiry <= 30;
 
   return (
     <div>
@@ -67,9 +71,9 @@ export function RightToWork({ applicationId, rtw }: { applicationId: string; rtw
               <span className="text-xs uppercase tracking-wide text-gray-400">Expiry</span>
               <br />
               {rtw.expiry ? (
-                <span className={expired ? "font-medium text-red-600" : ""}>
+                <span className={expired ? "font-medium text-red-600" : expiringSoon ? "font-medium text-amber-600" : ""}>
                   {new Date(rtw.expiry).toLocaleDateString("en-GB")}
-                  {expired ? " (expired)" : ""}
+                  {expired ? " (expired)" : expiringSoon ? ` (in ${daysToExpiry}d)` : ""}
                 </span>
               ) : (
                 <span className="text-gray-400">—</span>

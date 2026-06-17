@@ -1,8 +1,8 @@
-import { Trash2 } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { deleteTemplateTask, deleteWorkflow } from "@/modules/onboarding/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AddTemplateTask } from "@/components/dashboard/add-template-task";
+import { WorkflowCard } from "@/components/dashboard/workflow-card";
 import {
   OnboardingTaskReview,
   type OnbTask,
@@ -110,46 +110,23 @@ export default async function OnboardingBoardPage() {
           {workflows.length > 0 && (
             <div className="mt-4 space-y-3">
               {workflows.map((wf, gi) => (
-                <div key={gi} className="rounded-lg border border-gray-200 bg-white p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-sm font-semibold text-gray-900">{wf.name}</span>
-                      <span className="ml-2 text-xs text-gray-400">
-                        {wf.role_id ? `${roleName.get(wf.role_id) ?? "role"} · ` : ""}
-                        {wf.items.length} task{wf.items.length === 1 ? "" : "s"}
-                      </span>
-                    </div>
-                    {wf.id && (
-                      <form action={deleteWorkflow}>
-                        <input type="hidden" name="workflowId" value={wf.id} />
-                        <button className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label="Delete workflow">
-                          <Trash2 className="h-3.5 w-3.5" /> Delete
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                  <ul className="mt-2 divide-y divide-gray-100">
-                    {wf.items.map((t) => (
-                      <li key={t.id} className="flex items-center justify-between py-2">
-                        <div>
-                          <span className="text-sm text-gray-800">{t.title}</span>
-                          <span className="ml-2 text-xs text-gray-400">
-                            {TYPE_LABEL[t.task_type] ?? t.task_type}
-                            {t.trigger_stage && ` · ${TRIGGER_LABEL[t.trigger_stage] ?? t.trigger_stage}`}
-                            {t.due_days != null && ` · due within ${t.due_days} day${t.due_days === 1 ? "" : "s"}`}
-                            {!t.required && " · optional"}
-                          </span>
-                        </div>
-                        <form action={deleteTemplateTask}>
-                          <input type="hidden" name="id" value={t.id} />
-                          <button className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label="Remove task">
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </form>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <WorkflowCard
+                  key={gi}
+                  name={wf.name}
+                  subtitle={`${wf.role_id ? `${roleName.get(wf.role_id) ?? "role"} · ` : ""}${wf.items.length} task${wf.items.length === 1 ? "" : "s"}`}
+                  workflowId={wf.id}
+                  items={wf.items.map((t) => ({
+                    id: t.id,
+                    title: t.title,
+                    meta:
+                      (TYPE_LABEL[t.task_type] ?? t.task_type) +
+                      (t.trigger_stage ? ` · ${TRIGGER_LABEL[t.trigger_stage] ?? t.trigger_stage}` : "") +
+                      (t.due_days != null ? ` · due within ${t.due_days} day${t.due_days === 1 ? "" : "s"}` : "") +
+                      (!t.required ? " · optional" : ""),
+                  }))}
+                  deleteWorkflow={deleteWorkflow}
+                  deleteTask={deleteTemplateTask}
+                />
               ))}
             </div>
           )}

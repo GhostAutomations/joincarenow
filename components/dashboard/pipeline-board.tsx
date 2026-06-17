@@ -293,7 +293,7 @@ export function PipelineBoard({
       )}
 
       {apps.length > 0 && view === "board" && (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           {STAGES.map((col) => {
             const cards = apps.filter((a) => a.stage === col.key);
             return (

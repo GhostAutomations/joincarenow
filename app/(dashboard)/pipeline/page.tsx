@@ -79,6 +79,17 @@ export default async function PipelinePage({
     interviewer_id: (iv.interviewer_id as string) ?? null,
   }));
 
+  // Company forms the recruiter can send ad-hoc from the pipeline panel
+  // (reference forms are handled by the Referencing app).
+  const { data: companyForms } = await supabase
+    .from("forms")
+    .select("id, name, category")
+    .eq("company_id", current.company_id)
+    .order("name", { ascending: true });
+  const availableForms = ((companyForms ?? []) as { id: string; name: string; category: string | null }[])
+    .filter((f) => f.category !== "referencing")
+    .map((f) => ({ id: f.id, name: f.name }));
+
   const { data: staffRaw } = await supabase
     .from("company_users")
     .select("user_id, profiles ( full_name, email )")
@@ -183,6 +194,7 @@ export default async function PipelinePage({
       openingHours={openingHours}
       staff={staff}
       bookedInterviews={bookedInterviews}
+      availableForms={availableForms}
     />
   );
 }

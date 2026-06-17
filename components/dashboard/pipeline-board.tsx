@@ -144,6 +144,7 @@ export function PipelineBoard({
   openingHours,
   staff = [],
   bookedInterviews = [],
+  availableForms = [],
 }: {
   initial: AppCard[];
   interviewAddress: string;
@@ -152,6 +153,7 @@ export function PipelineBoard({
   openingHours?: OpeningHours | null;
   staff?: StaffMember[];
   bookedInterviews?: BookedInterview[];
+  availableForms?: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const [apps, setApps] = useState(initial);
@@ -400,6 +402,7 @@ export function PipelineBoard({
           openingHours={openingHours}
           staff={staff}
           bookedInterviews={bookedInterviews}
+          availableForms={availableForms}
         />
       )}
 
@@ -560,6 +563,7 @@ function ApplicantPanel({
   openingHours,
   staff,
   bookedInterviews,
+  availableForms,
 }: {
   app: AppCard;
   interviewAddress: string;
@@ -569,6 +573,7 @@ function ApplicantPanel({
   openingHours?: OpeningHours | null;
   staff: StaffMember[];
   bookedInterviews: BookedInterview[];
+  availableForms: { id: string; name: string }[];
 }) {
   const [cvLoading, setCvLoading] = useState(false);
   const [cvError, setCvError] = useState<string | null>(null);
@@ -685,6 +690,7 @@ function ApplicantPanel({
             <ApplicantForms
               forms={forms.map((f) => ({ id: f.id, title: f.title, status: f.status }))}
               applicationId={app.id}
+              availableForms={availableForms}
             />
           )}
 

@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Send } from "lucide-react";
 import {
   reviewTask,
   reviewApplicationForm,
   getFormReview,
   getApplicationReview,
+  sendAdHocForm,
   type FormReview,
 } from "@/modules/onboarding/actions";
 import { FormReviewModal } from "@/components/dashboard/form-review-modal";
@@ -37,15 +38,21 @@ type Modal = {
 export function ApplicantForms({
   forms,
   applicationId,
+  availableForms = [],
 }: {
   forms: FormItem[];
   applicationId: string;
+  availableForms?: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const [items, setItems] = useState(forms);
   const [appReview, setAppReview] = useState<(FormReview & { submissionId: string | null }) | null>(null);
   const [modal, setModal] = useState<Modal | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [sendId, setSendId] = useState("");
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => setItems(forms), [forms]);
 
   useEffect(() => {
     getApplicationReview(applicationId).then(setAppReview);
@@ -57,6 +64,12 @@ export function ApplicantForms({
     (f) => f.title.trim().toLowerCase() !== "application form"
   );
   const done = workflowItems.filter((f) => f.status === "approved").length;
+
+  // Forms the recruiter can still send (not already on this applicant).
+  const sentTitles = new Set(items.map((f) => f.title.trim().toLowerCase()));
+  const sendableForms = availableForms.filter(
+    (f) => !sentTitles.has(f.name.trim().toLowerCase())
+  );
 
   async function doReviewTask(taskId: string, status: "approved" | "rejected", note?: string) {
     const fd = new FormData();
@@ -90,6 +103,19 @@ export function ApplicantForms({
       onApprove: () => doReviewTask(taskId, "approved"),
       onResend: (note) => doReviewTask(taskId, "rejected", note),
     });
+  }
+
+  async function send() {
+    if (!sendId) return;
+    setSending(true);
+    const r = await sendAdHocForm(applicationId, sendId);
+    setSending(false);
+    if (r?.error) {
+      alert(r.error);
+      return;
+    }
+    setSendId("");
+    router.refresh();
   }
 
   function openApp() {
@@ -138,6 +164,31 @@ export function ApplicantForms({
           <li className="text-sm text-gray-500">No forms assigned.</li>
         )}
       </ul>
+
+      {/* Ad-hoc: send another form to this applicant. */}
+      {sendableForms.length > 0 && (
+        <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
+          <select
+            value={sendId}
+            onChange={(e) => setSendId(e.target.value)}
+            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          >
+            <option value="">Send a form…</option>
+            {sendableForms.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={send}
+            disabled={!sendId || sending}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+          >
+            <Send className="h-3.5 w-3.5" /> {sending ? "Sending…" : "Send"}
+          </button>
+        </div>
+      )}
 
       {modal && (
         <FormReviewModal

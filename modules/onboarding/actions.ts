@@ -381,6 +381,67 @@ export async function reviewTask(formData: FormData) {
   revalidatePath("/onboarding-board");
 }
 
+/** Staff: send an ad-hoc form to an applicant from the pipeline. Creates a
+ *  form task so it appears in the applicant's portal and behaves like any other
+ *  workflow form (review / approve / resend). */
+export async function sendAdHocForm(
+  applicationId: string,
+  formId: string
+): Promise<{ ok?: boolean; error?: string }> {
+  const { supabase, current } = await requireCompany();
+
+  const { data: app } = await supabase
+    .from("applications")
+    .select("applicant_id")
+    .eq("id", applicationId)
+    .eq("company_id", current.company_id)
+    .single();
+  if (!app?.applicant_id) return { error: "Application not found" };
+
+  const { data: form } = await supabase
+    .from("forms")
+    .select("id, name")
+    .eq("id", formId)
+    .eq("company_id", current.company_id)
+    .single();
+  if (!form) return { error: "Form not found" };
+
+  // Avoid sending the same form twice to one application.
+  const { data: existing } = await supabase
+    .from("onboarding_tasks")
+    .select("id")
+    .eq("application_id", applicationId)
+    .eq("form_id", formId)
+    .maybeSingle();
+  if (existing) return { error: "That form has already been sent." };
+
+  const { data: maxRow } = await supabase
+    .from("onboarding_tasks")
+    .select("position")
+    .eq("application_id", applicationId)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const position = ((maxRow?.position as number) ?? 0) + 1;
+
+  const { error } = await supabase.from("onboarding_tasks").insert({
+    company_id: current.company_id,
+    application_id: applicationId,
+    applicant_id: app.applicant_id,
+    title: form.name as string,
+    task_type: "form",
+    form_id: formId,
+    required: true,
+    status: "pending",
+    position,
+  });
+  if (error) return { error: "Could not send the form. Please try again." };
+
+  revalidatePath("/pipeline");
+  revalidatePath("/onboarding-board");
+  return { ok: true };
+}
+
 /** Staff: signed URL for an uploaded onboarding document. */
 export async function getOnboardingDocUrl(
   taskId: string

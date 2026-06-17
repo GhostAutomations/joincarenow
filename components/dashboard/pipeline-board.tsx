@@ -8,6 +8,7 @@ import { scheduleInterview, acceptInterviewTime } from "@/modules/interviews/act
 import { InterviewSlotPicker, type BookedInterview } from "@/components/dashboard/interview-slot-picker";
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { ApplicantForms } from "@/components/dashboard/applicant-forms";
+import { CvRequest } from "@/components/dashboard/cv-request";
 import { createClient } from "@/lib/supabase/client";
 import { formatLondon, londonToUtcIso } from "@/lib/time";
 import type { OpeningHours } from "@/lib/opening-hours";
@@ -718,6 +719,9 @@ function ApplicantPanel({
               <p className="mt-0.5 text-sm text-gray-500">No CV uploaded.</p>
             )}
             {cvError && <p className="mt-1 text-xs text-red-600">{cvError}</p>}
+            <div>
+              <CvRequest applicationId={app.id} />
+            </div>
           </div>
 
         </div>

@@ -401,6 +401,23 @@ export async function sendAdHocForm(
   return { ok: true };
 }
 
+/** Staff: ask the applicant to upload a CV. Creates a document task in their
+ *  portal with an optional message. */
+export async function requestCv(
+  applicationId: string,
+  message: string
+): Promise<{ ok?: boolean; error?: string }> {
+  const { supabase } = await requireCompany();
+  const { error } = await supabase.rpc("request_cv", {
+    p_application_id: applicationId,
+    p_message: message || null,
+  });
+  if (error) return { error: error.message || "Could not request the CV. Please try again." };
+  revalidatePath("/pipeline");
+  revalidatePath("/onboarding-board");
+  return { ok: true };
+}
+
 /** Staff: signed URL for an uploaded onboarding document. */
 export async function getOnboardingDocUrl(
   taskId: string

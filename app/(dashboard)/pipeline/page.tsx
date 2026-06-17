@@ -86,13 +86,15 @@ export default async function PipelinePage({
     .select("id, name, category, purpose")
     .eq("company_id", current.company_id)
     .order("name", { ascending: true });
+  // Show the system "Your References" form (purpose = 'reference'); hide any
+  // other referencing-category forms (those belong to the Referencing app).
   const availableForms = ((companyForms ?? []) as {
     id: string;
     name: string;
     category: string | null;
     purpose: string | null;
   }[])
-    .filter((f) => f.category !== "referencing" && f.purpose !== "reference")
+    .filter((f) => f.purpose === "reference" || f.category !== "referencing")
     .map((f) => ({ id: f.id, name: f.name }));
 
   const { data: staffRaw } = await supabase

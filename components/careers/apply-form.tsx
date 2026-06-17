@@ -212,12 +212,17 @@ const SIZE_CLASS: Record<string, string> = {
 export function DynamicField({
   field,
   managed,
+  defaults,
 }: {
   field: FormField;
   managed?: ManagedOptions;
+  defaults?: Record<string, string | string[]>;
 }) {
   const name = `field_${field.field_id}`;
   const req = field.required;
+  const dv = defaults?.[field.field_id];
+  const dvStr = Array.isArray(dv) ? (dv[0] ?? "") : (dv ?? "");
+  const dvArr = Array.isArray(dv) ? dv : dv != null && dv !== "" ? [dv] : [];
 
   // Static information block — not an input.
   if (field.field_type === "body_text") {
@@ -238,7 +243,7 @@ export function DynamicField({
   }
 
   if (field.field_type === "signature") {
-    return <SignatureField name={name} label={field.label} required={req} help={field.help_text} />;
+    return <SignatureField name={name} label={field.label} required={req} help={field.help_text} initial={dvStr} />;
   }
   const label = (
     <span className="block text-sm font-medium text-gray-700">
@@ -255,7 +260,7 @@ export function DynamicField({
       <label className="block">
         {label}
         {help}
-        <textarea name={name} required={req} rows={4} className={inputClass} />
+        <textarea name={name} required={req} rows={4} defaultValue={dvStr} className={inputClass} />
       </label>
     );
   }
@@ -272,7 +277,7 @@ export function DynamicField({
       <label className="block">
         {label}
         {help}
-        <select name={name} required={req} defaultValue="" className={inputClass} disabled={managedEmpty}>
+        <select name={name} required={req} defaultValue={dvStr || ""} className={inputClass} disabled={managedEmpty}>
           <option value="" disabled>
             {managedEmpty ? "Set per company in Settings" : "Select…"}
           </option>
@@ -294,7 +299,7 @@ export function DynamicField({
         <div className="mt-1 space-y-1">
           {opts.map((o) => (
             <label key={o} className="flex items-center gap-2 text-sm text-gray-700">
-              <input type="radio" name={name} value={o} required={req} />
+              <input type="radio" name={name} value={o} required={req} defaultChecked={dvStr === o} />
               {o}
             </label>
           ))}
@@ -310,7 +315,7 @@ export function DynamicField({
         <div className="mt-1 space-y-1">
           {field.options.map((o) => (
             <label key={o} className="flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" name={name} value={o} />
+              <input type="checkbox" name={name} value={o} defaultChecked={dvArr.includes(o)} />
               {o}
             </label>
           ))}
@@ -333,11 +338,11 @@ export function DynamicField({
         {label}
         {help}
         <div className="mt-1 space-y-2">
-          <input name={name} required={req} placeholder="Address line 1" className={inputClass} />
-          <input name={name} placeholder="Address line 2 (optional)" className={inputClass} />
-          <input name={name} placeholder="Town / city" className={inputClass} />
-          <input name={name} placeholder="County" className={inputClass} />
-          <input name={name} placeholder="Postcode" className={inputClass} />
+          <input name={name} required={req} placeholder="Address line 1" defaultValue={dvArr[0] ?? ""} className={inputClass} />
+          <input name={name} placeholder="Address line 2 (optional)" defaultValue={dvArr[1] ?? ""} className={inputClass} />
+          <input name={name} placeholder="Town / city" defaultValue={dvArr[2] ?? ""} className={inputClass} />
+          <input name={name} placeholder="County" defaultValue={dvArr[3] ?? ""} className={inputClass} />
+          <input name={name} placeholder="Postcode" defaultValue={dvArr[4] ?? ""} className={inputClass} />
         </div>
       </fieldset>
     );
@@ -350,7 +355,7 @@ export function DynamicField({
     <label className="block">
       {label}
       {help}
-      <input type={type} name={name} required={req} className={inputClass} />
+      <input type={type} name={name} required={req} defaultValue={dvStr} className={inputClass} />
     </label>
   );
 }
@@ -360,15 +365,28 @@ function SignatureField({
   label,
   required,
   help,
+  initial = "",
 }: {
   name: string;
   label: string;
   required: boolean;
   help: string | null;
+  initial?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(initial);
+  const loaded = useRef(false);
+
+  // Paint the previously-captured signature onto the canvas once.
+  function paintInitial(c: HTMLCanvasElement | null) {
+    canvasRef.current = c;
+    if (!c || loaded.current || !initial.startsWith("data:image")) return;
+    loaded.current = true;
+    const img = new Image();
+    img.onload = () => c.getContext("2d")?.drawImage(img, 0, 0, c.width, c.height);
+    img.src = initial;
+  }
 
   function point(e: ReactPointerEvent<HTMLCanvasElement>) {
     const c = canvasRef.current!;
@@ -413,7 +431,7 @@ function SignatureField({
       {help && <span className="mt-0.5 block text-xs text-gray-500">{help}</span>}
       <div className="mt-1 inline-block rounded-md border border-gray-300 bg-white">
         <canvas
-          ref={canvasRef}
+          ref={paintInitial}
           width={400}
           height={140}
           onPointerDown={down}

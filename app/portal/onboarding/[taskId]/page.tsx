@@ -13,8 +13,12 @@ export default async function OnboardingFormPage({
   const { taskId } = await params;
   const { supabase, user } = await requireApplicant(`/portal/onboarding/${taskId}`);
 
-  const { data } = await supabase.rpc("get_onboarding_form", { p_task_id: taskId });
+  const [{ data }, { data: prev }] = await Promise.all([
+    supabase.rpc("get_onboarding_form", { p_task_id: taskId }),
+    supabase.rpc("get_onboarding_form_answers", { p_task_id: taskId }),
+  ]);
   const fields = (data ?? []) as FormField[];
+  const defaults = (prev ?? {}) as Record<string, string | string[]>;
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -47,7 +51,7 @@ export default async function OnboardingFormPage({
               your portal.
             </p>
           ) : (
-            <OnboardingFormFill taskId={taskId} fields={fields} />
+            <OnboardingFormFill taskId={taskId} fields={fields} defaults={defaults} />
           )}
         </div>
       </div>

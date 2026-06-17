@@ -8,12 +8,14 @@ import { SubmitButton, FormError } from "@/components/ui/form";
 export function OnboardingFormFill({
   taskId,
   fields,
+  defaults,
 }: {
   taskId: string;
   fields: FormField[];
+  defaults?: Record<string, string | string[]>;
 }) {
   const [state, action] = useActionState<OnbState, FormData>(submitOnboardingForm, undefined);
-  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>(defaults ?? {});
 
   function track(e: { target: EventTarget | null }) {
     const t = e.target as HTMLInputElement;
@@ -43,7 +45,7 @@ export function OnboardingFormFill({
       <FormError error={state?.error} />
       <input type="hidden" name="taskId" value={taskId} />
       {fields.filter(visible).map((f) =>
-        f.field_type === "page_break" ? null : <DynamicField key={f.field_id} field={f} />
+        f.field_type === "page_break" ? null : <DynamicField key={f.field_id} field={f} defaults={defaults} />
       )}
       <div className="sm:w-48">
         <SubmitButton>Submit</SubmitButton>

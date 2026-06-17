@@ -635,12 +635,7 @@ function ApplicantPanel({
             <Fact label="Applied for">
               <span className="font-medium text-gray-900">{app.job_title}</span>
             </Fact>
-            <Fact label="Branch">
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5 text-gray-400" />
-                {app.branch || <span className="text-gray-400">Not set</span>}
-              </span>
-            </Fact>
+            <Fact label="Branch">{app.branch || <span className="text-gray-400">Not set</span>}</Fact>
             <Fact label="Phone">{app.phone || <span className="text-gray-400">—</span>}</Fact>
             <Fact label="Postcode">{app.postcode || <span className="text-gray-400">—</span>}</Fact>
 

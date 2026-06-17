@@ -200,7 +200,7 @@ export async function addMyReferee(formData: FormData) {
     p_relationship: relationship,
     p_phone: phone,
   });
-  if (error) return { error: "Could not add referee. Please try again." };
+  if (error) return { error: error.message || "Could not add referee. Please try again." };
   revalidatePath("/portal");
   return { ok: true };
 }

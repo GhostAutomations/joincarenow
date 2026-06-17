@@ -39,7 +39,10 @@ export function OnboardingTaskItem({ task }: { task: PortalTask }) {
           {s.label}
         </span>
       </div>
-      {task.body && <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">{task.body}</p>}
+      {task.body &&
+        !["", "none", "n/a", "na", "-"].includes(task.body.trim().toLowerCase()) && (
+          <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">{task.body}</p>
+        )}
       {task.status === "rejected" && task.note && (
         <p className="mt-1 text-xs text-red-600">Reviewer: {task.note}</p>
       )}

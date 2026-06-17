@@ -51,7 +51,12 @@ export function ApplicantForms({
     getApplicationReview(applicationId).then(setAppReview);
   }, [applicationId]);
 
-  const done = items.filter((f) => f.status === "approved").length;
+  // The application form has its own dedicated row; if a resend created a portal
+  // task for it (title "Application form"), don't list it twice.
+  const workflowItems = items.filter(
+    (f) => f.title.trim().toLowerCase() !== "application form"
+  );
+  const done = workflowItems.filter((f) => f.status === "approved").length;
 
   async function doReviewTask(taskId: string, status: "approved" | "rejected", note?: string) {
     const fd = new FormData();
@@ -65,12 +70,8 @@ export function ApplicantForms({
   }
 
   async function doReviewApp(status: "approved" | "rejected", note?: string) {
-    if (!appReview?.submissionId) {
-      setModal(null);
-      return;
-    }
     const fd = new FormData();
-    fd.set("submissionId", appReview.submissionId);
+    fd.set("applicationId", applicationId);
     fd.set("status", status);
     if (note) fd.set("note", note);
     await reviewApplicationForm(fd);
@@ -106,8 +107,8 @@ export function ApplicantForms({
     <div>
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-wide text-gray-400">Forms</p>
-        {items.length > 0 && (
-          <span className="text-xs text-gray-500">{done}/{items.length} approved</span>
+        {workflowItems.length > 0 && (
+          <span className="text-xs text-gray-500">{done}/{workflowItems.length} approved</span>
         )}
       </div>
 
@@ -123,7 +124,7 @@ export function ApplicantForms({
         )}
 
         {/* Workflow form tasks */}
-        {items.map((f) => (
+        {workflowItems.map((f) => (
           <Row
             key={f.id}
             title={f.title}
@@ -133,7 +134,7 @@ export function ApplicantForms({
           />
         ))}
 
-        {items.length === 0 && !hasAppForm && (
+        {workflowItems.length === 0 && !hasAppForm && (
           <li className="text-sm text-gray-500">No forms assigned.</li>
         )}
       </ul>

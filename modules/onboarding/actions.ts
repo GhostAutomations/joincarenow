@@ -293,43 +293,31 @@ export async function getApplicationReview(
 ): Promise<(FormReview & { submissionId: string | null }) | null> {
   const { supabase, current } = await requireCompany();
 
-  const [{ data: subs }, { data: onb }] = await Promise.all([
-    supabase
-      .from("form_submissions")
-      .select("id, form_id, answers, review_status, created_at")
-      .eq("application_id", applicationId)
-      .eq("company_id", current.company_id)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("onboarding_tasks")
-      .select("submission_id")
-      .eq("application_id", applicationId),
-  ]);
-
-  const onbIds = new Set(
-    (onb ?? []).map((o) => o.submission_id as string | null).filter(Boolean)
-  );
-  const sub = (subs ?? []).find((s) => !onbIds.has(s.id as string));
-
-  // Use the applicant's actual submission; if none yet, fall back to the form
-  // assigned to the job so the row still shows (awaiting submission).
-  let formId = sub?.form_id as string | undefined;
-  if (!formId) {
-    const { data: app } = await supabase
-      .from("applications")
-      .select("job_id")
-      .eq("id", applicationId)
-      .eq("company_id", current.company_id)
-      .single();
-    if (!app?.job_id) return null;
-    const { data: job } = await supabase
-      .from("jobs")
-      .select("application_form_id")
-      .eq("id", app.job_id)
-      .single();
-    formId = (job as { application_form_id?: string } | null)?.application_form_id ?? undefined;
-  }
+  // The application form is, by definition, the form assigned to the job.
+  // Identify it directly (robust), then load that form's submission for this
+  // application (the applicant's answers + review status).
+  const { data: app } = await supabase
+    .from("applications")
+    .select("job_id")
+    .eq("id", applicationId)
+    .eq("company_id", current.company_id)
+    .single();
+  if (!app?.job_id) return null;
+  const { data: job } = await supabase
+    .from("jobs")
+    .select("application_form_id")
+    .eq("id", app.job_id)
+    .single();
+  const formId = (job as { application_form_id?: string } | null)?.application_form_id ?? undefined;
   if (!formId) return null;
+
+  const { data: sub } = await supabase
+    .from("form_submissions")
+    .select("id, answers, review_status")
+    .eq("application_id", applicationId)
+    .eq("form_id", formId)
+    .eq("company_id", current.company_id)
+    .maybeSingle();
 
   const { data: fields } = await supabase
     .from("form_fields")
@@ -352,20 +340,23 @@ export async function getApplicationReview(
   };
 }
 
-/** Staff: approve / resend the application form. */
+/** Staff: approve / resend the application form. Goes through a SECURITY
+ *  DEFINER RPC so the review persists (RLS blocks a direct update) and so a
+ *  resend surfaces the form to the applicant in their portal. */
 export async function reviewApplicationForm(formData: FormData) {
-  const submissionId = formData.get("submissionId");
+  const applicationId = formData.get("applicationId");
   const status = formData.get("status");
   const note = formData.get("note")?.toString() || null;
-  if (typeof submissionId !== "string") return;
+  if (typeof applicationId !== "string") return;
   if (status !== "approved" && status !== "rejected" && status !== "submitted") return;
-  const { supabase, current } = await requireCompany();
-  await supabase
-    .from("form_submissions")
-    .update({ review_status: status, review_note: note })
-    .eq("id", submissionId)
-    .eq("company_id", current.company_id);
+  const { supabase } = await requireCompany();
+  await supabase.rpc("set_application_form_review", {
+    p_application_id: applicationId,
+    p_status: status,
+    p_note: note,
+  });
   revalidatePath("/pipeline");
+  revalidatePath("/onboarding-board");
 }
 
 // ---------- Staff: review a submitted task ----------

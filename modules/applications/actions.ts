@@ -171,3 +171,88 @@ export async function getCvUrl(
   if (error || !data) return { error: "Could not open the CV. Please try again." };
   return { url: data.signedUrl };
 }
+
+/** Recruiter: record a verified Right to Work — uploads the document, share code
+ *  and expiry, with a declaration that the original was checked and is a true
+ *  likeness. */
+export async function verifyRightToWork(
+  formData: FormData
+): Promise<{ ok?: boolean; error?: string }> {
+  const applicationId = formData.get("applicationId")?.toString();
+  const shareCode = formData.get("shareCode")?.toString().trim() || null;
+  const expiry = formData.get("expiry")?.toString() || null;
+  const declared = formData.get("declaration") === "on";
+  const file = formData.get("doc");
+  if (!applicationId) return { error: "Missing application" };
+  if (!declared) return { error: "Please confirm you have checked the document" };
+
+  const supabase = await createClient();
+  const { data: before } = await supabase
+    .from("applications")
+    .select("id, company_id")
+    .eq("id", applicationId)
+    .single();
+  if (!before) return { error: "Application not found" };
+
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id;
+
+  // Optional document upload (private bucket).
+  let docPath: string | null = null;
+  if (file instanceof File && file.size > 0) {
+    if (file.size > 10 * 1024 * 1024) return { error: "File must be 10MB or smaller" };
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    docPath = `${before.company_id}/rtw/${applicationId}-${Date.now()}-${safe}`;
+    const admin = createAdminClient();
+    const { error: upErr } = await admin.storage
+      .from("applications")
+      .upload(docPath, await file.arrayBuffer(), {
+        contentType: file.type || "application/octet-stream",
+        upsert: false,
+      });
+    if (upErr) return { error: "Could not upload the document. Please try again." };
+  }
+
+  const { error } = await supabase
+    .from("applications")
+    .update({
+      ...(docPath ? { rtw_doc_path: docPath } : {}),
+      rtw_share_code: shareCode,
+      rtw_expiry: expiry,
+      rtw_verified_by: userId,
+      rtw_verified_at: new Date().toISOString(),
+    })
+    .eq("id", applicationId);
+  if (error) return { error: "Could not save. Please try again." };
+
+  await supabase.rpc("log_audit", {
+    p_company_id: before.company_id,
+    p_action: "application.rtw_verified",
+    p_entity_type: "application",
+    p_entity_id: applicationId,
+    p_before: {},
+    p_after: { share_code: shareCode, expiry, declared: true },
+  });
+
+  revalidatePath("/pipeline");
+  return { ok: true };
+}
+
+/** Signed URL for an application's uploaded Right to Work document. */
+export async function getRtwDocUrl(
+  applicationId: string
+): Promise<{ url?: string; error?: string }> {
+  const supabase = await createClient();
+  const { data: app } = await supabase
+    .from("applications")
+    .select("id, rtw_doc_path")
+    .eq("id", applicationId)
+    .single();
+  if (!app?.rtw_doc_path) return { error: "No document uploaded" };
+  const admin = createAdminClient();
+  const { data, error } = await admin.storage
+    .from("applications")
+    .createSignedUrl(app.rtw_doc_path as string, 120);
+  if (error || !data) return { error: "Could not open the document." };
+  return { url: data.signedUrl };
+}

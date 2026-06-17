@@ -12,6 +12,10 @@ type Row = {
   cover_message: string | null;
   cv_path: string | null;
   answers: { right_to_work?: boolean } | null;
+  rtw_doc_path: string | null;
+  rtw_share_code: string | null;
+  rtw_expiry: string | null;
+  rtw_verified_at: string | null;
   jobs: {
     title: string;
     region: string | null;
@@ -42,7 +46,7 @@ export default async function PipelinePage({
     supabase
       .from("applications")
       .select(
-        "id, stage, created_at, cover_message, cv_path, answers, jobs(title, region, worker_category, branches(name), roles!role_id(name)), applicants(first_name, last_name, email, phone, postcode)"
+        "id, stage, created_at, cover_message, cv_path, answers, rtw_doc_path, rtw_share_code, rtw_expiry, rtw_verified_at, jobs(title, region, worker_category, branches(name), roles!role_id(name)), applicants(first_name, last_name, email, phone, postcode)"
       )
       .eq("company_id", current.company_id)
       .order("created_at", { ascending: false }),
@@ -192,6 +196,10 @@ export default async function PipelinePage({
     formResent: formStatusByApp.get(r.id)?.resent ?? 0,
     formTotal: formStatusByApp.get(r.id)?.total ?? 0,
     transport: transportByApp.get(r.id) ?? null,
+    rtwVerifiedAt: r.rtw_verified_at,
+    rtwShareCode: r.rtw_share_code,
+    rtwExpiry: r.rtw_expiry,
+    rtwHasDoc: !!r.rtw_doc_path,
   }));
 
   return (

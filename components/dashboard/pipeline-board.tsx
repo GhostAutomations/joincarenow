@@ -9,6 +9,7 @@ import { InterviewSlotPicker, type BookedInterview } from "@/components/dashboar
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { ApplicantForms } from "@/components/dashboard/applicant-forms";
 import { CvRequest } from "@/components/dashboard/cv-request";
+import { RightToWork } from "@/components/dashboard/right-to-work";
 import { createClient } from "@/lib/supabase/client";
 import { formatLondon, londonToUtcIso } from "@/lib/time";
 import type { OpeningHours } from "@/lib/opening-hours";
@@ -50,6 +51,10 @@ export type AppCard = {
   formResent: number;
   formTotal: number;
   transport: string | null;
+  rtwVerifiedAt: string | null;
+  rtwShareCode: string | null;
+  rtwExpiry: string | null;
+  rtwHasDoc: boolean;
 };
 
 const STAGES: { key: string; label: string; dot: string }[] = [
@@ -672,6 +677,16 @@ function ApplicantPanel({
               onScheduled={onClose}
             />
           )}
+
+          <RightToWork
+            applicationId={app.id}
+            rtw={{
+              verifiedAt: app.rtwVerifiedAt,
+              shareCode: app.rtwShareCode,
+              expiry: app.rtwExpiry,
+              hasDoc: app.rtwHasDoc,
+            }}
+          />
 
           {app.cover_message && (
             <div>

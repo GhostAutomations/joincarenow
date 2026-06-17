@@ -3,6 +3,19 @@ import { Plus } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createBlankStoreForm } from "@/modules/forms/actions";
 import { TIER_LABEL } from "@/modules/forms/tiers";
+import {
+  CollapsibleSection,
+  categoryLabel,
+  sortCategories,
+} from "@/components/dashboard/collapsible-section";
+
+type StoreFormRow = {
+  id: string;
+  name: string;
+  category: string | null;
+  store_tier: string;
+  form_fields: { count: number }[] | null;
+};
 
 export default async function FounderFormsPage() {
   const { supabase } = await requirePlatformAdmin();
@@ -11,7 +24,17 @@ export default async function FounderFormsPage() {
     .from("forms")
     .select("id, name, category, store_tier, form_fields(count)")
     .eq("is_store", true)
-    .order("created_at", { ascending: false });
+    .order("name", { ascending: true });
+
+  const rows = (forms ?? []) as unknown as StoreFormRow[];
+  const byCategory = new Map<string, StoreFormRow[]>();
+  for (const f of rows) {
+    const cat = f.category || "other";
+    const list = byCategory.get(cat) ?? [];
+    list.push(f);
+    byCategory.set(cat, list);
+  }
+  const categories = sortCategories([...byCategory.keys()]);
 
   return (
     <div>
@@ -28,35 +51,38 @@ export default async function FounderFormsPage() {
         Admins can add them to their own forms, gated by their subscription plan.
       </p>
 
-      <div className="mt-6">
-        {(forms ?? []).length === 0 ? (
+      <div className="mt-6 space-y-3">
+        {rows.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">No store forms yet.</div>
         ) : (
-          <ul className="space-y-2">
-            {(forms ?? []).map((f) => {
-              const count =
-                (f.form_fields as unknown as { count: number }[] | null)?.[0]?.count ?? 0;
-              return (
-                <li key={f.id}>
-                  <Link
-                    href={`/admin/forms/${f.id}/build`}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm hover:border-brand-300"
-                  >
-                    <div>
-                      <span className="font-medium text-gray-900">{f.name}</span>
-                      <span className="ml-2 text-xs capitalize text-gray-400">{f.category}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span className="rounded-full bg-brand-50 px-2 py-0.5 font-medium text-brand-700">
-                        {TIER_LABEL[f.store_tier] ?? f.store_tier}
-                      </span>
-                      <span>{count} field{count === 1 ? "" : "s"}</span>
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          categories.map((cat) => {
+            const list = byCategory.get(cat) ?? [];
+            return (
+              <CollapsibleSection key={cat} title={categoryLabel(cat)} count={list.length}>
+                <ul className="space-y-1.5">
+                  {list.map((f) => {
+                    const count = f.form_fields?.[0]?.count ?? 0;
+                    return (
+                      <li key={f.id}>
+                        <Link
+                          href={`/admin/forms/${f.id}/build`}
+                          className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 hover:border-brand-300"
+                        >
+                          <span className="font-medium text-gray-900">{f.name}</span>
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <span className="rounded-full bg-brand-50 px-2 py-0.5 font-medium text-brand-700">
+                              {TIER_LABEL[f.store_tier] ?? f.store_tier}
+                            </span>
+                            <span>{count} field{count === 1 ? "" : "s"}</span>
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </CollapsibleSection>
+            );
+          })
         )}
       </div>
     </div>

@@ -11,6 +11,11 @@ import {
 } from "@/modules/forms/actions";
 import { TIER_LABEL, tierRank } from "@/modules/forms/tiers";
 import { FormPreview } from "@/components/dashboard/form-preview";
+import {
+  CollapsibleSection,
+  categoryLabel,
+  sortCategories,
+} from "@/components/dashboard/collapsible-section";
 import type { FormField } from "@/components/careers/apply-form";
 
 export type StoreCard = {
@@ -84,6 +89,16 @@ export function StoreBrowser({
     });
   }
 
+  // Group store cards by category for the collapsible sections.
+  const grouped = new Map<string, StoreCard[]>();
+  for (const f of forms) {
+    const cat = f.category || "other";
+    const list = grouped.get(cat) ?? [];
+    list.push(f);
+    grouped.set(cat, list);
+  }
+  const categories = sortCategories([...grouped.keys()]);
+
   return (
     <div className="mx-auto max-w-6xl">
       {isAdmin && selected.size > 0 && (
@@ -109,12 +124,15 @@ export function StoreBrowser({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {forms.map((f) => {
-          const unlocked = tierRank(companyTier) >= tierRank(f.store_tier);
-          const isAdded = added.has(f.id);
-          return (
-            <div key={f.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+      <div className="space-y-3">
+        {categories.map((cat) => (
+          <CollapsibleSection key={cat} title={categoryLabel(cat)} count={grouped.get(cat)!.length}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {grouped.get(cat)!.map((f) => {
+                const unlocked = tierRank(companyTier) >= tierRank(f.store_tier);
+                const isAdded = added.has(f.id);
+                return (
+            <div key={f.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-start gap-3">
                 {isAdmin && !f.acquired && (
                   <input
@@ -193,8 +211,11 @@ export function StoreBrowser({
                 </div>
               </div>
             </div>
-          );
-        })}
+                );
+              })}
+            </div>
+          </CollapsibleSection>
+        ))}
       </div>
 
       {preview && (

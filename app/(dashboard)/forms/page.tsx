@@ -3,15 +3,40 @@ import { Plus } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { createBlankForm } from "@/modules/forms/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
+import {
+  CollapsibleSection,
+  categoryLabel,
+  sortCategories,
+} from "@/components/dashboard/collapsible-section";
+import { StoreBadge } from "@/components/dashboard/store-badge";
+
+type FormRow = {
+  id: string;
+  name: string;
+  category: string | null;
+  source_form_id: string | null;
+  form_fields: { count: number }[] | null;
+};
 
 export default async function FormsPage() {
   const { supabase, current } = await requireCompany();
 
   const { data: forms } = await supabase
     .from("forms")
-    .select("id, name, purpose, created_at, form_fields(count)")
+    .select("id, name, category, source_form_id, created_at, form_fields(count)")
     .eq("company_id", current.company_id)
-    .order("created_at", { ascending: false });
+    .order("name", { ascending: true });
+
+  // Group forms by category for the collapsible sections.
+  const rows = (forms ?? []) as unknown as FormRow[];
+  const byCategory = new Map<string, FormRow[]>();
+  for (const f of rows) {
+    const cat = f.category || "other";
+    const list = byCategory.get(cat) ?? [];
+    list.push(f);
+    byCategory.set(cat, list);
+  }
+  const categories = sortCategories([...byCategory.keys()]);
 
   return (
     <div>
@@ -27,8 +52,8 @@ export default async function FormsPage() {
         </form>
       </PageHeader>
 
-      <div className="mt-6">
-        {(forms ?? []).length === 0 ? (
+      <div className="mt-6 space-y-3">
+        {rows.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
             <p className="text-sm font-medium text-gray-900">No forms yet</p>
             <p className="mt-1 text-sm text-gray-500">
@@ -42,26 +67,34 @@ export default async function FormsPage() {
             </form>
           </div>
         ) : (
-          <ul className="space-y-2">
-            {(forms ?? []).map((f) => {
-              const count =
-                (f.form_fields as unknown as { count: number }[] | null)?.[0]
-                  ?.count ?? 0;
-              return (
-                <li key={f.id}>
-                  <Link
-                    href={`/forms/${f.id}`}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-4 hover:border-brand-300"
-                  >
-                    <span className="font-medium text-gray-900">{f.name}</span>
-                    <span className="text-xs text-gray-500">
-                      {count} field{count === 1 ? "" : "s"}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          categories.map((cat) => {
+            const list = byCategory.get(cat) ?? [];
+            return (
+              <CollapsibleSection key={cat} title={categoryLabel(cat)} count={list.length}>
+                <ul className="space-y-1.5">
+                  {list.map((f) => {
+                    const count = f.form_fields?.[0]?.count ?? 0;
+                    return (
+                      <li key={f.id}>
+                        <Link
+                          href={`/forms/${f.id}`}
+                          className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 hover:border-brand-300"
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="font-medium text-gray-900">{f.name}</span>
+                            {f.source_form_id && <StoreBadge />}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {count} field{count === 1 ? "" : "s"}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </CollapsibleSection>
+            );
+          })
         )}
       </div>
     </div>

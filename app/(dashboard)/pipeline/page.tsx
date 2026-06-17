@@ -79,8 +79,10 @@ export default async function PipelinePage({
     interviewer_id: (iv.interviewer_id as string) ?? null,
   }));
 
-  // Forms the recruiter can send ad-hoc from the pipeline panel. Reference forms
-  // are excluded — references go out to referees via the Referencing app.
+  // Make sure the system "Your References" form exists so it can be sent.
+  await supabase.rpc("ensure_reference_form", { p_company_id: current.company_id });
+
+  // Forms the recruiter can send ad-hoc from the pipeline panel.
   const { data: companyForms } = await supabase
     .from("forms")
     .select("id, name, category, purpose")

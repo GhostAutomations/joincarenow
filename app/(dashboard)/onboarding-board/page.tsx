@@ -1,6 +1,6 @@
 import { Trash2 } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
-import { deleteTemplateTask } from "@/modules/onboarding/actions";
+import { deleteTemplateTask, deleteWorkflow } from "@/modules/onboarding/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AddTemplateTask } from "@/components/dashboard/add-template-task";
 import {
@@ -32,7 +32,7 @@ export default async function OnboardingBoardPage() {
   const [{ data: templates }, { data: forms }, { data: roles }, { data: tasks }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, required, due_days, trigger_stage, role_id, position")
+      .select("id, title, task_type, required, due_days, trigger_stage, role_id, workflow_id, workflow_name, position")
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
@@ -47,6 +47,38 @@ export default async function OnboardingBoardPage() {
   ]);
 
   const roleName = new Map((roles ?? []).map((r) => [r.id as string, r.name as string]));
+
+  // Group template tasks into their workflows.
+  type Tpl = {
+    id: string;
+    title: string;
+    task_type: string;
+    required: boolean;
+    due_days: number | null;
+    trigger_stage: string | null;
+    role_id: string | null;
+    workflow_id: string | null;
+    workflow_name: string | null;
+    position: number;
+  };
+  const wfMap = new Map<
+    string,
+    { id: string | null; name: string; role_id: string | null; items: Tpl[] }
+  >();
+  for (const t of (templates ?? []) as unknown as Tpl[]) {
+    const wid = t.workflow_id ?? null;
+    const key = wid ?? `solo-${t.id}`;
+    const g =
+      wfMap.get(key) ?? {
+        id: wid,
+        name: t.workflow_name ?? t.title,
+        role_id: t.role_id ?? null,
+        items: [],
+      };
+    g.items.push(t);
+    wfMap.set(key, g);
+  }
+  const workflows = [...wfMap.values()];
 
   // Group tasks by person.
   const byPerson = new Map<string, { name: string; tasks: OnbTask[] }>();
@@ -75,29 +107,51 @@ export default async function OnboardingBoardPage() {
             Each task is sent automatically when an applicant reaches its trigger point.
           </p>
 
-          {(templates ?? []).length > 0 && (
-            <ul className="mt-4 divide-y divide-gray-100">
-              {(templates ?? []).map((t) => (
-                <li key={t.id} className="flex items-center justify-between py-2.5">
-                  <div>
-                    <span className="text-sm font-medium text-gray-900">{t.title}</span>
-                    <span className="ml-2 text-xs text-gray-400">
-                      {TYPE_LABEL[t.task_type] ?? t.task_type}
-                      {t.trigger_stage && ` · ${TRIGGER_LABEL[t.trigger_stage] ?? t.trigger_stage}`}
-                      {t.role_id && ` · ${roleName.get(t.role_id) ?? "role"} only`}
-                      {t.due_days != null && ` · due within ${t.due_days} day${t.due_days === 1 ? "" : "s"}`}
-                      {!t.required && " · optional"}
-                    </span>
+          {workflows.length > 0 && (
+            <div className="mt-4 space-y-3">
+              {workflows.map((wf, gi) => (
+                <div key={gi} className="rounded-lg border border-gray-200 bg-white p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-semibold text-gray-900">{wf.name}</span>
+                      <span className="ml-2 text-xs text-gray-400">
+                        {wf.role_id ? `${roleName.get(wf.role_id) ?? "role"} · ` : ""}
+                        {wf.items.length} task{wf.items.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                    {wf.id && (
+                      <form action={deleteWorkflow}>
+                        <input type="hidden" name="workflowId" value={wf.id} />
+                        <button className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label="Delete workflow">
+                          <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </button>
+                      </form>
+                    )}
                   </div>
-                  <form action={deleteTemplateTask}>
-                    <input type="hidden" name="id" value={t.id} />
-                    <button className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label="Remove">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </form>
-                </li>
+                  <ul className="mt-2 divide-y divide-gray-100">
+                    {wf.items.map((t) => (
+                      <li key={t.id} className="flex items-center justify-between py-2">
+                        <div>
+                          <span className="text-sm text-gray-800">{t.title}</span>
+                          <span className="ml-2 text-xs text-gray-400">
+                            {TYPE_LABEL[t.task_type] ?? t.task_type}
+                            {t.trigger_stage && ` · ${TRIGGER_LABEL[t.trigger_stage] ?? t.trigger_stage}`}
+                            {t.due_days != null && ` · due within ${t.due_days} day${t.due_days === 1 ? "" : "s"}`}
+                            {!t.required && " · optional"}
+                          </span>
+                        </div>
+                        <form action={deleteTemplateTask}>
+                          <input type="hidden" name="id" value={t.id} />
+                          <button className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label="Remove task">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </form>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
 
           <div className="mt-4 rounded-lg border border-dashed border-gray-300 p-4">

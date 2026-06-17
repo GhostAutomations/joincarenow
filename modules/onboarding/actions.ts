@@ -60,17 +60,20 @@ export async function addTemplateTasks(
     names = new Map((fs ?? []).map((f) => [f.id as string, f.name as string]));
   }
 
+  // One workflow id/name shared by every task created in this submission.
+  const workflowId = crypto.randomUUID();
+  const workflowName = (drafts[0]?.title ?? "Workflow").trim();
+
   const rows: Record<string, unknown>[] = [];
   for (const d of drafts) {
     const dueDays = d.dueDays === "" ? null : Math.max(0, parseInt(d.dueDays, 10) || 0);
     const body = (d.body ?? "").trim() || null;
     const roleId = d.roleId || null;
     if (d.taskType === "form") {
-      const multi = d.formIds.length > 1;
       for (const fid of d.formIds) {
         rows.push({
           company_id: current.company_id,
-          title: multi ? `${d.title.trim()} – ${names.get(fid) ?? "Form"}` : d.title.trim(),
+          title: names.get(fid) ?? d.title.trim(),
           task_type: "form",
           form_id: fid,
           body,
@@ -78,6 +81,8 @@ export async function addTemplateTasks(
           due_days: dueDays,
           trigger_stage: d.triggerStage,
           role_id: roleId,
+          workflow_id: workflowId,
+          workflow_name: workflowName,
           position: pos++,
         });
       }
@@ -92,6 +97,8 @@ export async function addTemplateTasks(
         due_days: dueDays,
         trigger_stage: d.triggerStage,
         role_id: roleId,
+        workflow_id: workflowId,
+        workflow_name: workflowName,
         position: pos++,
       });
     }
@@ -195,6 +202,19 @@ export async function setStartDate(formData: FormData) {
     .from("applications")
     .update({ start_date: startDate })
     .eq("id", applicationId)
+    .eq("company_id", current.company_id);
+  revalidatePath("/onboarding-board");
+}
+
+/** Delete every task in a workflow group. */
+export async function deleteWorkflow(formData: FormData) {
+  const workflowId = formData.get("workflowId");
+  if (typeof workflowId !== "string") return;
+  const { supabase, current } = await requireCompany();
+  await supabase
+    .from("onboarding_templates")
+    .delete()
+    .eq("workflow_id", workflowId)
     .eq("company_id", current.company_id);
   revalidatePath("/onboarding-board");
 }

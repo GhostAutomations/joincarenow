@@ -106,7 +106,7 @@ export function RightToWork({ applicationId, rtw }: { applicationId: string; rtw
             </label>
           </div>
           <label className="block">
-            <span className="text-xs font-medium text-gray-600">Upload confirmed document (optional)</span>
+            <span className="text-xs font-medium text-gray-600">Upload confirmed document</span>
             <input
               name="doc"
               type="file"

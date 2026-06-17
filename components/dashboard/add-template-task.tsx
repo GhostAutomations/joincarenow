@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { addTemplateTasks, type TaskDraft } from "@/modules/onboarding/actions";
 
 const cls =
@@ -40,6 +40,16 @@ export function AddTemplateTask({
   const [boxes, setBoxes] = useState<Box[]>([blankBox()]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [created, setCreated] = useState(false);
+
+  function reset() {
+    setTitle("");
+    setRoleId("");
+    setBody("");
+    setBoxes([blankBox()]);
+    setCreated(false);
+    setError(null);
+  }
 
   function updateBox(i: number, patch: Partial<Box>) {
     setBoxes((bs) => bs.map((b, idx) => (idx === i ? { ...b, ...patch } : b)));
@@ -78,11 +88,25 @@ export function AddTemplateTask({
       setError(res.error);
       return;
     }
-    setTitle("");
-    setRoleId("");
-    setBody("");
-    setBoxes([blankBox()]);
+    setCreated(true);
     router.refresh();
+  }
+
+  if (created) {
+    return (
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-green-300 bg-green-50 px-4 py-3">
+        <span className="inline-flex items-center gap-2 text-sm font-medium text-green-800">
+          <CheckCircle2 className="h-5 w-5" /> Workflow created
+        </span>
+        <button
+          type="button"
+          onClick={reset}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-green-300 bg-white px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100"
+        >
+          <Plus className="h-4 w-4" /> Create another workflow
+        </button>
+      </div>
+    );
   }
 
   return (

@@ -98,7 +98,7 @@ export async function addTemplateTasks(
   }
 
   const { error } = await supabase.from("onboarding_templates").insert(rows);
-  if (error) return { error: "Could not save. Please try again." };
+  if (error) return { error: `Could not save: ${error.message}` };
   revalidatePath("/onboarding-board");
   return { ok: true };
 }

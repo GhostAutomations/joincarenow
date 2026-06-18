@@ -732,20 +732,8 @@ function ApplicantPanel({
             </Fact>
           </div>
 
-          {/* Forms */}
-          {tasks === null ? (
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-400">Forms</p>
-              <p className="mt-1 text-sm text-gray-400">Loading…</p>
-            </div>
-          ) : (
-            <ApplicantForms
-              forms={forms.map((f) => ({ id: f.id, title: f.title, status: f.status }))}
-              applicationId={app.id}
-              availableForms={availableForms}
-            />
-          )}
-
+          {/* Stage-specific action sits at the top so it's front-and-centre
+             when you drop someone into Interview / Right to work / Offer. */}
           {app.stage === "interview" && (
             <InterviewSection
               app={app}
@@ -771,6 +759,20 @@ function ApplicantPanel({
           )}
 
           {app.stage === "offer" && <OfferSection applicationId={app.id} onSend={onSendOffer} />}
+
+          {/* Forms */}
+          {tasks === null ? (
+            <div>
+              <p className="text-xs uppercase tracking-wide text-gray-400">Forms</p>
+              <p className="mt-1 text-sm text-gray-400">Loading…</p>
+            </div>
+          ) : (
+            <ApplicantForms
+              forms={forms.map((f) => ({ id: f.id, title: f.title, status: f.status }))}
+              applicationId={app.id}
+              availableForms={availableForms}
+            />
+          )}
 
           {app.cover_message && (
             <div>

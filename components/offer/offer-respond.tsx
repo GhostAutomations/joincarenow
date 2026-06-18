@@ -23,17 +23,33 @@ export function OfferRespond({ offer }: { offer: TokenOffer }) {
   const [status, setStatus] = useState(offer.status);
   const [busy, setBusy] = useState<"accepted" | "declined" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [declining, setDeclining] = useState(false);
+  const [reason, setReason] = useState("");
+  const [talentPool, setTalentPool] = useState(true);
 
-  async function respond(r: "accepted" | "declined") {
-    setBusy(r);
+  async function accept() {
+    setBusy("accepted");
     setError(null);
-    const res = await respondToOffer(offer.token, r);
+    const res = await respondToOffer(offer.token, "accepted");
     setBusy(null);
     if (res?.error) {
       setError(res.error);
       return;
     }
-    setStatus(r);
+    setStatus("accepted");
+  }
+
+  async function confirmDecline() {
+    setBusy("declined");
+    setError(null);
+    const res = await respondToOffer(offer.token, "declined", { reason, talentPool });
+    setBusy(null);
+    if (res?.error) {
+      setError(res.error);
+      return;
+    }
+    setDeclining(false);
+    setStatus("declined");
   }
 
   const Row = ({ label, value }: { label: string; value: string }) => (
@@ -70,23 +86,65 @@ export function OfferRespond({ offer }: { offer: TokenOffer }) {
         <div className="mt-5 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
           You&apos;ve declined this offer. Thank you for letting us know.
         </div>
+      ) : declining ? (
+        <div className="mt-5 space-y-3">
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <p className="text-sm text-gray-700">
+            Sorry to hear that. If you don&apos;t mind, could you let us know why? (optional)
+          </p>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={3}
+            placeholder="e.g. accepted another role, pay, location, timing…"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+          <label className="flex items-start gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={talentPool}
+              onChange={(e) => setTalentPool(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300"
+            />
+            <span>
+              Keep my details on file so {offer.companyName} can contact me about future roles
+              (talent pool). You can ask us to remove your details at any time.
+            </span>
+          </label>
+          <div className="flex flex-wrap gap-3 pt-1">
+            <button
+              onClick={confirmDecline}
+              disabled={busy !== null}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gray-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-900 disabled:opacity-60"
+            >
+              {busy === "declined" ? "Saving…" : "Confirm decline"}
+            </button>
+            <button
+              onClick={() => setDeclining(false)}
+              disabled={busy !== null}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+            >
+              Back
+            </button>
+          </div>
+        </div>
       ) : (
         <div className="mt-5">
           {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => respond("accepted")}
+              onClick={accept}
               disabled={busy !== null}
               className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-60"
             >
               <CheckCircle2 className="h-4 w-4" /> {busy === "accepted" ? "Saving…" : "Accept offer"}
             </button>
             <button
-              onClick={() => respond("declined")}
+              onClick={() => setDeclining(true)}
               disabled={busy !== null}
               className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
             >
-              <X className="h-4 w-4" /> {busy === "declined" ? "Saving…" : "Decline"}
+              <X className="h-4 w-4" /> Decline
             </button>
           </div>
         </div>

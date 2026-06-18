@@ -19,6 +19,7 @@ export type OfferInfo = {
   status: string;
   sentAt: string | null;
   respondedAt: string | null;
+  declineReason: string | null;
 };
 
 /** Latest offer for an application (for the pipeline panel). */
@@ -26,7 +27,7 @@ export async function getOffer(applicationId: string): Promise<OfferInfo | null>
   const { supabase, current } = await requireCompany();
   const { data } = await supabase
     .from("offers")
-    .select("id, role, start_date, pay, hours, conditional, conditions, message, status, sent_at, responded_at")
+    .select("id, role, start_date, pay, hours, conditional, conditions, message, status, sent_at, responded_at, decline_reason")
     .eq("application_id", applicationId)
     .eq("company_id", current.company_id)
     .order("created_at", { ascending: false })
@@ -45,6 +46,7 @@ export async function getOffer(applicationId: string): Promise<OfferInfo | null>
     status: data.status as string,
     sentAt: (data.sent_at as string) ?? null,
     respondedAt: (data.responded_at as string) ?? null,
+    declineReason: (data.decline_reason as string) ?? null,
   };
 }
 
@@ -128,15 +130,19 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
   return { ok: true };
 }
 
-/** Public (applicant, no login): accept or decline an offer by token. */
+/** Public (applicant, no login): accept or decline an offer by token. On a
+ *  decline the applicant may optionally give a reason and opt in to the talent pool. */
 export async function respondToOffer(
   token: string,
-  response: "accepted" | "declined"
+  response: "accepted" | "declined",
+  opts?: { reason?: string; talentPool?: boolean }
 ): Promise<{ ok?: boolean; error?: string }> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("respond_to_offer_by_token", {
     p_token: token,
     p_response: response,
+    p_reason: opts?.reason ?? null,
+    p_talent_pool: opts?.talentPool ?? false,
   });
   if (error) return { error: error.message || "Could not record your response." };
   return { ok: true };

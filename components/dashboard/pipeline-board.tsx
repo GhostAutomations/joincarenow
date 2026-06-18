@@ -862,6 +862,9 @@ function OfferSection({ applicationId, onSend }: { applicationId: string; onSend
           {offer.conditional && offer.conditions && (
             <p className="mt-1.5 text-xs text-gray-600"><span className="text-gray-400">Conditions:</span> {offer.conditions}</p>
           )}
+          {offer.status === "declined" && offer.declineReason && (
+            <p className="mt-1.5 text-xs text-gray-600"><span className="text-gray-400">Reason given:</span> {offer.declineReason}</p>
+          )}
           <button
             onClick={onSend}
             className="mt-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"

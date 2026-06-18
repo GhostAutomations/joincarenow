@@ -109,7 +109,7 @@ function daysUntil(dateStr: string): number {
 function RtwChip({ verifiedAt, expiry }: { verifiedAt: string | null; expiry: string | null }) {
   if (!verifiedAt) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+      <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-700">
         RTW: Awaiting
       </span>
     );
@@ -117,23 +117,20 @@ function RtwChip({ verifiedAt, expiry }: { verifiedAt: string | null; expiry: st
   const d = expiry ? daysUntil(expiry) : null;
   if (d !== null && d < 0) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+      <span className="inline-flex items-center rounded-full bg-red-100 px-1.5 py-0.5 text-[11px] font-medium text-red-700">
         RTW: Expired
       </span>
     );
   }
   if (d !== null && d <= 30) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-        RTW: Expires in {d}d
+      <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-700">
+        RTW: Expires {d}d
       </span>
     );
   }
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-      RTW: Confirmed
-    </span>
-  );
+  // Verified and in date — nothing to flag.
+  return null;
 }
 
 /** References chip on a pipeline card — most-urgent state across the applicant's referees. */
@@ -145,10 +142,11 @@ const REF_CHIP: Record<string, { label: string; cls: string }> = {
   approved: { label: "Complete", cls: "bg-green-100 text-green-700" },
 };
 function RefsChip({ state, total }: { state: string | null; total: number }) {
-  if (!state || total === 0) return null;
+  // Hide when nothing to do (no refs, or all approved); only flag the rest.
+  if (!state || total === 0 || state === "approved") return null;
   const s = REF_CHIP[state] ?? REF_CHIP.pending;
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}>
+    <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[11px] font-medium ${s.cls}`}>
       Refs: {s.label}
     </span>
   );
@@ -178,26 +176,22 @@ function FormBadge({
   total: number;
 }) {
   if (total === 0) return null;
-  // One chip, matching the RTW chip style. Resent takes priority, then awaiting.
+  // Only flag forms that need attention; a fully-complete set shows no chip.
   if (resent > 0) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+      <span className="inline-flex items-center rounded-full bg-red-100 px-1.5 py-0.5 text-[11px] font-medium text-red-700">
         Forms: {resent} resent
       </span>
     );
   }
   if (awaiting > 0) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-        Forms: {awaiting} awaiting
+      <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-700">
+        Forms: {awaiting} to review
       </span>
     );
   }
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-      Forms: Complete
-    </span>
-  );
+  return null;
 }
 
 export function PipelineBoard({
@@ -376,14 +370,14 @@ export function PipelineBoard({
                       >
                         <p className="text-sm font-medium text-gray-900">{fullName(a)}</p>
                         <p className="mt-0.5 text-xs text-gray-500">{a.job_title}</p>
-                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
                           {a.branch && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                              <MapPin className="h-3 w-3" aria-hidden /> {a.branch}
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">
+                              <MapPin className="h-2.5 w-2.5" aria-hidden /> {a.branch}
                             </span>
                           )}
                           {a.transport && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                            <span className="inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">
                               {a.transport}
                             </span>
                           )}

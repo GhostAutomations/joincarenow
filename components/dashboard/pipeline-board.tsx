@@ -865,6 +865,23 @@ function OfferSection({ applicationId, onSend }: { applicationId: string; onSend
           {offer.status === "declined" && offer.declineReason && (
             <p className="mt-1.5 text-xs text-gray-600"><span className="text-gray-400">Reason given:</span> {offer.declineReason}</p>
           )}
+          {offer.status === "declined" && (
+            <p className="mt-1.5 text-xs text-gray-600">
+              <span className="text-gray-400">Talent pool:</span>{" "}
+              {offer.talentPool ? (
+                <span className="text-green-700">
+                  Opted in
+                  {offer.talentPoolConsentAt && (() => {
+                    const expiry = new Date(offer.talentPoolConsentAt);
+                    expiry.setMonth(expiry.getMonth() + 6);
+                    return ` — kept until ${expiry.toLocaleDateString("en-GB")}`;
+                  })()}
+                </span>
+              ) : (
+                <span className="text-gray-500">Declined to join</span>
+              )}
+            </p>
+          )}
           <button
             onClick={onSend}
             className="mt-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"

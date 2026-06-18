@@ -26,6 +26,7 @@ export function OfferRespond({ offer }: { offer: TokenOffer }) {
   const [declining, setDeclining] = useState(false);
   const [reason, setReason] = useState("");
   const [talentPool, setTalentPool] = useState(true);
+  const [declinedWithPool, setDeclinedWithPool] = useState(false);
 
   async function accept() {
     setBusy("accepted");
@@ -48,6 +49,7 @@ export function OfferRespond({ offer }: { offer: TokenOffer }) {
       setError(res.error);
       return;
     }
+    setDeclinedWithPool(talentPool);
     setDeclining(false);
     setStatus("declined");
   }
@@ -84,7 +86,13 @@ export function OfferRespond({ offer }: { offer: TokenOffer }) {
         </div>
       ) : status === "declined" ? (
         <div className="mt-5 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
-          You&apos;ve declined this offer. Thank you for letting us know.
+          <p>You&apos;ve declined this offer. Thank you for letting us know.</p>
+          {declinedWithPool && (
+            <p className="mt-2">
+              We&apos;ll keep your details on file so {offer.companyName} can contact you about
+              future roles for up to six months. You can ask to be removed at any time.
+            </p>
+          )}
         </div>
       ) : declining ? (
         <div className="mt-5 space-y-3">
@@ -108,7 +116,7 @@ export function OfferRespond({ offer }: { offer: TokenOffer }) {
             />
             <span>
               Keep my details on file so {offer.companyName} can contact me about future roles
-              (talent pool). You can ask us to remove your details at any time.
+              (talent pool) for up to six months. You can ask us to remove your details at any time.
             </span>
           </label>
           <div className="flex flex-wrap gap-3 pt-1">

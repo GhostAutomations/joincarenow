@@ -20,6 +20,8 @@ export type OfferInfo = {
   sentAt: string | null;
   respondedAt: string | null;
   declineReason: string | null;
+  talentPool: boolean;
+  talentPoolConsentAt: string | null;
 };
 
 /** Latest offer for an application (for the pipeline panel). */
@@ -27,13 +29,27 @@ export async function getOffer(applicationId: string): Promise<OfferInfo | null>
   const { supabase, current } = await requireCompany();
   const { data } = await supabase
     .from("offers")
-    .select("id, role, start_date, pay, hours, conditional, conditions, message, status, sent_at, responded_at, decline_reason")
+    .select("id, role, start_date, pay, hours, conditional, conditions, message, status, sent_at, responded_at, decline_reason, applicant_id")
     .eq("application_id", applicationId)
     .eq("company_id", current.company_id)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
   if (!data) return null;
+
+  // Talent-pool consent lives on the applicant.
+  let talentPool = false;
+  let talentPoolConsentAt: string | null = null;
+  if (data.applicant_id) {
+    const { data: appl } = await supabase
+      .from("applicants")
+      .select("talent_pool, talent_pool_consent_at")
+      .eq("id", data.applicant_id as string)
+      .maybeSingle();
+    talentPool = !!appl?.talent_pool;
+    talentPoolConsentAt = (appl?.talent_pool_consent_at as string) ?? null;
+  }
+
   return {
     id: data.id as string,
     role: (data.role as string) ?? null,
@@ -47,6 +63,8 @@ export async function getOffer(applicationId: string): Promise<OfferInfo | null>
     sentAt: (data.sent_at as string) ?? null,
     respondedAt: (data.responded_at as string) ?? null,
     declineReason: (data.decline_reason as string) ?? null,
+    talentPool,
+    talentPoolConsentAt,
   };
 }
 

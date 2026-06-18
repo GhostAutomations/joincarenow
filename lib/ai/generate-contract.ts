@@ -37,7 +37,7 @@ export async function generateContractDraft(brief: string): Promise<string> {
     throw new Error("Contract generation isn't configured yet (missing ANTHROPIC_API_KEY).");
   }
 
-  const client = new Anthropic({ apiKey, maxRetries: 0, timeout: 50_000 });
+  const client = new Anthropic({ apiKey, maxRetries: 0, timeout: 110_000 });
   const model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
 
   const userText = brief.trim()

@@ -3,9 +3,10 @@ import { requireCompany } from "@/modules/auth/queries";
 import { generateContractDraft } from "@/lib/ai/generate-contract";
 import { generatePolicyDraft } from "@/lib/ai/generate-policy";
 
-// AI generation can take a while — give the function room (Vercel Pro).
+// AI generation of a full contract/policy can take 60-90s — give the function
+// plenty of room (Vercel Pro allows up to 300s).
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
   try {

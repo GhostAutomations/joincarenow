@@ -50,7 +50,7 @@ export function DocEditorForm({
     setGenerating(true);
     setError(null);
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 58_000);
+    const timer = setTimeout(() => controller.abort(), 118_000);
     try {
       const res = await fetch("/api/contracts/generate", {
         method: "POST",
@@ -168,7 +168,7 @@ export function DocEditorForm({
               className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-60"
             >
               <Sparkles className="h-4 w-4" />
-              {generating ? "Generating…" : kind === "contract" ? "Generate contract" : "Generate policy"}
+              {generating ? "Generating… (up to a minute)" : kind === "contract" ? "Generate contract" : "Generate policy"}
             </button>
           </div>
           <p className="mt-2 text-[11px] leading-snug text-violet-800/70">

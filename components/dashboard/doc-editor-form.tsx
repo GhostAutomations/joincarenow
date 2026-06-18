@@ -60,14 +60,19 @@ export function DocEditorForm({
       });
       const data = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
       if (!res.ok || data.error) {
-        setError(data.error || `Generation failed (${res.status}).`);
+        const msg = data.error || `Generation failed (${res.status}).`;
+        setError(msg);
+        alert(`Contract generation error:\n\n${msg}`);
       } else if (data.text) {
         setBody(data.text);
       } else {
         setError("The generator returned nothing. Please try again.");
+        alert("The generator returned nothing.");
       }
-    } catch {
-      setError("The generator took too long or the connection dropped. Please try again.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "The generator took too long or the connection dropped.";
+      setError(msg);
+      alert(`Contract generation error:\n\n${msg}`);
     } finally {
       clearTimeout(timer);
       setGenerating(false);

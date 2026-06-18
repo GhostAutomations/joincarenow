@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Sparkles } from "lucide-react";
-import { saveDoc, generateContract, generatePolicy } from "@/modules/contracts/actions";
+import { saveDoc } from "@/modules/contracts/actions";
 
 type Kind = "contract" | "policy";
 
@@ -49,13 +49,27 @@ export function DocEditorForm({
     }
     setGenerating(true);
     setError(null);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 58_000);
     try {
-      const r = kind === "contract" ? await generateContract(brief) : await generatePolicy(name, brief);
-      if (r?.error) setError(r.error);
-      else if (r?.text) setBody(r.text);
+      const res = await fetch("/api/contracts/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind, name, brief }),
+        signal: controller.signal,
+      });
+      const data = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
+      if (!res.ok || data.error) {
+        setError(data.error || `Generation failed (${res.status}).`);
+      } else if (data.text) {
+        setBody(data.text);
+      } else {
+        setError("The generator returned nothing. Please try again.");
+      }
     } catch {
       setError("The generator took too long or the connection dropped. Please try again.");
     } finally {
+      clearTimeout(timer);
       setGenerating(false);
     }
   }

@@ -56,7 +56,7 @@ export function SettingsHub({ sections }: { sections: SettingsSection[] }) {
   if (current) {
     const Icon = ICONS[current.key] ?? Building2;
     return (
-      <div className="mt-6 max-w-3xl">
+      <div className="mt-6 mx-auto max-w-3xl">
         <button
           onClick={() => setActive(null)}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-white/80 hover:text-white"

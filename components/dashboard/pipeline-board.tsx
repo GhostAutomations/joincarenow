@@ -760,7 +760,7 @@ function ApplicantPanel({
                 <button
                   onClick={openCv}
                   disabled={cvLoading}
-                  className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
                 >
                   <FileText className="h-4 w-4" />
                   {cvLoading ? "Opening…" : "View CV"}

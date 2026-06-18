@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireCompany } from "@/modules/auth/queries";
 import { createClient } from "@/lib/supabase/server";
-import { sendEmail } from "@/lib/comms/send";
+import { notifyApplicant } from "@/modules/comms/actions";
 
 const BASE_URL = "https://www.joincarenow.com";
 
@@ -65,7 +65,7 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
 
   const { data: app } = await supabase
     .from("applications")
-    .select("applicant_id, applicants(first_name, email), jobs(title), companies(name)")
+    .select("applicant_id")
     .eq("id", applicationId)
     .eq("company_id", current.company_id)
     .single();
@@ -91,16 +91,13 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
     .single();
   if (error || !offer) return { error: "Could not create the offer. Please try again." };
 
-  // Email the applicant with the accept/decline link + log to Conversation.
-  const ap = app.applicants as unknown as { first_name: string | null; email: string | null } | null;
-  const job = app.jobs as unknown as { title: string | null } | null;
-  const company = app.companies as unknown as { name: string | null } | null;
+  // Email the applicant via the shared notify path (builds merge context + logs
+  // to Conversation), with merge tokens for name/company/role.
   const link = `${BASE_URL}/offer/${offer.token}`;
-  const companyName = company?.name || "our team";
-  const lines = [
-    `Hi ${ap?.first_name || "there"},`,
+  const body = [
+    "Hi {{first_name}},",
     "",
-    `${companyName} is delighted to offer you the ${role || job?.title || "role"}${
+    `{{company_name}} is delighted to offer you the ${role || "{{job_title}}"}${
       conditional ? " (conditional offer)" : ""
     }.`,
     startDate ? `Start date: ${new Date(startDate).toLocaleDateString("en-GB")}` : "",
@@ -109,35 +106,23 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
     conditional && conditions ? `Conditions: ${conditions}` : "",
     message ? `\n${message}` : "",
     "",
-    `Please review and accept or decline your offer here:`,
+    "Please review and accept or decline your offer here:",
     link,
     "",
-    `Thank you,`,
-    companyName,
-  ].filter((l) => l !== "");
-  const body = lines.join("\n");
+    "You can also accept or decline in your applicant portal.",
+    "",
+    "Thank you,",
+    "{{company_name}}",
+  ]
+    .filter((l) => l !== "")
+    .join("\n");
 
-  if (ap?.email) {
-    const res = await sendEmail({
-      to: ap.email,
-      subject: `Job offer from ${companyName}`,
-      text: body,
-    });
-    await supabase.from("messages").insert({
-      company_id: current.company_id,
-      application_id: applicationId,
-      applicant_id: app.applicant_id,
-      channel: "email",
-      direction: "outbound",
-      to_address: ap.email,
-      subject: `Job offer from ${companyName}`,
-      body,
-      status: res.ok ? "sent" : "failed",
-      provider_id: res.id ?? null,
-      error: res.ok ? null : res.error ?? null,
-      created_by: user.id,
-    });
-  }
+  await notifyApplicant({
+    applicationId,
+    channel: "email",
+    subject: "Job offer from {{company_name}}",
+    body,
+  });
 
   revalidatePath("/pipeline");
   return { ok: true };

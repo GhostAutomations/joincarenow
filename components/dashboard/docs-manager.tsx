@@ -139,6 +139,10 @@ function DocEditor({
             />
           </label>
 
+          <p className="text-xs text-gray-500">
+            Editing creates a new version — copies already signed are never changed.
+          </p>
+
           <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
             Merge fields (filled in automatically when sent):{" "}
             {MERGE_FIELDS.map((f) => (

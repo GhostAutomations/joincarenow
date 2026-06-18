@@ -157,9 +157,7 @@ export default async function SettingsPage() {
             <div>
               <h3 className="text-sm font-medium text-gray-900">Contract templates</h3>
               <p className="mb-3 mt-0.5 text-xs text-gray-500">
-                The employment contract the applicant signs on accepting an offer. Use merge
-                fields like {"{{first_name}}"} and {"{{start_date}}"}. Editing creates a new
-                version — copies already signed are never changed.
+                The employment contract the applicant signs on accepting an offer.
               </p>
               <DocsManager kind="contract" items={contractDocs ?? []} />
             </div>

@@ -11,7 +11,7 @@ export function CvRequest({ applicationId }: { applicationId: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [notify, setNotify] = useState<"email" | "sms" | "none">("email");
+  const [notify, setNotify] = useState<"email" | "sms" | "both" | "none">("email");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -77,6 +77,7 @@ export function CvRequest({ applicationId }: { applicationId: string }) {
                 >
                   <option value="email">Email</option>
                   <option value="sms">SMS</option>
+                  <option value="both">Email &amp; SMS</option>
                   <option value="none">Don&apos;t notify (portal only)</option>
                 </select>
               </label>

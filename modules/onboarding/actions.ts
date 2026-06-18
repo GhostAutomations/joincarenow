@@ -388,7 +388,7 @@ export async function reviewTask(formData: FormData) {
 export async function sendAdHocForm(
   applicationId: string,
   formId: string,
-  notify?: "email" | "sms" | null
+  notify?: "email" | "sms" | "both" | null
 ): Promise<{ ok?: boolean; error?: string; notifyError?: string }> {
   const { supabase } = await requireCompany();
   const { error } = await supabase.rpc("send_adhoc_form", {
@@ -399,11 +399,13 @@ export async function sendAdHocForm(
     return { error: error.message || "Could not send the form. Please try again." };
   }
 
+  const channels: ("email" | "sms")[] =
+    notify === "both" ? ["email", "sms"] : notify === "email" || notify === "sms" ? [notify] : [];
   let notifyError: string | undefined;
-  if (notify === "email" || notify === "sms") {
+  for (const channel of channels) {
     const res = await notifyApplicant({
       applicationId,
-      channel: notify,
+      channel,
       subject: "A form to complete from {{company_name}}",
       body:
         "Hi {{first_name}},\n\n{{company_name}} has sent you a form to complete for the {{job_title}} role. " +
@@ -422,7 +424,7 @@ export async function sendAdHocForm(
 export async function requestCv(
   applicationId: string,
   message: string,
-  notify?: "email" | "sms" | null
+  notify?: "email" | "sms" | "both" | null
 ): Promise<{ ok?: boolean; error?: string; notifyError?: string }> {
   const { supabase } = await requireCompany();
   const { error } = await supabase.rpc("request_cv", {
@@ -431,18 +433,22 @@ export async function requestCv(
   });
   if (error) return { error: error.message || "Could not request the CV. Please try again." };
 
+  const channels: ("email" | "sms")[] =
+    notify === "both" ? ["email", "sms"] : notify === "email" || notify === "sms" ? [notify] : [];
   let notifyError: string | undefined;
-  if (notify === "email" || notify === "sms") {
+  if (channels.length) {
     const intro = message.trim()
       ? message.trim() + "\n\n"
       : "{{company_name}} has asked you to upload your CV for the {{job_title}} role.\n\n";
-    const res = await notifyApplicant({
-      applicationId,
-      channel: notify,
-      subject: "Please upload your CV — {{company_name}}",
-      body: `Hi {{first_name}},\n\n${intro}Please log in to your applicant portal to upload it:\n{{portal_link}}\n\nThank you.`,
-    });
-    if (!res.ok) notifyError = res.error;
+    for (const channel of channels) {
+      const res = await notifyApplicant({
+        applicationId,
+        channel,
+        subject: "Please upload your CV — {{company_name}}",
+        body: `Hi {{first_name}},\n\n${intro}Please log in to your applicant portal to upload it:\n{{portal_link}}\n\nThank you.`,
+      });
+      if (!res.ok) notifyError = res.error;
+    }
   }
 
   revalidatePath("/pipeline");

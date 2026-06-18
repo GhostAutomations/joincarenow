@@ -51,7 +51,7 @@ export function ApplicantForms({
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [sendId, setSendId] = useState("");
   const [sending, setSending] = useState(false);
-  const [notify, setNotify] = useState<"email" | "sms" | "none">("email");
+  const [notify, setNotify] = useState<"email" | "sms" | "both" | "none">("email");
 
   // Re-sync only when the actual form id/status content changes — not on every
   // render. (A plain [forms] dependency changes identity each render and would
@@ -191,12 +191,13 @@ export function ApplicantForms({
           </select>
           <select
             value={notify}
-            onChange={(e) => setNotify(e.target.value as "email" | "sms" | "none")}
+            onChange={(e) => setNotify(e.target.value as "email" | "sms" | "both" | "none")}
             title="Notify the applicant"
             className="shrink-0 rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           >
             <option value="email">Email</option>
             <option value="sms">SMS</option>
+            <option value="both">Email &amp; SMS</option>
             <option value="none">No notice</option>
           </select>
           <button

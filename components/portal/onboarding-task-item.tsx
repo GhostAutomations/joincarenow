@@ -27,7 +27,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 export function OnboardingTaskItem({ task }: { task: PortalTask }) {
-  const [state, action] = useActionState<OnbState, FormData>(uploadOnboardingDoc, undefined);
+  const [state, action, pending] = useActionState<OnbState, FormData>(uploadOnboardingDoc, undefined);
   const needsAction = task.status === "pending" || task.status === "rejected";
   const s = STATUS[task.status] ?? STATUS.pending;
 
@@ -76,9 +76,13 @@ export function OnboardingTaskItem({ task }: { task: PortalTask }) {
                 required
                 className="text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-700 hover:file:bg-brand-100"
               />
-              <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">
-                Upload
+              <button
+                disabled={pending}
+                className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+              >
+                {pending ? "Uploading…" : "Upload"}
               </button>
+              {pending && <span className="text-xs text-gray-500">Please wait…</span>}
               {state?.error && <span className="text-xs text-red-600">{state.error}</span>}
             </form>
           )}

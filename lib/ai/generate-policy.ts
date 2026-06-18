@@ -20,7 +20,7 @@ export async function generatePolicyDraft(name: string, brief: string): Promise<
     throw new Error("Policy generation isn't configured yet (missing ANTHROPIC_API_KEY).");
   }
 
-  const client = new Anthropic({ apiKey, maxRetries: 0, timeout: 55_000 });
+  const client = new Anthropic({ apiKey, maxRetries: 0, timeout: 50_000 });
   const model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
 
   const topic = name.trim() || (brief.trim() ? "" : "Staff Code of Conduct");

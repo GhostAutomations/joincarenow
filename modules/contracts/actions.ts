@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireCompany } from "@/modules/auth/queries";
 import { generateContractDraft } from "@/lib/ai/generate-contract";
+import { generatePolicyDraft } from "@/lib/ai/generate-policy";
 
 export type DocResult = { ok?: boolean; error?: string; id?: string };
 
@@ -67,6 +68,22 @@ export async function generateContract(
     return { text };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not generate the contract." };
+  }
+}
+
+/** AI-draft a UK care-sector policy document (admin only). The name sets the
+ *  topic; brief adds specifics. Returns the text for the editor to drop in. */
+export async function generatePolicy(
+  name: string,
+  brief: string
+): Promise<{ text?: string; error?: string }> {
+  const { current } = await requireCompany();
+  if (current.role !== "admin") return { error: "Only admins can generate policies." };
+  try {
+    const text = await generatePolicyDraft(name ?? "", brief ?? "");
+    return { text };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Could not generate the policy." };
   }
 }
 

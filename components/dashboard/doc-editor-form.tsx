@@ -49,13 +49,15 @@ export function DocEditorForm({
     }
     setGenerating(true);
     setError(null);
-    const r = kind === "contract" ? await generateContract(brief) : await generatePolicy(name, brief);
-    setGenerating(false);
-    if (r?.error) {
-      setError(r.error);
-      return;
+    try {
+      const r = kind === "contract" ? await generateContract(brief) : await generatePolicy(name, brief);
+      if (r?.error) setError(r.error);
+      else if (r?.text) setBody(r.text);
+    } catch {
+      setError("The generator took too long or the connection dropped. Please try again.");
+    } finally {
+      setGenerating(false);
     }
-    if (r?.text) setBody(r.text);
   }
 
   function insertField(field: string) {

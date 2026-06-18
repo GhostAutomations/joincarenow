@@ -2,6 +2,10 @@ import { notFound, redirect } from "next/navigation";
 import { requireCompany } from "@/modules/auth/queries";
 import { DocEditorForm } from "@/components/dashboard/doc-editor-form";
 
+// Contract/policy generation calls the LLM and can take a while — give the
+// server action room (Vercel default would cut it off mid-generation).
+export const maxDuration = 60;
+
 const TABLE = {
   contract: "contract_templates",
   policy: "policy_documents",

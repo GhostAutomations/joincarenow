@@ -10,6 +10,7 @@ import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
 import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
 import { CareersContentForm } from "@/components/dashboard/careers-content-form";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { SettingsHub, type SettingsSection } from "@/components/dashboard/settings-hub";
 import type { OpeningHours } from "@/lib/opening-hours";
 
 export default async function SettingsPage() {
@@ -62,18 +63,47 @@ export default async function SettingsPage() {
         .order("created_at", { ascending: false })
     : { data: [] };
 
-  return (
-    <div>
-      <PageHeader title="Settings" subtitle={current.companies.name} />
+  const teamList = (
+    <>
+      <ul className="divide-y divide-gray-100">
+        {(members ?? []).map((m) => {
+          const profile = m.profiles as unknown as {
+            full_name: string | null;
+            email: string;
+          } | null;
+          return (
+            <li key={m.id} className="flex items-center justify-between py-3">
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  {profile?.full_name || profile?.email}
+                </p>
+                <p className="text-xs text-gray-500">{profile?.email}</p>
+              </div>
+              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium capitalize text-gray-700">
+                {m.role}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      {!isAdmin && (
+        <p className="mt-4 text-xs text-gray-400">
+          Only company admins can invite or manage team members.
+        </p>
+      )}
+    </>
+  );
 
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-        <h2 className="text-base font-medium text-gray-900">Company</h2>
-        <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
+  const sections: SettingsSection[] = [
+    {
+      key: "company",
+      label: "Company",
+      description: "Your company name and public careers address.",
+      content: (
+        <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-gray-500">Name</dt>
-            <dd className="mt-0.5 font-medium text-gray-900">
-              {current.companies.name}
-            </dd>
+            <dd className="mt-0.5 font-medium text-gray-900">{current.companies.name}</dd>
           </div>
           <div>
             <dt className="text-gray-500">Careers page address</dt>
@@ -82,183 +112,131 @@ export default async function SettingsPage() {
             </dd>
           </div>
         </dl>
-      </section>
+      ),
+    },
+  ];
 
-      {isAdmin && (
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">Navigation</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Choose how your team moves around the platform.
-          </p>
-          <SidebarToggle companyId={current.company_id} show={showSidebar} />
-        </section>
-      )}
-
-      {isAdmin && (
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">Careers page</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            The intro and benefits shown to candidates on your public careers
-            page at joincarenow.com/careers/{current.companies.slug}.
-          </p>
+  if (isAdmin) {
+    sections.push(
+      {
+        key: "navigation",
+        label: "Navigation",
+        description: "Choose how your team moves around the platform.",
+        content: <SidebarToggle companyId={current.company_id} show={showSidebar} />,
+      },
+      {
+        key: "careers",
+        label: "Careers page",
+        description: "Intro and benefits shown to candidates on your public careers page.",
+        content: (
           <CareersContentForm
             companyId={current.company_id}
             intro={careers.intro ?? ""}
             benefits={careers.benefits ?? []}
           />
-        </section>
-      )}
-
-      {isAdmin && (
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">Branches</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Set up your branches once. They become selectable on jobs and follow
-            each new hire onto their employee record — no duplicate or mistyped locations.
-          </p>
-          <div className="mt-4">
-            <BranchesManager branches={branches ?? []} />
-          </div>
-        </section>
-      )}
-
-      {isAdmin && (
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">Roles</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Define your roles once (e.g. Walker, Driver). They become selectable
-            on jobs and follow each hire onto their employee record.
-          </p>
-          <div className="mt-4">
-            <RolesManager roles={roles ?? []} />
-          </div>
-        </section>
-      )}
-
-      {isAdmin && (
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">Contracts &amp; policies</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Build your employment contracts and policy documents once, using merge
-            fields like {"{{first_name}}"} and {"{{start_date}}"}. Assign them to a job
-            and the applicant signs them when they accept their offer. Editing a
-            document creates a new version — copies already signed are never changed.
-          </p>
-          <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        ),
+      },
+      {
+        key: "branches",
+        label: "Branches",
+        description: "Set up branches once; they become selectable on jobs and follow each hire.",
+        content: <BranchesManager branches={branches ?? []} />,
+      },
+      {
+        key: "roles",
+        label: "Roles",
+        description: "Define roles once (e.g. Walker, Driver); they follow each hire onto their record.",
+        content: <RolesManager roles={roles ?? []} />,
+      },
+      {
+        key: "contracts",
+        label: "Contracts & policies",
+        description: "Build contracts and policy documents; assign them to jobs for sign-on-accept.",
+        content: (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div>
               <h3 className="text-sm font-medium text-gray-900">Contract templates</h3>
-              <p className="mt-0.5 mb-3 text-xs text-gray-500">
-                The employment contract the applicant signs on accepting an offer.
+              <p className="mb-3 mt-0.5 text-xs text-gray-500">
+                The employment contract the applicant signs on accepting an offer. Use merge
+                fields like {"{{first_name}}"} and {"{{start_date}}"}. Editing creates a new
+                version — copies already signed are never changed.
               </p>
               <DocsManager kind="contract" items={contractDocs ?? []} />
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-900">Policy documents</h3>
-              <p className="mt-0.5 mb-3 text-xs text-gray-500">
+              <p className="mb-3 mt-0.5 text-xs text-gray-500">
                 Handbook, GDPR, code of conduct, etc. The applicant acknowledges each one.
               </p>
               <DocsManager kind="policy" items={policyDocs ?? []} />
             </div>
           </div>
-        </section>
-      )}
-
-      {isAdmin && (
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">Employee numbers</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Choose how each new hire&apos;s Employee ID is set.
-          </p>
+        ),
+      },
+      {
+        key: "numbers",
+        label: "Employee numbers",
+        description: "Choose how each new hire's Employee ID is set.",
+        content: (
           <EmployeeNumberSettings
             companyId={current.company_id}
             mode={empNumberMode}
             prefix={empNumberPrefix}
           />
-        </section>
-      )}
-
-      {isAdmin && (
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">
-            Interview address
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Your default address for in-person interviews. It pre-fills the
-            location when you schedule an in-person interview.
-          </p>
-          <InterviewAddressForm
-            companyId={current.company_id}
-            defaultValue={interviewAddress}
-          />
-        </section>
-      )}
-
-      {isAdmin && (
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">Opening hours</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Set the days and hours your office is open. Interviews can only be
-            scheduled — and applicants can only propose times — within these hours.
-          </p>
-          <OpeningHoursForm companyId={current.company_id} hours={openingHours} />
-        </section>
-      )}
-
-      {isAdmin && (
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">
-            Invite a team member
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Invite managers and recruiters to {current.companies.name}. They set
-            their own password from the invitation link.
-          </p>
-          <div className="mt-4">
-            <InviteForm
-              companyId={current.company_id}
-              roles={[
-                { value: "manager", label: "Manager" },
-                { value: "recruiter", label: "Recruiter" },
-              ]}
-            />
+        ),
+      },
+      {
+        key: "interview",
+        label: "Interview address",
+        description: "Your default address for in-person interviews.",
+        content: (
+          <InterviewAddressForm companyId={current.company_id} defaultValue={interviewAddress} />
+        ),
+      },
+      {
+        key: "hours",
+        label: "Opening hours",
+        description: "Days and hours your office is open; constrains interview scheduling.",
+        content: <OpeningHoursForm companyId={current.company_id} hours={openingHours} />,
+      },
+      {
+        key: "team",
+        label: "Team",
+        description: "Invite managers and recruiters, and see who's on your team.",
+        content: (
+          <div className="space-y-6">
+            <div>
+              <InviteForm
+                companyId={current.company_id}
+                roles={[
+                  { value: "manager", label: "Manager" },
+                  { value: "recruiter", label: "Recruiter" },
+                ]}
+              />
+              <h3 className="mt-6 text-sm font-medium text-gray-900">Pending invitations</h3>
+              <PendingInvites invites={invites ?? []} />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-900">Team members</h3>
+              <div className="mt-2">{teamList}</div>
+            </div>
           </div>
+        ),
+      }
+    );
+  } else {
+    sections.push({
+      key: "team",
+      label: "Team",
+      description: "See who's on your team.",
+      content: teamList,
+    });
+  }
 
-          <h3 className="mt-8 text-sm font-medium text-gray-900">
-            Pending invitations
-          </h3>
-          <PendingInvites invites={invites ?? []} />
-        </section>
-      )}
-
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-        <h2 className="text-base font-medium text-gray-900">Team members</h2>
-        <ul className="mt-4 divide-y divide-gray-100">
-          {(members ?? []).map((m) => {
-            const profile = m.profiles as unknown as {
-              full_name: string | null;
-              email: string;
-            } | null;
-            return (
-              <li key={m.id} className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {profile?.full_name || profile?.email}
-                  </p>
-                  <p className="text-xs text-gray-500">{profile?.email}</p>
-                </div>
-                <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium capitalize text-gray-700">
-                  {m.role}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-        {!isAdmin && (
-          <p className="mt-4 text-xs text-gray-400">
-            Only company admins can invite or manage team members.
-          </p>
-        )}
-      </section>
+  return (
+    <div>
+      <PageHeader title="Settings" subtitle={current.companies.name} />
+      <SettingsHub sections={sections} />
     </div>
   );
 }

@@ -64,7 +64,7 @@ export function SettingsHub({ sections }: { sections: SettingsSection[] }) {
           <ChevronLeft className="h-4 w-4" /> All settings
         </button>
 
-        <section className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+        <section className="mt-4 rounded-2xl border border-white/40 bg-white/80 p-6 shadow-lg backdrop-blur-md">
           <div className="flex items-start gap-3">
             <span
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-sm ${

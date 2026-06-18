@@ -277,6 +277,11 @@ export function PipelineBoard({
         { event: "*", schema: "public", table: "interviews", filter: `company_id=eq.${companyId}` },
         refresh
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "offers", filter: `company_id=eq.${companyId}` },
+        refresh
+      )
       .subscribe();
 
     const t = setInterval(() => {

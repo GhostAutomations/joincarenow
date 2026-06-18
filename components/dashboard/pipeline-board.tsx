@@ -693,7 +693,7 @@ function ApplicantPanel({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop — intentionally does NOT close on click. */}
       <div className="absolute inset-0 bg-black/40" aria-hidden />
-      <div className="relative flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="relative flex h-[88vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className="flex items-center justify-between gap-4 border-b border-gray-200 px-5 py-4">
           <h2 className="text-lg font-semibold text-gray-900">{fullName(app)}</h2>
           <div className="flex items-center gap-3">
@@ -862,13 +862,16 @@ function OfferSection({ applicationId, onSend }: { applicationId: string; onSend
           {offer.conditional && offer.conditions && (
             <p className="mt-1.5 text-xs text-gray-600"><span className="text-gray-400">Conditions:</span> {offer.conditions}</p>
           )}
-          {offer.status === "sent" && (
-            <button
-              onClick={onSend}
-              className="mt-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
-            >
-              Resend / edit offer
-            </button>
+          <button
+            onClick={onSend}
+            className="mt-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+          >
+            {offer.status === "sent" ? "Resend / edit offer" : "Reissue offer"}
+          </button>
+          {offer.status === "accepted" && (
+            <p className="mt-1.5 text-xs text-gray-500">
+              Reissuing replaces the accepted offer with a fresh one (e.g. corrected pay or contract) and asks the applicant to accept again.
+            </p>
           )}
         </div>
       )}

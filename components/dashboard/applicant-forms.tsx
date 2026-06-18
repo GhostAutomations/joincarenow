@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, AlertTriangle, Send, ChevronDown } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Send } from "lucide-react";
 import {
   reviewTask,
   reviewApplicationForm,
@@ -52,7 +52,6 @@ export function ApplicantForms({
   const [sendId, setSendId] = useState("");
   const [sending, setSending] = useState(false);
   const [notify, setNotify] = useState<"email" | "sms" | "both" | "none">("email");
-  const [open, setOpen] = useState(false);
 
   // Re-sync only when the actual form id/status content changes — not on every
   // render. (A plain [forms] dependency changes identity each render and would
@@ -141,21 +140,14 @@ export function ApplicantForms({
 
   return (
     <div>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2 text-left"
-        aria-expanded={open}
-      >
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
-        <span className="text-xs uppercase tracking-wide text-gray-400">Forms</span>
-        <span className="ml-auto text-xs text-gray-500">
-          {workflowItems.length > 0 ? `${done}/${workflowItems.length} approved` : "none"}
-        </span>
-      </button>
+      <div className="flex items-center justify-between">
+        <p className="text-xs uppercase tracking-wide text-gray-400">Forms</p>
+        {workflowItems.length > 0 && (
+          <span className="text-xs text-gray-500">{done}/{workflowItems.length} approved</span>
+        )}
+      </div>
 
-      {!open ? null : (
-      <>
-      <ul className="mt-1.5 space-y-1">
+      <ul className="mt-1.5 grid grid-cols-1 gap-x-3 gap-y-0.5 sm:grid-cols-2">
         {/* Application form */}
         {hasAppForm && (
           <Row
@@ -216,8 +208,6 @@ export function ApplicantForms({
             <Send className="h-3.5 w-3.5" /> {sending ? "Sending…" : "Send"}
           </button>
         </div>
-      )}
-      </>
       )}
 
       {modal && (

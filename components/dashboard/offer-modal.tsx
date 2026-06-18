@@ -12,10 +12,12 @@ const input =
 export function OfferModal({
   applicationId,
   defaultRole,
+  defaultPay = "",
   onClose,
 }: {
   applicationId: string;
   defaultRole: string;
+  defaultPay?: string;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -60,7 +62,7 @@ export function OfferModal({
             </label>
             <label className="block">
               <span className="text-xs font-medium text-gray-600">Pay</span>
-              <input name="pay" placeholder="e.g. £12.50 / hour" className={input} />
+              <input name="pay" defaultValue={defaultPay} placeholder="e.g. £12.50 / hour" className={input} />
             </label>
             <label className="block">
               <span className="text-xs font-medium text-gray-600">Hours</span>

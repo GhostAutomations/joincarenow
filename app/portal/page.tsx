@@ -9,6 +9,7 @@ import {
   OnboardingTaskItem,
   type PortalTask,
 } from "@/components/portal/onboarding-task-item";
+import { OfferRespond } from "@/components/offer/offer-respond";
 
 type MyApplication = {
   application_id: string;
@@ -48,13 +49,20 @@ export default async function PortalPage({
   const { supabase, user } = await requireApplicant();
   const { applied } = await searchParams;
 
-  const [{ data }, { data: ivData }, { data: onbData }] = await Promise.all([
+  const [{ data }, { data: ivData }, { data: onbData }, { data: offerData }] = await Promise.all([
     supabase.rpc("get_my_applications"),
     supabase.rpc("get_my_interviews"),
     supabase.rpc("get_my_onboarding"),
+    supabase.rpc("get_my_offers"),
   ]);
   const onboarding = (onbData ?? []) as PortalTask[];
   const applications = (data ?? []) as MyApplication[];
+  type OfferRow = {
+    token: string; status: string; role: string | null; start_date: string | null;
+    pay: string | null; hours: string | null; conditional: boolean; conditions: string | null;
+    message: string | null; company_name: string | null; job_title: string | null;
+  };
+  const offers = (offerData ?? []) as OfferRow[];
   const interviewByApp = new Map<string, PortalInterview>();
   for (const iv of (ivData ?? []) as (PortalInterview & {
     application_id: string;
@@ -125,6 +133,32 @@ export default async function PortalPage({
               );
             })}
           </ul>
+        )}
+
+        {offers.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-xl font-semibold text-white drop-shadow-sm">Your offer</h2>
+            <p className="mt-1 text-sm text-white/80">Review your offer and let the employer know your decision.</p>
+            {offers.map((o) => (
+              <OfferRespond
+                key={o.token}
+                offer={{
+                  token: o.token,
+                  status: o.status,
+                  role: o.role,
+                  startDate: o.start_date,
+                  pay: o.pay,
+                  hours: o.hours,
+                  conditional: o.conditional,
+                  conditions: o.conditions,
+                  message: o.message,
+                  companyName: o.company_name ?? "The team",
+                  jobTitle: o.job_title,
+                  firstName: null,
+                }}
+              />
+            ))}
+          </section>
         )}
 
         {onboarding.length > 0 && (

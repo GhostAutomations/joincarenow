@@ -60,6 +60,7 @@ export type AppCard = {
   refsState: string | null;
   refsTotal: number;
   offerStatus: string | null;
+  salary: string | null;
 };
 
 const STAGES: { key: string; label: string; dot: string }[] = [
@@ -497,6 +498,7 @@ export function PipelineBoard({
         <OfferModal
           applicationId={offerId}
           defaultRole={apps.find((a) => a.id === offerId)?.job_title ?? ""}
+          defaultPay={apps.find((a) => a.id === offerId)?.salary ?? ""}
           onClose={() => setOfferId(null)}
         />
       )}

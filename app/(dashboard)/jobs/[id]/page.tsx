@@ -19,11 +19,11 @@ export default async function EditJobPage({
   const { id } = await params;
   const { supabase, current } = await requireCompany();
 
-  const [{ data: job }, { data: forms }, { data: branches }, { data: roles }] = await Promise.all([
+  const [{ data: job }, { data: forms }, { data: branches }, { data: roles }, { data: contracts }, { data: policies }, { data: jobPolicyRows }] = await Promise.all([
     supabase
       .from("jobs")
       .select(
-        "id, title, slug, description, employment_type, branch_id, role_id, workflow_role_id, salary, vacancies, closing_date, status, application_form_id"
+        "id, title, slug, description, employment_type, branch_id, role_id, workflow_role_id, salary, vacancies, closing_date, status, application_form_id, contract_template_id"
       )
       .eq("id", id)
       .eq("company_id", current.company_id)
@@ -43,9 +43,25 @@ export default async function EditJobPage({
       .select("id, name")
       .eq("company_id", current.company_id)
       .order("name"),
+    supabase
+      .from("contract_templates")
+      .select("id, name")
+      .eq("company_id", current.company_id)
+      .order("name"),
+    supabase
+      .from("policy_documents")
+      .select("id, name")
+      .eq("company_id", current.company_id)
+      .order("name"),
+    supabase
+      .from("job_policies")
+      .select("policy_id")
+      .eq("job_id", id),
   ]);
 
   if (!job) notFound();
+
+  const jobPolicyIds = (jobPolicyRows ?? []).map((r) => r.policy_id as string);
 
   const careersUrl = `/careers/${current.companies.slug}/${job.slug}`;
 
@@ -124,6 +140,8 @@ export default async function EditJobPage({
           forms={forms ?? []}
           branches={branches ?? []}
           roles={roles ?? []}
+          contracts={contracts ?? []}
+          policies={policies ?? []}
           defaults={{
             id: job.id,
             title: job.title,
@@ -136,6 +154,8 @@ export default async function EditJobPage({
             vacancies: job.vacancies,
             closing_date: job.closing_date ?? "",
             application_form_id: job.application_form_id ?? "",
+            contract_template_id: (job as { contract_template_id?: string | null }).contract_template_id ?? "",
+            policy_ids: jobPolicyIds,
           }}
         />
       </div>

@@ -4,6 +4,7 @@ import { PendingInvites } from "@/components/dashboard/pending-invites";
 import { InterviewAddressForm } from "@/components/dashboard/interview-address-form";
 import { BranchesManager } from "@/components/dashboard/branches-manager";
 import { RolesManager } from "@/components/dashboard/roles-manager";
+import { DocsManager } from "@/components/dashboard/docs-manager";
 import { EmployeeNumberSettings } from "@/components/dashboard/employee-number-settings";
 import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
 import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
@@ -20,9 +21,15 @@ export default async function SettingsPage() {
     .select("id, role, profiles ( full_name, email )")
     .eq("company_id", current.company_id);
 
-  const [{ data: branches }, { data: roles }] = await Promise.all([
+  const [{ data: branches }, { data: roles }, { data: contractDocs }, { data: policyDocs }] = await Promise.all([
     supabase.from("branches").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("name"),
+    isAdmin
+      ? supabase.from("contract_templates").select("id, name, body, version").eq("company_id", current.company_id).order("name")
+      : Promise.resolve({ data: [] }),
+    isAdmin
+      ? supabase.from("policy_documents").select("id, name, body, version").eq("company_id", current.company_id).order("name")
+      : Promise.resolve({ data: [] }),
   ]);
 
   const { data: companyRow } = await supabase
@@ -124,6 +131,34 @@ export default async function SettingsPage() {
           </p>
           <div className="mt-4">
             <RolesManager roles={roles ?? []} />
+          </div>
+        </section>
+      )}
+
+      {isAdmin && (
+        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
+          <h2 className="text-base font-medium text-gray-900">Contracts &amp; policies</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Build your employment contracts and policy documents once, using merge
+            fields like {"{{first_name}}"} and {"{{start_date}}"}. Assign them to a job
+            and the applicant signs them when they accept their offer. Editing a
+            document creates a new version — copies already signed are never changed.
+          </p>
+          <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div>
+              <h3 className="text-sm font-medium text-gray-900">Contract templates</h3>
+              <p className="mt-0.5 mb-3 text-xs text-gray-500">
+                The employment contract the applicant signs on accepting an offer.
+              </p>
+              <DocsManager kind="contract" items={contractDocs ?? []} />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-900">Policy documents</h3>
+              <p className="mt-0.5 mb-3 text-xs text-gray-500">
+                Handbook, GDPR, code of conduct, etc. The applicant acknowledges each one.
+              </p>
+              <DocsManager kind="policy" items={policyDocs ?? []} />
+            </div>
           </div>
         </section>
       )}

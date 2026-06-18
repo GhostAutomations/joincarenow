@@ -17,6 +17,7 @@ const jobSchema = z.object({
   vacancies: z.coerce.number().int().min(1).max(999).default(1),
   closing_date: z.string().optional().or(z.literal("")),
   application_form_id: z.string().uuid().optional().or(z.literal("")),
+  contract_template_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 export type JobState = { error?: string } | undefined;
@@ -33,7 +34,22 @@ function parseJob(formData: FormData) {
     vacancies: formData.get("vacancies") ?? 1,
     closing_date: formData.get("closing_date") ?? "",
     application_form_id: formData.get("application_form_id") ?? "",
+    contract_template_id: formData.get("contract_template_id") ?? "",
   });
+}
+
+/** Replace the job's assigned policies with the ticked set. */
+async function syncJobPolicies(
+  supabase: Awaited<ReturnType<typeof requireCompany>>["supabase"],
+  jobId: string,
+  policyIds: string[]
+) {
+  await supabase.from("job_policies").delete().eq("job_id", jobId);
+  if (policyIds.length > 0) {
+    await supabase
+      .from("job_policies")
+      .insert(policyIds.map((policy_id) => ({ job_id: jobId, policy_id })));
+  }
 }
 
 export async function createJob(
@@ -66,6 +82,7 @@ export async function createJob(
         vacancies: parsed.data.vacancies,
         closing_date: parsed.data.closing_date || null,
         application_form_id: parsed.data.application_form_id || null,
+        contract_template_id: parsed.data.contract_template_id || null,
       })
       .select("id")
       .single();
@@ -80,6 +97,8 @@ export async function createJob(
   }
 
   if (!newId) return { error: "Could not generate a unique link for this job." };
+
+  await syncJobPolicies(supabase, newId, formData.getAll("policy_ids").map(String));
 
   revalidatePath("/jobs");
   redirect(`/jobs/${newId}`);
@@ -109,11 +128,14 @@ export async function updateJob(
       vacancies: parsed.data.vacancies,
       closing_date: parsed.data.closing_date || null,
       application_form_id: parsed.data.application_form_id || null,
+      contract_template_id: parsed.data.contract_template_id || null,
     })
     .eq("id", id)
     .eq("company_id", current.company_id);
 
   if (error) return { error: "Could not save changes. Please try again." };
+
+  await syncJobPolicies(supabase, id, formData.getAll("policy_ids").map(String));
 
   revalidatePath("/jobs");
   revalidatePath(`/jobs/${id}`);

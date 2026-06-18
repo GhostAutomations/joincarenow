@@ -18,6 +18,8 @@ export type JobDefaults = {
   vacancies?: number;
   closing_date?: string;
   application_form_id?: string;
+  contract_template_id?: string;
+  policy_ids?: string[];
 };
 
 const inputClass =
@@ -38,6 +40,8 @@ export function JobForm({
   forms = [],
   branches = [],
   roles = [],
+  contracts = [],
+  policies = [],
 }: {
   action: Action;
   defaults?: JobDefaults;
@@ -45,6 +49,8 @@ export function JobForm({
   forms?: { id: string; name: string }[];
   branches?: { id: string; name: string }[];
   roles?: { id: string; name: string }[];
+  contracts?: { id: string; name: string }[];
+  policies?: { id: string; name: string }[];
 }) {
   const [state, formAction] = useActionState<JobState, FormData>(action, undefined);
 
@@ -246,6 +252,56 @@ export function JobForm({
         <p className="mt-1 text-xs text-gray-500">
           Optional. Adds your custom questions on top of the built-in basics.
         </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <label htmlFor="contract_template_id" className="block text-sm font-medium text-gray-700">
+            Contract
+          </label>
+          <select
+            id="contract_template_id"
+            name="contract_template_id"
+            defaultValue={defaults?.contract_template_id ?? ""}
+            className={inputClass}
+          >
+            <option value="">No contract</option>
+            {contracts.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            {contracts.length === 0
+              ? "Build contract templates in Settings first."
+              : "The contract the applicant signs when they accept their offer."}
+          </p>
+        </div>
+        <div>
+          <span className="block text-sm font-medium text-gray-700">Policies to acknowledge</span>
+          {policies.length === 0 ? (
+            <p className="mt-1 text-xs text-gray-500">Build policy documents in Settings first.</p>
+          ) : (
+            <div className="mt-1 space-y-1.5 rounded-lg border border-gray-300 px-3 py-2">
+              {policies.map((p) => (
+                <label key={p.id} className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="policy_ids"
+                    value={p.id}
+                    defaultChecked={defaults?.policy_ids?.includes(p.id)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  {p.name}
+                </label>
+              ))}
+            </div>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            The applicant acknowledges each ticked policy when they accept.
+          </p>
+        </div>
       </div>
 
       <div className="sm:w-48">

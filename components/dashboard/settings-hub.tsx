@@ -85,7 +85,7 @@ export function SettingsHub({ sections }: { sections: SettingsSection[] }) {
   }
 
   return (
-    <div className="mt-6 grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-5">
+    <div className="mt-6 flex flex-wrap gap-x-14 gap-y-6">
       {sections.map((s) => {
         const Icon = ICONS[s.key] ?? Building2;
         return (
@@ -93,7 +93,7 @@ export function SettingsHub({ sections }: { sections: SettingsSection[] }) {
             key={s.key}
             onClick={() => setActive(s.key)}
             title={s.description}
-            className="group flex flex-col items-center gap-2 text-center"
+            className="group flex w-14 flex-col items-center gap-2 text-center"
           >
             <span
               className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-sm transition group-hover:-translate-y-0.5 group-hover:shadow-md ${

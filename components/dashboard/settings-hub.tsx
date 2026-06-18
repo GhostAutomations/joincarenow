@@ -85,7 +85,7 @@ export function SettingsHub({ sections }: { sections: SettingsSection[] }) {
   }
 
   return (
-    <div className="mt-6 flex flex-wrap gap-x-14 gap-y-6">
+    <div className="mt-6 grid w-fit grid-cols-3 gap-x-14 gap-y-6 sm:grid-cols-5 mx-auto">
       {sections.map((s) => {
         const Icon = ICONS[s.key] ?? Building2;
         return (

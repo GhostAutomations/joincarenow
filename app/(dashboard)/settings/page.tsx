@@ -153,7 +153,7 @@ export default async function SettingsPage() {
         label: "Contracts & policies",
         description: "Build contracts and policy documents; assign them to jobs for sign-on-accept.",
         content: (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
             <div>
               <h3 className="text-sm font-medium text-gray-900">Contract templates</h3>
               <p className="mb-3 mt-0.5 text-xs text-gray-500">
@@ -163,7 +163,7 @@ export default async function SettingsPage() {
               </p>
               <DocsManager kind="contract" items={contractDocs ?? []} />
             </div>
-            <div>
+            <div className="border-t border-gray-100 pt-6">
               <h3 className="text-sm font-medium text-gray-900">Policy documents</h3>
               <p className="mb-3 mt-0.5 text-xs text-gray-500">
                 Handbook, GDPR, code of conduct, etc. The applicant acknowledges each one.

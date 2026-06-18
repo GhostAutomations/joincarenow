@@ -123,7 +123,7 @@ function StatusIcon({ kind, label }: { kind: StatusKind; label: string }) {
     kind === "ok" ? "text-green-600" : kind === "bad" ? "text-red-600" : kind === "warn" ? "text-amber-500" : "text-gray-300";
   return (
     <Tip label={label}>
-      <Icon className={`h-4 w-4 ${cls}`} aria-hidden />
+      <Icon className={`h-3.5 w-3.5 ${cls}`} aria-hidden />
     </Tip>
   );
 }
@@ -159,11 +159,11 @@ function StatusCol({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-w-0 flex-col items-center gap-1 px-1 py-1.5">
-      <span className="text-[10px] font-semibold text-gray-700">
-        {Icon ? <Icon className="h-3 w-3" aria-hidden /> : title}
+    <div className="flex min-w-0 flex-col items-center gap-0.5 px-0.5 py-1">
+      <span className="text-[9px] font-semibold text-gray-600">
+        {Icon ? <Icon className="h-2.5 w-2.5" aria-hidden /> : title}
       </span>
-      <span className="flex h-4 items-center justify-center">{children}</span>
+      <span className="flex h-3.5 items-center justify-center">{children}</span>
     </div>
   );
 }
@@ -175,7 +175,7 @@ function CardStatusRow({ a }: { a: AppCard }) {
   const w = rtwStatus(a);
   const t = a.transport?.toLowerCase();
   return (
-    <div className="mt-2 grid grid-cols-5 divide-x divide-gray-200 rounded-lg border border-gray-200">
+    <div className="mt-1.5 grid grid-cols-5 divide-x divide-gray-200 rounded-lg border border-gray-200">
       <StatusCol title="Forms">
         <StatusIcon kind={f.kind} label={f.label} />
       </StatusCol>
@@ -186,17 +186,17 @@ function CardStatusRow({ a }: { a: AppCard }) {
         <StatusIcon kind={w.kind} label={w.label} />
       </StatusCol>
       <StatusCol icon={MapPin}>
-        <span className="block w-full truncate px-0.5 text-center text-[10px] text-gray-700">
+        <span className="block w-full truncate px-0.5 text-center text-[9px] text-gray-700">
           {a.branch || <span className="text-gray-300">—</span>}
         </span>
       </StatusCol>
       <StatusCol title="Travel">
         {t === "driver" ? (
-          <Tip label="Driver"><Car className="h-4 w-4 text-gray-600" aria-hidden /></Tip>
+          <Tip label="Driver"><Car className="h-3.5 w-3.5 text-gray-600" aria-hidden /></Tip>
         ) : t === "walker" ? (
-          <Tip label="Walker"><PersonStanding className="h-4 w-4 text-gray-600" aria-hidden /></Tip>
+          <Tip label="Walker"><PersonStanding className="h-3.5 w-3.5 text-gray-600" aria-hidden /></Tip>
         ) : (
-          <Tip label="Transport not set"><Minus className="h-4 w-4 text-gray-300" aria-hidden /></Tip>
+          <Tip label="Transport not set"><Minus className="h-3.5 w-3.5 text-gray-300" aria-hidden /></Tip>
         )}
       </StatusCol>
     </div>
@@ -387,7 +387,7 @@ export function PipelineBoard({
                           ivColour || "border-gray-200 bg-white"
                         }`}
                       >
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-xs font-medium text-gray-900">
                           {fullName(a)}
                           <span className="font-normal text-gray-500"> · {a.job_title}</span>
                         </p>

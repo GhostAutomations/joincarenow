@@ -10,6 +10,8 @@ import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { ApplicantForms } from "@/components/dashboard/applicant-forms";
 import { CvRequest } from "@/components/dashboard/cv-request";
 import { RightToWork } from "@/components/dashboard/right-to-work";
+import { OfferModal } from "@/components/dashboard/offer-modal";
+import { getOffer, type OfferInfo } from "@/modules/offers/actions";
 import { createClient } from "@/lib/supabase/client";
 import { formatLondon, londonToUtcIso } from "@/lib/time";
 import type { OpeningHours } from "@/lib/opening-hours";
@@ -57,6 +59,7 @@ export type AppCard = {
   rtwHasDoc: boolean;
   refsState: string | null;
   refsTotal: number;
+  offerStatus: string | null;
 };
 
 const STAGES: { key: string; label: string; dot: string }[] = [
@@ -239,6 +242,8 @@ export function PipelineBoard({
   const [dragId, setDragId] = useState<string | null>(null);
   // Pre-Hire confirmation: holds the applicant pending a Hire confirm.
   const [hireId, setHireId] = useState<string | null>(null);
+  // Make-an-offer popup: holds the applicant being offered.
+  const [offerId, setOfferId] = useState<string | null>(null);
 
   // Keep local state in sync when the server data refreshes.
   useEffect(() => setApps(initial), [initial]);
@@ -300,6 +305,8 @@ export function PipelineBoard({
       prevStage !== stage
     )
       setSelectedId(id);
+    // Moving into Offer opens the make-an-offer popup.
+    if (stage === "offer" && prevStage !== "offer") setOfferId(id);
     changeStage(id, stage).then((res) => {
       if (res.error) router.refresh();
     });
@@ -397,6 +404,23 @@ export function PipelineBoard({
                             {IV_LABEL[a.interview.status]}
                           </p>
                         )}
+                        {a.stage === "offer" && a.offerStatus && (
+                          <p
+                            className={`mt-2 text-xs font-semibold ${
+                              a.offerStatus === "accepted"
+                                ? "text-green-600"
+                                : a.offerStatus === "declined"
+                                ? "text-red-600"
+                                : "text-blue-600"
+                            }`}
+                          >
+                            {a.offerStatus === "accepted"
+                              ? "Offer accepted"
+                              : a.offerStatus === "declined"
+                              ? "Offer declined"
+                              : "Offer sent — awaiting reply"}
+                          </p>
+                        )}
                       </button>
                     );
                   })}
@@ -452,6 +476,7 @@ export function PipelineBoard({
           onClose={() => setSelectedId(null)}
           onStage={(s) => move(selected.id, s)}
           onConfirmInterview={() => confirmInterviewLocal(selected.id)}
+          onSendOffer={() => setOfferId(selected.id)}
           openingHours={openingHours}
           staff={staff}
           bookedInterviews={bookedInterviews}
@@ -465,6 +490,14 @@ export function PipelineBoard({
           name={fullName(apps.find((a) => a.id === hireId)!)}
           onCancel={() => setHireId(null)}
           onConfirm={() => confirmHire(hireId)}
+        />
+      )}
+
+      {offerId && (
+        <OfferModal
+          applicationId={offerId}
+          defaultRole={apps.find((a) => a.id === offerId)?.job_title ?? ""}
+          onClose={() => setOfferId(null)}
         />
       )}
     </div>
@@ -613,6 +646,7 @@ function ApplicantPanel({
   onClose,
   onStage,
   onConfirmInterview,
+  onSendOffer,
   openingHours,
   staff,
   bookedInterviews,
@@ -623,6 +657,7 @@ function ApplicantPanel({
   onClose: () => void;
   onStage: (s: string) => void;
   onConfirmInterview: () => void;
+  onSendOffer: () => void;
   openingHours?: OpeningHours | null;
   staff: StaffMember[];
   bookedInterviews: BookedInterview[];
@@ -733,6 +768,8 @@ function ApplicantPanel({
             />
           )}
 
+          {app.stage === "offer" && <OfferSection applicationId={app.id} onSend={onSendOffer} />}
+
           {app.cover_message && (
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-400">Cover message</p>
@@ -770,6 +807,62 @@ function ApplicantPanel({
         </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Offer status + send/resend, shown in the panel when the applicant is at Offer. */
+function OfferSection({ applicationId, onSend }: { applicationId: string; onSend: () => void }) {
+  const [offer, setOffer] = useState<OfferInfo | null | "loading">("loading");
+  useEffect(() => {
+    getOffer(applicationId).then((o) => setOffer(o));
+  }, [applicationId]);
+
+  const STATUS: Record<string, { label: string; cls: string }> = {
+    sent: { label: "Sent — awaiting reply", cls: "text-blue-600" },
+    accepted: { label: "Accepted", cls: "text-green-600" },
+    declined: { label: "Declined", cls: "text-red-600" },
+  };
+
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wide text-gray-400">Offer</p>
+      {offer === "loading" ? (
+        <p className="mt-1 text-sm text-gray-400">Loading…</p>
+      ) : !offer ? (
+        <div className="mt-1.5">
+          <p className="text-sm text-gray-600">No offer sent yet.</p>
+          <button
+            onClick={onSend}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+          >
+            Make an offer
+          </button>
+        </div>
+      ) : (
+        <div className="mt-1.5 rounded-xl border border-gray-200 bg-gray-50/60 p-3 text-sm text-gray-700">
+          <p className={`font-medium ${STATUS[offer.status]?.cls ?? "text-gray-700"}`}>
+            Offer {STATUS[offer.status]?.label ?? offer.status}
+          </p>
+          <div className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+            {offer.role && <p><span className="text-gray-400">Role</span><br />{offer.role}</p>}
+            {offer.startDate && <p><span className="text-gray-400">Start</span><br />{new Date(offer.startDate).toLocaleDateString("en-GB")}</p>}
+            {offer.pay && <p><span className="text-gray-400">Pay</span><br />{offer.pay}</p>}
+            {offer.hours && <p><span className="text-gray-400">Hours</span><br />{offer.hours}</p>}
+          </div>
+          {offer.conditional && offer.conditions && (
+            <p className="mt-1.5 text-xs text-gray-600"><span className="text-gray-400">Conditions:</span> {offer.conditions}</p>
+          )}
+          {offer.status === "sent" && (
+            <button
+              onClick={onSend}
+              className="mt-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+            >
+              Resend / edit offer
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

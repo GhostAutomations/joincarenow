@@ -15,6 +15,8 @@ const PUBLIC_PATHS = [
   "/interview",
   // Referee reference forms (token-secured, no login).
   "/reference",
+  // Job offer accept/decline links (token-secured, no login).
+  "/offer",
   // Guarded at the page level (redirects to the applicant sign-in, not staff).
   "/portal",
   // Inbound webhooks — authenticated by provider signature, not a user session.

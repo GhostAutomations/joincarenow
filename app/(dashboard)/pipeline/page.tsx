@@ -118,6 +118,17 @@ export default async function PipelinePage({
     refsByApp.set(r.application_id, cur);
   }
 
+  // Latest offer status per application (for the card status line).
+  const { data: offerRows } = await supabase
+    .from("offers")
+    .select("application_id, status, created_at")
+    .eq("company_id", current.company_id)
+    .order("created_at", { ascending: false });
+  const offerByApp = new Map<string, string>();
+  for (const o of (offerRows ?? []) as { application_id: string; status: string }[]) {
+    if (!offerByApp.has(o.application_id)) offerByApp.set(o.application_id, o.status);
+  }
+
   const { data: staffRaw } = await supabase
     .from("company_users")
     .select("user_id, profiles ( full_name, email )")
@@ -217,6 +228,7 @@ export default async function PipelinePage({
     rtwHasDoc: !!r.rtw_doc_path,
     refsState: refsByApp.get(r.id)?.state ?? null,
     refsTotal: refsByApp.get(r.id)?.total ?? 0,
+    offerStatus: offerByApp.get(r.id) ?? null,
   }));
 
   return (

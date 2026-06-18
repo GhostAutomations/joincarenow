@@ -3,8 +3,8 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
-import { saveDoc } from "@/modules/contracts/actions";
+import { ChevronLeft, Sparkles } from "lucide-react";
+import { saveDoc, generateContract } from "@/modules/contracts/actions";
 
 type Kind = "contract" | "policy";
 
@@ -34,8 +34,25 @@ export function DocEditorForm({
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState(doc?.name ?? "");
   const [body, setBody] = useState(doc?.body ?? "");
+  const [brief, setBrief] = useState("");
+  const [generating, setGenerating] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const noun = kind === "contract" ? "contract template" : "policy";
+
+  async function generate() {
+    if (body.trim() && !confirm("Replace the current contract text with a fresh AI-generated draft?")) {
+      return;
+    }
+    setGenerating(true);
+    setError(null);
+    const r = await generateContract(brief);
+    setGenerating(false);
+    if (r?.error) {
+      setError(r.error);
+      return;
+    }
+    if (r?.text) setBody(r.text);
+  }
 
   function insertField(field: string) {
     const token = `{{${field}}}`;
@@ -95,6 +112,40 @@ export function DocEditorForm({
         <p className="text-xs text-gray-500">
           Editing creates a new version — copies already signed are never changed.
         </p>
+
+        {kind === "contract" && (
+          <div className="rounded-xl border border-violet-200 bg-violet-50/70 p-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-violet-600" />
+              <span className="text-sm font-medium text-violet-900">Generate a contract</span>
+            </div>
+            <p className="mt-1 text-xs text-violet-800/80">
+              Drafts a care-sector employment contract reflecting current UK employment law and
+              ACAS guidance, with merge fields ready to fill. Add any specifics below (optional).
+            </p>
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+              <input
+                value={brief}
+                onChange={(e) => setBrief(e.target.value)}
+                placeholder="e.g. 6-month probation, zero-hours bank staff, mileage paid…"
+                className="min-w-0 flex-1 rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm focus:border-violet-400 focus:outline-none focus:ring-1 focus:ring-violet-400"
+              />
+              <button
+                type="button"
+                onClick={generate}
+                disabled={generating}
+                className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-60"
+              >
+                <Sparkles className="h-4 w-4" />
+                {generating ? "Generating…" : "Generate contract"}
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] leading-snug text-violet-800/70">
+              AI-generated draft for guidance only — review it (ideally with a qualified adviser)
+              and check it against the latest ACAS guidance before use.
+            </p>
+          </div>
+        )}
 
         <div className="rounded-lg bg-gray-50 px-3 py-2.5">
           <p className="mb-1.5 text-xs text-gray-600">

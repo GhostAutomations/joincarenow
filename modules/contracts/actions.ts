@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireCompany } from "@/modules/auth/queries";
+import { generateContractDraft } from "@/lib/ai/generate-contract";
 
 export type DocResult = { ok?: boolean; error?: string; id?: string };
 
@@ -52,6 +53,21 @@ export async function saveDoc(kind: Kind, formData: FormData): Promise<DocResult
   if (error) return { error: "Could not create the document." };
   revalidatePath("/settings");
   return { ok: true, id: data.id as string };
+}
+
+/** AI-draft a UK care-sector employment contract template (admin only). Returns
+ *  the generated text for the editor to drop in — nothing is saved here. */
+export async function generateContract(
+  brief: string
+): Promise<{ text?: string; error?: string }> {
+  const { current } = await requireCompany();
+  if (current.role !== "admin") return { error: "Only admins can generate contracts." };
+  try {
+    const text = await generateContractDraft(brief ?? "");
+    return { text };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Could not generate the contract." };
+  }
 }
 
 export async function deleteDoc(kind: Kind, id: string): Promise<DocResult> {

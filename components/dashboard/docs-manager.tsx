@@ -1,29 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Plus, Pencil, Trash2, X } from "lucide-react";
-import { saveDoc, deleteDoc } from "@/modules/contracts/actions";
+import Link from "next/link";
+import { FileText, Plus, Pencil, Trash2 } from "lucide-react";
+import { deleteDoc } from "@/modules/contracts/actions";
 
 export type DocItem = { id: string; name: string; body: string; version: number };
 type Kind = "contract" | "policy";
 
-const MERGE_FIELDS = [
-  "first_name",
-  "last_name",
-  "job_title",
-  "role",
-  "pay",
-  "hours",
-  "start_date",
-  "company_name",
-  "conditions",
-];
-
 export function DocsManager({ kind, items }: { kind: Kind; items: DocItem[] }) {
   const router = useRouter();
-  const [editing, setEditing] = useState<DocItem | "new" | null>(null);
-
   const noun = kind === "contract" ? "contract template" : "policy";
 
   async function onDelete(id: string) {
@@ -39,19 +25,22 @@ export function DocsManager({ kind, items }: { kind: Kind; items: DocItem[] }) {
         <ul className="mb-4 divide-y divide-gray-100">
           {items.map((d) => (
             <li key={d.id} className="flex items-center justify-between py-2.5">
-              <span className="flex items-center gap-2 text-sm font-medium text-gray-900">
+              <Link
+                href={`/settings/documents/${kind}/${d.id}`}
+                className="flex items-center gap-2 text-sm font-medium text-gray-900 hover:text-brand-700"
+              >
                 <FileText className="h-4 w-4 text-gray-400" />
                 {d.name}
                 <span className="text-xs font-normal text-gray-400">v{d.version}</span>
-              </span>
+              </Link>
               <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setEditing(d)}
+                <Link
+                  href={`/settings/documents/${kind}/${d.id}`}
                   className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
                   aria-label="Edit"
                 >
                   <Pencil className="h-4 w-4" />
-                </button>
+                </Link>
                 <button
                   onClick={() => onDelete(d.id)}
                   className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
@@ -65,155 +54,12 @@ export function DocsManager({ kind, items }: { kind: Kind; items: DocItem[] }) {
         </ul>
       )}
 
-      <button
-        onClick={() => setEditing("new")}
+      <Link
+        href={`/settings/documents/${kind}/new`}
         className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
       >
         <Plus className="h-4 w-4" /> New {noun}
-      </button>
-
-      {editing && (
-        <DocEditor
-          kind={kind}
-          doc={editing === "new" ? null : editing}
-          onClose={() => setEditing(null)}
-          onSaved={() => {
-            setEditing(null);
-            router.refresh();
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-function DocEditor({
-  kind,
-  doc,
-  onClose,
-  onSaved,
-}: {
-  kind: Kind;
-  doc: DocItem | null;
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [body, setBody] = useState(doc?.body ?? "");
-  const taRef = useRef<HTMLTextAreaElement>(null);
-  const noun = kind === "contract" ? "contract template" : "policy";
-
-  // Click a field to drop it into the text at the cursor, replacing any
-  // selected (highlighted) word.
-  function insertField(field: string) {
-    const token = `{{${field}}}`;
-    const ta = taRef.current;
-    if (!ta) {
-      setBody((b) => b + token);
-      return;
-    }
-    const start = ta.selectionStart ?? body.length;
-    const end = ta.selectionEnd ?? body.length;
-    const next = body.slice(0, start) + token + body.slice(end);
-    setBody(next);
-    requestAnimationFrame(() => {
-      ta.focus();
-      const pos = start + token.length;
-      ta.setSelectionRange(pos, pos);
-    });
-  }
-
-  async function action(fd: FormData) {
-    setBusy(true);
-    setError(null);
-    if (doc) fd.set("id", doc.id);
-    const r = await saveDoc(kind, fd);
-    setBusy(false);
-    if (r?.error) {
-      setError(r.error);
-      return;
-    }
-    onSaved();
-  }
-
-  return (
-    <div className="fixed inset-0 z-[70] overflow-y-auto">
-      <div className="absolute inset-0 bg-black/50" aria-hidden onClick={onClose} />
-      <div className="relative mx-auto my-8 w-full max-w-2xl px-4">
-        <div className="rounded-2xl bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-            <h2 className="text-base font-semibold text-gray-900">
-              {doc ? `Edit ${noun}` : `New ${noun}`}
-            </h2>
-            <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <form action={action} className="flex flex-col gap-3 px-5 py-4">
-            <label className="block">
-              <span className="text-xs font-medium text-gray-600">Name</span>
-              <input
-                name="name"
-                defaultValue={doc?.name ?? ""}
-                placeholder={kind === "contract" ? "e.g. Care Assistant — Permanent Contract" : "e.g. Data Protection (GDPR) Policy"}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-              />
-            </label>
-
-            <p className="text-xs text-gray-500">
-              Editing creates a new version — copies already signed are never changed.
-            </p>
-
-            <div className="rounded-lg bg-gray-50 px-3 py-2">
-              <p className="mb-1.5 text-xs text-gray-600">
-                Highlight a word in the text below, then click a field to drop it in:
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {MERGE_FIELDS.map((f) => (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => insertField(f)}
-                    className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-brand-700 ring-1 ring-gray-200 hover:bg-brand-50 hover:ring-brand-300"
-                  >
-                    {`{{${f}}}`}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <label className="block">
-              <span className="text-xs font-medium text-gray-600">
-                {kind === "contract" ? "Contract text" : "Policy text"}
-              </span>
-              <textarea
-                ref={taRef}
-                name="body"
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder={`Write the ${noun} here. Use the merge fields above where you want details filled in, e.g. "This contract is between {{company_name}} and {{first_name}} {{last_name}} for the role of {{role}}, starting {{start_date}}."`}
-                className="mt-1 h-80 w-full resize-y rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm leading-relaxed focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-              />
-            </label>
-
-            {error && <p className="text-sm text-red-600">{error}</p>}
-
-            <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
-              <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
-                Cancel
-              </button>
-              <button
-                disabled={busy}
-                className="rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
-              >
-                {busy ? "Saving…" : doc ? "Save changes" : `Create ${noun}`}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+      </Link>
     </div>
   );
 }

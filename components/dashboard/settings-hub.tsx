@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Building2,
   PanelLeft,
@@ -50,7 +51,11 @@ const TILE_TINT: Record<string, string> = {
 };
 
 export function SettingsHub({ sections }: { sections: SettingsSection[] }) {
-  const [active, setActive] = useState<string | null>(null);
+  const router = useRouter();
+  const params = useSearchParams();
+  const active = params.get("s");
+  const setActive = (key: string | null) =>
+    router.replace(key ? `/settings?s=${key}` : "/settings", { scroll: false });
   const current = sections.find((s) => s.key === active) ?? null;
 
   if (current) {

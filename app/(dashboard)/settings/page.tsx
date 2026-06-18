@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { requireCompany } from "@/modules/auth/queries";
 import { InviteForm } from "@/components/dashboard/invite-form";
 import { PendingInvites } from "@/components/dashboard/pending-invites";
@@ -234,7 +235,9 @@ export default async function SettingsPage() {
   return (
     <div>
       <PageHeader title="Settings" subtitle={current.companies.name} />
-      <SettingsHub sections={sections} />
+      <Suspense fallback={null}>
+        <SettingsHub sections={sections} />
+      </Suspense>
     </div>
   );
 }

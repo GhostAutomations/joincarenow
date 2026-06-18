@@ -85,7 +85,7 @@ export function SettingsHub({ sections }: { sections: SettingsSection[] }) {
   }
 
   return (
-    <div className="mt-6 grid grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-6">
+    <div className="mt-6 grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-5">
       {sections.map((s) => {
         const Icon = ICONS[s.key] ?? Building2;
         return (
@@ -93,16 +93,16 @@ export function SettingsHub({ sections }: { sections: SettingsSection[] }) {
             key={s.key}
             onClick={() => setActive(s.key)}
             title={s.description}
-            className="group flex flex-col items-center gap-2 rounded-xl border border-white/40 bg-white/70 px-2 py-3 text-center shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+            className="group flex flex-col items-center gap-2 text-center"
           >
             <span
-              className={`flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm ${
+              className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-sm transition group-hover:-translate-y-0.5 group-hover:shadow-md ${
                 TILE_TINT[s.key] ?? "from-slate-500 to-slate-600"
               }`}
             >
-              <Icon className="h-[18px] w-[18px]" />
+              <Icon className="h-6 w-6" />
             </span>
-            <span className="block text-xs font-medium leading-tight text-gray-900">{s.label}</span>
+            <span className="block text-xs font-medium leading-tight text-white drop-shadow-sm">{s.label}</span>
           </button>
         );
       })}

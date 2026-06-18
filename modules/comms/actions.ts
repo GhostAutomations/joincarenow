@@ -142,6 +142,50 @@ export async function sendMessage(_prev: SendState, formData: FormData): Promise
   return { ok: true };
 }
 
+/** Send a templated email/SMS to the applicant and log it to the timeline.
+ *  Reusable from other actions (sending a form, requesting a CV, etc.).
+ *  Best-effort: never throws; returns ok/error. */
+export async function notifyApplicant(opts: {
+  applicationId: string;
+  channel: "email" | "sms";
+  subject?: string;
+  body: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const { applicationId, channel } = opts;
+  const { supabase, user, current } = await requireCompany();
+  const senderName = user.user_metadata?.full_name || user.email || "the team";
+  const ctx = await mergeContext(supabase, applicationId, senderName);
+  if (!ctx) return { ok: false, error: "Application not found" };
+
+  const to = channel === "email" ? ctx.email : normalizeUkPhone(ctx.phone);
+  if (!to) return { ok: false, error: channel === "email" ? "No email on file" : "No phone on file" };
+
+  const subject = channel === "email" ? renderMergeFields(opts.subject ?? "", ctx.values) : null;
+  const body = renderMergeFields(opts.body, ctx.values);
+
+  const result =
+    channel === "email"
+      ? await sendEmail({ to, subject: subject || "(no subject)", text: body })
+      : await sendSms({ to, body });
+
+  await supabase.from("messages").insert({
+    company_id: current.company_id,
+    application_id: applicationId,
+    applicant_id: ctx.applicant_id,
+    channel,
+    direction: "outbound",
+    to_address: to,
+    subject,
+    body,
+    status: result.ok ? "sent" : "failed",
+    provider_id: result.id ?? null,
+    error: result.ok ? null : result.error ?? null,
+    created_by: user.id,
+  });
+  revalidatePath("/pipeline");
+  return { ok: result.ok, error: result.ok ? undefined : result.error };
+}
+
 /** Log an internal note to the applicant's timeline (not sent anywhere). */
 export async function addNote(_prev: SendState, formData: FormData): Promise<SendState> {
   const applicationId = formData.get("applicationId")?.toString();

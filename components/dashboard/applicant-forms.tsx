@@ -51,6 +51,7 @@ export function ApplicantForms({
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [sendId, setSendId] = useState("");
   const [sending, setSending] = useState(false);
+  const [notify, setNotify] = useState<"email" | "sms" | "none">("email");
 
   // Re-sync only when the actual form id/status content changes — not on every
   // render. (A plain [forms] dependency changes identity each render and would
@@ -115,12 +116,13 @@ export function ApplicantForms({
   async function send() {
     if (!sendId) return;
     setSending(true);
-    const r = await sendAdHocForm(applicationId, sendId);
+    const r = await sendAdHocForm(applicationId, sendId, notify === "none" ? null : notify);
     setSending(false);
     if (r?.error) {
       alert(r.error);
       return;
     }
+    if (r?.notifyError) alert(`Form sent, but the notification didn't go: ${r.notifyError}`);
     setSendId("");
     router.refresh();
   }
@@ -186,6 +188,16 @@ export function ApplicantForms({
                 {f.name}
               </option>
             ))}
+          </select>
+          <select
+            value={notify}
+            onChange={(e) => setNotify(e.target.value as "email" | "sms" | "none")}
+            title="Notify the applicant"
+            className="shrink-0 rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          >
+            <option value="email">Email</option>
+            <option value="sms">SMS</option>
+            <option value="none">No notice</option>
           </select>
           <button
             onClick={send}

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireCompany, requireUser } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyApplicant } from "@/modules/comms/actions";
 
 export type OnbState = { error?: string; ok?: boolean } | undefined;
 
@@ -386,8 +387,9 @@ export async function reviewTask(formData: FormData) {
  *  workflow form (review / approve / resend). */
 export async function sendAdHocForm(
   applicationId: string,
-  formId: string
-): Promise<{ ok?: boolean; error?: string }> {
+  formId: string,
+  notify?: "email" | "sms" | null
+): Promise<{ ok?: boolean; error?: string; notifyError?: string }> {
   const { supabase } = await requireCompany();
   const { error } = await supabase.rpc("send_adhoc_form", {
     p_application_id: applicationId,
@@ -396,26 +398,56 @@ export async function sendAdHocForm(
   if (error) {
     return { error: error.message || "Could not send the form. Please try again." };
   }
+
+  let notifyError: string | undefined;
+  if (notify === "email" || notify === "sms") {
+    const res = await notifyApplicant({
+      applicationId,
+      channel: notify,
+      subject: "A form to complete from {{company_name}}",
+      body:
+        "Hi {{first_name}},\n\n{{company_name}} has sent you a form to complete for the {{job_title}} role. " +
+        "Please log in to your applicant portal to fill it in:\n{{portal_link}}\n\nThank you.",
+    });
+    if (!res.ok) notifyError = res.error;
+  }
+
   revalidatePath("/pipeline");
   revalidatePath("/onboarding-board");
-  return { ok: true };
+  return { ok: true, notifyError };
 }
 
 /** Staff: ask the applicant to upload a CV. Creates a document task in their
  *  portal with an optional message. */
 export async function requestCv(
   applicationId: string,
-  message: string
-): Promise<{ ok?: boolean; error?: string }> {
+  message: string,
+  notify?: "email" | "sms" | null
+): Promise<{ ok?: boolean; error?: string; notifyError?: string }> {
   const { supabase } = await requireCompany();
   const { error } = await supabase.rpc("request_cv", {
     p_application_id: applicationId,
     p_message: message || null,
   });
   if (error) return { error: error.message || "Could not request the CV. Please try again." };
+
+  let notifyError: string | undefined;
+  if (notify === "email" || notify === "sms") {
+    const intro = message.trim()
+      ? message.trim() + "\n\n"
+      : "{{company_name}} has asked you to upload your CV for the {{job_title}} role.\n\n";
+    const res = await notifyApplicant({
+      applicationId,
+      channel: notify,
+      subject: "Please upload your CV — {{company_name}}",
+      body: `Hi {{first_name}},\n\n${intro}Please log in to your applicant portal to upload it:\n{{portal_link}}\n\nThank you.`,
+    });
+    if (!res.ok) notifyError = res.error;
+  }
+
   revalidatePath("/pipeline");
   revalidatePath("/onboarding-board");
-  return { ok: true };
+  return { ok: true, notifyError };
 }
 
 /** Staff: signed URL for an uploaded onboarding document. */

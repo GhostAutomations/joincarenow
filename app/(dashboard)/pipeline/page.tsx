@@ -103,6 +103,21 @@ export default async function PipelinePage({
     .filter((f) => f.purpose === "reference" || f.category !== "referencing")
     .map((f) => ({ id: f.id, name: f.name }));
 
+  // Reference status per application (for the card chip).
+  const { data: refRows } = await supabase
+    .from("reference_requests")
+    .select("application_id, status")
+    .eq("company_id", current.company_id);
+  // Most-urgent state wins for the chip: info needed > to request > awaiting > review > approved.
+  const REF_PRIORITY = ["rejected", "pending", "sent", "received", "approved"];
+  const refsByApp = new Map<string, { state: string; total: number }>();
+  for (const r of (refRows ?? []) as { application_id: string; status: string }[]) {
+    const cur = refsByApp.get(r.application_id) ?? { state: "approved", total: 0 };
+    cur.total += 1;
+    if (REF_PRIORITY.indexOf(r.status) < REF_PRIORITY.indexOf(cur.state)) cur.state = r.status;
+    refsByApp.set(r.application_id, cur);
+  }
+
   const { data: staffRaw } = await supabase
     .from("company_users")
     .select("user_id, profiles ( full_name, email )")
@@ -200,6 +215,8 @@ export default async function PipelinePage({
     rtwShareCode: r.rtw_share_code,
     rtwExpiry: r.rtw_expiry,
     rtwHasDoc: !!r.rtw_doc_path,
+    refsState: refsByApp.get(r.id)?.state ?? null,
+    refsTotal: refsByApp.get(r.id)?.total ?? 0,
   }));
 
   return (

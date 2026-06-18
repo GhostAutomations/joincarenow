@@ -55,6 +55,8 @@ export type AppCard = {
   rtwShareCode: string | null;
   rtwExpiry: string | null;
   rtwHasDoc: boolean;
+  refsState: string | null;
+  refsTotal: number;
 };
 
 const STAGES: { key: string; label: string; dot: string }[] = [
@@ -130,6 +132,24 @@ function RtwChip({ verifiedAt, expiry }: { verifiedAt: string | null; expiry: st
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
       RTW: Confirmed
+    </span>
+  );
+}
+
+/** References chip on a pipeline card — most-urgent state across the applicant's referees. */
+const REF_CHIP: Record<string, { label: string; cls: string }> = {
+  rejected: { label: "Info needed", cls: "bg-red-100 text-red-700" },
+  pending: { label: "To request", cls: "bg-slate-100 text-slate-600" },
+  sent: { label: "Awaiting", cls: "bg-blue-100 text-blue-700" },
+  received: { label: "Review", cls: "bg-amber-100 text-amber-700" },
+  approved: { label: "Complete", cls: "bg-green-100 text-green-700" },
+};
+function RefsChip({ state, total }: { state: string | null; total: number }) {
+  if (!state || total === 0) return null;
+  const s = REF_CHIP[state] ?? REF_CHIP.pending;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}>
+      Refs: {s.label}
     </span>
   );
 }
@@ -372,6 +392,7 @@ export function PipelineBoard({
                             resent={a.formResent}
                             total={a.formTotal}
                           />
+                          <RefsChip state={a.refsState} total={a.refsTotal} />
                           <RtwChip verifiedAt={a.rtwVerifiedAt} expiry={a.rtwExpiry} />
                         </div>
                         <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">

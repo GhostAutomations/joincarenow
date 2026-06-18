@@ -11,6 +11,7 @@ export function CvRequest({ applicationId }: { applicationId: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [notify, setNotify] = useState<"email" | "sms" | "none">("email");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -18,12 +19,13 @@ export function CvRequest({ applicationId }: { applicationId: string }) {
   async function send() {
     setBusy(true);
     setError(null);
-    const r = await requestCv(applicationId, message);
+    const r = await requestCv(applicationId, message, notify === "none" ? null : notify);
     setBusy(false);
     if (r?.error) {
       setError(r.error);
       return;
     }
+    if (r?.notifyError) alert(`CV requested, but the notification didn't go: ${r.notifyError}`);
     setSent(true);
     setOpen(false);
     setMessage("");
@@ -66,6 +68,18 @@ export function CvRequest({ applicationId }: { applicationId: string }) {
                 placeholder="e.g. Please upload an up-to-date CV so we can progress your application."
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
+              <label className="mt-3 block">
+                <span className="text-xs font-medium text-gray-600">Notify the applicant by</span>
+                <select
+                  value={notify}
+                  onChange={(e) => setNotify(e.target.value as "email" | "sms" | "none")}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                >
+                  <option value="email">Email</option>
+                  <option value="sms">SMS</option>
+                  <option value="none">Don&apos;t notify (portal only)</option>
+                </select>
+              </label>
               {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             </div>
             <div className="flex items-center justify-end gap-2 border-t border-gray-200 bg-gray-50/70 px-5 py-3">

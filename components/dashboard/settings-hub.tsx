@@ -85,26 +85,24 @@ export function SettingsHub({ sections }: { sections: SettingsSection[] }) {
   }
 
   return (
-    <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="mt-6 grid grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-6">
       {sections.map((s) => {
         const Icon = ICONS[s.key] ?? Building2;
         return (
           <button
             key={s.key}
             onClick={() => setActive(s.key)}
-            className="group flex flex-col items-start gap-3 rounded-2xl border border-white/40 bg-white/70 p-4 text-left shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+            title={s.description}
+            className="group flex flex-col items-center gap-2 rounded-xl border border-white/40 bg-white/70 px-2 py-3 text-center shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
           >
             <span
-              className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-sm ${
+              className={`flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm ${
                 TILE_TINT[s.key] ?? "from-slate-500 to-slate-600"
               }`}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-[18px] w-[18px]" />
             </span>
-            <span>
-              <span className="block text-sm font-semibold text-gray-900">{s.label}</span>
-              <span className="mt-0.5 line-clamp-2 block text-xs text-gray-500">{s.description}</span>
-            </span>
+            <span className="block text-xs font-medium leading-tight text-gray-900">{s.label}</span>
           </button>
         );
       })}

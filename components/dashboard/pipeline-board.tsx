@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useActionState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, X, Phone, Mail, MapPin, CalendarClock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { FileText, X, Phone, Mail, MapPin, CalendarClock, CheckCircle2, AlertTriangle, XCircle, Minus, Car, PersonStanding } from "lucide-react";
 import { changeStage, getCvUrl, getHireChecklist, type HireChecklistItem } from "@/modules/applications/actions";
 import { scheduleInterview, acceptInterviewTime } from "@/modules/interviews/actions";
 import { InterviewSlotPicker, type BookedInterview } from "@/components/dashboard/interview-slot-picker";
@@ -104,50 +104,102 @@ function daysUntil(dateStr: string): number {
   return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
 }
 
-/** Right-to-work chip on a pipeline card: amber "Awaiting" until verified, then
- *  green "Confirmed" — turning amber/red when the recorded expiry is near/past. */
-function RtwChip({ verifiedAt, expiry }: { verifiedAt: string | null; expiry: string | null }) {
-  if (!verifiedAt) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-700">
-        RTW: Awaiting
+/** Hover tooltip, same idea as the dock icons. */
+function Tip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <span className="group relative inline-flex">
+      {children}
+      <span className="pointer-events-none absolute -top-7 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-1.5 py-1 text-[10px] font-medium text-white opacity-0 shadow transition-opacity group-hover:opacity-100">
+        {label}
       </span>
-    );
-  }
-  const d = expiry ? daysUntil(expiry) : null;
-  if (d !== null && d < 0) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-red-100 px-1.5 py-0.5 text-[11px] font-medium text-red-700">
-        RTW: Expired
-      </span>
-    );
-  }
-  if (d !== null && d <= 30) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-700">
-        RTW: Expires {d}d
-      </span>
-    );
-  }
-  // Verified and in date — nothing to flag.
-  return null;
+    </span>
+  );
 }
 
-/** References chip on a pipeline card — most-urgent state across the applicant's referees. */
-const REF_CHIP: Record<string, { label: string; cls: string }> = {
-  rejected: { label: "Info needed", cls: "bg-red-100 text-red-700" },
-  pending: { label: "To request", cls: "bg-slate-100 text-slate-600" },
-  sent: { label: "Awaiting", cls: "bg-blue-100 text-blue-700" },
-  received: { label: "Review", cls: "bg-amber-100 text-amber-700" },
-  approved: { label: "Complete", cls: "bg-green-100 text-green-700" },
-};
-function RefsChip({ state, total }: { state: string | null; total: number }) {
-  if (!state || total === 0) return null;
-  const s = REF_CHIP[state] ?? REF_CHIP.pending;
+type StatusKind = "ok" | "warn" | "bad" | "none";
+function StatusIcon({ kind, label }: { kind: StatusKind; label: string }) {
+  const Icon = kind === "ok" ? CheckCircle2 : kind === "bad" ? XCircle : kind === "warn" ? AlertTriangle : Minus;
+  const cls =
+    kind === "ok" ? "text-green-600" : kind === "bad" ? "text-red-600" : kind === "warn" ? "text-amber-500" : "text-gray-300";
   return (
-    <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[11px] font-medium ${s.cls}`}>
-      Refs: {s.label}
-    </span>
+    <Tip label={label}>
+      <Icon className={`h-4 w-4 ${cls}`} aria-hidden />
+    </Tip>
+  );
+}
+
+function formsStatus(a: AppCard): { kind: StatusKind; label: string } {
+  if (a.formTotal === 0) return { kind: "none", label: "No forms sent" };
+  if (a.formResent > 0) return { kind: "bad", label: `${a.formResent} form(s) need redoing` };
+  if (a.formAwaiting > 0) return { kind: "warn", label: `${a.formAwaiting} form(s) awaiting review` };
+  return { kind: "ok", label: "All forms complete" };
+}
+function refsStatus(a: AppCard): { kind: StatusKind; label: string } {
+  if (!a.refsState || a.refsTotal === 0) return { kind: "none", label: "No references yet" };
+  if (a.refsState === "approved") return { kind: "ok", label: "References complete" };
+  if (a.refsState === "rejected") return { kind: "bad", label: "Reference: more info needed" };
+  return { kind: "warn", label: "References in progress" };
+}
+function rtwStatus(a: AppCard): { kind: StatusKind; label: string } {
+  if (!a.rtwVerifiedAt) return { kind: "warn", label: "Right to work awaiting" };
+  const d = a.rtwExpiry ? daysUntil(a.rtwExpiry) : null;
+  if (d !== null && d < 0) return { kind: "bad", label: "Right to work expired" };
+  if (d !== null && d <= 30) return { kind: "warn", label: `Right to work expires in ${d}d` };
+  return { kind: "ok", label: "Right to work confirmed" };
+}
+
+/** One column of the card status strip. */
+function StatusCol({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title?: string;
+  icon?: typeof MapPin;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col items-center gap-1 px-1 py-1.5">
+      <span className="text-[10px] font-semibold text-gray-700">
+        {Icon ? <Icon className="h-3 w-3" aria-hidden /> : title}
+      </span>
+      <span className="flex h-4 items-center justify-center">{children}</span>
+    </div>
+  );
+}
+
+/** Five-column status strip on a pipeline card: Forms · Refs · RTW · Location · Travel. */
+function CardStatusRow({ a }: { a: AppCard }) {
+  const f = formsStatus(a);
+  const r = refsStatus(a);
+  const w = rtwStatus(a);
+  const t = a.transport?.toLowerCase();
+  return (
+    <div className="mt-2 grid grid-cols-5 divide-x divide-gray-200 rounded-lg border border-gray-200">
+      <StatusCol title="Forms">
+        <StatusIcon kind={f.kind} label={f.label} />
+      </StatusCol>
+      <StatusCol title="Refs">
+        <StatusIcon kind={r.kind} label={r.label} />
+      </StatusCol>
+      <StatusCol title="RTW">
+        <StatusIcon kind={w.kind} label={w.label} />
+      </StatusCol>
+      <StatusCol icon={MapPin}>
+        <span className="block w-full truncate px-0.5 text-center text-[10px] text-gray-700">
+          {a.branch || <span className="text-gray-300">—</span>}
+        </span>
+      </StatusCol>
+      <StatusCol title="Travel">
+        {t === "driver" ? (
+          <Tip label="Driver"><Car className="h-4 w-4 text-gray-600" aria-hidden /></Tip>
+        ) : t === "walker" ? (
+          <Tip label="Walker"><PersonStanding className="h-4 w-4 text-gray-600" aria-hidden /></Tip>
+        ) : (
+          <Tip label="Transport not set"><Minus className="h-4 w-4 text-gray-300" aria-hidden /></Tip>
+        )}
+      </StatusCol>
+    </div>
   );
 }
 
@@ -158,42 +210,6 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
       <p className="text-[11px] uppercase tracking-wide text-gray-400">{label}</p>
       <p className="mt-0.5 text-sm text-gray-800">{children}</p>
     </div>
-  );
-}
-
-/** Compact forms status on a pipeline card:
- *  green tick when every form is complete, an amber count of forms awaiting
- *  review, and a red count of resent forms still outstanding. Completed forms
- *  are not listed individually. Shows nothing if the applicant has no forms. */
-function FormBadge({
-  awaiting,
-  resent,
-  total,
-}: {
-  awaiting: number;
-  resent: number;
-  total: number;
-}) {
-  if (total === 0) return null;
-  // Only flag forms that need attention; a fully-complete set shows no chip.
-  if (resent > 0) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-red-100 px-1.5 py-0.5 text-[11px] font-medium text-red-700">
-        Forms: {resent} resent
-      </span>
-    );
-  }
-  if (awaiting > 0) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-700">
-        Forms: {awaiting} to review
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center rounded-full bg-green-100 px-1.5 py-0.5 text-[11px] font-medium text-green-700">
-      Forms: Complete
-    </span>
   );
 }
 
@@ -375,25 +391,7 @@ export function PipelineBoard({
                           {fullName(a)}
                           <span className="font-normal text-gray-500"> · {a.job_title}</span>
                         </p>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                          {a.branch && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">
-                              <MapPin className="h-2.5 w-2.5" aria-hidden /> {a.branch}
-                            </span>
-                          )}
-                          {a.transport && (
-                            <span className="inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">
-                              {a.transport}
-                            </span>
-                          )}
-                          <FormBadge
-                            awaiting={a.formAwaiting}
-                            resent={a.formResent}
-                            total={a.formTotal}
-                          />
-                          <RefsChip state={a.refsState} total={a.refsTotal} />
-                          <RtwChip verifiedAt={a.rtwVerifiedAt} expiry={a.rtwExpiry} />
-                        </div>
+                        <CardStatusRow a={a} />
                         {a.stage === "interview" && a.interview && (
                           <p className={`mt-2 text-xs font-semibold ${IV_TEXT[a.interview.status] ?? "text-gray-600"}`}>
                             {IV_LABEL[a.interview.status]}

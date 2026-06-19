@@ -364,7 +364,7 @@ export default async function PipelinePage({
           <div className="space-y-4">
             {groups.map((g) => (
               <section key={g.id}>
-                <h2 className="mb-3 text-[1.7rem] font-semibold text-white drop-shadow-sm">{g.title}</h2>
+                <h2 className="mb-px text-[1.7rem] font-semibold text-white drop-shadow-sm">{g.title}</h2>
                 <PipelineBoard
                   initial={g.apps}
                   interviewAddress={interviewAddress}

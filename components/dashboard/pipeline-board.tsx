@@ -279,9 +279,17 @@ export function PipelineBoard({
       if (!document.hidden) router.refresh();
     }, 60000);
 
+    // Background tabs are throttled, so realtime can lag while the board isn't
+    // focused — refresh immediately when the recruiter returns to the tab.
+    const onVisible = () => {
+      if (!document.hidden) router.refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       if (pending) clearTimeout(pending);
       clearInterval(t);
+      document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(channel);
     };
   }, [companyId, router]);

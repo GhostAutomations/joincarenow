@@ -65,10 +65,12 @@ export default async function CompanyCareersPage({
 }) {
   const { company } = await params;
   const [rows, profile] = await Promise.all([loadCareers(company), loadProfile(company)]);
-  if (!rows) notFound();
+  // 404 only if the company genuinely doesn't exist. A company with no published
+  // jobs still renders, showing the "no vacancies" state below.
+  if (!rows && !profile) notFound();
 
-  const companyName = rows[0].company_name;
-  const jobs = rows.filter((r) => r.job_id) as Required<CareersRow>[];
+  const companyName = profile?.name ?? rows?.[0]?.company_name ?? "Careers";
+  const jobs = (rows ?? []).filter((r) => r.job_id) as Required<CareersRow>[];
   const benefits = profile?.benefits ?? [];
   const brand = profile
     ? {
@@ -110,15 +112,17 @@ export default async function CompanyCareersPage({
               open roles below.
             </p>
           )}
-          <div className="mt-6">
-            <a
-              href="#roles"
-              className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-white/90"
-            >
-              See {jobs.length} open {jobs.length === 1 ? "role" : "roles"}
-              <ArrowRight className="h-4 w-4" />
-            </a>
-          </div>
+          {jobs.length > 0 && (
+            <div className="mt-6">
+              <a
+                href="#roles"
+                className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-white/90"
+              >
+                See {jobs.length} open {jobs.length === 1 ? "role" : "roles"}
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+          )}
         </div>
       </header>
 
@@ -154,7 +158,7 @@ export default async function CompanyCareersPage({
 
         {jobs.length === 0 ? (
           <p className="mt-4 rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500">
-            There are no open roles right now — please check back soon.
+            No vacancies at the moment — please check back soon.
           </p>
         ) : (
           <ul className="mt-4 space-y-3">

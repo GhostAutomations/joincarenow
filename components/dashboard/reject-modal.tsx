@@ -11,6 +11,16 @@ const input =
 const TEMPLATES: Record<string, string> = {
   unsuccessful:
     "Hi {{first_name}},\n\nThank you for taking the time to apply to {{company_name}} and for your interest in the role. After careful consideration, we won't be taking your application further on this occasion.\n\nWe wish you all the best in your job search.\n\nKind regards,\n{{company_name}}",
+  experience:
+    "Hi {{first_name}},\n\nThank you for applying to {{company_name}}. On this occasion we've decided to move forward with applicants whose experience more closely matches what the role needs, so we won't be taking your application further.\n\nWe genuinely appreciate your interest and wish you the very best.\n\nKind regards,\n{{company_name}}",
+  interview:
+    "Hi {{first_name}},\n\nThank you for taking the time to meet with us and for your interest in joining {{company_name}}. It was a difficult decision, but on this occasion we won't be progressing your application further.\n\nWe wish you every success in your search.\n\nKind regards,\n{{company_name}}",
+  eligibility:
+    "Hi {{first_name}},\n\nThank you for applying to {{company_name}}. Unfortunately we're unable to progress your application at this stage as we couldn't confirm the eligibility requirements for the role.\n\nIf you believe this is incorrect, please do get in touch.\n\nKind regards,\n{{company_name}}",
+  filled:
+    "Hi {{first_name}},\n\nThank you for your interest in joining {{company_name}}. This position has now been filled, so we won't be progressing your application this time.\n\nWe'd be glad to keep your details on file for future roles — see the link below if you're happy for us to.\n\nKind regards,\n{{company_name}}",
+  unresponsive:
+    "Hi {{first_name}},\n\nWe tried to reach you regarding your application to {{company_name}} but haven't been able to make contact, so we've closed your application for now.\n\nIf you're still interested, please get in touch and we'll be happy to pick things back up.\n\nKind regards,\n{{company_name}}",
   closed:
     "Hi {{first_name}},\n\nThank you for your interest in {{company_name}}. This role has now closed, so we won't be progressing your application this time.\n\nWe'd love to keep your details on file for future opportunities — see the link below if you're happy for us to.\n\nKind regards,\n{{company_name}}",
   custom: "",
@@ -21,7 +31,7 @@ export function RejectModal({ applicationId, onClose }: { applicationId: string;
   const router = useRouter();
   const [reason, setReason] = useState<keyof typeof TEMPLATES>("unsuccessful");
   const [message, setMessage] = useState(TEMPLATES.unsuccessful);
-  const [channel, setChannel] = useState<"email" | "sms" | "both">("both");
+  const [channel, setChannel] = useState<"email" | "sms" | "both">("email");
   const [talentPool, setTalentPool] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +80,11 @@ export function RejectModal({ applicationId, onClose }: { applicationId: string;
                 className={input}
               >
                 <option value="unsuccessful">Unsuccessful this time</option>
+                <option value="experience">Not enough relevant experience</option>
+                <option value="interview">Unsuccessful after interview</option>
+                <option value="eligibility">Right to work / eligibility not met</option>
+                <option value="filled">Position already filled</option>
+                <option value="unresponsive">Couldn’t make contact / unresponsive</option>
                 <option value="closed">Role now closed — offer talent pool</option>
                 <option value="custom">Custom message</option>
               </select>
@@ -98,9 +113,9 @@ export function RejectModal({ applicationId, onClose }: { applicationId: string;
             <label className="block">
               <span className="text-xs font-medium text-gray-600">Send by</span>
               <select value={channel} onChange={(e) => setChannel(e.target.value as "email" | "sms" | "both")} className={input}>
-                <option value="both">Email &amp; SMS</option>
                 <option value="email">Email</option>
                 <option value="sms">SMS</option>
+                <option value="both">Email &amp; SMS</option>
               </select>
             </label>
 

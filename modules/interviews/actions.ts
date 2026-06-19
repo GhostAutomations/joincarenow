@@ -224,8 +224,18 @@ async function sendInterviewInvite(
           .eq("user_id", ivMeta.interviewer_id)
           .maybeSingle();
         const p = m?.profiles as unknown as { full_name: string | null; email: string | null } | null;
-        const interviewerEmail = p?.email ?? null;
+        let interviewerEmail = p?.email ?? null;
         const interviewerName = p?.full_name ?? null;
+        // profiles.email is often blank for staff — fall back to their auth email.
+        if (!interviewerEmail) {
+          try {
+            const admin = createAdminClient();
+            const { data: au } = await admin.auth.admin.getUserById(ivMeta.interviewer_id);
+            interviewerEmail = au?.user?.email ?? null;
+          } catch {
+            /* ignore */
+          }
+        }
         if (interviewerEmail) {
           const interviewerEvent: CalEvent = {
             ...baseEvent,
@@ -245,12 +255,14 @@ async function sendInterviewInvite(
             (ap?.email ? `Candidate email: ${ap.email}\n` : "") +
             (ap?.phone ? `Candidate phone: ${ap.phone}\n` : "") +
             calBlock(il.google, il.outlook);
-          await sendEmail({
+          const subj = `Interview scheduled: ${applicantName} — ${jobTitle}`;
+          const r = await sendEmail({
             to: interviewerEmail,
-            subject: `Interview scheduled: ${applicantName} — ${jobTitle}`,
+            subject: subj,
             text: interviewerBody,
             attachments: [{ filename: "interview.ics", content: interviewerIcs }],
           });
+          await log("email", interviewerEmail, `[Interviewer] ${subj}`, interviewerBody, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);
         }
       }
     } catch {

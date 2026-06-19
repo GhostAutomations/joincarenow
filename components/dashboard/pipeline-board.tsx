@@ -11,6 +11,7 @@ import { ApplicantForms } from "@/components/dashboard/applicant-forms";
 import { CvRequest } from "@/components/dashboard/cv-request";
 import { RightToWork } from "@/components/dashboard/right-to-work";
 import { OfferModal } from "@/components/dashboard/offer-modal";
+import { RejectModal } from "@/components/dashboard/reject-modal";
 import { getOffer, type OfferInfo } from "@/modules/offers/actions";
 import { createClient } from "@/lib/supabase/client";
 import { formatLondon, londonToUtcIso } from "@/lib/time";
@@ -245,6 +246,7 @@ export function PipelineBoard({
   const [hireId, setHireId] = useState<string | null>(null);
   // Make-an-offer popup: holds the applicant being offered.
   const [offerId, setOfferId] = useState<string | null>(null);
+  const [rejectId, setRejectId] = useState<string | null>(null);
 
   // Keep local state in sync when the server data refreshes.
   useEffect(() => setApps(initial), [initial]);
@@ -301,6 +303,11 @@ export function PipelineBoard({
     // Moving into Hired requires a confirmation that reviews the workflow.
     if (stage === "hired" && prevStage !== "hired") {
       setHireId(id);
+      return;
+    }
+    // Moving into Not Progressing opens the rejection popup (the send sets the stage).
+    if (stage === "rejected" && prevStage !== "rejected") {
+      setRejectId(id);
       return;
     }
     setApps((prev) => prev.map((a) => (a.id === id ? { ...a, stage } : a)));
@@ -505,6 +512,10 @@ export function PipelineBoard({
           defaultPay={apps.find((a) => a.id === offerId)?.salary ?? ""}
           onClose={() => setOfferId(null)}
         />
+      )}
+
+      {rejectId && (
+        <RejectModal applicationId={rejectId} onClose={() => setRejectId(null)} />
       )}
     </div>
   );

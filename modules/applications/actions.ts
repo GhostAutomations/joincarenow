@@ -4,6 +4,69 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncEmployeeToCarerAcademy } from "@/lib/integrations/carer-academy";
+import { notifyApplicant } from "@/modules/comms/actions";
+
+const BASE_URL = "https://www.joincarenow.com";
+
+/** Move an applicant to Not Progressing and send them a rejection reply. The
+ *  email can include a talent-pool opt-in link. Message supports merge fields. */
+export async function sendRejection(
+  formData: FormData
+): Promise<{ ok?: boolean; error?: string }> {
+  const applicationId = formData.get("applicationId")?.toString();
+  const message = formData.get("message")?.toString().trim() ?? "";
+  const channel = (formData.get("channel")?.toString() ?? "both") as "email" | "sms" | "both";
+  const talentPool = formData.get("talentPool") === "on";
+  if (!applicationId) return { error: "Missing application" };
+  if (message.length < 2) return { error: "Add a short message before sending." };
+
+  const supabase = await createClient();
+  const token = talentPool ? crypto.randomUUID() : null;
+
+  const { error } = await supabase
+    .from("applications")
+    .update({ stage: "rejected", ...(token ? { talent_pool_token: token } : {}) })
+    .eq("id", applicationId);
+  if (error) return { error: "Could not update the applicant. Please try again." };
+
+  const emailBody =
+    talentPool && token
+      ? `${message}\n\nWe'd love to keep your details for future roles. If you're happy for us to, join our talent pool here (you can ask to be removed any time):\n${BASE_URL}/talent-pool/${token}`
+      : message;
+
+  if (channel === "email" || channel === "both") {
+    await notifyApplicant({ applicationId, channel: "email", subject: "Update on your application", body: emailBody });
+  }
+  if (channel === "sms" || channel === "both") {
+    await notifyApplicant({ applicationId, channel: "sms", subject: "Update on your application", body: message });
+  }
+
+  revalidatePath("/pipeline");
+  return { ok: true };
+}
+
+export type TalentPoolInvite = { companyName: string; firstName: string | null; opted: boolean };
+
+/** Public (no login): details for the talent-pool opt-in page. */
+export async function getTalentPoolInvite(token: string): Promise<TalentPoolInvite | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("get_talent_pool_invite", { p_token: token });
+  const row = (data as Record<string, unknown>[] | null)?.[0];
+  if (!row) return null;
+  return {
+    companyName: (row.company_name as string) ?? "The team",
+    firstName: (row.first_name as string) ?? null,
+    opted: !!row.opted,
+  };
+}
+
+/** Public (no login): record talent-pool consent via the rejection link token. */
+export async function consentTalentPool(token: string): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("consent_talent_pool_by_token", { p_token: token });
+  if (error) return { error: error.message || "Could not record your choice." };
+  return { ok: true };
+}
 
 const STAGES = [
   "applied",

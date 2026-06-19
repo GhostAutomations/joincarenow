@@ -79,6 +79,59 @@ export async function getOffer(applicationId: string): Promise<OfferInfo | null>
   };
 }
 
+export type OfferDocOptions = {
+  contracts: { id: string; name: string }[];
+  policies: { id: string; name: string }[];
+  contractId: string | null;
+  policyIds: string[];
+};
+
+/** Contract/policy options for the offer popup: the company's available docs,
+ *  plus the defaults to pre-select (a previous offer's set if reissuing, else the
+ *  job's assigned set). */
+export async function getOfferDocOptions(applicationId: string): Promise<OfferDocOptions> {
+  const { supabase, current } = await requireCompany();
+
+  const [{ data: contracts }, { data: policies }, { data: app }] = await Promise.all([
+    supabase.from("contract_templates").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("policy_documents").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("applications").select("job_id").eq("id", applicationId).eq("company_id", current.company_id).maybeSingle(),
+  ]);
+
+  // Default from the most recent offer if there is one (reissue), else the job.
+  const { data: prevOffer } = await supabase
+    .from("offers")
+    .select("id, contract_template_id")
+    .eq("application_id", applicationId)
+    .eq("company_id", current.company_id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let contractId: string | null = null;
+  let policyIds: string[] = [];
+
+  if (prevOffer?.id) {
+    contractId = (prevOffer.contract_template_id as string) ?? null;
+    const { data: op } = await supabase.from("offer_policies").select("policy_id").eq("offer_id", prevOffer.id);
+    policyIds = (op ?? []).map((r) => r.policy_id as string);
+  } else if (app?.job_id) {
+    const [{ data: job }, { data: jp }] = await Promise.all([
+      supabase.from("jobs").select("contract_template_id").eq("id", app.job_id).maybeSingle(),
+      supabase.from("job_policies").select("policy_id").eq("job_id", app.job_id),
+    ]);
+    contractId = (job?.contract_template_id as string) ?? null;
+    policyIds = (jp ?? []).map((r) => r.policy_id as string);
+  }
+
+  return {
+    contracts: (contracts ?? []) as { id: string; name: string }[],
+    policies: (policies ?? []) as { id: string; name: string }[],
+    contractId,
+    policyIds,
+  };
+}
+
 /** Create + send an offer. Emails the applicant a secure accept/decline link and
  *  logs it to their Conversation. */
 export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; error?: string }> {
@@ -102,17 +155,10 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
     .single();
   if (!app?.applicant_id) return { error: "Application not found" };
 
-  // Attach the job's contract + policies so the applicant signs them on accept.
-  let contractTemplateId: string | null = null;
-  let policyIds: string[] = [];
-  if (app.job_id) {
-    const [{ data: job }, { data: jobPolicies }] = await Promise.all([
-      supabase.from("jobs").select("contract_template_id").eq("id", app.job_id).maybeSingle(),
-      supabase.from("job_policies").select("policy_id").eq("job_id", app.job_id),
-    ]);
-    contractTemplateId = (job?.contract_template_id as string) ?? null;
-    policyIds = (jobPolicies ?? []).map((r) => r.policy_id as string);
-  }
+  // Contract + policies to attach for signing — taken from the offer popup
+  // (which pre-selects the job's set but lets the recruiter adjust).
+  const contractTemplateId = formData.get("contract_template_id")?.toString() || null;
+  const policyIds = formData.getAll("policy_ids").map(String).filter(Boolean);
 
   const { data: offer, error } = await supabase
     .from("offers")

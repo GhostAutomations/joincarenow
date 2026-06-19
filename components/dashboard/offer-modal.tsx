@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Send } from "lucide-react";
-import { sendOffer, getOffer, type OfferInfo } from "@/modules/offers/actions";
+import { sendOffer, getOffer, getOfferDocOptions, type OfferInfo, type OfferDocOptions } from "@/modules/offers/actions";
 
 const input =
   "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -25,12 +25,20 @@ export function OfferModal({
   const [conditional, setConditional] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [docOpts, setDocOpts] = useState<OfferDocOptions | null>(null);
+  const [contractId, setContractId] = useState("");
+  const [policyIds, setPolicyIds] = useState<string[]>([]);
 
   // Pre-fill from the existing offer so a reissue only needs the correction.
   useEffect(() => {
     getOffer(applicationId).then((o) => {
       setPrev(o);
       if (o?.conditional) setConditional(true);
+    });
+    getOfferDocOptions(applicationId).then((o) => {
+      setDocOpts(o);
+      setContractId(o.contractId ?? "");
+      setPolicyIds(o.policyIds);
     });
   }, [applicationId]);
 
@@ -111,6 +119,58 @@ export function OfferModal({
               <span className="text-xs font-medium text-gray-600">Message to the applicant <span className="font-normal text-gray-400">(optional)</span></span>
               <textarea name="message" rows={3} defaultValue={p?.message ?? ""} placeholder="A short personal note to go with the offer…" className={input} />
             </label>
+
+            {/* Contract + policies the applicant will sign on accepting. */}
+            {docOpts && (docOpts.contracts.length > 0 || docOpts.policies.length > 0) && (
+              <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
+                <p className="text-xs font-medium text-gray-700">To sign on acceptance</p>
+                {docOpts.contracts.length > 0 && (
+                  <label className="mt-2 block">
+                    <span className="text-xs text-gray-500">Contract</span>
+                    <select
+                      name="contract_template_id"
+                      value={contractId}
+                      onChange={(e) => setContractId(e.target.value)}
+                      className={input}
+                    >
+                      <option value="">No contract</option>
+                      {docOpts.contracts.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {docOpts.policies.length > 0 && (
+                  <div className="mt-2">
+                    <span className="text-xs text-gray-500">Policies</span>
+                    <div className="mt-1 space-y-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                      {docOpts.policies.map((pol) => (
+                        <label key={pol.id} className="flex items-center gap-2 text-sm text-gray-700">
+                          <input
+                            type="checkbox"
+                            name="policy_ids"
+                            value={pol.id}
+                            checked={policyIds.includes(pol.id)}
+                            onChange={(e) =>
+                              setPolicyIds((prevIds) =>
+                                e.target.checked
+                                  ? [...prevIds, pol.id]
+                                  : prevIds.filter((id) => id !== pol.id)
+                              )
+                            }
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          {pol.name}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p className="mt-2 text-[11px] text-gray-400">
+                  Pre-selected from the job — adjust if needed. The applicant signs these when they accept.
+                </p>
+              </div>
+            )}
 
             {error && <p className="text-sm text-red-600">{error}</p>}
 

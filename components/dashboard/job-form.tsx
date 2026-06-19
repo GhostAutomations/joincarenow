@@ -55,6 +55,9 @@ export function JobForm({
 }) {
   const [state, formAction] = useActionState<JobState, FormData>(action, undefined);
 
+  // Save stays disabled until something actually changes.
+  const [dirty, setDirty] = useState(false);
+
   // Controlled so the chosen value stays put after save (an uncontrolled select
   // visually snaps back to "No contract" on the post-save re-render).
   const [contractId, setContractId] = useState(defaults?.contract_template_id ?? "");
@@ -67,7 +70,11 @@ export function JobForm({
   const [wfTouched, setWfTouched] = useState(false);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form
+      action={formAction}
+      onChange={() => setDirty(true)}
+      className="space-y-5"
+    >
       <FormError error={state?.error} />
       {defaults?.id && <input type="hidden" name="id" value={defaults.id} />}
 
@@ -289,7 +296,7 @@ export function JobForm({
           {policies.length === 0 ? (
             <p className="mt-1 text-xs text-gray-500">Build policy documents in Settings first.</p>
           ) : (
-            <PolicyMultiSelect policies={policies} defaultSelected={defaults?.policy_ids ?? []} />
+            <PolicyMultiSelect policies={policies} defaultSelected={defaults?.policy_ids ?? []} onChange={() => setDirty(true)} />
           )}
           <p className="mt-1 text-xs text-gray-500">
             The applicant acknowledges each selected policy when they accept.
@@ -298,7 +305,7 @@ export function JobForm({
       </div>
 
       <div className="sm:w-48">
-        <SubmitButton>{submitLabel}</SubmitButton>
+        <SubmitButton disabled={!dirty}>{submitLabel}</SubmitButton>
       </div>
     </form>
   );
@@ -309,9 +316,11 @@ export function JobForm({
 function PolicyMultiSelect({
   policies,
   defaultSelected,
+  onChange,
 }: {
   policies: { id: string; name: string }[];
   defaultSelected: string[];
+  onChange?: () => void;
 }) {
   const [selected, setSelected] = useState<string[]>(defaultSelected);
   const [open, setOpen] = useState(false);
@@ -326,9 +335,11 @@ function PolicyMultiSelect({
 
   function toggle(id: string) {
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+    onChange?.();
   }
   function toggleAll() {
     setSelected(allSelected ? [] : policies.map((p) => p.id));
+    onChange?.();
   }
 
   return (

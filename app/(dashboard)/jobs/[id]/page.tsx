@@ -127,7 +127,7 @@ export default async function EditJobPage({
           )}
         </div>
         {job.status === "published" && (
-          <p className="mt-2 text-xs text-white/80">
+          <p className="mt-2 text-xs text-gray-500">
             Public link: joincarenow.com{careersUrl}
           </p>
         )}

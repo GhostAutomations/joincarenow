@@ -54,7 +54,7 @@ export default async function PipelinePage({
         .select("id, title, status, branches(name)")
         .eq("company_id", current.company_id)
         .in("status", ["published", "closed"])
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: true }),
       supabase.from("applications").select("job_id, stage").eq("company_id", current.company_id),
     ]);
 
@@ -84,18 +84,18 @@ export default async function PipelinePage({
             No live jobs yet. Publish a job to start receiving applicants.
           </p>
         ) : (
-          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto mt-6 max-w-xl space-y-2">
             {jobs.map((j) => (
               <Link
                 key={j.id}
                 href={`/pipeline?job=${j.id}`}
-                className="group flex items-center gap-3 rounded-2xl border border-white/40 bg-white/80 p-4 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+                className="group flex items-center gap-3 rounded-xl border border-white/40 bg-white/80 px-3 py-2.5 shadow-sm backdrop-blur-sm transition hover:bg-white hover:shadow-md"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
-                  <Briefcase className="h-5 w-5" />
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
+                  <Briefcase className="h-4 w-4" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-gray-900">{j.title}</span>
+                  <span className="block truncate text-sm font-medium text-gray-900">{j.title}</span>
                   <span className="block text-xs text-gray-500">
                     {j.branch ? `${j.branch} · ` : ""}
                     {j.active} in pipeline{j.hired ? ` · ${j.hired} hired` : ""}

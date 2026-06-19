@@ -102,15 +102,17 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
         </div>
       )}
 
-      {interview.status === "proposed" && mode === "none" && (
+      {(interview.status === "proposed" || interview.status === "confirmed") && mode === "none" && (
         <div className="mt-3 flex flex-wrap gap-2">
-          <form action={respondToInterview}>
-            <input type="hidden" name="interviewId" value={interview.interview_id} />
-            <input type="hidden" name="response" value="confirmed" />
-            <button className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700">
-              Confirm
-            </button>
-          </form>
+          {interview.status === "proposed" && (
+            <form action={respondToInterview}>
+              <input type="hidden" name="interviewId" value={interview.interview_id} />
+              <input type="hidden" name="response" value="confirmed" />
+              <button className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700">
+                Confirm
+              </button>
+            </form>
+          )}
           <button
             onClick={() => setMode("reschedule")}
             className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100"
@@ -121,13 +123,13 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
             <input type="hidden" name="interviewId" value={interview.interview_id} />
             <input type="hidden" name="response" value="declined" />
             <button className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100">
-              No longer interested
+              {interview.status === "confirmed" ? "Cancel interview" : "No longer interested"}
             </button>
           </form>
         </div>
       )}
 
-      {interview.status === "proposed" && mode === "reschedule" && (
+      {(interview.status === "proposed" || interview.status === "confirmed") && mode === "reschedule" && (
         <form action={respondToInterview} className="mt-3 space-y-2">
           <input type="hidden" name="interviewId" value={interview.interview_id} />
           <input type="hidden" name="response" value="reschedule_requested" />

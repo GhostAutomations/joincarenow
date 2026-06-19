@@ -45,10 +45,12 @@ export function OfferRespond({
     setError(null);
     if (documents.length > 0) {
       setDocSigns(
-        documents.map(() => ({
+        documents.map((d) => ({
           open: false,
           agreed: false,
-          name: signerDefaultName,
+          // Type-to-sign: applicant types their own name. Draw-to-sign: pre-fill
+          // the name for the "Signing as" guide.
+          name: d.signatureMethod === "draw" ? signerDefaultName : "",
           image: "",
         }))
       );
@@ -60,6 +62,14 @@ export function OfferRespond({
 
   function updateDoc(i: number, patch: Partial<DocSign>) {
     setDocSigns((prev) => prev.map((d, idx) => (idx === i ? { ...d, ...patch } : d)));
+  }
+
+  // Accordion: opening a document collapses the others (keeps the screen tidy,
+  // so the one you just signed closes when you open the next).
+  function toggleOpen(i: number) {
+    setDocSigns((prev) =>
+      prev.map((d, idx) => (idx === i ? { ...d, open: !d.open } : { ...d, open: false }))
+    );
   }
 
   function docDone(i: number): boolean {
@@ -167,7 +177,7 @@ export function OfferRespond({
               <div key={`${d.docType}-${d.sourceId ?? i}`} className="rounded-xl border border-gray-200">
                 <button
                   type="button"
-                  onClick={() => updateDoc(i, { open: !s?.open })}
+                  onClick={() => toggleOpen(i)}
                   className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
                 >
                   {done ? (

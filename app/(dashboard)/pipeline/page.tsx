@@ -361,10 +361,10 @@ export default async function PipelinePage({
         {groups.length === 0 ? (
           <p className="text-sm text-white/80">No applicants yet.</p>
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-4">
             {groups.map((g) => (
               <section key={g.id}>
-                <h2 className="mb-3 text-lg font-semibold text-white drop-shadow-sm">{g.title}</h2>
+                <h2 className="mb-3 text-[1.7rem] font-semibold text-white drop-shadow-sm">{g.title}</h2>
                 <PipelineBoard
                   initial={g.apps}
                   interviewAddress={interviewAddress}

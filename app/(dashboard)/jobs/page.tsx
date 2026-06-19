@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Plus, Archive } from "lucide-react";
+import { Plus } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
 import { reopenJob } from "@/modules/jobs/actions";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -96,40 +97,34 @@ export default async function JobsPage() {
       )}
 
       {archived.length > 0 && (
-        <details className="mt-8 group">
-          <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium text-white/80 hover:text-white">
-            <Archive className="h-4 w-4" aria-hidden />
-            Archived jobs ({archived.length})
-          </summary>
-          <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
-            <table className="min-w-full divide-y divide-gray-100 text-sm">
-              <tbody className="divide-y divide-gray-100">
-                {archived.map((j) => {
-                  const count =
-                    (j.applications as unknown as { count: number }[] | null)?.[0]?.count ?? 0;
-                  return (
-                    <tr key={j.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">
-                        <Link href={`/jobs/${j.id}`} className="hover:text-brand-700">
-                          {j.title}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">{count} applicant{count === 1 ? "" : "s"}</td>
-                      <td className="px-4 py-3 text-right">
-                        <form action={reopenJob}>
-                          <input type="hidden" name="id" value={j.id} />
-                          <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">
-                            Reopen
-                          </button>
-                        </form>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </details>
+        <div className="mt-6">
+          <CollapsibleSection title="Archived jobs" count={archived.length}>
+            <ul className="divide-y divide-slate-100">
+              {archived.map((j) => {
+                const count =
+                  (j.applications as unknown as { count: number }[] | null)?.[0]?.count ?? 0;
+                return (
+                  <li key={j.id} className="flex items-center justify-between gap-4 px-1 py-2.5">
+                    <div className="min-w-0">
+                      <Link href={`/jobs/${j.id}`} className="font-medium text-gray-900 hover:text-brand-700">
+                        {j.title}
+                      </Link>
+                      <p className="text-xs text-gray-500">
+                        {count} applicant{count === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                    <form action={reopenJob}>
+                      <input type="hidden" name="id" value={j.id} />
+                      <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">
+                        Reopen
+                      </button>
+                    </form>
+                  </li>
+                );
+              })}
+            </ul>
+          </CollapsibleSection>
+        </div>
       )}
     </div>
   );

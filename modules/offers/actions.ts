@@ -85,6 +85,8 @@ export type OfferDocOptions = {
   policies: { id: string; name: string }[];
   contractId: string | null;
   policyIds: string[];
+  managers: { id: string; name: string }[];
+  managerId: string | null;
 };
 
 /** Contract/policy options for the offer popup: the company's available docs,
@@ -93,11 +95,21 @@ export type OfferDocOptions = {
 export async function getOfferDocOptions(applicationId: string): Promise<OfferDocOptions> {
   const { supabase, current } = await requireCompany();
 
-  const [{ data: contracts }, { data: policies }, { data: app }] = await Promise.all([
+  const [{ data: contracts }, { data: policies }, { data: app }, { data: staffRaw }] = await Promise.all([
     supabase.from("contract_templates").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("policy_documents").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("applications").select("job_id").eq("id", applicationId).eq("company_id", current.company_id).maybeSingle(),
+    supabase
+      .from("company_users")
+      .select("user_id, role, profiles ( full_name, email )")
+      .eq("company_id", current.company_id)
+      .in("role", ["admin", "manager"]),
   ]);
+
+  const managers = (staffRaw ?? []).map((m) => {
+    const p = m.profiles as unknown as { full_name: string | null; email: string } | null;
+    return { id: m.user_id as string, name: p?.full_name || p?.email || "Team member" };
+  });
 
   // Default from the job's assigned contract + policies.
   let contractId: string | null = null;
@@ -116,6 +128,8 @@ export async function getOfferDocOptions(applicationId: string): Promise<OfferDo
     policies: (policies ?? []) as { id: string; name: string }[],
     contractId,
     policyIds,
+    managers,
+    managerId: null,
   };
 }
 
@@ -146,6 +160,7 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
   // (which pre-selects the job's set but lets the recruiter adjust).
   const contractTemplateId = formData.get("contract_template_id")?.toString() || null;
   const policyIds = formData.getAll("policy_ids").map(String).filter(Boolean);
+  const managerId = formData.get("manager_id")?.toString() || null;
 
   const { data: offer, error } = await supabase
     .from("offers")
@@ -161,6 +176,7 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
       conditions,
       message,
       contract_template_id: contractTemplateId,
+      manager_id: managerId,
       status: "sent",
       created_by: user.id,
     })

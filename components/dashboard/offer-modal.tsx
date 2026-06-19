@@ -28,6 +28,7 @@ export function OfferModal({
   const [docOpts, setDocOpts] = useState<OfferDocOptions | null>(null);
   const [contractId, setContractId] = useState("");
   const [policyIds, setPolicyIds] = useState<string[]>([]);
+  const [managerId, setManagerId] = useState("");
 
   // Pre-fill from the existing offer so a reissue only needs the correction.
   useEffect(() => {
@@ -39,6 +40,7 @@ export function OfferModal({
       setDocOpts(o);
       setContractId(o.contractId ?? "");
       setPolicyIds(o.policyIds);
+      setManagerId(o.managerId ?? "");
     });
   }, [applicationId]);
 
@@ -95,6 +97,21 @@ export function OfferModal({
               <label className="block">
                 <span className="text-xs font-medium text-gray-600">Hours</span>
                 <input name="hours" defaultValue={p?.hours ?? ""} placeholder="e.g. Full-time, 37.5/wk" className={input} />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="text-xs font-medium text-gray-600">Manager</span>
+                <select
+                  name="manager_id"
+                  value={managerId}
+                  onChange={(e) => setManagerId(e.target.value)}
+                  className={input}
+                >
+                  <option value="">No manager</option>
+                  {(docOpts?.managers ?? []).map((m) => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+                <span className="mt-1 block text-[11px] text-gray-400">Who they&apos;ll report to — set on their employee record &amp; sent to Carer.Academy.</span>
               </label>
             </div>
 

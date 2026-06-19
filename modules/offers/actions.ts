@@ -2,10 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { requireCompany } from "@/modules/auth/queries";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { notifyApplicant } from "@/modules/comms/actions";
+import { renderMergeFields } from "@/lib/comms/send";
 
 const BASE_URL = "https://www.joincarenow.com";
+
+/** A contract/policy ready to display + sign, with merge fields already filled. */
+export type SignableDoc = {
+  docType: "contract" | "policy";
+  sourceId: string | null;
+  title: string;
+  body: string;
+  version: number | null;
+};
 
 export type OfferInfo = {
   id: string;
@@ -85,11 +96,23 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
 
   const { data: app } = await supabase
     .from("applications")
-    .select("applicant_id")
+    .select("applicant_id, job_id")
     .eq("id", applicationId)
     .eq("company_id", current.company_id)
     .single();
   if (!app?.applicant_id) return { error: "Application not found" };
+
+  // Attach the job's contract + policies so the applicant signs them on accept.
+  let contractTemplateId: string | null = null;
+  let policyIds: string[] = [];
+  if (app.job_id) {
+    const [{ data: job }, { data: jobPolicies }] = await Promise.all([
+      supabase.from("jobs").select("contract_template_id").eq("id", app.job_id).maybeSingle(),
+      supabase.from("job_policies").select("policy_id").eq("job_id", app.job_id),
+    ]);
+    contractTemplateId = (job?.contract_template_id as string) ?? null;
+    policyIds = (jobPolicies ?? []).map((r) => r.policy_id as string);
+  }
 
   const { data: offer, error } = await supabase
     .from("offers")
@@ -104,12 +127,19 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
       conditional,
       conditions,
       message,
+      contract_template_id: contractTemplateId,
       status: "sent",
       created_by: user.id,
     })
     .select("id, token")
     .single();
   if (error || !offer) return { error: "Could not create the offer. Please try again." };
+
+  if (policyIds.length > 0) {
+    await supabase
+      .from("offer_policies")
+      .insert(policyIds.map((policy_id) => ({ offer_id: offer.id, policy_id })));
+  }
 
   // Email the applicant via the shared notify path (builds merge context + logs
   // to Conversation), with merge tokens for name/company/role.
@@ -163,5 +193,93 @@ export async function respondToOffer(
     p_talent_pool: opts?.talentPool ?? false,
   });
   if (error) return { error: error.message || "Could not record your response." };
+  return { ok: true };
+}
+
+/** Build the merge context + render a doc body for an offer's token row. */
+function mergeContextFromOfferRow(row: Record<string, unknown>): Record<string, string> {
+  const startDate = row.start_date as string | null;
+  return {
+    first_name: (row.first_name as string) ?? "",
+    last_name: (row.last_name as string) ?? "",
+    job_title: (row.job_title as string) ?? "",
+    role: (row.role as string) ?? (row.job_title as string) ?? "",
+    pay: (row.pay as string) ?? "",
+    hours: (row.hours as string) ?? "",
+    start_date: startDate ? new Date(startDate).toLocaleDateString("en-GB") : "",
+    company_name: (row.company_name as string) ?? "",
+    conditions: (row.conditions as string) ?? "",
+  };
+}
+
+/** Public (no login): the contract + policies attached to an offer, with merge
+ *  fields filled in, ready to display and sign. */
+export async function loadSignableDocs(token: string): Promise<SignableDoc[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("get_offer_by_token", { p_token: token });
+  const row = (data as Record<string, unknown>[] | null)?.[0];
+  if (!row) return [];
+
+  const ctx = mergeContextFromOfferRow(row);
+  const docs: SignableDoc[] = [];
+
+  if (row.contract_id && row.contract_body) {
+    docs.push({
+      docType: "contract",
+      sourceId: row.contract_id as string,
+      title: (row.contract_name as string) ?? "Employment contract",
+      body: renderMergeFields(row.contract_body as string, ctx),
+      version: (row.contract_version as number) ?? null,
+    });
+  }
+
+  const policies = (row.policies as { id: string; name: string; body: string; version: number }[] | null) ?? [];
+  for (const p of policies) {
+    docs.push({
+      docType: "policy",
+      sourceId: p.id,
+      title: p.name,
+      body: renderMergeFields(p.body ?? "", ctx),
+      version: p.version ?? null,
+    });
+  }
+  return docs;
+}
+
+/** Public (no login): accept an offer by signing the attached documents. Records
+ *  an immutable snapshot of exactly what was agreed, then completes the hire. */
+export async function signAndAcceptOffer(
+  token: string,
+  signerName: string
+): Promise<{ ok?: boolean; error?: string }> {
+  const name = signerName.trim();
+  if (name.length < 2) return { error: "Please type your full name to sign." };
+
+  // Re-render the docs server-side (don't trust client-sent text) for the snapshot.
+  const docs = await loadSignableDocs(token);
+  const payload = docs.map((d) => ({
+    doc_type: d.docType,
+    source_id: d.sourceId,
+    title: d.title,
+    body: d.body,
+    version: d.version,
+  }));
+
+  let ip: string | null = null;
+  try {
+    const h = await headers();
+    ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
+  } catch {
+    ip = null;
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("sign_and_accept_offer", {
+    p_token: token,
+    p_signer_name: name,
+    p_docs: payload,
+    p_ip: ip,
+  });
+  if (error) return { error: error.message || "Could not record your signature." };
   return { ok: true };
 }

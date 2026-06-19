@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, X } from "lucide-react";
-import { respondToOffer } from "@/modules/offers/actions";
+import { CheckCircle2, X, FileText } from "lucide-react";
+import { respondToOffer, signAndAcceptOffer, type SignableDoc } from "@/modules/offers/actions";
 
 export type TokenOffer = {
   token: string;
@@ -19,7 +19,13 @@ export type TokenOffer = {
   firstName: string | null;
 };
 
-export function OfferRespond({ offer }: { offer: TokenOffer }) {
+export function OfferRespond({
+  offer,
+  documents = [],
+}: {
+  offer: TokenOffer;
+  documents?: SignableDoc[];
+}) {
   const [status, setStatus] = useState(offer.status);
   const [busy, setBusy] = useState<"accepted" | "declined" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +33,20 @@ export function OfferRespond({ offer }: { offer: TokenOffer }) {
   const [reason, setReason] = useState("");
   const [talentPool, setTalentPool] = useState(true);
   const [declinedWithPool, setDeclinedWithPool] = useState(false);
+  const [signing, setSigning] = useState(false);
+  const [signerName, setSignerName] = useState("");
+  const [agreed, setAgreed] = useState<boolean[]>([]);
+
+  function startAccept() {
+    setError(null);
+    if (documents.length > 0) {
+      setAgreed(documents.map(() => false));
+      setSignerName("");
+      setSigning(true);
+    } else {
+      void accept();
+    }
+  }
 
   async function accept() {
     setBusy("accepted");
@@ -39,6 +59,23 @@ export function OfferRespond({ offer }: { offer: TokenOffer }) {
     }
     setStatus("accepted");
   }
+
+  async function signAndAccept() {
+    setBusy("accepted");
+    setError(null);
+    const res = await signAndAcceptOffer(offer.token, signerName);
+    setBusy(null);
+    if (res?.error) {
+      setError(res.error);
+      return;
+    }
+    setSigning(false);
+    setStatus("accepted");
+  }
+
+  const allAgreed =
+    documents.length > 0 && agreed.length === documents.length && agreed.every(Boolean);
+  const canSign = allAgreed && signerName.trim().length >= 2;
 
   async function confirmDecline() {
     setBusy("declined");
@@ -94,6 +131,71 @@ export function OfferRespond({ offer }: { offer: TokenOffer }) {
             </p>
           )}
         </div>
+      ) : signing ? (
+        <div className="mt-5 space-y-4">
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <p className="text-sm text-gray-700">
+            Before you start, please read and agree to the following. Type your full name at the
+            bottom to sign — this is your electronic signature.
+          </p>
+
+          {documents.map((d, i) => (
+            <div key={`${d.docType}-${d.sourceId ?? i}`} className="rounded-xl border border-gray-200">
+              <div className="flex items-center gap-2 border-b border-gray-100 px-3 py-2">
+                <FileText className="h-4 w-4 text-gray-400" />
+                <span className="text-sm font-medium text-gray-900">{d.title}</span>
+                <span className="ml-auto text-[11px] uppercase tracking-wide text-gray-400">
+                  {d.docType === "contract" ? "Contract" : "Policy"}
+                </span>
+              </div>
+              <div className="max-h-64 overflow-y-auto whitespace-pre-wrap px-3 py-2 text-xs leading-relaxed text-gray-700">
+                {d.body}
+              </div>
+              <label className="flex items-start gap-2 border-t border-gray-100 px-3 py-2.5 text-sm text-gray-800">
+                <input
+                  type="checkbox"
+                  checked={agreed[i] ?? false}
+                  onChange={(e) =>
+                    setAgreed((prev) => prev.map((v, idx) => (idx === i ? e.target.checked : v)))
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300"
+                />
+                <span>
+                  {d.docType === "contract"
+                    ? "I have read and agree to this contract."
+                    : "I have read and understood this policy."}
+                </span>
+              </label>
+            </div>
+          ))}
+
+          <label className="block">
+            <span className="text-xs font-medium text-gray-600">Type your full name to sign</span>
+            <input
+              value={signerName}
+              onChange={(e) => setSignerName(e.target.value)}
+              placeholder="e.g. Jane Smith"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+          </label>
+
+          <div className="flex flex-wrap gap-3 pt-1">
+            <button
+              onClick={signAndAccept}
+              disabled={!canSign || busy !== null}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-60"
+            >
+              <CheckCircle2 className="h-4 w-4" /> {busy === "accepted" ? "Signing…" : "Sign & accept offer"}
+            </button>
+            <button
+              onClick={() => setSigning(false)}
+              disabled={busy !== null}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+            >
+              Back
+            </button>
+          </div>
+        </div>
       ) : declining ? (
         <div className="mt-5 space-y-3">
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -141,11 +243,12 @@ export function OfferRespond({ offer }: { offer: TokenOffer }) {
           {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={accept}
+              onClick={startAccept}
               disabled={busy !== null}
               className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-60"
             >
-              <CheckCircle2 className="h-4 w-4" /> {busy === "accepted" ? "Saving…" : "Accept offer"}
+              <CheckCircle2 className="h-4 w-4" />{" "}
+              {busy === "accepted" ? "Saving…" : documents.length > 0 ? "Review & accept" : "Accept offer"}
             </button>
             <button
               onClick={() => setDeclining(true)}

@@ -10,6 +10,7 @@ import {
   type PortalTask,
 } from "@/components/portal/onboarding-task-item";
 import { OfferRespond } from "@/components/offer/offer-respond";
+import { loadSignableDocs } from "@/modules/offers/actions";
 
 type MyApplication = {
   application_id: string;
@@ -63,6 +64,14 @@ export default async function PortalPage({
     message: string | null; company_name: string | null; job_title: string | null;
   };
   const offers = (offerData ?? []) as OfferRow[];
+  // Load the documents to sign for any offer still awaiting a response.
+  const offerDocs = new Map<string, Awaited<ReturnType<typeof loadSignableDocs>>>(
+    await Promise.all(
+      offers
+        .filter((o) => o.status === "sent")
+        .map(async (o) => [o.token, await loadSignableDocs(o.token)] as const)
+    )
+  );
   const interviewByApp = new Map<string, PortalInterview>();
   for (const iv of (ivData ?? []) as (PortalInterview & {
     application_id: string;
@@ -156,6 +165,7 @@ export default async function PortalPage({
                   jobTitle: o.job_title,
                   firstName: null,
                 }}
+                documents={offerDocs.get(o.token) ?? []}
               />
             ))}
           </section>

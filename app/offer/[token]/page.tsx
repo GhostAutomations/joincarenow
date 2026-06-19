@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { loadSignableDocs } from "@/modules/offers/actions";
 import { OfferRespond, type TokenOffer } from "@/components/offer/offer-respond";
 
 export default async function OfferTokenPage({
@@ -12,6 +13,8 @@ export default async function OfferTokenPage({
   const { data } = await supabase.rpc("get_offer_by_token", { p_token: token });
   const row = (data as Record<string, unknown>[] | null)?.[0];
   if (!row) notFound();
+
+  const documents = await loadSignableDocs(token);
 
   const offer: TokenOffer = {
     token,
@@ -41,7 +44,7 @@ export default async function OfferTokenPage({
           {offer.companyName} has made you an offer{offer.jobTitle ? ` for the ${offer.jobTitle} role` : ""}.
           Please review it below and let them know your decision.
         </p>
-        <OfferRespond offer={offer} />
+        <OfferRespond offer={offer} documents={documents} />
       </div>
     </main>
   );

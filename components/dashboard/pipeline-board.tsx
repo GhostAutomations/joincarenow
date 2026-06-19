@@ -227,6 +227,7 @@ export function PipelineBoard({
   staff = [],
   bookedInterviews = [],
   availableForms = [],
+  channelSuffix = "",
 }: {
   initial: AppCard[];
   interviewAddress: string;
@@ -236,6 +237,7 @@ export function PipelineBoard({
   staff?: StaffMember[];
   bookedInterviews?: BookedInterview[];
   availableForms?: { id: string; name: string }[];
+  channelSuffix?: string;
 }) {
   const router = useRouter();
   const [apps, setApps] = useState(initial);
@@ -271,7 +273,7 @@ export function PipelineBoard({
     // and unfiltered postgres_changes subscriptions deliver far more reliably
     // than filtered ones (the filtered version was missing the offer-accept push).
     const channel = supabase
-      .channel(`pipeline-${companyId}`)
+      .channel(`pipeline-${companyId}${channelSuffix ? `-${channelSuffix}` : ""}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "applications" }, refresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "interviews" }, refresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, refresh)
@@ -294,7 +296,7 @@ export function PipelineBoard({
       document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(channel);
     };
-  }, [companyId, router]);
+  }, [companyId, router, channelSuffix]);
 
   const selected = apps.find((a) => a.id === selectedId) ?? null;
 

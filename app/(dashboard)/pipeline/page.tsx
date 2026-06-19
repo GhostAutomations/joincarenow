@@ -10,6 +10,7 @@ import {
 
 type Row = {
   id: string;
+  job_id: string | null;
   stage: string;
   created_at: string;
   cover_message: string | null;
@@ -133,7 +134,7 @@ export default async function PipelinePage({
   let appsQuery = supabase
     .from("applications")
     .select(
-      "id, stage, created_at, cover_message, cv_path, answers, rtw_doc_path, rtw_share_code, rtw_expiry, rtw_verified_at, jobs(title, salary, region, worker_category, branches(name), roles!role_id(name)), applicants(first_name, last_name, email, phone, postcode)"
+      "id, job_id, stage, created_at, cover_message, cv_path, answers, rtw_doc_path, rtw_share_code, rtw_expiry, rtw_verified_at, jobs(title, salary, region, worker_category, branches(name), roles!role_id(name)), applicants(first_name, last_name, email, phone, postcode)"
     )
     .eq("company_id", current.company_id);
   if (!isAll) appsQuery = appsQuery.eq("job_id", job);
@@ -325,6 +326,62 @@ export default async function PipelinePage({
     offerStatus: offerByApp.get(r.id) ?? null,
     salary: r.jobs?.salary ?? null,
   }));
+
+  // "Show all pipelines" → one separate board per role, stacked top to bottom.
+  if (isAll) {
+    const jobIdOf = new Map<string, string>();
+    for (const r of (data ?? []) as unknown as Row[]) {
+      if (r.job_id) jobIdOf.set(r.id, r.job_id);
+    }
+    const { data: jobOrder } = await supabase
+      .from("jobs")
+      .select("id, title")
+      .eq("company_id", current.company_id)
+      .in("status", ["published", "closed"])
+      .order("created_at", { ascending: true });
+
+    const groups = (jobOrder ?? [])
+      .map((j) => ({
+        id: j.id as string,
+        title: j.title as string,
+        apps: apps.filter((a) => jobIdOf.get(a.id) === j.id),
+      }))
+      .filter((g) => g.apps.length > 0);
+
+    return (
+      <div>
+        <Link
+          href="/pipeline"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-white/80 hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to jobs
+        </Link>
+        <h1 className="mt-2 mb-4 text-2xl font-semibold text-white drop-shadow-sm">All pipelines</h1>
+        {groups.length === 0 ? (
+          <p className="text-sm text-white/80">No applicants yet.</p>
+        ) : (
+          <div className="space-y-10">
+            {groups.map((g) => (
+              <section key={g.id}>
+                <h2 className="mb-3 text-lg font-semibold text-white drop-shadow-sm">{g.title}</h2>
+                <PipelineBoard
+                  initial={g.apps}
+                  interviewAddress={interviewAddress}
+                  openId={open ?? null}
+                  companyId={current.company_id}
+                  openingHours={openingHours}
+                  staff={staff}
+                  bookedInterviews={bookedInterviews}
+                  availableForms={availableForms}
+                  channelSuffix={g.id}
+                />
+              </section>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div>

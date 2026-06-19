@@ -161,3 +161,57 @@ export async function setJobStatus(formData: FormData) {
   revalidatePath("/jobs");
   revalidatePath(`/jobs/${id}`);
 }
+
+/** Archive a job — only allowed once every applicant has been hired or moved to
+ *  Not progressing, so nobody is left without a reply. Archived jobs drop out of
+ *  the pipeline and the active jobs list into the reopenable Archived section. */
+export async function archiveJob(
+  formData: FormData
+): Promise<{ ok?: boolean; error?: string }> {
+  const id = formData.get("id");
+  if (typeof id !== "string") return { error: "Missing job" };
+
+  const { supabase, current } = await requireCompany();
+
+  const { count } = await supabase
+    .from("applications")
+    .select("id", { count: "exact", head: true })
+    .eq("job_id", id)
+    .not("stage", "in", "(hired,rejected)");
+
+  if ((count ?? 0) > 0) {
+    return {
+      error: `${count} applicant${count === 1 ? "" : "s"} still need a decision. Hire them or move them to Not progressing before archiving — that way everyone gets a reply.`,
+    };
+  }
+
+  const { error } = await supabase
+    .from("jobs")
+    .update({ status: "archived", archived_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("company_id", current.company_id);
+  if (error) return { error: "Could not archive the job. Please try again." };
+
+  revalidatePath("/jobs");
+  revalidatePath("/pipeline");
+  revalidatePath(`/jobs/${id}`);
+  return { ok: true };
+}
+
+/** Reopen an archived job — returns it to Closed (visible in jobs + pipeline,
+ *  not listed publicly until re-published). */
+export async function reopenJob(formData: FormData) {
+  const id = formData.get("id");
+  if (typeof id !== "string") return;
+
+  const { supabase, current } = await requireCompany();
+  await supabase
+    .from("jobs")
+    .update({ status: "closed", archived_at: null })
+    .eq("id", id)
+    .eq("company_id", current.company_id);
+
+  revalidatePath("/jobs");
+  revalidatePath("/pipeline");
+  revalidatePath(`/jobs/${id}`);
+}

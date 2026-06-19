@@ -2,13 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
-import { updateJob, setJobStatus } from "@/modules/jobs/actions";
+import { updateJob, setJobStatus, reopenJob } from "@/modules/jobs/actions";
 import { JobForm } from "@/components/dashboard/job-form";
+import { ArchiveJobButton } from "@/components/dashboard/archive-job";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-gray-100 text-gray-700",
   published: "bg-green-100 text-green-800",
   closed: "bg-amber-100 text-amber-800",
+  archived: "bg-gray-200 text-gray-600",
 };
 
 export default async function EditJobPage({
@@ -124,6 +126,17 @@ export default async function EditJobPage({
                 Re-open
               </button>
             </form>
+          )}
+          {job.status === "archived" && (
+            <form action={reopenJob}>
+              <input type="hidden" name="id" value={job.id} />
+              <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">
+                Reopen job
+              </button>
+            </form>
+          )}
+          {job.status !== "archived" && job.status !== "draft" && (
+            <ArchiveJobButton id={job.id} />
           )}
         </div>
         {job.status === "published" && (

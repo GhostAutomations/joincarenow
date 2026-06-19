@@ -11,6 +11,7 @@ import {
   type FormDoc,
 } from "@/components/dashboard/employee-hr";
 import { CarerAcademySync, type SyncEvent } from "@/components/dashboard/carer-academy-sync";
+import { CollapsibleCard } from "@/components/dashboard/collapsible-card";
 import { type SignedDoc } from "@/components/documents/signed-docs";
 import { DeleteEmployeeButton } from "@/components/dashboard/delete-employee-button";
 
@@ -197,32 +198,36 @@ export default async function EmployeeDetailPage({
         </div>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Master record (read-only summary) */}
-        <section className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">Master profile</h2>
-          <p className="mt-1 text-xs text-gray-400">
-            The source of truth shared with connected systems.
-          </p>
-          <dl className="mt-4 space-y-3 text-sm">
+      <div className="mt-6 space-y-6">
+        {/* Master record (compact read-only summary) */}
+        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-sm font-medium text-gray-900">Master profile</h2>
+            {employee.applicant_id && (
+              <Link href="/pipeline" className="text-xs text-brand-600 hover:underline">
+                Recruitment history →
+              </Link>
+            )}
+          </div>
+          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm sm:grid-cols-3 lg:grid-cols-5">
             <div>
-              <dt className="text-gray-500">Email</dt>
-              <dd className="font-medium text-gray-900">{employee.email || "—"}</dd>
+              <dt className="text-xs text-gray-500">Email</dt>
+              <dd className="truncate font-medium text-gray-900">{employee.email || "—"}</dd>
             </div>
             <div>
-              <dt className="text-gray-500">Mobile</dt>
+              <dt className="text-xs text-gray-500">Mobile</dt>
               <dd className="font-medium text-gray-900">{employee.phone || "—"}</dd>
             </div>
             <div>
-              <dt className="text-gray-500">Role</dt>
+              <dt className="text-xs text-gray-500">Role</dt>
               <dd className="font-medium text-gray-900">{employee.job_title || "—"}</dd>
             </div>
             <div>
-              <dt className="text-gray-500">Branch</dt>
+              <dt className="text-xs text-gray-500">Branch</dt>
               <dd className="font-medium text-gray-900">{employee.branch || "—"}</dd>
             </div>
             <div>
-              <dt className="text-gray-500">Start date</dt>
+              <dt className="text-xs text-gray-500">Start date</dt>
               <dd className="font-medium text-gray-900">
                 {employee.start_date
                   ? new Date(employee.start_date).toLocaleDateString("en-GB")
@@ -230,43 +235,32 @@ export default async function EmployeeDetailPage({
               </dd>
             </div>
           </dl>
-          {employee.applicant_id && (
-            <Link
-              href="/pipeline"
-              className="mt-5 inline-block text-sm text-brand-600 hover:underline"
-            >
-              View recruitment history →
-            </Link>
-          )}
         </section>
 
-        {/* Editable fields */}
-        <section className="lg:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">Employment details</h2>
-          <p className="mt-1 text-xs text-gray-400">
-            These feed the Carer.Academy sync and future connected systems.
-          </p>
-          <div className="mt-4">
-            <EmployeeEditForm
-              employee={{
-                id: employee.id,
-                employee_ref: employee.employee_ref,
-                job_title: employee.job_title,
-                department: employee.department,
-                branch_id: employee.branch_id,
-                worker_category: employee.worker_category,
-                training_group: employee.training_group,
-                phone: employee.phone,
-                start_date: employee.start_date,
-                manager_id: employee.manager_id,
-                status: employee.status,
-              }}
-              managers={managers}
-              branches={branchList ?? []}
-              roles={roleList ?? []}
-            />
-          </div>
-        </section>
+        {/* Editable fields — collapsed by default (important; open to change) */}
+        <CollapsibleCard
+          title="Employment details"
+          subtitle="These feed the Carer.Academy sync and future connected systems."
+        >
+          <EmployeeEditForm
+            employee={{
+              id: employee.id,
+              employee_ref: employee.employee_ref,
+              job_title: employee.job_title,
+              department: employee.department,
+              branch_id: employee.branch_id,
+              worker_category: employee.worker_category,
+              training_group: employee.training_group,
+              phone: employee.phone,
+              start_date: employee.start_date,
+              manager_id: employee.manager_id,
+              status: employee.status,
+            }}
+            managers={managers}
+            branches={branchList ?? []}
+            roles={roleList ?? []}
+          />
+        </CollapsibleCard>
       </div>
 
       <div className="mt-6">

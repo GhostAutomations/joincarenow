@@ -75,11 +75,11 @@ export function SignedDocs({ docs }: { docs: SignedDoc[] }) {
       <ul className="divide-y divide-gray-100">
         {docs.map((d) => (
           <li key={d.id} className="flex items-center justify-between gap-3 py-2.5">
-            <div className="flex min-w-0 items-center gap-2">
-              <FileText className="h-4 w-4 shrink-0 text-gray-400" />
+            <div className="flex min-w-0 items-center gap-2.5">
+              <FileText className="h-6 w-6 shrink-0 text-gray-400" />
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-gray-900">{d.title}</p>
-                <p className="text-xs text-gray-500">
+                <p className="truncate text-base font-medium text-gray-900">{d.title}</p>
+                <p className="text-sm text-gray-500">
                   Signed by {d.signerName} · {new Date(d.signedAt).toLocaleDateString("en-GB")}
                 </p>
               </div>

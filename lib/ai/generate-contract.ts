@@ -9,6 +9,7 @@ OUTPUT RULES (important):
 - Where a value will be filled in automatically by the platform, use these EXACT merge-field tokens: {{company_name}}, {{first_name}}, {{last_name}}, {{job_title}}, {{role}}, {{pay}}, {{hours}}, {{start_date}}, {{conditions}}.
 - For details the platform does NOT provide, use a clearly bracketed placeholder for the employer to complete, e.g. [place of work], [notice period], [pension scheme name], [holiday year start date].
 - Use plain, readable English suitable for a non-legal care manager and a care worker.
+- Use plain ASCII only — no box-drawing lines, smart/curly quotes, em dashes or other special symbols. For section dividers use a simple line of hyphens (e.g. "----------") or just a numbered heading; never characters like "─────".
 
 COVER, AS A MINIMUM, the statutory particulars and care-sector essentials:
 - Parties and employment start date / continuity of employment

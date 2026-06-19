@@ -9,6 +9,7 @@ OUTPUT RULES (important):
 - Where the platform fills a value automatically, you may use these EXACT merge-field tokens where they make sense: {{company_name}}, {{first_name}}, {{last_name}}.
 - For anything the platform does NOT provide, use a clearly bracketed placeholder for the employer to complete, e.g. [policy owner], [review date], [contact name].
 - Plain, readable English suitable for a non-legal care manager and a care worker.
+- Use plain ASCII only — no box-drawing lines, smart/curly quotes, em dashes or other special symbols. For section dividers use a simple line of hyphens (e.g. "----------") or just a heading; never characters like "─────".
 
 STRUCTURE the policy with: a title, purpose/scope, who it applies to, the policy statement, responsibilities, the procedure/what staff must do, links to related procedures (e.g. ACAS-compliant disciplinary/grievance where relevant), and a review/version note. Keep it practical and appropriate to the specific policy requested.`;
 

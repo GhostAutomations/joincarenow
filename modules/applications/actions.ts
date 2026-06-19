@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncEmployeeToCarerAcademy } from "@/lib/integrations/carer-academy";
 import { notifyApplicant } from "@/modules/comms/actions";
+import { requireCompany } from "@/modules/auth/queries";
 
 const BASE_URL = "https://www.joincarenow.com";
 
@@ -43,6 +44,38 @@ export async function sendRejection(
 
   revalidatePath("/pipeline");
   return { ok: true };
+}
+
+export type RejectionTemplate = { id: string; name: string; body: string };
+
+/** Company's saved Not-progressing reasons (name + message) for the popup. */
+export async function getRejectionTemplates(): Promise<RejectionTemplate[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("rejection_templates")
+    .select("id, name, body")
+    .order("created_at", { ascending: true });
+  return (data ?? []) as RejectionTemplate[];
+}
+
+/** Save a new Not-progressing reason so it appears in the dropdown next time. */
+export async function saveRejectionTemplate(
+  name: string,
+  body: string
+): Promise<{ template?: RejectionTemplate; error?: string }> {
+  const trimmedName = name.trim();
+  const trimmedBody = body.trim();
+  if (trimmedName.length < 2) return { error: "Give the reason a short name." };
+  if (trimmedBody.length < 2) return { error: "The message is empty." };
+
+  const { supabase, current } = await requireCompany();
+  const { data, error } = await supabase
+    .from("rejection_templates")
+    .insert({ company_id: current.company_id, name: trimmedName, body: trimmedBody })
+    .select("id, name, body")
+    .single();
+  if (error || !data) return { error: "Could not save the reason. Please try again." };
+  return { template: data as RejectionTemplate };
 }
 
 export type TalentPoolInvite = { companyName: string; firstName: string | null; opted: boolean };

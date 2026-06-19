@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { ArrowLeft, MapPin, Briefcase, Users, CalendarClock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { BrandStyle } from "@/components/dashboard/brand-style";
@@ -70,7 +70,9 @@ export default async function PublicJobPage({
 }) {
   const { company, job } = await params;
   const [data, profile] = await Promise.all([loadJob(company, job), loadProfile(company)]);
-  if (!data) notFound();
+  // A closed/removed job's public link should land on the company careers page
+  // (which shows other roles, or "no vacancies"), not a dead 404.
+  if (!data) redirect(`/careers/${company}`);
 
   const brand = profile
     ? {

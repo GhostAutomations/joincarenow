@@ -24,6 +24,21 @@ function loadJsPdf(): Promise<new (opts?: Record<string, unknown>) => JsPdfDoc> 
   });
 }
 
+/** jsPDF's standard fonts only cover Latin-1 — map the characters the AI tends
+ *  to use (box-drawing separators, smart quotes, dashes, bullets) to safe ones,
+ *  otherwise they render as garbage (e.g. stray % signs). */
+function pdfSafe(text: string): string {
+  return text
+    .replace(/[─-╿]/g, "-") // box-drawing separators ──── → hyphens
+    .replace(/[‘’‚′]/g, "'") // smart single quotes
+    .replace(/[“”„″]/g, '"') // smart double quotes
+    .replace(/[–—]/g, "-") // en/em dash
+    .replace(/[•●▪·]/g, "-") // bullets
+    .replace(/ /g, " ") // non-breaking space
+    .replace(/…/g, "...") // ellipsis
+    .replace(/[^\x09\x0A\x0D\x20-\xFF]/g, ""); // drop anything else outside Latin-1
+}
+
 type JsPdfDoc = {
   internal: { pageSize: { getWidth: () => number; getHeight: () => number } };
   setFont: (f: string, s?: string) => void;
@@ -100,7 +115,7 @@ function DocViewer({ doc, onClose }: { doc: SignedDoc; onClose: () => void }) {
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(14);
-      for (const line of pdf.splitTextToSize(doc.title, width)) {
+      for (const line of pdf.splitTextToSize(pdfSafe(doc.title), width)) {
         pdf.text(line, margin, y);
         y += 20;
       }
@@ -108,7 +123,7 @@ function DocViewer({ doc, onClose }: { doc: SignedDoc; onClose: () => void }) {
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(11);
-      for (const line of pdf.splitTextToSize(doc.body, width)) {
+      for (const line of pdf.splitTextToSize(pdfSafe(doc.body), width)) {
         if (y > pageH - margin) {
           pdf.addPage();
           y = margin;
@@ -132,12 +147,12 @@ function DocViewer({ doc, onClose }: { doc: SignedDoc; onClose: () => void }) {
         }
       } else {
         pdf.setFontSize(18);
-        pdf.text(doc.signerName, margin, y);
+        pdf.text(pdfSafe(doc.signerName), margin, y);
         y += 22;
       }
       pdf.setFontSize(9);
       pdf.setTextColor(110);
-      pdf.text(`Signed by ${doc.signerName} on ${signedOn}`, margin, y);
+      pdf.text(pdfSafe(`Signed by ${doc.signerName} on ${signedOn}`), margin, y);
 
       pdf.save(`${doc.title}.pdf`);
     } catch {

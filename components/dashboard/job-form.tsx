@@ -54,6 +54,10 @@ export function JobForm({
 }) {
   const [state, formAction] = useActionState<JobState, FormData>(action, undefined);
 
+  // Controlled so the chosen value stays put after save (an uncontrolled select
+  // visually snaps back to "No contract" on the post-save re-render).
+  const [contractId, setContractId] = useState(defaults?.contract_template_id ?? "");
+
   // Role drives the default workflow; the workflow can then be changed.
   const [roleId, setRoleId] = useState(defaults?.role_id ?? "");
   const [workflowRoleId, setWorkflowRoleId] = useState(
@@ -262,7 +266,8 @@ export function JobForm({
           <select
             id="contract_template_id"
             name="contract_template_id"
-            defaultValue={defaults?.contract_template_id ?? ""}
+            value={contractId}
+            onChange={(e) => setContractId(e.target.value)}
             className={inputClass}
           >
             <option value="">No contract</option>

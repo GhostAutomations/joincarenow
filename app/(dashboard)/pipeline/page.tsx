@@ -356,7 +356,8 @@ export default async function PipelinePage({
         >
           <ArrowLeft className="h-4 w-4" /> Back to jobs
         </Link>
-        <h1 className="mt-2 mb-4 text-2xl font-semibold text-white drop-shadow-sm">All pipelines</h1>
+        <h1 className="mt-2 text-2xl font-semibold text-white drop-shadow-sm">All pipelines</h1>
+        <p className="mb-6 text-sm text-white/80">Drag applicants through your hiring stages.</p>
         {groups.length === 0 ? (
           <p className="text-sm text-white/80">No applicants yet.</p>
         ) : (
@@ -374,6 +375,7 @@ export default async function PipelinePage({
                   bookedInterviews={bookedInterviews}
                   availableForms={availableForms}
                   channelSuffix={g.id}
+                  hideHeader
                 />
               </section>
             ))}

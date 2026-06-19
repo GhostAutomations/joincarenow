@@ -228,6 +228,7 @@ export function PipelineBoard({
   bookedInterviews = [],
   availableForms = [],
   channelSuffix = "",
+  hideHeader = false,
 }: {
   initial: AppCard[];
   interviewAddress: string;
@@ -238,6 +239,7 @@ export function PipelineBoard({
   bookedInterviews?: BookedInterview[];
   availableForms?: { id: string; name: string }[];
   channelSuffix?: string;
+  hideHeader?: boolean;
 }) {
   const router = useRouter();
   const [apps, setApps] = useState(initial);
@@ -350,7 +352,9 @@ export function PipelineBoard({
 
   return (
     <div>
-      <PageHeader title="Pipeline" subtitle="Drag applicants through your hiring stages." />
+      {!hideHeader && (
+        <PageHeader title="Pipeline" subtitle="Drag applicants through your hiring stages." />
+      )}
 
       {apps.length === 0 && (
         <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">

@@ -119,26 +119,6 @@ async function sendInterviewInvite(
       .single();
     if (!app) return;
 
-    // The interviewer (selected in the scheduler) — email them an invite too.
-    const { data: ivMeta } = await supabase
-      .from("interviews")
-      .select("interviewer_id")
-      .eq("application_id", applicationId)
-      .maybeSingle();
-    let interviewerEmail: string | null = null;
-    let interviewerName: string | null = null;
-    if (ivMeta?.interviewer_id) {
-      const { data: m } = await supabase
-        .from("company_users")
-        .select("profiles ( full_name, email )")
-        .eq("company_id", app.company_id)
-        .eq("user_id", ivMeta.interviewer_id)
-        .maybeSingle();
-      const p = m?.profiles as unknown as { full_name: string | null; email: string | null } | null;
-      interviewerEmail = p?.email ?? null;
-      interviewerName = p?.full_name ?? null;
-    }
-
     const ap = app.applicants as unknown as {
       first_name: string | null; last_name: string | null; email: string | null; phone: string | null;
     } | null;
@@ -226,32 +206,55 @@ async function sendInterviewInvite(
     }
 
     // Email the selected interviewer their own calendar invite (always, since the
-    // scheduler may not be the interviewer).
-    if (interviewerEmail) {
-      const interviewerEvent: CalEvent = {
-        ...baseEvent,
-        uid: `${iv.respond_token}-interviewer`,
-        title: `Interview: ${applicantName} — ${jobTitle}`,
-        description:
-          `You're interviewing ${applicantName} for ${jobTitle} (${modeText}).` +
-          (ap?.email ? `\nCandidate email: ${ap.email}` : "") +
-          (ap?.phone ? `\nCandidate phone: ${ap.phone}` : ""),
-      };
-      const interviewerIcs = Buffer.from(buildIcs(interviewerEvent)).toString("base64");
-      const il = calendarLinks(interviewerEvent);
-      const hi = interviewerName ? interviewerName.split(" ")[0] : "there";
-      const interviewerBody =
-        `Hi ${hi},\n\nYou're scheduled to interview ${applicantName} for the ${jobTitle} role at ${company}.\n\n` +
-        `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n` +
-        (ap?.email ? `Candidate email: ${ap.email}\n` : "") +
-        (ap?.phone ? `Candidate phone: ${ap.phone}\n` : "") +
-        calBlock(il.google, il.outlook);
-      await sendEmail({
-        to: interviewerEmail,
-        subject: `Interview scheduled: ${applicantName} — ${jobTitle}`,
-        text: interviewerBody,
-        attachments: [{ filename: "interview.ics", content: interviewerIcs }],
-      });
+    // scheduler may not be the interviewer). Self-contained so a lookup hiccup
+    // can never block the applicant's invite above.
+    try {
+      const { data: ivMeta } = await supabase
+        .from("interviews")
+        .select("interviewer_id")
+        .eq("application_id", applicationId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (ivMeta?.interviewer_id) {
+        const { data: m } = await supabase
+          .from("company_users")
+          .select("profiles ( full_name, email )")
+          .eq("company_id", app.company_id)
+          .eq("user_id", ivMeta.interviewer_id)
+          .maybeSingle();
+        const p = m?.profiles as unknown as { full_name: string | null; email: string | null } | null;
+        const interviewerEmail = p?.email ?? null;
+        const interviewerName = p?.full_name ?? null;
+        if (interviewerEmail) {
+          const interviewerEvent: CalEvent = {
+            ...baseEvent,
+            uid: `${iv.respond_token}-interviewer`,
+            title: `Interview: ${applicantName} — ${jobTitle}`,
+            description:
+              `You're interviewing ${applicantName} for ${jobTitle} (${modeText}).` +
+              (ap?.email ? `\nCandidate email: ${ap.email}` : "") +
+              (ap?.phone ? `\nCandidate phone: ${ap.phone}` : ""),
+          };
+          const interviewerIcs = Buffer.from(buildIcs(interviewerEvent)).toString("base64");
+          const il = calendarLinks(interviewerEvent);
+          const hi = interviewerName ? interviewerName.split(" ")[0] : "there";
+          const interviewerBody =
+            `Hi ${hi},\n\nYou're scheduled to interview ${applicantName} for the ${jobTitle} role at ${company}.\n\n` +
+            `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n` +
+            (ap?.email ? `Candidate email: ${ap.email}\n` : "") +
+            (ap?.phone ? `Candidate phone: ${ap.phone}\n` : "") +
+            calBlock(il.google, il.outlook);
+          await sendEmail({
+            to: interviewerEmail,
+            subject: `Interview scheduled: ${applicantName} — ${jobTitle}`,
+            text: interviewerBody,
+            attachments: [{ filename: "interview.ics", content: interviewerIcs }],
+          });
+        }
+      }
+    } catch {
+      /* interviewer email is best-effort */
     }
   } catch {
     /* don't fail scheduling if the invite send hiccups */

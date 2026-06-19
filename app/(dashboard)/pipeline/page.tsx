@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronRight, ArrowLeft, Briefcase } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { PageHeader } from "@/components/dashboard/page-header";
 import {
@@ -91,14 +91,14 @@ export default async function PipelinePage({
                 href={`/pipeline?job=${j.id}`}
                 className="group flex items-center gap-3 rounded-xl border border-white/40 bg-white/80 px-3 py-2.5 shadow-sm backdrop-blur-sm transition hover:bg-white hover:shadow-md"
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-2xl font-bold leading-none text-white">
-                  P
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
+                  <Briefcase className="h-6 w-6" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-lg font-semibold text-gray-900">{j.title}</span>
                   <span className="block text-sm text-gray-700">
                     {j.branch ? `${j.branch} · ` : ""}
-                    {j.active} in pipeline{j.hired ? ` · ${j.hired} hired` : ""}
+                    {j.active} in Pipeline{j.hired ? ` · ${j.hired} hired` : ""}
                     {j.status === "closed" ? " · closed" : ""}
                   </span>
                 </span>

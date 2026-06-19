@@ -1,7 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, X, Printer } from "lucide-react";
+import { FileText, X, Printer, Download } from "lucide-react";
+
+/** Load jsPDF from the CDN once (no npm dependency needed). */
+function loadJsPdf(): Promise<new (opts?: Record<string, unknown>) => JsPdfDoc> {
+  return new Promise((resolve, reject) => {
+    const w = window as unknown as { jspdf?: { jsPDF: new (opts?: Record<string, unknown>) => JsPdfDoc } };
+    if (w.jspdf?.jsPDF) return resolve(w.jspdf.jsPDF);
+    const url = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    const existing = document.getElementById("jspdf-cdn") as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener("load", () => resolve(w.jspdf!.jsPDF));
+      existing.addEventListener("error", () => reject(new Error("load failed")));
+      return;
+    }
+    const s = document.createElement("script");
+    s.id = "jspdf-cdn";
+    s.src = url;
+    s.onload = () => resolve(w.jspdf!.jsPDF);
+    s.onerror = () => reject(new Error("load failed"));
+    document.body.appendChild(s);
+  });
+}
+
+type JsPdfDoc = {
+  internal: { pageSize: { getWidth: () => number; getHeight: () => number } };
+  setFont: (f: string, s?: string) => void;
+  setFontSize: (n: number) => void;
+  setTextColor: (n: number) => void;
+  splitTextToSize: (t: string, w: number) => string[];
+  text: (t: string | string[], x: number, y: number) => void;
+  addPage: () => void;
+  addImage: (d: string, f: string, x: number, y: number, w: number, h: number) => void;
+  save: (name: string) => void;
+};
 
 export type SignedDoc = {
   id: string;
@@ -53,6 +86,66 @@ export function SignedDocs({ docs }: { docs: SignedDoc[] }) {
 
 function DocViewer({ doc, onClose }: { doc: SignedDoc; onClose: () => void }) {
   const signedOn = new Date(doc.signedAt).toLocaleString("en-GB");
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  async function downloadPdf() {
+    setPdfBusy(true);
+    try {
+      const JsPDF = await loadJsPdf();
+      const pdf = new JsPDF({ unit: "pt", format: "a4" });
+      const margin = 48;
+      const pageH = pdf.internal.pageSize.getHeight();
+      const width = pdf.internal.pageSize.getWidth() - margin * 2;
+      let y = margin;
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(14);
+      for (const line of pdf.splitTextToSize(doc.title, width)) {
+        pdf.text(line, margin, y);
+        y += 20;
+      }
+      y += 6;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(11);
+      for (const line of pdf.splitTextToSize(doc.body, width)) {
+        if (y > pageH - margin) {
+          pdf.addPage();
+          y = margin;
+        }
+        pdf.text(line, margin, y);
+        y += 15;
+      }
+
+      // Signature block
+      if (y > pageH - 120) {
+        pdf.addPage();
+        y = margin;
+      }
+      y += 24;
+      if (doc.signatureMethod === "draw" && doc.signatureImage) {
+        try {
+          pdf.addImage(doc.signatureImage, "PNG", margin, y, 160, 60);
+          y += 72;
+        } catch {
+          /* ignore bad image */
+        }
+      } else {
+        pdf.setFontSize(18);
+        pdf.text(doc.signerName, margin, y);
+        y += 22;
+      }
+      pdf.setFontSize(9);
+      pdf.setTextColor(110);
+      pdf.text(`Signed by ${doc.signerName} on ${signedOn}`, margin, y);
+
+      pdf.save(`${doc.title}.pdf`);
+    } catch {
+      alert("Sorry, the PDF couldn't be generated. You can use Print → Save as PDF instead.");
+    } finally {
+      setPdfBusy(false);
+    }
+  }
 
   function printDoc() {
     const w = window.open("", "_blank", "width=800,height=900");
@@ -86,7 +179,14 @@ function DocViewer({ doc, onClose }: { doc: SignedDoc; onClose: () => void }) {
                 onClick={printDoc}
                 className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
               >
-                <Printer className="h-4 w-4" /> Print / PDF
+                <Printer className="h-4 w-4" /> Print
+              </button>
+              <button
+                onClick={downloadPdf}
+                disabled={pdfBusy}
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-60"
+              >
+                <Download className="h-4 w-4" /> {pdfBusy ? "Preparing…" : "PDF"}
               </button>
               <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
                 <X className="h-5 w-5" />

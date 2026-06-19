@@ -84,25 +84,25 @@ export default async function PipelinePage({
             No live jobs yet. Publish a job to start receiving applicants.
           </p>
         ) : (
-          <div className="mx-auto mt-6 max-w-xl space-y-2">
+          <div className="mx-auto mt-6 max-w-md space-y-2.5">
             {jobs.map((j) => (
               <Link
                 key={j.id}
                 href={`/pipeline?job=${j.id}`}
-                className="group flex items-center gap-3 rounded-xl border border-white/40 bg-white/80 px-3 py-2.5 shadow-sm backdrop-blur-sm transition hover:bg-white hover:shadow-md"
+                className="group flex items-center gap-3 rounded-xl border border-white/40 bg-white/80 px-3 py-3 shadow-sm backdrop-blur-sm transition hover:bg-white hover:shadow-md"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
-                  <Briefcase className="h-4 w-4" />
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
+                  <Briefcase className="h-7 w-7" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-gray-900">{j.title}</span>
-                  <span className="block text-xs text-gray-500">
+                  <span className="block truncate text-base font-semibold text-gray-900">{j.title}</span>
+                  <span className="block text-sm text-gray-500">
                     {j.branch ? `${j.branch} · ` : ""}
                     {j.active} in pipeline{j.hired ? ` · ${j.hired} hired` : ""}
                     {j.status === "closed" ? " · closed" : ""}
                   </span>
                 </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-gray-300 group-hover:text-gray-500" />
+                <ChevronRight className="h-5 w-5 shrink-0 text-gray-300 group-hover:text-gray-500" />
               </Link>
             ))}
           </div>

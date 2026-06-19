@@ -341,6 +341,45 @@ export async function getApplicationReview(
   };
 }
 
+export type FormView = { name: string; items: { label: string; value: string }[] };
+
+/** Read-only view of a form submission's answers (label → value), for the
+ *  employee record's Documents → Forms category. */
+export async function getFormSubmissionView(submissionId: string): Promise<FormView | null> {
+  const { supabase, current } = await requireCompany();
+  const { data: sub } = await supabase
+    .from("form_submissions")
+    .select("answers, form_id, forms(name)")
+    .eq("id", submissionId)
+    .eq("company_id", current.company_id)
+    .maybeSingle();
+  if (!sub) return null;
+
+  const { data: fields } = await supabase
+    .from("form_fields")
+    .select("id, label, field_type, position")
+    .eq("form_id", sub.form_id as string)
+    .order("position", { ascending: true });
+
+  const answers = (sub.answers as Record<string, unknown>) ?? {};
+  const fmt = (v: unknown, type: string): string => {
+    if (v == null || v === "") return "—";
+    if (type === "signature") return "Signature captured";
+    if (type === "file") {
+      const path = Array.isArray(v) ? v.join(", ") : String(v);
+      return path.split("/").pop() || "File attached";
+    }
+    return Array.isArray(v) ? v.join(", ") : String(v);
+  };
+
+  const items = (fields ?? []).map((f) => ({
+    label: f.label as string,
+    value: fmt(answers[f.id as string], f.field_type as string),
+  }));
+
+  return { name: (sub.forms as unknown as { name: string } | null)?.name ?? "Form", items };
+}
+
 /** Staff: approve / resend the application form. Goes through a SECURITY
  *  DEFINER RPC so the review persists (RLS blocks a direct update) and so a
  *  resend surfaces the form to the applicant in their portal. */

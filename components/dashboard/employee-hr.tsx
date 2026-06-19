@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { Trash2, FileText, Download, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Trash2, FileText, Download, Plus, ChevronDown, ChevronRight, X } from "lucide-react";
 import {
   addAbsence,
   deleteAbsence,
@@ -14,6 +14,7 @@ import {
 } from "@/modules/hr/actions";
 import { SignedDocs, type SignedDoc } from "@/components/documents/signed-docs";
 import { getCvUrl } from "@/modules/applications/actions";
+import { getFormSubmissionView, type FormView } from "@/modules/onboarding/actions";
 
 const cls =
   "mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -311,27 +312,79 @@ function DocumentsTab({
         <SignedDocs docs={policies} />
       </Collapsible>
       <Collapsible title="Forms" count={forms.length}>
-        {forms.length === 0 ? (
-          <p className="text-sm text-gray-500">No forms submitted.</p>
-        ) : (
-          <ul className="divide-y divide-gray-100">
-            {forms.map((f) => (
-              <li key={f.id} className="flex items-center gap-2 py-2.5 text-sm text-gray-900">
-                <FileText className="h-4 w-4 text-gray-400" />
-                <span className="font-medium">{f.name}</span>
-                {f.submittedAt && (
-                  <span className="ml-auto text-xs text-gray-500">{fmt(f.submittedAt)}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+        <Forms items={forms} />
       </Collapsible>
       <Collapsible title="Uploaded files" count={uploadsCount}>
         {cvApplicationId && <CvRow applicationId={cvApplicationId} />}
         <Uploads employeeId={employeeId} items={uploads} />
       </Collapsible>
     </div>
+  );
+}
+
+function Forms({ items }: { items: FormDoc[] }) {
+  const [view, setView] = useState<FormView | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  async function open(id: string) {
+    setLoadingId(id);
+    const data = await getFormSubmissionView(id);
+    setLoadingId(null);
+    if (data) setView(data);
+  }
+
+  if (items.length === 0) return <p className="text-sm text-gray-500">No forms submitted.</p>;
+
+  return (
+    <>
+      <ul className="divide-y divide-gray-100">
+        {items.map((f) => (
+          <li key={f.id} className="flex items-center justify-between gap-2 py-2.5">
+            <button
+              onClick={() => open(f.id)}
+              disabled={loadingId === f.id}
+              className="flex min-w-0 items-center gap-2 text-left text-sm text-gray-900 hover:text-brand-600 disabled:opacity-60"
+            >
+              <FileText className="h-4 w-4 shrink-0 text-gray-400" />
+              <span className="truncate font-medium">{f.name}</span>
+            </button>
+            <span className="shrink-0 text-xs text-gray-500">
+              {loadingId === f.id ? "Opening…" : f.submittedAt ? fmt(f.submittedAt) : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {view && (
+        <div className="fixed inset-0 z-[70] overflow-y-auto">
+          <div className="absolute inset-0 bg-black/50" aria-hidden onClick={() => setView(null)} />
+          <div className="relative mx-auto my-8 w-full max-w-2xl px-4">
+            <div className="rounded-2xl bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+                <h2 className="text-base font-semibold text-gray-900">{view.name}</h2>
+                <button onClick={() => setView(null)} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="max-h-[70vh] overflow-y-auto px-5 py-4">
+                {view.items.length === 0 ? (
+                  <p className="text-sm text-gray-500">No answers recorded.</p>
+                ) : (
+                  <dl className="space-y-3">
+                    {view.items.map((it, i) => (
+                      <div key={i}>
+                        <dt className="text-xs text-gray-500">{it.label}</dt>
+                        <dd className="text-sm text-gray-900">{it.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

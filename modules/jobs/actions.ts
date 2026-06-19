@@ -139,7 +139,9 @@ export async function updateJob(
 
   revalidatePath("/jobs");
   revalidatePath(`/jobs/${id}`);
-  return undefined;
+  // Re-load the page fresh so every field (incl. the Contract select) shows the
+  // saved values — avoids React's post-action form reset blanking the dropdown.
+  redirect(`/jobs/${id}`);
 }
 
 /** Publish / close / revert-to-draft. Used by small forms on the job page. */

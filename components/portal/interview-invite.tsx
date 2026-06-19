@@ -5,6 +5,7 @@ import { CalendarClock } from "lucide-react";
 import { respondToInterview } from "@/modules/interviews/actions";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { formatLondon } from "@/lib/time";
+import { buildIcs, calendarLinks, type CalEvent } from "@/lib/calendar/ics";
 
 export type PortalInterview = {
   interview_id: string;
@@ -33,6 +34,30 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
   const [mode, setMode] = useState<"none" | "reschedule">("none");
   const when = formatLondon(interview.scheduled_at);
 
+  const calEvent: CalEvent = {
+    uid: interview.interview_id,
+    title: "Job interview",
+    startIso: new Date(interview.scheduled_at).toISOString(),
+    durationMinutes: interview.duration_minutes,
+    location:
+      interview.mode === "phone"
+        ? "Phone call"
+        : interview.mode === "video"
+          ? "Video call"
+          : interview.location || "In person",
+  };
+  const calHref = calendarLinks(calEvent);
+
+  function downloadIcs() {
+    const blob = new Blob([buildIcs(calEvent)], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "interview.ics";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="mt-3 rounded-lg border border-brand-200 bg-brand-50/50 p-4">
       <div className="flex items-center gap-2">
@@ -48,6 +73,34 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
       </p>
 
       <p className="mt-2 text-xs text-gray-600">{STATUS_TEXT[interview.status]}</p>
+
+      {(interview.status === "proposed" || interview.status === "confirmed") && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-gray-500">Add to calendar:</span>
+          <button
+            onClick={downloadIcs}
+            className="rounded-md border border-gray-300 bg-white px-2 py-1 font-medium text-gray-700 hover:bg-gray-100"
+          >
+            Apple / iCal
+          </button>
+          <a
+            href={calHref.google}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-md border border-gray-300 bg-white px-2 py-1 font-medium text-gray-700 hover:bg-gray-100"
+          >
+            Google
+          </a>
+          <a
+            href={calHref.outlook}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-md border border-gray-300 bg-white px-2 py-1 font-medium text-gray-700 hover:bg-gray-100"
+          >
+            Outlook
+          </a>
+        </div>
+      )}
 
       {interview.status === "proposed" && mode === "none" && (
         <div className="mt-3 flex flex-wrap gap-2">

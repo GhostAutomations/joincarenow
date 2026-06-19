@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, sendSms } from "@/lib/comms/send";
 import { londonToUtcIso, formatLondon } from "@/lib/time";
 import { isWithinOpeningHours, type OpeningHours } from "@/lib/opening-hours";
+import { buildIcs, calendarLinks, type CalEvent } from "@/lib/calendar/ics";
 
 const BASE_URL = "https://www.joincarenow.com";
 
@@ -113,20 +114,54 @@ async function sendInterviewInvite(
     const { data: { user } } = await supabase.auth.getUser();
     const { data: app } = await supabase
       .from("applications")
-      .select("company_id, applicant_id, applicants(first_name, email, phone), jobs(title), companies(name)")
+      .select("company_id, applicant_id, applicants(first_name, last_name, email, phone), jobs(title), companies(name)")
       .eq("id", applicationId)
       .single();
     if (!app) return;
 
+    // The interviewer (selected in the scheduler) — email them an invite too.
+    const { data: ivMeta } = await supabase
+      .from("interviews")
+      .select("interviewer_id")
+      .eq("application_id", applicationId)
+      .maybeSingle();
+    let interviewerEmail: string | null = null;
+    let interviewerName: string | null = null;
+    if (ivMeta?.interviewer_id) {
+      const { data: m } = await supabase
+        .from("company_users")
+        .select("profiles ( full_name, email )")
+        .eq("company_id", app.company_id)
+        .eq("user_id", ivMeta.interviewer_id)
+        .maybeSingle();
+      const p = m?.profiles as unknown as { full_name: string | null; email: string | null } | null;
+      interviewerEmail = p?.email ?? null;
+      interviewerName = p?.full_name ?? null;
+    }
+
     const ap = app.applicants as unknown as {
-      first_name: string | null; email: string | null; phone: string | null;
+      first_name: string | null; last_name: string | null; email: string | null; phone: string | null;
     } | null;
     const company = (app.companies as unknown as { name: string | null } | null)?.name ?? "the team";
+    const jobTitle = (app.jobs as unknown as { title: string | null } | null)?.title ?? "the role";
     const link = `${BASE_URL}/interview/${iv.respond_token}`;
     const when = formatLondon(iv.scheduled_at);
     const first = ap?.first_name || "there";
+    const applicantName = [ap?.first_name, ap?.last_name].filter(Boolean).join(" ") || "the candidate";
     const modeText = iv.mode === "phone" ? "by phone" : iv.mode === "video" ? "by video call" : "in person";
     const whereLine = iv.location ? `\nWhere: ${iv.location}` : "";
+
+    // Calendar event (used for the applicant's invite + the interviewer's email).
+    const startIso = new Date(iv.scheduled_at).toISOString();
+    const calLocation =
+      iv.mode === "phone" ? "Phone call" : iv.mode === "video" ? "Video call" : iv.location || "In person";
+    const baseEvent: Omit<CalEvent, "uid" | "title" | "description"> = {
+      startIso,
+      durationMinutes: iv.duration_minutes,
+      location: calLocation,
+    };
+    const calBlock = (g: string, o: string) =>
+      `\n\nAdd to your calendar:\nGoogle: ${g}\nOutlook: ${o}\n(A calendar invite is attached to this email.)`;
 
     const emailSubject =
       variant === "confirmed"
@@ -162,9 +197,25 @@ async function sendInterviewInvite(
       });
     }
 
+    // Applicant calendar invite (.ics + links).
+    const applicantEvent: CalEvent = {
+      ...baseEvent,
+      uid: iv.respond_token,
+      title: `Interview — ${company}`,
+      description: `Interview for ${jobTitle} (${modeText}). Manage your interview: ${link}`,
+    };
+    const applicantIcs = Buffer.from(buildIcs(applicantEvent)).toString("base64");
+    const applicantLinks = calendarLinks(applicantEvent);
+
     if ((channel === "email" || channel === "both") && ap?.email) {
-      const r = await sendEmail({ to: ap.email, subject: emailSubject, text: emailBody });
-      await log("email", ap.email, emailSubject, emailBody, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);
+      const bodyWithCal = emailBody + calBlock(applicantLinks.google, applicantLinks.outlook);
+      const r = await sendEmail({
+        to: ap.email,
+        subject: emailSubject,
+        text: bodyWithCal,
+        attachments: [{ filename: "interview.ics", content: applicantIcs }],
+      });
+      await log("email", ap.email, emailSubject, bodyWithCal, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);
     }
     if ((channel === "sms" || channel === "both")) {
       const phone = ukPhone(ap?.phone ?? null);
@@ -172,6 +223,35 @@ async function sendInterviewInvite(
         const r = await sendSms({ to: phone, body: smsBody });
         await log("sms", phone, null, smsBody, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);
       }
+    }
+
+    // Email the selected interviewer their own calendar invite (always, since the
+    // scheduler may not be the interviewer).
+    if (interviewerEmail) {
+      const interviewerEvent: CalEvent = {
+        ...baseEvent,
+        uid: `${iv.respond_token}-interviewer`,
+        title: `Interview: ${applicantName} — ${jobTitle}`,
+        description:
+          `You're interviewing ${applicantName} for ${jobTitle} (${modeText}).` +
+          (ap?.email ? `\nCandidate email: ${ap.email}` : "") +
+          (ap?.phone ? `\nCandidate phone: ${ap.phone}` : ""),
+      };
+      const interviewerIcs = Buffer.from(buildIcs(interviewerEvent)).toString("base64");
+      const il = calendarLinks(interviewerEvent);
+      const hi = interviewerName ? interviewerName.split(" ")[0] : "there";
+      const interviewerBody =
+        `Hi ${hi},\n\nYou're scheduled to interview ${applicantName} for the ${jobTitle} role at ${company}.\n\n` +
+        `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n` +
+        (ap?.email ? `Candidate email: ${ap.email}\n` : "") +
+        (ap?.phone ? `Candidate phone: ${ap.phone}\n` : "") +
+        calBlock(il.google, il.outlook);
+      await sendEmail({
+        to: interviewerEmail,
+        subject: `Interview scheduled: ${applicantName} — ${jobTitle}`,
+        text: interviewerBody,
+        attachments: [{ filename: "interview.ics", content: interviewerIcs }],
+      });
     }
   } catch {
     /* don't fail scheduling if the invite send hiccups */

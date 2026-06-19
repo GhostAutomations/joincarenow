@@ -8,6 +8,7 @@ export async function sendEmail(opts: {
   to: string;
   subject: string;
   text: string;
+  attachments?: { filename: string; content: string }[]; // content = base64
 }): Promise<SendResult> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM; // e.g. "Join Care Now <no-reply@joincarenow.com>"
@@ -31,6 +32,7 @@ export async function sendEmail(opts: {
         subject: opts.subject,
         text: opts.text,
         ...(replyTo ? { reply_to: replyTo } : {}),
+        ...(opts.attachments?.length ? { attachments: opts.attachments } : {}),
       }),
     });
     const data = (await res.json().catch(() => ({}))) as { id?: string; message?: string };

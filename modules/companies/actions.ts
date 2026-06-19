@@ -272,6 +272,44 @@ export async function setOpeningHours(
   return { ok: true };
 }
 
+/** Admins control automated reminders (interview, missing-doc, onboarding,
+ *  start-date): on/off and channel per reminder. Stored in settings.reminders. */
+export async function setReminderSettings(
+  _prev: SettingsState,
+  formData: FormData
+): Promise<SettingsState> {
+  const companyId = formData.get("companyId");
+  if (typeof companyId !== "string") return { error: "Missing company" };
+
+  const kinds = ["interview", "docs", "onboarding", "start_date"] as const;
+  const reminders: Record<string, { enabled: boolean; channel: string }> = {};
+  for (const k of kinds) {
+    const ch = formData.get(`${k}_channel`)?.toString() ?? "both";
+    reminders[k] = {
+      enabled: formData.get(`${k}_enabled`) === "on",
+      channel: ["email", "sms", "both"].includes(ch) ? ch : "both",
+    };
+  }
+
+  const supabase = await createClient();
+  const { data: company } = await supabase
+    .from("companies")
+    .select("settings")
+    .eq("id", companyId)
+    .single();
+
+  const settings = {
+    ...((company?.settings as Record<string, unknown>) ?? {}),
+    reminders,
+  };
+
+  const { error } = await supabase.from("companies").update({ settings }).eq("id", companyId);
+  if (error) return { error: "Could not save. Please try again." };
+
+  revalidatePath("/settings");
+  return { ok: true };
+}
+
 /** Admins choose how Employee IDs are assigned: auto-generated with a prefix,
  *  or entered manually (for companies with their own payroll numbers). */
 export async function setEmployeeNumberSettings(

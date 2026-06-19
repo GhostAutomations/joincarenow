@@ -10,6 +10,7 @@ import { EmployeeNumberSettings } from "@/components/dashboard/employee-number-s
 import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
 import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
 import { CareersContentForm } from "@/components/dashboard/careers-content-form";
+import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard/reminder-settings-form";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SettingsHub, type SettingsSection } from "@/components/dashboard/settings-hub";
 import type { OpeningHours } from "@/lib/opening-hours";
@@ -53,6 +54,8 @@ export default async function SettingsPage() {
     ((companyRow?.settings as { show_sidebar?: boolean } | null)?.show_sidebar) === true;
   const careers =
     ((companyRow?.settings as { careers?: { intro?: string; benefits?: string[] } } | null)?.careers) ?? {};
+  const reminderPrefs =
+    ((companyRow?.settings as { reminders?: ReminderPrefs } | null)?.reminders) ?? {};
 
   // Admins manage invitations. RLS only returns this company's invites.
   const { data: invites } = isAdmin
@@ -197,6 +200,12 @@ export default async function SettingsPage() {
         label: "Opening hours",
         description: "Days and hours your office is open; constrains interview scheduling.",
         content: <OpeningHoursForm companyId={current.company_id} hours={openingHours} />,
+      },
+      {
+        key: "communication",
+        label: "Communication",
+        description: "Automated reminders to applicants and new starters — on/off and channel.",
+        content: <ReminderSettingsForm companyId={current.company_id} prefs={reminderPrefs} />,
       },
       {
         key: "team",

@@ -24,6 +24,8 @@ const PUBLIC_PATHS = [
   // Inbound webhooks — authenticated by provider signature, not a user session.
   "/api/twilio",
   "/api/resend",
+  // Hourly reminder cron — authenticated by CRON_SECRET bearer, not a session.
+  "/api/cron",
 ];
 
 function isPublicPath(pathname: string) {

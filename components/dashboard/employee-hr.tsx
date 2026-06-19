@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { Trash2, FileText, Download, Plus } from "lucide-react";
+import { Trash2, FileText, Download, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import {
   addAbsence,
   deleteAbsence,
@@ -12,6 +12,7 @@ import {
   getHrDocUrl,
   type HrState,
 } from "@/modules/hr/actions";
+import { SignedDocs, type SignedDoc } from "@/components/documents/signed-docs";
 
 const cls =
   "mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -40,6 +41,7 @@ export type HrDoc = {
   issued_date: string | null;
   expiry_date: string | null;
 };
+export type FormDoc = { id: string; name: string; submittedAt: string | null };
 
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleDateString("en-GB") : "—");
 
@@ -51,19 +53,26 @@ export function EmployeeHr({
   absences,
   warnings,
   documents,
+  contracts = [],
+  policies = [],
+  forms = [],
 }: {
   employeeId: string;
   absences: Absence[];
   warnings: Warning[];
   documents: HrDoc[];
+  contracts?: SignedDoc[];
+  policies?: SignedDoc[];
+  forms?: FormDoc[];
 }) {
   const [tab, setTab] = useState<Tab>("Absences");
+  const docCount = documents.length + contracts.length + policies.length + forms.length;
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
       <div className="flex items-center gap-1 border-b border-gray-100 px-3 pt-3">
         {TABS.map((t) => {
-          const count = t === "Absences" ? absences.length : t === "Warnings" ? warnings.length : documents.length;
+          const count = t === "Absences" ? absences.length : t === "Warnings" ? warnings.length : docCount;
           return (
             <button
               key={t}
@@ -82,7 +91,15 @@ export function EmployeeHr({
       <div className="p-5">
         {tab === "Absences" && <Absences employeeId={employeeId} items={absences} />}
         {tab === "Warnings" && <Warnings employeeId={employeeId} items={warnings} />}
-        {tab === "Documents" && <Documents employeeId={employeeId} items={documents} />}
+        {tab === "Documents" && (
+          <DocumentsTab
+            employeeId={employeeId}
+            uploads={documents}
+            contracts={contracts}
+            policies={policies}
+            forms={forms}
+          />
+        )}
       </div>
     </section>
   );
@@ -237,8 +254,79 @@ function Warnings({ employeeId, items }: { employeeId: string; items: Warning[] 
   );
 }
 
-// ---------- Documents ----------
-function Documents({ employeeId, items }: { employeeId: string; items: HrDoc[] }) {
+// ---------- Documents (categorised) ----------
+function Collapsible({
+  title,
+  count,
+  children,
+}: {
+  title: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
+      >
+        {open ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+        <span className="text-sm font-medium text-gray-900">{title}</span>
+        <span className="ml-auto text-xs text-gray-400">{count}</span>
+      </button>
+      {open && <div className="border-t border-gray-100 px-3 py-3">{children}</div>}
+    </div>
+  );
+}
+
+function DocumentsTab({
+  employeeId,
+  uploads,
+  contracts,
+  policies,
+  forms,
+}: {
+  employeeId: string;
+  uploads: HrDoc[];
+  contracts: SignedDoc[];
+  policies: SignedDoc[];
+  forms: FormDoc[];
+}) {
+  return (
+    <div className="space-y-2.5">
+      <Collapsible title="Contracts" count={contracts.length}>
+        <SignedDocs docs={contracts} />
+      </Collapsible>
+      <Collapsible title="Policies" count={policies.length}>
+        <SignedDocs docs={policies} />
+      </Collapsible>
+      <Collapsible title="Forms" count={forms.length}>
+        {forms.length === 0 ? (
+          <p className="text-sm text-gray-500">No forms submitted.</p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {forms.map((f) => (
+              <li key={f.id} className="flex items-center gap-2 py-2.5 text-sm text-gray-900">
+                <FileText className="h-4 w-4 text-gray-400" />
+                <span className="font-medium">{f.name}</span>
+                {f.submittedAt && (
+                  <span className="ml-auto text-xs text-gray-500">{fmt(f.submittedAt)}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Collapsible>
+      <Collapsible title="Uploaded files" count={uploads.length}>
+        <Uploads employeeId={employeeId} items={uploads} />
+      </Collapsible>
+    </div>
+  );
+}
+
+function Uploads({ employeeId, items }: { employeeId: string; items: HrDoc[] }) {
   const [state, action] = useActionState<HrState, FormData>(uploadHrDocument, undefined);
   const ref = useRef<HTMLFormElement>(null);
   useResetOnOk(state, ref);

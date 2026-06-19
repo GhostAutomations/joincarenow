@@ -8,9 +8,10 @@ import {
   type Absence,
   type Warning,
   type HrDoc,
+  type FormDoc,
 } from "@/components/dashboard/employee-hr";
 import { CarerAcademySync, type SyncEvent } from "@/components/dashboard/carer-academy-sync";
-import { SignedDocs, type SignedDoc } from "@/components/documents/signed-docs";
+import { type SignedDoc } from "@/components/documents/signed-docs";
 import { DeleteEmployeeButton } from "@/components/dashboard/delete-employee-button";
 
 type Employee = {
@@ -131,6 +132,23 @@ export default async function EmployeeDetailPage({
       body: r.body_snapshot as string,
       version: (r.version as number) ?? null,
     }));
+  }
+  const signedContracts = signedDocs.filter((d) => d.docType === "contract");
+  const signedPolicies = signedDocs.filter((d) => d.docType === "policy");
+
+  // Forms the applicant submitted (for the Documents → Forms category).
+  let forms: FormDoc[] = [];
+  if (employee.application_id) {
+    const { data: subs } = await supabase
+      .from("form_submissions")
+      .select("id, created_at, forms(name)")
+      .eq("application_id", employee.application_id)
+      .eq("company_id", current.company_id)
+      .order("created_at", { ascending: false });
+    forms = (subs ?? []).map((s) => {
+      const f = s.forms as unknown as { name: string } | null;
+      return { id: s.id as string, name: f?.name ?? "Form", submittedAt: (s.created_at as string) ?? null };
+    });
   }
 
   const fullName =
@@ -253,22 +271,15 @@ export default async function EmployeeDetailPage({
       </div>
 
       <div className="mt-6">
-        <h2 className="mb-3 text-base font-medium text-white drop-shadow-sm">Documents</h2>
-        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
-          <p className="mb-3 text-xs text-gray-400">
-            Contracts and policies this employee signed when accepting their offer.
-          </p>
-          <SignedDocs docs={signedDocs} />
-        </section>
-      </div>
-
-      <div className="mt-6">
         <h2 className="mb-3 text-base font-medium text-white drop-shadow-sm">HR record</h2>
         <EmployeeHr
           employeeId={employee.id}
           absences={(absences ?? []) as Absence[]}
           warnings={(warnings ?? []) as Warning[]}
           documents={(documents ?? []) as HrDoc[]}
+          contracts={signedContracts}
+          policies={signedPolicies}
+          forms={forms}
         />
       </div>
     </div>

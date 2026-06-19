@@ -265,23 +265,14 @@ export function PipelineBoard({
       if (pending) clearTimeout(pending);
       pending = setTimeout(() => router.refresh(), 400);
     };
+    // No server-side filter — RLS already scopes events to this company's rows,
+    // and unfiltered postgres_changes subscriptions deliver far more reliably
+    // than filtered ones (the filtered version was missing the offer-accept push).
     const channel = supabase
       .channel(`pipeline-${companyId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "applications", filter: `company_id=eq.${companyId}` },
-        refresh
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "interviews", filter: `company_id=eq.${companyId}` },
-        refresh
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "offers", filter: `company_id=eq.${companyId}` },
-        refresh
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "applications" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "interviews" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, refresh)
       .subscribe();
 
     const t = setInterval(() => {

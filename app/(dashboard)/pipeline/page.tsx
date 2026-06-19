@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Briefcase, ArrowLeft } from "lucide-react";
+import { ChevronRight, ArrowLeft } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { PageHeader } from "@/components/dashboard/page-header";
 import {
@@ -84,19 +84,19 @@ export default async function PipelinePage({
             No live jobs yet. Publish a job to start receiving applicants.
           </p>
         ) : (
-          <div className="mx-auto mt-6 max-w-md space-y-2.5">
+          <div className="mx-auto mt-6 max-w-sm space-y-2">
             {jobs.map((j) => (
               <Link
                 key={j.id}
                 href={`/pipeline?job=${j.id}`}
-                className="group flex items-center gap-3 rounded-xl border border-white/40 bg-white/80 px-3 py-3 shadow-sm backdrop-blur-sm transition hover:bg-white hover:shadow-md"
+                className="group flex items-center gap-3 rounded-xl border border-white/40 bg-white/80 px-3 py-2.5 shadow-sm backdrop-blur-sm transition hover:bg-white hover:shadow-md"
               >
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
-                  <Briefcase className="h-7 w-7" />
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-2xl font-bold leading-none text-white">
+                  P
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-base font-semibold text-gray-900">{j.title}</span>
-                  <span className="block text-sm text-gray-500">
+                  <span className="block truncate text-lg font-semibold text-gray-900">{j.title}</span>
+                  <span className="block text-sm text-gray-700">
                     {j.branch ? `${j.branch} · ` : ""}
                     {j.active} in pipeline{j.hired ? ` · ${j.hired} hired` : ""}
                     {j.status === "closed" ? " · closed" : ""}

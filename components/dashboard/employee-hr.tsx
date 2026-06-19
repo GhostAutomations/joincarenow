@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { Trash2, FileText, Download, Plus, ChevronDown, ChevronRight, X } from "lucide-react";
+import { Trash2, FileText, Download, Plus, X } from "lucide-react";
+import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
 import {
   addAbsence,
   deleteAbsence,
@@ -261,32 +262,6 @@ function Warnings({ employeeId, items }: { employeeId: string; items: Warning[] 
 }
 
 // ---------- Documents (categorised) ----------
-function Collapsible({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count: number;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
-      >
-        {open ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
-        <span className="text-sm font-medium text-gray-900">{title}</span>
-        <span className="ml-auto text-xs text-gray-400">{count}</span>
-      </button>
-      {open && <div className="border-t border-gray-100 px-3 py-3">{children}</div>}
-    </div>
-  );
-}
-
 function DocumentsTab({
   employeeId,
   uploads,
@@ -305,19 +280,19 @@ function DocumentsTab({
   const uploadsCount = uploads.length + (cvApplicationId ? 1 : 0);
   return (
     <div className="space-y-2.5">
-      <Collapsible title="Contracts" count={contracts.length}>
+      <CollapsibleSection title="Contracts" count={contracts.length}>
         <SignedDocs docs={contracts} />
-      </Collapsible>
-      <Collapsible title="Policies" count={policies.length}>
+      </CollapsibleSection>
+      <CollapsibleSection title="Policies" count={policies.length}>
         <SignedDocs docs={policies} />
-      </Collapsible>
-      <Collapsible title="Forms" count={forms.length}>
+      </CollapsibleSection>
+      <CollapsibleSection title="Forms" count={forms.length}>
         <Forms items={forms} />
-      </Collapsible>
-      <Collapsible title="Uploaded files" count={uploadsCount}>
+      </CollapsibleSection>
+      <CollapsibleSection title="Uploaded files" count={uploadsCount}>
         {cvApplicationId && <CvRow applicationId={cvApplicationId} />}
         <Uploads employeeId={employeeId} items={uploads} />
-      </Collapsible>
+      </CollapsibleSection>
     </div>
   );
 }

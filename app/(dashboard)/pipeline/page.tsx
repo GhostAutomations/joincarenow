@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, ArrowLeft, Briefcase } from "lucide-react";
+import { ChevronRight, ArrowLeft, Briefcase, Layers } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { PageHeader } from "@/components/dashboard/page-header";
 import {
@@ -85,6 +85,12 @@ export default async function PipelinePage({
           </p>
         ) : (
           <div className="mx-auto mt-6 max-w-sm space-y-2">
+            <Link
+              href="/pipeline?job=all"
+              className="group flex items-center justify-center gap-2 rounded-xl border border-white/40 bg-white/20 px-3 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/30"
+            >
+              <Layers className="h-4 w-4" /> Show all pipelines
+            </Link>
             {jobs.map((j) => (
               <Link
                 key={j.id}
@@ -111,24 +117,29 @@ export default async function PipelinePage({
     );
   }
 
-  // Job selected → that job's board.
-  const { data: jobRow } = await supabase
-    .from("jobs")
-    .select("title")
-    .eq("id", job)
-    .eq("company_id", current.company_id)
-    .maybeSingle();
-  const jobTitle = (jobRow?.title as string) ?? "Pipeline";
+  // Job selected → that job's board. "all" → every job's applicants combined.
+  const isAll = job === "all";
+  let jobTitle = "All pipelines";
+  if (!isAll) {
+    const { data: jobRow } = await supabase
+      .from("jobs")
+      .select("title")
+      .eq("id", job)
+      .eq("company_id", current.company_id)
+      .maybeSingle();
+    jobTitle = (jobRow?.title as string) ?? "Pipeline";
+  }
+
+  let appsQuery = supabase
+    .from("applications")
+    .select(
+      "id, stage, created_at, cover_message, cv_path, answers, rtw_doc_path, rtw_share_code, rtw_expiry, rtw_verified_at, jobs(title, salary, region, worker_category, branches(name), roles!role_id(name)), applicants(first_name, last_name, email, phone, postcode)"
+    )
+    .eq("company_id", current.company_id);
+  if (!isAll) appsQuery = appsQuery.eq("job_id", job);
 
   const [{ data }, { data: ivData }, { data: companyRow }] = await Promise.all([
-    supabase
-      .from("applications")
-      .select(
-        "id, stage, created_at, cover_message, cv_path, answers, rtw_doc_path, rtw_share_code, rtw_expiry, rtw_verified_at, jobs(title, salary, region, worker_category, branches(name), roles!role_id(name)), applicants(first_name, last_name, email, phone, postcode)"
-      )
-      .eq("company_id", current.company_id)
-      .eq("job_id", job)
-      .order("created_at", { ascending: false }),
+    appsQuery.order("created_at", { ascending: false }),
     supabase
       .from("interviews")
       .select(

@@ -241,7 +241,7 @@ export function PipelineBoard({
 }) {
   const router = useRouter();
   const [apps, setApps] = useState(initial);
-  const [view, setView] = useState<"board" | "table">("board");
+  const [view] = useState<"board" | "table">("board");
   const [selectedId, setSelectedId] = useState<string | null>(openId);
   const [dragId, setDragId] = useState<string | null>(null);
   // Pre-Hire confirmation: holds the applicant pending a Hire confirm.
@@ -350,21 +350,7 @@ export function PipelineBoard({
 
   return (
     <div>
-      <PageHeader title="Pipeline" subtitle="Drag applicants through your hiring stages.">
-        <div className="inline-flex rounded-lg border border-white/40 bg-white/15 p-0.5 text-sm">
-          {(["board", "table"] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`rounded-md px-3 py-1 capitalize ${
-                view === v ? "bg-white text-brand-700" : "text-white/80 hover:bg-white/10"
-              }`}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
-      </PageHeader>
+      <PageHeader title="Pipeline" subtitle="Drag applicants through your hiring stages." />
 
       {apps.length === 0 && (
         <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">

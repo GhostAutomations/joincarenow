@@ -343,9 +343,9 @@ function Forms({ items }: { items: FormDoc[] }) {
             <button
               onClick={() => open(f.id)}
               disabled={loadingId === f.id}
-              className="flex min-w-0 items-center gap-2.5 text-left text-base text-gray-900 hover:text-brand-600 disabled:opacity-60"
+              className="flex min-w-0 items-center gap-2 text-left text-sm text-gray-900 hover:text-brand-600 disabled:opacity-60"
             >
-              <FileText className="h-6 w-6 shrink-0 text-gray-400" />
+              <FileText className="h-4 w-4 shrink-0 text-gray-400" />
               <span className="truncate font-medium">{f.name}</span>
             </button>
             <span className="shrink-0 text-xs text-gray-500">
@@ -397,12 +397,12 @@ function CvRow({ applicationId }: { applicationId: string }) {
   return (
     <button
       onClick={open}
-      className="mb-2 flex w-full items-center gap-2.5 rounded-md py-2 text-left text-base text-gray-900 hover:text-brand-600"
+      className="mb-2 flex w-full items-center gap-2 rounded-md py-2 text-left text-sm text-gray-900 hover:text-brand-600"
     >
-      <FileText className="h-6 w-6 text-gray-400" />
+      <FileText className="h-4 w-4 text-gray-400" />
       <span className="font-medium">CV</span>
-      <span className="text-sm text-gray-500">· uploaded by applicant</span>
-      <Download className="h-4 w-4 text-gray-300" />
+      <span className="text-xs text-gray-500">· uploaded by applicant</span>
+      <Download className="h-3.5 w-3.5 text-gray-300" />
     </button>
   );
 }
@@ -427,9 +427,9 @@ function Uploads({ employeeId, items }: { employeeId: string; items: HrDoc[] }) 
             <li key={d.id} className="flex items-center justify-between py-2.5">
               <button
                 onClick={() => open(d.id)}
-                className="flex items-center gap-2.5 text-left text-base text-gray-900 hover:text-brand-600"
+                className="flex items-center gap-2 text-left text-sm text-gray-900 hover:text-brand-600"
               >
-                <FileText className="h-6 w-6 text-gray-400" />
+                <FileText className="h-4 w-4 text-gray-400" />
                 <span>
                   <span className="font-medium">{d.title}</span>
                   <span className="ml-2 text-xs text-gray-500">

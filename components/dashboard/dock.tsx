@@ -37,11 +37,11 @@ export function Dock() {
               key={href}
               onClick={() => router.push(href)}
               aria-label={label}
-              className={`group relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${grad} text-white shadow transition-transform hover:-translate-y-1 ${
+              className={`group relative grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${grad} text-white shadow transition-transform hover:-translate-y-1 ${
                 active ? "ring-2 ring-brand-600 ring-offset-2 ring-offset-white/60" : ""
               }`}
             >
-              <Icon className="h-5 w-5" strokeWidth={1.9} />
+              <Icon className="h-8 w-8" strokeWidth={1.9} />
               <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white opacity-0 shadow transition-opacity duration-75 group-hover:opacity-100">
                 {label}
               </span>

@@ -78,11 +78,15 @@ export default async function PipelinePage({
   }
 
   // Booked interviews (for slot conflict detection) + staff list (interviewers).
-  const bookedInterviews = (ivData ?? []).map((iv) => ({
-    scheduled_at: iv.scheduled_at as string,
-    duration_minutes: iv.duration_minutes as number,
-    interviewer_id: (iv.interviewer_id as string) ?? null,
-  }));
+  // Only live interviews (proposed/confirmed) block a slot — cancelled/declined or
+  // reschedule-requested times are free again.
+  const bookedInterviews = (ivData ?? [])
+    .filter((iv) => iv.status === "proposed" || iv.status === "confirmed")
+    .map((iv) => ({
+      scheduled_at: iv.scheduled_at as string,
+      duration_minutes: iv.duration_minutes as number,
+      interviewer_id: (iv.interviewer_id as string) ?? null,
+    }));
 
   // Make sure the system "Your References" form exists so it can be sent.
   await supabase.rpc("ensure_reference_form", { p_company_id: current.company_id });

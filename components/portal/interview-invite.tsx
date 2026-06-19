@@ -31,7 +31,7 @@ function modeLabel(m: string | null) {
 }
 
 export function InterviewInvite({ interview }: { interview: PortalInterview }) {
-  const [mode, setMode] = useState<"none" | "reschedule">("none");
+  const [mode, setMode] = useState<"none" | "reschedule" | "cancel">("none");
   const when = formatLondon(interview.scheduled_at);
 
   const calEvent: CalEvent = {
@@ -119,14 +119,41 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
           >
             Request new time
           </button>
-          <form action={respondToInterview}>
-            <input type="hidden" name="interviewId" value={interview.interview_id} />
-            <input type="hidden" name="response" value="declined" />
-            <button className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100">
-              {interview.status === "confirmed" ? "Cancel interview" : "No longer interested"}
-            </button>
-          </form>
+          <button
+            onClick={() => setMode("cancel")}
+            className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100"
+          >
+            {interview.status === "confirmed" ? "Cancel interview" : "No longer interested"}
+          </button>
         </div>
+      )}
+
+      {(interview.status === "proposed" || interview.status === "confirmed") && mode === "cancel" && (
+        <form action={respondToInterview} className="mt-3 space-y-2">
+          <input type="hidden" name="interviewId" value={interview.interview_id} />
+          <input type="hidden" name="response" value="declined" />
+          <p className="text-xs text-gray-600">
+            Sorry to hear that. If you&apos;d like, let the employer know why (optional).
+          </p>
+          <textarea
+            name="note"
+            rows={2}
+            placeholder="Reason (optional)"
+            className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+          />
+          <div className="flex gap-2">
+            <button className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700">
+              Confirm cancellation
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("none")}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              Back
+            </button>
+          </div>
+        </form>
       )}
 
       {(interview.status === "proposed" || interview.status === "confirmed") && mode === "reschedule" && (

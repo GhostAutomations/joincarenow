@@ -13,11 +13,12 @@ export default async function DashboardPage() {
   const monthStart = londonToUtcIso(`${todayStr.slice(0, 7)}-01T00:00`);
   const count = (q: { count: number | null }) => q.count ?? 0;
 
-  const [jobs, applicants, interviews, workflow, sms] = await Promise.all([
+  const [jobs, applicants, interviews, workflow, signoff, sms] = await Promise.all([
     supabase.from("jobs").select("id", { count: "exact", head: true }).eq("company_id", cid).eq("status", "published"),
     supabase.from("applications").select("id", { count: "exact", head: true }).eq("company_id", cid).in("stage", ["applied", "reviewing", "interview", "offer"]),
     supabase.from("interviews").select("id", { count: "exact", head: true }).eq("company_id", cid).gte("scheduled_at", dayStart).lt("scheduled_at", dayEnd),
     supabase.from("onboarding_tasks").select("id", { count: "exact", head: true }).eq("company_id", cid).neq("status", "approved"),
+    supabase.from("signed_documents").select("id", { count: "exact", head: true }).eq("company_id", cid).eq("review_status", "pending"),
     supabase.from("messages").select("id", { count: "exact", head: true }).eq("company_id", cid).eq("channel", "sms").eq("direction", "outbound").gte("created_at", monthStart),
   ]);
 
@@ -34,7 +35,7 @@ export default async function DashboardPage() {
     { label: "Live jobs", value: count(jobs), href: "/jobs" },
     { label: "Active applicants", value: count(applicants), href: "/pipeline" },
     { label: "Interviews today", value: count(interviews), href: "/interviews" },
-    { label: "In workflow", value: count(workflow), href: "/onboarding-board" },
+    { label: "Sign Off", value: count(signoff), href: "/sign-off" },
     { label: "SMS this month", value: count(sms), href: "/templates" },
   ];
 

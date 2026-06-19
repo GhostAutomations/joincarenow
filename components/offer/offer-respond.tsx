@@ -45,10 +45,10 @@ export function OfferRespond({
     setError(null);
     if (documents.length > 0) {
       setDocSigns(
-        documents.map((d, i) => ({
-          open: i === 0,
+        documents.map(() => ({
+          open: false,
           agreed: false,
-          name: d.signatureMethod === "type" ? signerDefaultName : signerDefaultName,
+          name: signerDefaultName,
           image: "",
         }))
       );

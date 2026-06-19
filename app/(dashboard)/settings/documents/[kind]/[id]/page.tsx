@@ -39,5 +39,7 @@ export default async function DocEditorPage({
     };
   }
 
-  return <DocEditorForm kind={kind} doc={doc} />;
+  // key per document so the form (incl. the signature-method selector) resets to
+  // this doc's values instead of reusing the previous editor's state.
+  return <DocEditorForm key={`${kind}-${id}`} kind={kind} doc={doc} />;
 }

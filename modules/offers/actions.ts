@@ -98,24 +98,10 @@ export async function getOfferDocOptions(applicationId: string): Promise<OfferDo
     supabase.from("applications").select("job_id").eq("id", applicationId).eq("company_id", current.company_id).maybeSingle(),
   ]);
 
-  // Default from the most recent offer if there is one (reissue), else the job.
-  const { data: prevOffer } = await supabase
-    .from("offers")
-    .select("id, contract_template_id")
-    .eq("application_id", applicationId)
-    .eq("company_id", current.company_id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
+  // Default from the job's assigned contract + policies.
   let contractId: string | null = null;
   let policyIds: string[] = [];
-
-  if (prevOffer?.id) {
-    contractId = (prevOffer.contract_template_id as string) ?? null;
-    const { data: op } = await supabase.from("offer_policies").select("policy_id").eq("offer_id", prevOffer.id);
-    policyIds = (op ?? []).map((r) => r.policy_id as string);
-  } else if (app?.job_id) {
+  if (app?.job_id) {
     const [{ data: job }, { data: jp }] = await Promise.all([
       supabase.from("jobs").select("contract_template_id").eq("id", app.job_id).maybeSingle(),
       supabase.from("job_policies").select("policy_id").eq("job_id", app.job_id),

@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { LayoutGrid } from "lucide-react";
 import { signOut } from "@/modules/auth/actions";
 import { NotificationsBell } from "@/components/dashboard/notifications-bell";
+import { JcnLogo } from "@/components/brand/jcn-logo";
 
 export function Topbar({
   userName,
@@ -24,7 +24,7 @@ export function Topbar({
             <img src={logoUrl} alt="" className="h-7 w-auto max-w-[140px] object-contain" />
           ) : (
             <>
-              <LayoutGrid className="h-5 w-5" aria-hidden />
+              <JcnLogo className="h-5 w-5" />
               Join Care Now
             </>
           )}

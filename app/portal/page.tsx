@@ -72,6 +72,14 @@ export default async function PortalPage({
         .map(async (o) => [o.token, await loadSignableDocs(o.token)] as const)
     )
   );
+
+  // The applicant's own name, to pre-fill the signature area.
+  const { data: me } = await supabase
+    .from("applicants")
+    .select("first_name, last_name")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const signerDefaultName = [me?.first_name, me?.last_name].filter(Boolean).join(" ");
   const interviewByApp = new Map<string, PortalInterview>();
   for (const iv of (ivData ?? []) as (PortalInterview & {
     application_id: string;
@@ -166,6 +174,7 @@ export default async function PortalPage({
                   firstName: null,
                 }}
                 documents={offerDocs.get(o.token) ?? []}
+                signerDefaultName={signerDefaultName}
               />
             ))}
           </section>

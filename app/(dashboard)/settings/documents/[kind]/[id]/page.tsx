@@ -22,16 +22,21 @@ export default async function DocEditorPage({
   const { supabase, current } = await requireCompany();
   if (current.role !== "admin") redirect("/settings");
 
-  let doc: { id: string; name: string; body: string } | null = null;
+  let doc: { id: string; name: string; body: string; signatureMethod: "type" | "draw" } | null = null;
   if (id !== "new") {
     const { data } = await supabase
       .from(TABLE[kind])
-      .select("id, name, body")
+      .select("id, name, body, signature_method")
       .eq("id", id)
       .eq("company_id", current.company_id)
       .maybeSingle();
     if (!data) notFound();
-    doc = { id: data.id as string, name: data.name as string, body: (data.body as string) ?? "" };
+    doc = {
+      id: data.id as string,
+      name: data.name as string,
+      body: (data.body as string) ?? "",
+      signatureMethod: data.signature_method === "draw" ? "draw" : "type",
+    };
   }
 
   return <DocEditorForm kind={kind} doc={doc} />;

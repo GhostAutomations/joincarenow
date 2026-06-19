@@ -15,6 +15,7 @@ export default async function OfferTokenPage({
   if (!row) notFound();
 
   const documents = await loadSignableDocs(token);
+  const signerDefaultName = [row.first_name, row.last_name].filter(Boolean).join(" ");
 
   const offer: TokenOffer = {
     token,
@@ -44,7 +45,7 @@ export default async function OfferTokenPage({
           {offer.companyName} has made you an offer{offer.jobTitle ? ` for the ${offer.jobTitle} role` : ""}.
           Please review it below and let them know your decision.
         </p>
-        <OfferRespond offer={offer} documents={documents} />
+        <OfferRespond offer={offer} documents={documents} signerDefaultName={signerDefaultName} />
       </div>
     </main>
   );

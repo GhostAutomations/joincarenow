@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, X, FileText } from "lucide-react";
+import { CheckCircle2, X, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { respondToOffer, signAndAcceptOffer, type SignableDoc } from "@/modules/offers/actions";
+import { SignaturePad } from "@/components/offer/signature-pad";
+
+type DocSign = { open: boolean; agreed: boolean; name: string; image: string };
 
 export type TokenOffer = {
   token: string;
@@ -22,9 +25,11 @@ export type TokenOffer = {
 export function OfferRespond({
   offer,
   documents = [],
+  signerDefaultName = "",
 }: {
   offer: TokenOffer;
   documents?: SignableDoc[];
+  signerDefaultName?: string;
 }) {
   const [status, setStatus] = useState(offer.status);
   const [busy, setBusy] = useState<"accepted" | "declined" | null>(null);
@@ -34,18 +39,34 @@ export function OfferRespond({
   const [talentPool, setTalentPool] = useState(true);
   const [declinedWithPool, setDeclinedWithPool] = useState(false);
   const [signing, setSigning] = useState(false);
-  const [signerName, setSignerName] = useState("");
-  const [agreed, setAgreed] = useState<boolean[]>([]);
+  const [docSigns, setDocSigns] = useState<DocSign[]>([]);
 
   function startAccept() {
     setError(null);
     if (documents.length > 0) {
-      setAgreed(documents.map(() => false));
-      setSignerName("");
+      setDocSigns(
+        documents.map((d, i) => ({
+          open: i === 0,
+          agreed: false,
+          name: d.signatureMethod === "type" ? signerDefaultName : signerDefaultName,
+          image: "",
+        }))
+      );
       setSigning(true);
     } else {
       void accept();
     }
+  }
+
+  function updateDoc(i: number, patch: Partial<DocSign>) {
+    setDocSigns((prev) => prev.map((d, idx) => (idx === i ? { ...d, ...patch } : d)));
+  }
+
+  function docDone(i: number): boolean {
+    const s = docSigns[i];
+    const d = documents[i];
+    if (!s || !d || !s.agreed) return false;
+    return d.signatureMethod === "draw" ? !!s.image : s.name.trim().length >= 2;
   }
 
   async function accept() {
@@ -63,7 +84,10 @@ export function OfferRespond({
   async function signAndAccept() {
     setBusy("accepted");
     setError(null);
-    const res = await signAndAcceptOffer(offer.token, signerName);
+    const res = await signAndAcceptOffer(
+      offer.token,
+      docSigns.map((s) => ({ name: s.name, image: s.image || null }))
+    );
     setBusy(null);
     if (res?.error) {
       setError(res.error);
@@ -73,9 +97,7 @@ export function OfferRespond({
     setStatus("accepted");
   }
 
-  const allAgreed =
-    documents.length > 0 && agreed.length === documents.length && agreed.every(Boolean);
-  const canSign = allAgreed && signerName.trim().length >= 2;
+  const canSign = documents.length > 0 && documents.every((_, i) => docDone(i));
 
   async function confirmDecline() {
     setBusy("declined");
@@ -132,52 +154,76 @@ export function OfferRespond({
           )}
         </div>
       ) : signing ? (
-        <div className="mt-5 space-y-4">
+        <div className="mt-5 space-y-3">
           {error && <p className="text-sm text-red-600">{error}</p>}
           <p className="text-sm text-gray-700">
-            Before you start, please read and agree to the following. Type your full name at the
-            bottom to sign — this is your electronic signature.
+            Please open and sign each document below. You can accept once all are signed.
           </p>
 
-          {documents.map((d, i) => (
-            <div key={`${d.docType}-${d.sourceId ?? i}`} className="rounded-xl border border-gray-200">
-              <div className="flex items-center gap-2 border-b border-gray-100 px-3 py-2">
-                <FileText className="h-4 w-4 text-gray-400" />
-                <span className="text-sm font-medium text-gray-900">{d.title}</span>
-                <span className="ml-auto text-[11px] uppercase tracking-wide text-gray-400">
-                  {d.docType === "contract" ? "Contract" : "Policy"}
-                </span>
-              </div>
-              <div className="max-h-64 overflow-y-auto whitespace-pre-wrap px-3 py-2 text-xs leading-relaxed text-gray-700">
-                {d.body}
-              </div>
-              <label className="flex items-start gap-2 border-t border-gray-100 px-3 py-2.5 text-sm text-gray-800">
-                <input
-                  type="checkbox"
-                  checked={agreed[i] ?? false}
-                  onChange={(e) =>
-                    setAgreed((prev) => prev.map((v, idx) => (idx === i ? e.target.checked : v)))
-                  }
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300"
-                />
-                <span>
-                  {d.docType === "contract"
-                    ? "I have read and agree to this contract."
-                    : "I have read and understood this policy."}
-                </span>
-              </label>
-            </div>
-          ))}
+          {documents.map((d, i) => {
+            const s = docSigns[i];
+            const done = docDone(i);
+            return (
+              <div key={`${d.docType}-${d.sourceId ?? i}`} className="rounded-xl border border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => updateDoc(i, { open: !s?.open })}
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
+                >
+                  {done ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
+                  ) : (
+                    <FileText className="h-4 w-4 shrink-0 text-gray-400" />
+                  )}
+                  <span className="text-sm font-medium text-gray-900">{d.title}</span>
+                  <span className="ml-auto flex items-center gap-2">
+                    <span className={`text-[11px] uppercase tracking-wide ${done ? "text-green-600" : "text-gray-400"}`}>
+                      {done ? "Signed" : "To sign"}
+                    </span>
+                    {s?.open ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+                  </span>
+                </button>
 
-          <label className="block">
-            <span className="text-xs font-medium text-gray-600">Type your full name to sign</span>
-            <input
-              value={signerName}
-              onChange={(e) => setSignerName(e.target.value)}
-              placeholder="e.g. Jane Smith"
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            />
-          </label>
+                {s?.open && (
+                  <div className="border-t border-gray-100 px-3 py-3">
+                    <div className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg bg-gray-50 px-3 py-2 text-xs leading-relaxed text-gray-700">
+                      {d.body}
+                    </div>
+
+                    <label className="mt-3 flex items-start gap-2 text-sm text-gray-800">
+                      <input
+                        type="checkbox"
+                        checked={s.agreed}
+                        onChange={(e) => updateDoc(i, { agreed: e.target.checked })}
+                        className="mt-0.5 h-4 w-4 rounded border-gray-300"
+                      />
+                      <span>
+                        {d.docType === "contract"
+                          ? "I have read and agree to this contract."
+                          : "I have read and understood this policy."}
+                      </span>
+                    </label>
+
+                    <div className="mt-3">
+                      {d.signatureMethod === "draw" ? (
+                        <SignaturePad name={s.name} onChange={(img) => updateDoc(i, { image: img })} />
+                      ) : (
+                        <label className="block">
+                          <span className="text-xs font-medium text-gray-600">Type your full name to sign</span>
+                          <input
+                            value={s.name}
+                            onChange={(e) => updateDoc(i, { name: e.target.value })}
+                            placeholder="e.g. Jane Smith"
+                            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           <div className="flex flex-wrap gap-3 pt-1">
             <button

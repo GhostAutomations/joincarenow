@@ -27,13 +27,14 @@ export function DocEditorForm({
   doc,
 }: {
   kind: Kind;
-  doc: { id: string; name: string; body: string } | null;
+  doc: { id: string; name: string; body: string; signatureMethod?: "type" | "draw" } | null;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState(doc?.name ?? "");
   const [body, setBody] = useState(doc?.body ?? "");
+  const [sigMethod, setSigMethod] = useState<"type" | "draw">(doc?.signatureMethod ?? "type");
   const [brief, setBrief] = useState("");
   const [generating, setGenerating] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -208,6 +209,40 @@ export function DocEditorForm({
             className="mt-1 h-[55vh] min-h-[320px] w-full resize-y rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm leading-relaxed focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </label>
+
+        <div className="rounded-lg border border-gray-200 p-3">
+          <p className="text-xs font-medium text-gray-700">How the applicant signs this {kind === "contract" ? "contract" : "policy"}</p>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+            <label className={`flex flex-1 cursor-pointer items-start gap-2 rounded-lg border px-3 py-2 text-sm ${sigMethod === "type" ? "border-brand-500 bg-brand-50" : "border-gray-200"}`}>
+              <input
+                type="radio"
+                name="signature_method"
+                value="type"
+                checked={sigMethod === "type"}
+                onChange={() => setSigMethod("type")}
+                className="mt-0.5"
+              />
+              <span>
+                <span className="font-medium text-gray-900">Tick &amp; type name</span>
+                <span className="block text-xs text-gray-500">Applicant ticks to agree and types their name.</span>
+              </span>
+            </label>
+            <label className={`flex flex-1 cursor-pointer items-start gap-2 rounded-lg border px-3 py-2 text-sm ${sigMethod === "draw" ? "border-brand-500 bg-brand-50" : "border-gray-200"}`}>
+              <input
+                type="radio"
+                name="signature_method"
+                value="draw"
+                checked={sigMethod === "draw"}
+                onChange={() => setSigMethod("draw")}
+                className="mt-0.5"
+              />
+              <span>
+                <span className="font-medium text-gray-900">Tick &amp; draw signature</span>
+                <span className="block text-xs text-gray-500">Applicant ticks to agree and draws their signature.</span>
+              </span>
+            </label>
+          </div>
+        </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 

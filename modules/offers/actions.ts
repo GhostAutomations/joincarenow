@@ -16,6 +16,7 @@ export type SignableDoc = {
   title: string;
   body: string;
   version: number | null;
+  signatureMethod: "type" | "draw";
 };
 
 export type OfferInfo = {
@@ -262,10 +263,12 @@ export async function loadSignableDocs(token: string): Promise<SignableDoc[]> {
       title: (row.contract_name as string) ?? "Employment contract",
       body: renderMergeFields(row.contract_body as string, ctx),
       version: (row.contract_version as number) ?? null,
+      signatureMethod: (row.contract_sig_method as string) === "draw" ? "draw" : "type",
     });
   }
 
-  const policies = (row.policies as { id: string; name: string; body: string; version: number }[] | null) ?? [];
+  const policies =
+    (row.policies as { id: string; name: string; body: string; version: number; signature_method?: string }[] | null) ?? [];
   for (const p of policies) {
     docs.push({
       docType: "policy",
@@ -273,29 +276,54 @@ export async function loadSignableDocs(token: string): Promise<SignableDoc[]> {
       title: p.name,
       body: renderMergeFields(p.body ?? "", ctx),
       version: p.version ?? null,
+      signatureMethod: p.signature_method === "draw" ? "draw" : "type",
     });
   }
   return docs;
 }
 
+/** A signature captured per document (aligned by index with loadSignableDocs). */
+export type DocSignature = { name: string; image: string | null };
+
 /** Public (no login): accept an offer by signing the attached documents. Records
- *  an immutable snapshot of exactly what was agreed, then completes the hire. */
+ *  an immutable snapshot of exactly what was agreed, then completes the hire.
+ *  `signatures` aligns by index with loadSignableDocs(token). */
 export async function signAndAcceptOffer(
   token: string,
-  signerName: string
+  signatures: DocSignature[]
 ): Promise<{ ok?: boolean; error?: string }> {
-  const name = signerName.trim();
-  if (name.length < 2) return { error: "Please type your full name to sign." };
-
   // Re-render the docs server-side (don't trust client-sent text) for the snapshot.
   const docs = await loadSignableDocs(token);
-  const payload = docs.map((d) => ({
-    doc_type: d.docType,
-    source_id: d.sourceId,
-    title: d.title,
-    body: d.body,
-    version: d.version,
-  }));
+  if (docs.length === 0) return { error: "There are no documents to sign on this offer." };
+  if (signatures.length !== docs.length) return { error: "Please sign every document." };
+
+  const payload = docs.map((d, i) => {
+    const sig = signatures[i] ?? { name: "", image: null };
+    const name = (sig.name ?? "").trim();
+    return {
+      doc_type: d.docType,
+      source_id: d.sourceId,
+      title: d.title,
+      body: d.body,
+      version: d.version,
+      signature_method: d.signatureMethod,
+      signer_name: name,
+      signature_image: d.signatureMethod === "draw" ? sig.image ?? "" : "",
+    };
+  });
+
+  // Validate: typed docs need a name; drawn docs need an image.
+  for (let i = 0; i < docs.length; i++) {
+    const p = payload[i];
+    if (docs[i].signatureMethod === "draw" && !p.signature_image) {
+      return { error: `Please draw your signature on "${docs[i].title}".` };
+    }
+    if (!p.signer_name || p.signer_name.length < 2) {
+      return { error: `Please sign "${docs[i].title}".` };
+    }
+  }
+
+  const firstName = payload[0]?.signer_name ?? "Signed";
 
   let ip: string | null = null;
   try {
@@ -308,7 +336,7 @@ export async function signAndAcceptOffer(
   const supabase = await createClient();
   const { error } = await supabase.rpc("sign_and_accept_offer", {
     p_token: token,
-    p_signer_name: name,
+    p_signer_name: firstName,
     p_docs: payload,
     p_ip: ip,
   });

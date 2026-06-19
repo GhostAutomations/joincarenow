@@ -21,6 +21,7 @@ export async function saveDoc(kind: Kind, formData: FormData): Promise<DocResult
   const id = formData.get("id")?.toString() || null;
   const name = (formData.get("name")?.toString() ?? "").trim();
   const body = formData.get("body")?.toString() ?? "";
+  const signatureMethod = formData.get("signature_method")?.toString() === "draw" ? "draw" : "type";
   if (name.length < 2) return { error: "Give the document a name." };
 
   const { supabase, current, user } = await requireCompany();
@@ -38,7 +39,7 @@ export async function saveDoc(kind: Kind, formData: FormData): Promise<DocResult
     const nextVersion = ((existing?.version as number) ?? 1) + 1;
     const { error } = await supabase
       .from(table)
-      .update({ name, body, version: nextVersion })
+      .update({ name, body, version: nextVersion, signature_method: signatureMethod })
       .eq("id", id)
       .eq("company_id", current.company_id);
     if (error) return { error: "Could not save your changes." };
@@ -48,7 +49,7 @@ export async function saveDoc(kind: Kind, formData: FormData): Promise<DocResult
 
   const { data, error } = await supabase
     .from(table)
-    .insert({ company_id: current.company_id, name, body, created_by: user.id })
+    .insert({ company_id: current.company_id, name, body, signature_method: signatureMethod, created_by: user.id })
     .select("id")
     .single();
   if (error) return { error: "Could not create the document." };

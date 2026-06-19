@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireCompany } from "@/modules/auth/queries";
 import { syncEmployeeToCarerAcademy } from "@/lib/integrations/carer-academy";
@@ -63,6 +64,19 @@ export async function updateEmployee(
   revalidatePath("/employees");
   revalidatePath(`/employees/${id}`);
   return { ok: true };
+}
+
+/** Delete an employee record (admin only). The recruitment history (application,
+ *  signed documents) is retained — only the employee master record is removed, so
+ *  re-hiring the same applicant creates a fresh record. */
+export async function deleteEmployee(formData: FormData): Promise<void> {
+  const id = formData.get("id")?.toString();
+  if (!id) return;
+  const { supabase, current } = await requireCompany();
+  if (current.role !== "admin") return;
+  await supabase.from("employees").delete().eq("id", id).eq("company_id", current.company_id);
+  revalidatePath("/employees");
+  redirect("/employees");
 }
 
 /** Manually (re)send an employee to Carer.Academy — for retries after a

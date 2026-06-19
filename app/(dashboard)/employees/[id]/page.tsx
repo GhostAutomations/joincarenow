@@ -11,6 +11,7 @@ import {
 } from "@/components/dashboard/employee-hr";
 import { CarerAcademySync, type SyncEvent } from "@/components/dashboard/carer-academy-sync";
 import { SignedDocs, type SignedDoc } from "@/components/documents/signed-docs";
+import { DeleteEmployeeButton } from "@/components/dashboard/delete-employee-button";
 
 type Employee = {
   id: string;
@@ -160,6 +161,12 @@ export default async function EmployeeDetailPage({
         Hired {new Date(employee.created_at).toLocaleDateString("en-GB")}
         {managerName && ` · Reports to ${managerName}`}
       </p>
+
+      {current.role === "admin" && (
+        <div className="mt-3">
+          <DeleteEmployeeButton id={employee.id} name={fullName} />
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Master record (read-only summary) */}

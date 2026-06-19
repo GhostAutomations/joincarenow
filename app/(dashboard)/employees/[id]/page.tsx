@@ -151,6 +151,17 @@ export default async function EmployeeDetailPage({
     });
   }
 
+  // The applicant's uploaded CV (stored on the application), if any.
+  let cvApplicationId: string | null = null;
+  if (employee.application_id) {
+    const { data: appRow } = await supabase
+      .from("applications")
+      .select("cv_path")
+      .eq("id", employee.application_id)
+      .maybeSingle();
+    if (appRow?.cv_path) cvApplicationId = employee.application_id;
+  }
+
   const fullName =
     [employee.first_name, employee.last_name].filter(Boolean).join(" ") ||
     employee.email ||
@@ -259,18 +270,6 @@ export default async function EmployeeDetailPage({
       </div>
 
       <div className="mt-6">
-        <h2 className="mb-3 text-base font-medium text-white drop-shadow-sm">Connected systems</h2>
-        <CarerAcademySync
-          employeeId={employee.id}
-          status={employee.carer_academy_status}
-          academyUserId={employee.carer_academy_user_id}
-          syncedAt={employee.carer_academy_synced_at}
-          error={employee.carer_academy_error}
-          events={(syncEvents ?? []) as SyncEvent[]}
-        />
-      </div>
-
-      <div className="mt-6">
         <h2 className="mb-3 text-base font-medium text-white drop-shadow-sm">HR record</h2>
         <EmployeeHr
           employeeId={employee.id}
@@ -280,6 +279,19 @@ export default async function EmployeeDetailPage({
           contracts={signedContracts}
           policies={signedPolicies}
           forms={forms}
+          cvApplicationId={cvApplicationId}
+        />
+      </div>
+
+      <div className="mt-6">
+        <h2 className="mb-3 text-base font-medium text-white drop-shadow-sm">Connected systems</h2>
+        <CarerAcademySync
+          employeeId={employee.id}
+          status={employee.carer_academy_status}
+          academyUserId={employee.carer_academy_user_id}
+          syncedAt={employee.carer_academy_synced_at}
+          error={employee.carer_academy_error}
+          events={(syncEvents ?? []) as SyncEvent[]}
         />
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
   type HrState,
 } from "@/modules/hr/actions";
 import { SignedDocs, type SignedDoc } from "@/components/documents/signed-docs";
+import { getCvUrl } from "@/modules/applications/actions";
 
 const cls =
   "mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -56,6 +57,7 @@ export function EmployeeHr({
   contracts = [],
   policies = [],
   forms = [],
+  cvApplicationId = null,
 }: {
   employeeId: string;
   absences: Absence[];
@@ -64,9 +66,11 @@ export function EmployeeHr({
   contracts?: SignedDoc[];
   policies?: SignedDoc[];
   forms?: FormDoc[];
+  cvApplicationId?: string | null;
 }) {
   const [tab, setTab] = useState<Tab>("Absences");
-  const docCount = documents.length + contracts.length + policies.length + forms.length;
+  const docCount =
+    documents.length + contracts.length + policies.length + forms.length + (cvApplicationId ? 1 : 0);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
@@ -98,6 +102,7 @@ export function EmployeeHr({
             contracts={contracts}
             policies={policies}
             forms={forms}
+            cvApplicationId={cvApplicationId}
           />
         )}
       </div>
@@ -287,13 +292,16 @@ function DocumentsTab({
   contracts,
   policies,
   forms,
+  cvApplicationId,
 }: {
   employeeId: string;
   uploads: HrDoc[];
   contracts: SignedDoc[];
   policies: SignedDoc[];
   forms: FormDoc[];
+  cvApplicationId: string | null;
 }) {
+  const uploadsCount = uploads.length + (cvApplicationId ? 1 : 0);
   return (
     <div className="space-y-2.5">
       <Collapsible title="Contracts" count={contracts.length}>
@@ -319,10 +327,30 @@ function DocumentsTab({
           </ul>
         )}
       </Collapsible>
-      <Collapsible title="Uploaded files" count={uploads.length}>
+      <Collapsible title="Uploaded files" count={uploadsCount}>
+        {cvApplicationId && <CvRow applicationId={cvApplicationId} />}
         <Uploads employeeId={employeeId} items={uploads} />
       </Collapsible>
     </div>
+  );
+}
+
+function CvRow({ applicationId }: { applicationId: string }) {
+  async function open() {
+    const res = await getCvUrl(applicationId);
+    if (res.url) window.open(res.url, "_blank");
+    else alert(res.error ?? "Could not open the CV.");
+  }
+  return (
+    <button
+      onClick={open}
+      className="mb-2 flex w-full items-center gap-2 rounded-md py-2 text-left text-sm text-gray-900 hover:text-brand-600"
+    >
+      <FileText className="h-4 w-4 text-gray-400" />
+      <span className="font-medium">CV</span>
+      <span className="text-xs text-gray-500">· uploaded by applicant</span>
+      <Download className="h-3.5 w-3.5 text-gray-300" />
+    </button>
   );
 }
 

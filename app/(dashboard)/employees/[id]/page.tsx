@@ -10,6 +10,7 @@ import {
   type HrDoc,
 } from "@/components/dashboard/employee-hr";
 import { CarerAcademySync, type SyncEvent } from "@/components/dashboard/carer-academy-sync";
+import { SignedDocs, type SignedDoc } from "@/components/documents/signed-docs";
 
 type Employee = {
   id: string;
@@ -106,6 +107,30 @@ export default async function EmployeeDetailPage({
     const p = m.profiles as unknown as { full_name: string | null; email: string } | null;
     return { user_id: m.user_id as string, name: p?.full_name || p?.email || "Team member" };
   });
+
+  // Signed contracts + policies (by applicant, falling back to application).
+  let signedDocs: SignedDoc[] = [];
+  const sdCol = employee.applicant_id ? "applicant_id" : employee.application_id ? "application_id" : null;
+  const sdVal = employee.applicant_id ?? employee.application_id;
+  if (sdCol && sdVal) {
+    const { data: signedRaw } = await supabase
+      .from("signed_documents")
+      .select("id, title, doc_type, signer_name, signed_at, signature_method, signature_image, body_snapshot, version")
+      .eq("company_id", current.company_id)
+      .eq(sdCol, sdVal)
+      .order("signed_at", { ascending: false });
+    signedDocs = (signedRaw ?? []).map((r) => ({
+      id: r.id as string,
+      title: r.title as string,
+      docType: r.doc_type as string,
+      signerName: r.signer_name as string,
+      signedAt: r.signed_at as string,
+      signatureMethod: r.signature_method as string,
+      signatureImage: (r.signature_image as string) ?? null,
+      body: r.body_snapshot as string,
+      version: (r.version as number) ?? null,
+    }));
+  }
 
   const fullName =
     [employee.first_name, employee.last_name].filter(Boolean).join(" ") ||
@@ -218,6 +243,16 @@ export default async function EmployeeDetailPage({
           error={employee.carer_academy_error}
           events={(syncEvents ?? []) as SyncEvent[]}
         />
+      </div>
+
+      <div className="mt-6">
+        <h2 className="mb-3 text-base font-medium text-white drop-shadow-sm">Documents</h2>
+        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+          <p className="mb-3 text-xs text-gray-400">
+            Contracts and policies this employee signed when accepting their offer.
+          </p>
+          <SignedDocs docs={signedDocs} />
+        </section>
       </div>
 
       <div className="mt-6">

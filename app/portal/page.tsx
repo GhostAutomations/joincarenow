@@ -12,6 +12,7 @@ import {
 import { OfferRespond } from "@/components/offer/offer-respond";
 import { loadSignableDocs } from "@/modules/offers/actions";
 import { PortalLive } from "@/components/portal/portal-live";
+import { SignedDocs, type SignedDoc } from "@/components/documents/signed-docs";
 
 type MyApplication = {
   application_id: string;
@@ -81,6 +82,23 @@ export default async function PortalPage({
     .eq("user_id", user.id)
     .maybeSingle();
   const signerDefaultName = [me?.first_name, me?.last_name].filter(Boolean).join(" ");
+
+  // The applicant's own signed contracts + policies (RLS scopes to them).
+  const { data: signedRaw } = await supabase
+    .from("signed_documents")
+    .select("id, title, doc_type, signer_name, signed_at, signature_method, signature_image, body_snapshot, version")
+    .order("signed_at", { ascending: false });
+  const signedDocs: SignedDoc[] = (signedRaw ?? []).map((r) => ({
+    id: r.id as string,
+    title: r.title as string,
+    docType: r.doc_type as string,
+    signerName: r.signer_name as string,
+    signedAt: r.signed_at as string,
+    signatureMethod: r.signature_method as string,
+    signatureImage: (r.signature_image as string) ?? null,
+    body: r.body_snapshot as string,
+    version: (r.version as number) ?? null,
+  }));
   const interviewByApp = new Map<string, PortalInterview>();
   for (const iv of (ivData ?? []) as (PortalInterview & {
     application_id: string;
@@ -193,6 +211,18 @@ export default async function PortalPage({
                 <OnboardingTaskItem key={t.task_id} task={t} />
               ))}
             </ul>
+          </section>
+        )}
+
+        {signedDocs.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-xl font-semibold text-white drop-shadow-sm">Your documents</h2>
+            <p className="mt-1 text-sm text-white/80">
+              The contracts and policies you&apos;ve signed. You can view or save a copy any time.
+            </p>
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+              <SignedDocs docs={signedDocs} />
+            </div>
           </section>
         )}
       </div>

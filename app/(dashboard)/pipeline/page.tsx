@@ -1,4 +1,7 @@
+import Link from "next/link";
+import { ChevronRight, Briefcase, ArrowLeft } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
+import { PageHeader } from "@/components/dashboard/page-header";
 import {
   PipelineBoard,
   type AppCard,
@@ -38,10 +41,84 @@ type InterviewRow = Interview & { application_id: string };
 export default async function PipelinePage({
   searchParams,
 }: {
-  searchParams: Promise<{ open?: string }>;
+  searchParams: Promise<{ open?: string; job?: string }>;
 }) {
-  const { open } = await searchParams;
+  const { open, job } = await searchParams;
   const { supabase, current } = await requireCompany();
+
+  // No job selected → show the per-job pipeline list (each job opens its own board).
+  if (!job) {
+    const [{ data: jobsRaw }, { data: appRows }] = await Promise.all([
+      supabase
+        .from("jobs")
+        .select("id, title, status, branches(name)")
+        .eq("company_id", current.company_id)
+        .in("status", ["published", "closed"])
+        .order("created_at", { ascending: false }),
+      supabase.from("applications").select("job_id, stage").eq("company_id", current.company_id),
+    ]);
+
+    const counts = new Map<string, { active: number; hired: number; total: number }>();
+    for (const a of (appRows ?? []) as { job_id: string | null; stage: string }[]) {
+      if (!a.job_id) continue;
+      const c = counts.get(a.job_id) ?? { active: 0, hired: 0, total: 0 };
+      c.total += 1;
+      if (a.stage === "hired") c.hired += 1;
+      else if (a.stage !== "rejected") c.active += 1;
+      counts.set(a.job_id, c);
+    }
+
+    const jobs = (jobsRaw ?? []).map((j) => ({
+      id: j.id as string,
+      title: j.title as string,
+      branch: (j.branches as unknown as { name: string } | null)?.name ?? null,
+      status: j.status as string,
+      ...(counts.get(j.id as string) ?? { active: 0, hired: 0, total: 0 }),
+    }));
+
+    return (
+      <div>
+        <PageHeader title="Pipeline" subtitle="Choose a job to view its applicants" />
+        {jobs.length === 0 ? (
+          <p className="mt-6 text-sm text-white/80">
+            No live jobs yet. Publish a job to start receiving applicants.
+          </p>
+        ) : (
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {jobs.map((j) => (
+              <Link
+                key={j.id}
+                href={`/pipeline?job=${j.id}`}
+                className="group flex items-center gap-3 rounded-2xl border border-white/40 bg-white/80 p-4 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
+                  <Briefcase className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-gray-900">{j.title}</span>
+                  <span className="block text-xs text-gray-500">
+                    {j.branch ? `${j.branch} · ` : ""}
+                    {j.active} in pipeline{j.hired ? ` · ${j.hired} hired` : ""}
+                    {j.status === "closed" ? " · closed" : ""}
+                  </span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-gray-300 group-hover:text-gray-500" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Job selected → that job's board.
+  const { data: jobRow } = await supabase
+    .from("jobs")
+    .select("title")
+    .eq("id", job)
+    .eq("company_id", current.company_id)
+    .maybeSingle();
+  const jobTitle = (jobRow?.title as string) ?? "Pipeline";
 
   const [{ data }, { data: ivData }, { data: companyRow }] = await Promise.all([
     supabase
@@ -50,6 +127,7 @@ export default async function PipelinePage({
         "id, stage, created_at, cover_message, cv_path, answers, rtw_doc_path, rtw_share_code, rtw_expiry, rtw_verified_at, jobs(title, salary, region, worker_category, branches(name), roles!role_id(name)), applicants(first_name, last_name, email, phone, postcode)"
       )
       .eq("company_id", current.company_id)
+      .eq("job_id", job)
       .order("created_at", { ascending: false }),
     supabase
       .from("interviews")
@@ -238,15 +316,24 @@ export default async function PipelinePage({
   }));
 
   return (
-    <PipelineBoard
-      initial={apps}
-      interviewAddress={interviewAddress}
-      openId={open ?? null}
-      companyId={current.company_id}
-      openingHours={openingHours}
-      staff={staff}
-      bookedInterviews={bookedInterviews}
-      availableForms={availableForms}
-    />
+    <div>
+      <Link
+        href="/pipeline"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-white/80 hover:text-white"
+      >
+        <ArrowLeft className="h-4 w-4" /> All pipelines
+      </Link>
+      <h1 className="mt-2 mb-4 text-2xl font-semibold text-white drop-shadow-sm">{jobTitle}</h1>
+      <PipelineBoard
+        initial={apps}
+        interviewAddress={interviewAddress}
+        openId={open ?? null}
+        companyId={current.company_id}
+        openingHours={openingHours}
+        staff={staff}
+        bookedInterviews={bookedInterviews}
+        availableForms={availableForms}
+      />
+    </div>
   );
 }

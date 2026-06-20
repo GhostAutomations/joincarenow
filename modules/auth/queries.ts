@@ -1,7 +1,12 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+
+/** Cookie a Founder sets to "manage as" a company (configure it with the real
+ *  company tools). Only honoured for platform admins. */
+export const ACTING_COMPANY_COOKIE = "jcn_acting_company";
 
 export type Membership = {
   company_id: string;
@@ -46,6 +51,31 @@ export async function getMemberships() {
  *  applicants go to their portal; anyone else has no access. */
 export async function requireCompany() {
   const ctx = await getMemberships();
+
+  // Founder "managing as" a company: resolve current to the cookie's company so
+  // the whole dashboard works for that company with the real tools.
+  if (ctx.profile?.is_platform_admin) {
+    const acting = (await cookies()).get(ACTING_COMPANY_COOKIE)?.value;
+    if (acting) {
+      const { data: company } = await ctx.supabase
+        .from("companies")
+        .select("id, name, slug")
+        .eq("id", acting)
+        .maybeSingle();
+      if (company) {
+        return {
+          ...ctx,
+          current: {
+            company_id: company.id as string,
+            role: "admin" as const,
+            companies: company as Membership["companies"],
+          },
+          acting: true as const,
+        };
+      }
+    }
+  }
+
   if (ctx.memberships.length === 0) {
     if (ctx.profile?.is_platform_admin) redirect("/admin");
     // Is this person an applicant rather than staff?

@@ -1,5 +1,6 @@
-import { Settings } from "lucide-react";
+import { Settings, Eye } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
+import { manageAsCompany } from "@/modules/founder/actions";
 import { CompanyForm } from "@/components/dashboard/company-form";
 import { DeleteCompany } from "@/components/dashboard/delete-company";
 import { InviteForm } from "@/components/dashboard/invite-form";
@@ -97,12 +98,20 @@ export default async function CompaniesPage() {
                   </span>
                 </div>
 
-                <a
-                  href={`/admin/companies/${c.id}`}
-                  className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
-                >
-                  <Settings className="h-4 w-4" /> Set up this company
-                </a>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <form action={manageAsCompany} className="flex-1">
+                    <input type="hidden" name="companyId" value={c.id} />
+                    <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
+                      <Eye className="h-4 w-4" /> Manage as this company
+                    </button>
+                  </form>
+                  <a
+                    href={`/admin/companies/${c.id}`}
+                    className="flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    <Settings className="h-4 w-4" /> Quick setup
+                  </a>
+                </div>
 
                 {companyAdmins.length > 0 && (
                   <ul className="mt-3 space-y-1">

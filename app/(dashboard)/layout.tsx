@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Dock } from "@/components/dashboard/dock";
 import { BrandStyle, type Brand } from "@/components/dashboard/brand-style";
+import { ActingBanner } from "@/components/dashboard/acting-banner";
 
 type CompanySettings = {
   show_sidebar?: boolean;
@@ -14,7 +15,9 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { supabase, profile, current } = await requireCompany();
+  const ctx = await requireCompany();
+  const { supabase, profile, current } = ctx;
+  const acting = "acting" in ctx && ctx.acting === true;
 
   const { data: companyRow } = await supabase
     .from("companies").select("settings").eq("id", current.company_id).single();
@@ -29,6 +32,7 @@ export default async function DashboardLayout({
       <BrandStyle brand={brand} />
       {showSidebar && <Sidebar companyName={current.companies.name} logoUrl={logoUrl} />}
       <div className="flex flex-1 flex-col overflow-hidden">
+        {acting && <ActingBanner companyName={current.companies.name} />}
         <Topbar
           userName={profile?.full_name || profile?.email || ""}
           showHome={!showSidebar}

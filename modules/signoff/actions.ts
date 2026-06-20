@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireCompany } from "@/modules/auth/queries";
+import { requireCompany, requireApplicant } from "@/modules/auth/queries";
 import { notifyApplicant } from "@/modules/comms/actions";
 
 export type SignOffDoc = {
@@ -79,6 +79,55 @@ export async function signOffDocument(id: string): Promise<{ ok?: boolean; error
 
   revalidatePath("/sign-off");
   revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export type ResignDoc = {
+  id: string;
+  title: string;
+  docType: string;
+  body: string;
+  signatureMethod: string;
+  rejectReason: string | null;
+};
+
+/** Applicant re-signs a document staff rejected. Updates their own record in
+ *  place with the new signature and puts it back into the sign-off queue. */
+export async function resignDocument(
+  id: string,
+  signerName: string,
+  signatureImage: string | null
+): Promise<{ ok?: boolean; error?: string }> {
+  const { supabase } = await requireApplicant();
+  const name = signerName.trim();
+
+  const { data: doc } = await supabase
+    .from("signed_documents")
+    .select("id, signature_method")
+    .eq("id", id)
+    .maybeSingle();
+  if (!doc) return { error: "Document not found" };
+
+  const drawn = doc.signature_method === "draw";
+  if (drawn) {
+    if (!signatureImage) return { error: "Please draw your signature." };
+  } else if (name.length < 2) {
+    return { error: "Please type your full name." };
+  }
+
+  const { error } = await supabase
+    .from("signed_documents")
+    .update({
+      signer_name: drawn ? name || "Signature" : name,
+      signature_image: drawn ? signatureImage : null,
+      signed_at: new Date().toISOString(),
+      review_status: "pending",
+      reject_reason: null,
+    })
+    .eq("id", id);
+  if (error) return { error: "Could not submit. Please try again." };
+
+  revalidatePath("/portal");
   return { ok: true };
 }
 

@@ -13,6 +13,8 @@ import { OfferRespond } from "@/components/offer/offer-respond";
 import { loadSignableDocs } from "@/modules/offers/actions";
 import { PortalLive } from "@/components/portal/portal-live";
 import { SignedDocs, type SignedDoc } from "@/components/documents/signed-docs";
+import { ResignDocs } from "@/components/portal/resign-docs";
+import type { ResignDoc } from "@/modules/signoff/actions";
 
 type MyApplication = {
   application_id: string;
@@ -86,19 +88,33 @@ export default async function PortalPage({
   // The applicant's own signed contracts + policies (RLS scopes to them).
   const { data: signedRaw } = await supabase
     .from("signed_documents")
-    .select("id, title, doc_type, signer_name, signed_at, signature_method, signature_image, body_snapshot, version")
+    .select("id, title, doc_type, signer_name, signed_at, signature_method, signature_image, body_snapshot, version, review_status, reject_reason")
     .order("signed_at", { ascending: false });
-  const signedDocs: SignedDoc[] = (signedRaw ?? []).map((r) => ({
-    id: r.id as string,
-    title: r.title as string,
-    docType: r.doc_type as string,
-    signerName: r.signer_name as string,
-    signedAt: r.signed_at as string,
-    signatureMethod: r.signature_method as string,
-    signatureImage: (r.signature_image as string) ?? null,
-    body: r.body_snapshot as string,
-    version: (r.version as number) ?? null,
-  }));
+  // Docs sent back by staff for re-signing.
+  const resignDocs: ResignDoc[] = (signedRaw ?? [])
+    .filter((r) => r.review_status === "rejected")
+    .map((r) => ({
+      id: r.id as string,
+      title: r.title as string,
+      docType: r.doc_type as string,
+      body: r.body_snapshot as string,
+      signatureMethod: r.signature_method as string,
+      rejectReason: (r.reject_reason as string) ?? null,
+    }));
+  // Everything else the applicant has signed (pending sign-off or approved).
+  const signedDocs: SignedDoc[] = (signedRaw ?? [])
+    .filter((r) => r.review_status !== "rejected")
+    .map((r) => ({
+      id: r.id as string,
+      title: r.title as string,
+      docType: r.doc_type as string,
+      signerName: r.signer_name as string,
+      signedAt: r.signed_at as string,
+      signatureMethod: r.signature_method as string,
+      signatureImage: (r.signature_image as string) ?? null,
+      body: r.body_snapshot as string,
+      version: (r.version as number) ?? null,
+    }));
   const interviewByApp = new Map<string, PortalInterview>();
   for (const iv of (ivData ?? []) as (PortalInterview & {
     application_id: string;
@@ -211,6 +227,16 @@ export default async function PortalPage({
                 <OnboardingTaskItem key={t.task_id} task={t} />
               ))}
             </ul>
+          </section>
+        )}
+
+        {resignDocs.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-xl font-semibold text-white drop-shadow-sm">Please re-sign</h2>
+            <p className="mt-1 text-sm text-white/80">
+              These were sent back because the signature needs redoing. Please sign again.
+            </p>
+            <ResignDocs docs={resignDocs} defaultName={signerDefaultName} />
           </section>
         )}
 

@@ -1,20 +1,32 @@
 import Link from "next/link";
-import { MessageSquare } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { londonToUtcIso } from "@/lib/time";
 import { FounderAppGrid } from "@/components/dashboard/founder-app-grid";
 
 export default async function FounderHomePage() {
-  const { supabase, profile } = await requirePlatformAdmin();
+  const { profile } = await requirePlatformAdmin();
+  const db = createAdminClient();
 
-  const [{ count: companyCount }, { data: smsUsage }] = await Promise.all([
-    supabase.from("companies").select("id", { count: "exact", head: true }),
-    supabase.rpc("get_sms_usage"),
+  const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/London" });
+  const monthStart = londonToUtcIso(`${todayStr.slice(0, 7)}-01T00:00`);
+  const n = (r: { count: number | null }) => r.count ?? 0;
+  const head = { count: "exact" as const, head: true };
+
+  const [
+    companies, users, applicants, active, hires, liveJobs, emails, sms, signoffs, syncErrors,
+  ] = await Promise.all([
+    db.from("companies").select("id", head),
+    db.from("company_users").select("id", head),
+    db.from("applicants").select("id", head),
+    db.from("applications").select("id", head).in("stage", ["applied", "reviewing", "interview", "right_to_work", "offer"]),
+    db.from("employees").select("id", head),
+    db.from("jobs").select("id", head).eq("status", "published"),
+    db.from("messages").select("id", head).eq("channel", "email").eq("direction", "outbound").gte("created_at", monthStart),
+    db.from("messages").select("id", head).eq("channel", "sms").eq("direction", "outbound").gte("created_at", monthStart),
+    db.from("signed_documents").select("id", head).eq("review_status", "pending"),
+    db.from("integration_events").select("id", head).eq("status", "error"),
   ]);
-
-  const smsThisMonth = (smsUsage ?? []).reduce(
-    (sum: number, r: { sms_this_month: number }) => sum + Number(r.sms_this_month),
-    0
-  );
 
   const first = profile?.full_name?.split(" ")[0] ?? "there";
   const hour = Number(
@@ -22,38 +34,52 @@ export default async function FounderHomePage() {
   );
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
+  const stats: { label: string; value: number; href?: string; alert?: boolean }[] = [
+    { label: "Companies", value: n(companies), href: "/admin/companies" },
+    { label: "Users", value: n(users), href: "/admin/users" },
+    { label: "Applicants", value: n(applicants) },
+    { label: "Active applicants", value: n(active) },
+    { label: "Hires", value: n(hires) },
+    { label: "Live jobs", value: n(liveJobs) },
+    { label: "Emails this month", value: n(emails) },
+    { label: "SMS this month", value: n(sms), href: "/admin/sms" },
+    { label: "Pending sign-offs", value: n(signoffs) },
+    { label: "Sync errors", value: n(syncErrors), href: "/admin/integrations", alert: n(syncErrors) > 0 },
+  ];
+
   return (
     <div className="relative -mx-4 -mt-4 -mb-24 flex min-h-[calc(100dvh-3.5rem)] flex-col overflow-hidden p-6 text-white sm:-mx-6 sm:-mt-6 sm:p-10">
-      {/* fluid colour blobs */}
       <div className="jcn-blob pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-teal-300/40 blur-3xl" />
       <div className="jcn-blob jcn-blob-2 pointer-events-none absolute left-1/2 top-1/3 h-72 w-72 rounded-full bg-fuchsia-400/30 blur-3xl" />
       <div className="jcn-blob jcn-blob-3 pointer-events-none absolute -bottom-24 right-0 h-96 w-96 rounded-full bg-indigo-400/40 blur-3xl" />
 
       <div className="relative">
         <h1 className="text-3xl font-semibold">{greeting}, {first} 👋</h1>
-        <p className="mt-1 text-white/70">Founder console · manage every company on the platform.</p>
+        <p className="mt-1 text-white/70">Founder console · the whole platform at a glance.</p>
 
-        {/* stat cards */}
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:max-w-md">
-          <Link
-            href="/admin/companies"
-            className="rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/25"
-          >
-            <p className="text-sm text-white/70">Companies</p>
-            <p className="mt-1 text-3xl font-semibold">{companyCount ?? 0}</p>
-          </Link>
-          <Link
-            href="/admin/sms"
-            className="rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/25"
-          >
-            <p className="flex items-center gap-1.5 text-sm text-white/70">
-              <MessageSquare className="h-3.5 w-3.5" /> SMS this month
-            </p>
-            <p className="mt-1 text-3xl font-semibold">{smsThisMonth.toLocaleString()}</p>
-          </Link>
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          {stats.map((s) => {
+            const inner = (
+              <>
+                <p className="text-sm text-white/70">{s.label}</p>
+                <p className={`mt-1 text-3xl font-semibold ${s.alert ? "text-amber-200" : ""}`}>
+                  {s.value.toLocaleString()}
+                </p>
+              </>
+            );
+            const cls = `rounded-2xl border p-4 backdrop-blur-md ${
+              s.alert ? "border-amber-300/60 bg-amber-400/15" : "border-white/25 bg-white/15"
+            }`;
+            return s.href ? (
+              <Link key={s.label} href={s.href} className={`${cls} transition hover:-translate-y-0.5 hover:bg-white/25`}>
+                {inner}
+              </Link>
+            ) : (
+              <div key={s.label} className={cls}>{inner}</div>
+            );
+          })}
         </div>
 
-        {/* app grid */}
         <p className="mt-8 text-sm font-medium text-white/70">Your workspace</p>
         <FounderAppGrid />
       </div>

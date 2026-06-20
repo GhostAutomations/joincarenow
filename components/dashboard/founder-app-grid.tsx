@@ -1,10 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Building2, Store, MessageSquareText, ListChecks } from "lucide-react";
+import { Building2, Store, MessageSquareText, ListChecks, Users, ScrollText, Plug } from "lucide-react";
 
 const APPS = [
   { href: "/admin/companies", label: "Companies", icon: Building2, grad: "from-teal-400 to-teal-600" },
+  { href: "/admin/users", label: "Users", icon: Users, grad: "from-sky-400 to-sky-600" },
+  { href: "/admin/audit", label: "Audit log", icon: ScrollText, grad: "from-violet-400 to-violet-600" },
+  { href: "/admin/integrations", label: "Integrations", icon: Plug, grad: "from-emerald-400 to-emerald-600" },
   { href: "/admin/forms", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
   { href: "/admin/questions", label: "Question Bank", icon: ListChecks, grad: "from-amber-400 to-amber-500" },
   { href: "/admin/sms", label: "SMS Usage", icon: MessageSquareText, grad: "from-pink-400 to-pink-600" },

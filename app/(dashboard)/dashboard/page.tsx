@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireCompany } from "@/modules/auth/queries";
 import { londonToUtcIso } from "@/lib/time";
 import { AppGrid } from "@/components/dashboard/app-grid";
+import { SignoffLive } from "@/components/dashboard/signoff-live";
 
 export default async function DashboardPage() {
   const { supabase, current, profile } = await requireCompany();
@@ -46,6 +47,7 @@ export default async function DashboardPage() {
       <div className="jcn-blob jcn-blob-2 pointer-events-none absolute left-1/2 top-1/3 h-72 w-72 rounded-full bg-fuchsia-400/30 blur-3xl" />
       <div className="jcn-blob jcn-blob-3 pointer-events-none absolute -bottom-24 right-0 h-96 w-96 rounded-full bg-indigo-400/40 blur-3xl" />
 
+      <SignoffLive />
       <div className="relative">
         <h1 className="text-3xl font-semibold">{greeting}, {first} 👋</h1>
         <p className="mt-1 text-white/70">{current.companies.name} · here&apos;s what&apos;s happening today.</p>

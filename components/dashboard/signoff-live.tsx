@@ -4,11 +4,10 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-/** Live-refreshes the applicant portal when anything is sent to them — offers,
- *  forms/document requests (onboarding_tasks), interviews, messages, or a stage
- *  change. RLS scopes events to this applicant's own rows. A slow poll is kept
- *  as a safety net if the socket drops. */
-export function PortalLive() {
+/** Live-refreshes the Sign Off widget/screen when a contract or policy is
+ *  signed, signed off, rejected or re-signed. Its own channel — independent of
+ *  the pipeline/portal subscriptions. RLS scopes events to this company. */
+export function SignoffLive() {
   const router = useRouter();
 
   useEffect(() => {
@@ -19,19 +18,24 @@ export function PortalLive() {
       pending = setTimeout(() => router.refresh(), 400);
     };
 
-    const channel = supabase.channel("portal-live");
-    for (const table of ["offers", "applications", "interviews", "messages", "onboarding_tasks", "signed_documents"]) {
-      channel.on("postgres_changes", { event: "*", schema: "public", table }, refresh);
-    }
-    channel.subscribe();
+    const channel = supabase
+      .channel("signoff-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "signed_documents" }, refresh)
+      .subscribe();
 
     const t = setInterval(() => {
       if (!document.hidden) router.refresh();
     }, 60000);
 
+    const onVisible = () => {
+      if (!document.hidden) router.refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       if (pending) clearTimeout(pending);
       clearInterval(t);
+      document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(channel);
     };
   }, [router]);

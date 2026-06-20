@@ -1,5 +1,7 @@
+import { Settings } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { CompanyForm } from "@/components/dashboard/company-form";
+import { DeleteCompany } from "@/components/dashboard/delete-company";
 import { InviteForm } from "@/components/dashboard/invite-form";
 import { PendingInvites } from "@/components/dashboard/pending-invites";
 import { setCompanyTier } from "@/modules/forms/actions";
@@ -89,19 +91,18 @@ export default async function CompaniesPage() {
                       joincarenow.com/careers/{c.slug}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-                      {companyAdmins.length} admin
-                      {companyAdmins.length === 1 ? "" : "s"}
-                    </span>
-                    <a
-                      href={`/admin/companies/${c.id}`}
-                      className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700"
-                    >
-                      Set up
-                    </a>
-                  </div>
+                  <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                    {companyAdmins.length} admin
+                    {companyAdmins.length === 1 ? "" : "s"}
+                  </span>
                 </div>
+
+                <a
+                  href={`/admin/companies/${c.id}`}
+                  className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+                >
+                  <Settings className="h-4 w-4" /> Set up this company
+                </a>
 
                 {companyAdmins.length > 0 && (
                   <ul className="mt-3 space-y-1">
@@ -156,6 +157,10 @@ export default async function CompaniesPage() {
                       <PendingInvites invites={pending} />
                     </>
                   )}
+                </div>
+
+                <div className="mt-4 flex justify-end border-t border-gray-100 pt-3">
+                  <DeleteCompany companyId={c.id} companyName={c.name} />
                 </div>
               </div>
             );

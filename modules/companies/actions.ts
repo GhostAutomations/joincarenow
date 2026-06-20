@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { settingsContext } from "@/modules/auth/queries";
+import { settingsContext, requireUser } from "@/modules/auth/queries";
 import { slugify } from "@/lib/utils";
 
 /** Build an absolute accept-invite URL from the incoming request host. */
@@ -336,5 +336,33 @@ export async function setEmployeeNumberSettings(
   if (error) return { error: "Could not save. Please try again." };
 
   revalidatePath("/settings");
+  return { ok: true };
+}
+
+/** Founder-only: permanently delete a company and all its data. Requires the
+ *  exact company name typed as confirmation. */
+export async function deleteCompany(
+  _prev: SettingsState,
+  formData: FormData
+): Promise<SettingsState> {
+  const { profile } = await requireUser();
+  if (!profile?.is_platform_admin) return { error: "Not allowed" };
+
+  const id = formData.get("companyId")?.toString();
+  const confirmName = (formData.get("confirmName")?.toString() ?? "").trim();
+  if (!id) return { error: "Missing company" };
+
+  const db = createAdminClient();
+  const { data: company } = await db.from("companies").select("name").eq("id", id).single();
+  if (!company) return { error: "Company not found" };
+  if (confirmName !== (company.name as string)) {
+    return { error: "The name you typed doesn't match." };
+  }
+
+  const { error } = await db.from("companies").delete().eq("id", id);
+  if (error) return { error: "Could not delete the company." };
+
+  revalidatePath("/admin/companies");
+  revalidatePath("/admin");
   return { ok: true };
 }

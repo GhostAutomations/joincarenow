@@ -4,6 +4,7 @@ import { Topbar } from "@/components/dashboard/topbar";
 import { Dock } from "@/components/dashboard/dock";
 import { BrandStyle, type Brand } from "@/components/dashboard/brand-style";
 import { ActingBanner } from "@/components/dashboard/acting-banner";
+import { feedbackOpen } from "@/lib/feedback";
 
 type CompanySettings = {
   show_sidebar?: boolean;
@@ -20,8 +21,10 @@ export default async function DashboardLayout({
   const acting = "acting" in ctx && ctx.acting === true;
 
   const { data: companyRow } = await supabase
-    .from("companies").select("settings").eq("id", current.company_id).single();
+    .from("companies").select("settings, created_at").eq("id", current.company_id).single();
   const settings = (companyRow?.settings as CompanySettings | null) ?? null;
+  const fbOpen = feedbackOpen(companyRow?.created_at as string | undefined);
+  const isAdmin = current.role === "admin";
   // Sidebar is OFF by default (iPad-style launcher); admins can switch it on.
   const showSidebar = settings?.show_sidebar === true;
   const brand = settings?.brand ?? null;
@@ -40,7 +43,7 @@ export default async function DashboardLayout({
         />
         <main className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24">{children}</main>
       </div>
-      {!showSidebar && <Dock />}
+      {!showSidebar && <Dock feedbackOpen={fbOpen} isAdmin={isAdmin} />}
     </div>
   );
 }

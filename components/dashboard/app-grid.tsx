@@ -4,9 +4,12 @@ import { useRouter } from "next/navigation";
 import {
   Briefcase, KanbanSquare, CalendarClock, Users, ClipboardCheck,
   IdCard, FileText, Store, MessageSquareText, BarChart3, Settings, ShieldCheck,
+  CreditCard, MessageSquarePlus, Lightbulb,
 } from "lucide-react";
 
-const APPS = [
+type App = { href: string; label: string; icon: typeof Briefcase; grad: string; badgeKey?: string };
+
+const BASE: App[] = [
   { href: "/jobs", label: "Jobs", icon: Briefcase, grad: "from-teal-400 to-teal-600" },
   { href: "/pipeline", label: "Pipeline", icon: KanbanSquare, grad: "from-indigo-400 to-indigo-600", badgeKey: "applicants" },
   { href: "/interviews", label: "Interviews", icon: CalendarClock, grad: "from-violet-400 to-violet-600", badgeKey: "interviews" },
@@ -18,11 +21,25 @@ const APPS = [
   { href: "/templates", label: "Templates", icon: MessageSquareText, grad: "from-pink-400 to-pink-600" },
   { href: "/store", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
   { href: "/reports", label: "Reports", icon: BarChart3, grad: "from-blue-400 to-blue-600" },
+  { href: "/billing", label: "Billing", icon: CreditCard, grad: "from-amber-400 to-amber-500" },
   { href: "/settings", label: "Settings", icon: Settings, grad: "from-slate-400 to-slate-600" },
-] as const;
+];
 
-export function AppGrid({ counts }: { counts: Record<string, number> }) {
+export function AppGrid({
+  counts,
+  feedbackOpen = false,
+  isAdmin = false,
+}: {
+  counts: Record<string, number>;
+  feedbackOpen?: boolean;
+  isAdmin?: boolean;
+}) {
   const router = useRouter();
+  const APPS: App[] = [
+    ...BASE,
+    ...(feedbackOpen ? [{ href: "/feedback", label: "Feedback", icon: MessageSquarePlus, grad: "from-fuchsia-400 to-fuchsia-600" }] : []),
+    ...(isAdmin ? [{ href: "/requests", label: "Requests", icon: Lightbulb, grad: "from-yellow-400 to-amber-500" }] : []),
+  ];
   return (
     <div className="mt-4 grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-5 lg:grid-cols-6">
       {APPS.map(({ href, label, icon: Icon, grad, ...rest }) => {

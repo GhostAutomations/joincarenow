@@ -3,6 +3,7 @@ import { requireCompany } from "@/modules/auth/queries";
 import { londonToUtcIso } from "@/lib/time";
 import { AppGrid } from "@/components/dashboard/app-grid";
 import { SignoffLive } from "@/components/dashboard/signoff-live";
+import { feedbackOpen } from "@/lib/feedback";
 
 export default async function DashboardPage() {
   const { supabase, current, profile } = await requireCompany();
@@ -28,6 +29,12 @@ export default async function DashboardPage() {
     interviews: count(interviews),
     workflow: count(workflow),
   };
+
+  const { data: companyRow } = await supabase
+    .from("companies").select("created_at").eq("id", cid).single();
+  const fbOpen = feedbackOpen(companyRow?.created_at as string | undefined);
+  const isAdmin = current.role === "admin";
+
   const first = profile?.full_name?.split(" ")[0] ?? "there";
   const hour = Number(new Date().toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/London" }));
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
@@ -68,7 +75,7 @@ export default async function DashboardPage() {
 
         {/* app grid */}
         <p className="mt-8 text-sm font-medium text-white/70">Your workspace</p>
-        <AppGrid counts={counts} />
+        <AppGrid counts={counts} feedbackOpen={fbOpen} isAdmin={isAdmin} />
       </div>
     </div>
   );

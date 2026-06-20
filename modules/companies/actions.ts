@@ -339,6 +339,58 @@ export async function setEmployeeNumberSettings(
   return { ok: true };
 }
 
+/** Set a company's branding — 3 colours + optional logo. Founder (via Quick
+ *  setup) or a company admin. Stored in companies.settings.brand; logo goes to
+ *  the public company-logos bucket. */
+export async function setBranding(
+  _prev: SettingsState,
+  formData: FormData
+): Promise<SettingsState> {
+  const { db, companyId } = await settingsContext(formData);
+  if (!companyId) return { error: "Missing company" };
+
+  const hex = (v: FormDataEntryValue | null) => {
+    const s = (v?.toString() ?? "").trim();
+    return HEX.test(s) ? s : "";
+  };
+  const primary = hex(formData.get("brandPrimary"));
+  const secondary = hex(formData.get("brandSecondary"));
+  const accent = hex(formData.get("brandAccent"));
+
+  const { data: companyRow } = await db
+    .from("companies").select("settings").eq("id", companyId).single();
+  const existing = ((companyRow?.settings as Record<string, unknown>)?.brand as Record<string, string>) ?? {};
+  const brand: Record<string, string> = { ...existing };
+  brand.primary = primary || existing.primary || "";
+  brand.secondary = secondary || existing.secondary || "";
+  brand.accent = accent || existing.accent || "";
+
+  const logo = formData.get("logo");
+  if (logo instanceof File && logo.size > 0) {
+    if (logo.size > 2 * 1024 * 1024) return { error: "Logo must be under 2MB." };
+    const ext = (logo.name.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const path = `${companyId}/logo.${ext || "png"}`;
+    const admin = createAdminClient();
+    const { error: uploadError } = await admin.storage
+      .from("company-logos")
+      .upload(path, logo, { upsert: true, contentType: logo.type || undefined });
+    if (uploadError) return { error: `Logo upload failed: ${uploadError.message}` };
+    const { data: pub } = admin.storage.from("company-logos").getPublicUrl(path);
+    if (pub?.publicUrl) brand.logo_url = `${pub.publicUrl}?v=${Date.now()}`;
+  }
+
+  const settings = {
+    ...((companyRow?.settings as Record<string, unknown>) ?? {}),
+    brand,
+  };
+  const { error } = await db.from("companies").update({ settings }).eq("id", companyId);
+  if (error) return { error: "Could not save branding. Please try again." };
+
+  revalidatePath("/settings");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 /** Founder-only: permanently delete a company and all its data. Requires the
  *  exact company name typed as confirmation. */
 export async function deleteCompany(

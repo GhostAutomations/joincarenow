@@ -11,6 +11,7 @@ import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
 import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard/reminder-settings-form";
 import { CareersContentForm } from "@/components/dashboard/careers-content-form";
 import { InterviewAddressForm } from "@/components/dashboard/interview-address-form";
+import { BrandingForm } from "@/components/dashboard/branding-form";
 import type { OpeningHours } from "@/lib/opening-hours";
 
 export default async function CompanySetupPage({
@@ -36,9 +37,16 @@ export default async function CompanySetupPage({
     opening_hours?: OpeningHours;
     careers?: { intro?: string; benefits?: string[] };
     reminders?: ReminderPrefs;
+    brand?: { primary?: string; secondary?: string; accent?: string; logo_url?: string | null };
   };
 
   const sections: SettingsSection[] = [
+    {
+      key: "branding",
+      label: "Branding",
+      description: "Logo and brand colours used across their dashboard and careers page.",
+      content: <BrandingForm companyId={id} brand={settings.brand ?? {}} />,
+    },
     {
       key: "branches",
       label: "Branches",

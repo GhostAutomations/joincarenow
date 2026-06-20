@@ -14,7 +14,7 @@ export default async function FounderHomePage() {
   const head = { count: "exact" as const, head: true };
 
   const [
-    companies, users, applicants, active, hires, liveJobs, emails, sms, signoffs, syncErrors,
+    companies, users, applicants, active, hires, liveJobs, emails, sms, errors, syncErrors,
   ] = await Promise.all([
     db.from("companies").select("id", head),
     db.from("company_users").select("id", head),
@@ -24,7 +24,7 @@ export default async function FounderHomePage() {
     db.from("jobs").select("id", head).eq("status", "published"),
     db.from("messages").select("id", head).eq("channel", "email").eq("direction", "outbound").gte("created_at", monthStart),
     db.from("messages").select("id", head).eq("channel", "sms").eq("direction", "outbound").gte("created_at", monthStart),
-    db.from("signed_documents").select("id", head).eq("review_status", "pending"),
+    db.from("error_logs").select("id", head),
     db.from("integration_events").select("id", head).eq("status", "error"),
   ]);
 
@@ -43,7 +43,7 @@ export default async function FounderHomePage() {
     { label: "Live jobs", value: n(liveJobs) },
     { label: "Emails this month", value: n(emails) },
     { label: "SMS this month", value: n(sms), href: "/admin/sms" },
-    { label: "Pending sign-offs", value: n(signoffs) },
+    { label: "Errors", value: n(errors), href: "/admin/errors", alert: n(errors) > 0 },
     { label: "Sync errors", value: n(syncErrors), href: "/admin/integrations", alert: n(syncErrors) > 0 },
   ];
 

@@ -26,6 +26,8 @@ const PUBLIC_PATHS = [
   "/api/resend",
   // Hourly reminder cron — authenticated by CRON_SECRET bearer, not a session.
   "/api/cron",
+  // Client error reporting — no session (errors can happen anywhere).
+  "/api/log-error",
 ];
 
 function isPublicPath(pathname: string) {

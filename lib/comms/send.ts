@@ -1,6 +1,8 @@
 // Email/SMS sending via Resend + Twilio REST APIs (fetch, no SDK deps).
 // All functions return { ok, id?, error? } and never throw.
 
+import { logError } from "@/lib/errors/log";
+
 export type SendResult = { ok: boolean; id?: string; error?: string };
 
 /** Send a transactional email via Resend. */
@@ -36,10 +38,16 @@ export async function sendEmail(opts: {
       }),
     });
     const data = (await res.json().catch(() => ({}))) as { id?: string; message?: string };
-    if (!res.ok) return { ok: false, error: data.message || `Email failed (${res.status})` };
+    if (!res.ok) {
+      const error = data.message || `Email failed (${res.status})`;
+      await logError({ source: "email", message: error, code: String(res.status), detail: { to: opts.to, subject: opts.subject } });
+      return { ok: false, error };
+    }
     return { ok: true, id: data.id };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Email send failed" };
+    const error = e instanceof Error ? e.message : "Email send failed";
+    await logError({ source: "email", message: error, detail: { to: opts.to, subject: opts.subject } });
+    return { ok: false, error };
   }
 }
 
@@ -65,11 +73,17 @@ export async function sendSms(opts: { to: string; body: string }): Promise<SendR
         body,
       }
     );
-    const data = (await res.json().catch(() => ({}))) as { sid?: string; message?: string };
-    if (!res.ok) return { ok: false, error: data.message || `SMS failed (${res.status})` };
+    const data = (await res.json().catch(() => ({}))) as { sid?: string; message?: string; code?: number };
+    if (!res.ok) {
+      const error = data.message || `SMS failed (${res.status})`;
+      await logError({ source: "sms", message: error, code: String(data.code ?? res.status), detail: { to: opts.to } });
+      return { ok: false, error };
+    }
     return { ok: true, id: data.sid };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "SMS send failed" };
+    const error = e instanceof Error ? e.message : "SMS send failed";
+    await logError({ source: "sms", message: error, detail: { to: opts.to } });
+    return { ok: false, error };
   }
 }
 

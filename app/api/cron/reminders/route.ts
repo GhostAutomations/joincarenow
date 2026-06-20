@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runReminders } from "@/lib/comms/reminders";
+import { logError } from "@/lib/errors/log";
 
 // Hourly Vercel Cron (see vercel.json). Sends due reminders. Long-ish job, so
 // give it headroom. Always dynamic — never cached.
@@ -21,9 +22,8 @@ export async function GET(req: NextRequest) {
     const result = await runReminders();
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
-    return NextResponse.json(
-      { ok: false, error: e instanceof Error ? e.message : "Reminder run failed" },
-      { status: 500 }
-    );
+    const message = e instanceof Error ? e.message : "Reminder run failed";
+    await logError({ source: "api/cron/reminders", message, detail: e instanceof Error ? { stack: e.stack } : undefined });
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

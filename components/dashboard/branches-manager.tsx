@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Trash2, Plus } from "lucide-react";
 import { createBranch, deleteBranch, type BranchState } from "@/modules/branches/actions";
 
@@ -13,10 +14,14 @@ export function BranchesManager({
 }) {
   const [state, action] = useActionState<BranchState, FormData>(createBranch, undefined);
   const ref = useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    if (state?.ok) ref.current?.reset();
-  }, [state]);
+    if (state?.ok) {
+      ref.current?.reset();
+      router.refresh();
+    }
+  }, [state, router]);
 
   return (
     <div>

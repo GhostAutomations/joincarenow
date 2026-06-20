@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Trash2, Plus } from "lucide-react";
 import { createRole, deleteRole, type RoleState } from "@/modules/roles/actions";
 
@@ -13,10 +14,14 @@ export function RolesManager({
 }) {
   const [state, action] = useActionState<RoleState, FormData>(createRole, undefined);
   const ref = useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    if (state?.ok) ref.current?.reset();
-  }, [state]);
+    if (state?.ok) {
+      ref.current?.reset();
+      router.refresh();
+    }
+  }, [state, router]);
 
   return (
     <div>

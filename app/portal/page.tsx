@@ -138,6 +138,16 @@ export default async function PortalPage({
       </header>
 
       <div className="mx-auto max-w-3xl px-6 py-8">
+        {resignDocs.length > 0 && (
+          <section className="mb-8 rounded-2xl border border-amber-300 bg-amber-50/95 p-5 shadow-lg">
+            <h2 className="text-lg font-semibold text-amber-900">Action needed: please re-sign</h2>
+            <p className="mt-1 text-sm text-amber-800">
+              These were sent back because the signature needs redoing. Please sign again.
+            </p>
+            <ResignDocs docs={resignDocs} defaultName={signerDefaultName} />
+          </section>
+        )}
+
         <h1 className="text-2xl font-semibold text-white drop-shadow-sm">My applications</h1>
 
         {applied && (
@@ -227,16 +237,6 @@ export default async function PortalPage({
                 <OnboardingTaskItem key={t.task_id} task={t} />
               ))}
             </ul>
-          </section>
-        )}
-
-        {resignDocs.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-xl font-semibold text-white drop-shadow-sm">Please re-sign</h2>
-            <p className="mt-1 text-sm text-white/80">
-              These were sent back because the signature needs redoing. Please sign again.
-            </p>
-            <ResignDocs docs={resignDocs} defaultName={signerDefaultName} />
           </section>
         )}
 

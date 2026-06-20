@@ -6,8 +6,10 @@ import { createBranch, deleteBranch, type BranchState } from "@/modules/branches
 
 export function BranchesManager({
   branches,
+  companyId,
 }: {
   branches: { id: string; name: string }[];
+  companyId: string;
 }) {
   const [state, action] = useActionState<BranchState, FormData>(createBranch, undefined);
   const ref = useRef<HTMLFormElement>(null);
@@ -25,6 +27,7 @@ export function BranchesManager({
               <span className="text-sm font-medium text-gray-900">{b.name}</span>
               <form action={deleteBranch}>
                 <input type="hidden" name="id" value={b.id} />
+                <input type="hidden" name="companyId" value={companyId} />
                 <button
                   className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
                   aria-label="Remove branch"
@@ -38,6 +41,7 @@ export function BranchesManager({
       )}
 
       <form ref={ref} action={action} className="flex items-start gap-2">
+        <input type="hidden" name="companyId" value={companyId} />
         <div className="flex-1">
           {state?.error && <p className="mb-1 text-xs text-red-600">{state.error}</p>}
           <input

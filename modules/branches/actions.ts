@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireCompany } from "@/modules/auth/queries";
+import { settingsContext } from "@/modules/auth/queries";
 
 export type BranchState = { error?: string; ok?: boolean } | undefined;
 
@@ -12,10 +12,9 @@ export async function createBranch(
   const name = (formData.get("name")?.toString() ?? "").trim();
   if (name.length < 2) return { error: "Give the branch a name" };
 
-  const { supabase, current } = await requireCompany();
-  const { error } = await supabase
-    .from("branches")
-    .insert({ company_id: current.company_id, name });
+  const { db, companyId } = await settingsContext(formData);
+  if (!companyId) return { error: "Missing company" };
+  const { error } = await db.from("branches").insert({ company_id: companyId, name });
 
   if (error) {
     if (error.code === "23505") return { error: "A branch with that name already exists" };
@@ -29,8 +28,9 @@ export async function createBranch(
 export async function deleteBranch(formData: FormData) {
   const id = formData.get("id")?.toString();
   if (!id) return;
-  const { supabase, current } = await requireCompany();
-  await supabase.from("branches").delete().eq("id", id).eq("company_id", current.company_id);
+  const { db, companyId } = await settingsContext(formData);
+  if (!companyId) return;
+  await db.from("branches").delete().eq("id", id).eq("company_id", companyId);
   revalidatePath("/settings");
   revalidatePath("/jobs");
 }

@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type Membership = {
   company_id: string;
@@ -56,6 +58,20 @@ export async function requireCompany() {
   }
   // Single-company users go straight in; multi-company picker comes later.
   return { ...ctx, current: ctx.memberships[0] };
+}
+
+/** Resolve the client + target company for a settings write. A platform admin
+ *  (Founder) may configure ANY company (uses the service-role client + the
+ *  companyId from the form). Everyone else writes via the RLS client, which
+ *  enforces they can only touch their own company. The companyId must be in the
+ *  form data. */
+export async function settingsContext(
+  formData: FormData
+): Promise<{ db: SupabaseClient; companyId: string }> {
+  const { supabase, profile } = await requireUser();
+  const companyId = formData.get("companyId")?.toString() ?? "";
+  const db = (profile?.is_platform_admin ? createAdminClient() : supabase) as SupabaseClient;
+  return { db, companyId };
 }
 
 /** Require a signed-in applicant; otherwise send to applicant sign-in. */

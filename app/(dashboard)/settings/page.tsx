@@ -144,13 +144,13 @@ export default async function SettingsPage() {
         key: "branches",
         label: "Branches",
         description: "Set up branches once; they become selectable on jobs and follow each hire.",
-        content: <BranchesManager branches={branches ?? []} />,
+        content: <BranchesManager branches={branches ?? []} companyId={current.company_id} />,
       },
       {
         key: "roles",
         label: "Roles",
         description: "Define roles once (e.g. Walker, Driver); they follow each hire onto their record.",
-        content: <RolesManager roles={roles ?? []} />,
+        content: <RolesManager roles={roles ?? []} companyId={current.company_id} />,
       },
       {
         key: "contracts",

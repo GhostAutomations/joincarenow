@@ -4,7 +4,13 @@ import { useActionState, useEffect, useRef } from "react";
 import { Trash2, Plus } from "lucide-react";
 import { createRole, deleteRole, type RoleState } from "@/modules/roles/actions";
 
-export function RolesManager({ roles }: { roles: { id: string; name: string }[] }) {
+export function RolesManager({
+  roles,
+  companyId,
+}: {
+  roles: { id: string; name: string }[];
+  companyId: string;
+}) {
   const [state, action] = useActionState<RoleState, FormData>(createRole, undefined);
   const ref = useRef<HTMLFormElement>(null);
 
@@ -21,6 +27,7 @@ export function RolesManager({ roles }: { roles: { id: string; name: string }[] 
               <span className="text-sm font-medium text-gray-900">{r.name}</span>
               <form action={deleteRole}>
                 <input type="hidden" name="id" value={r.id} />
+                <input type="hidden" name="companyId" value={companyId} />
                 <button
                   className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
                   aria-label="Remove role"
@@ -34,6 +41,7 @@ export function RolesManager({ roles }: { roles: { id: string; name: string }[] 
       )}
 
       <form ref={ref} action={action} className="flex items-start gap-2">
+        <input type="hidden" name="companyId" value={companyId} />
         <div className="flex-1">
           {state?.error && <p className="mb-1 text-xs text-red-600">{state.error}</p>}
           <input

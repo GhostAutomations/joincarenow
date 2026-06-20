@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { settingsContext } from "@/modules/auth/queries";
 import { slugify } from "@/lib/utils";
 
 /** Build an absolute accept-invite URL from the incoming request host. */
@@ -152,11 +153,10 @@ export async function setInterviewAddress(
   _prev: SettingsState,
   formData: FormData
 ): Promise<SettingsState> {
-  const companyId = formData.get("companyId");
-  if (typeof companyId !== "string") return { error: "Missing company" };
   const address = (formData.get("interviewAddress")?.toString() ?? "").slice(0, 500);
 
-  const supabase = await createClient();
+  const { db: supabase, companyId } = await settingsContext(formData);
+  if (!companyId) return { error: "Missing company" };
   const { data: company } = await supabase
     .from("companies")
     .select("settings")
@@ -185,9 +185,6 @@ export async function setCareersContent(
   _prev: SettingsState,
   formData: FormData
 ): Promise<SettingsState> {
-  const companyId = formData.get("companyId");
-  if (typeof companyId !== "string") return { error: "Missing company" };
-
   const intro = (formData.get("intro")?.toString() ?? "").slice(0, 2000);
   const benefits = (formData.get("benefits")?.toString() ?? "")
     .split("\n")
@@ -195,7 +192,8 @@ export async function setCareersContent(
     .filter(Boolean)
     .slice(0, 12);
 
-  const supabase = await createClient();
+  const { db: supabase, companyId } = await settingsContext(formData);
+  if (!companyId) return { error: "Missing company" };
   const { data: company } = await supabase
     .from("companies").select("settings").eq("id", companyId).single();
   const settings = {
@@ -237,9 +235,6 @@ export async function setOpeningHours(
   _prev: SettingsState,
   formData: FormData
 ): Promise<SettingsState> {
-  const companyId = formData.get("companyId");
-  if (typeof companyId !== "string") return { error: "Missing company" };
-
   const hours: Record<string, { open: string; close: string } | null> = {};
   for (let d = 1; d <= 7; d++) {
     const open = formData.get(`open_${d}`) === "on";
@@ -252,7 +247,8 @@ export async function setOpeningHours(
     }
   }
 
-  const supabase = await createClient();
+  const { db: supabase, companyId } = await settingsContext(formData);
+  if (!companyId) return { error: "Missing company" };
   const { data: company } = await supabase
     .from("companies")
     .select("settings")
@@ -278,9 +274,6 @@ export async function setReminderSettings(
   _prev: SettingsState,
   formData: FormData
 ): Promise<SettingsState> {
-  const companyId = formData.get("companyId");
-  if (typeof companyId !== "string") return { error: "Missing company" };
-
   const kinds = ["interview", "docs", "onboarding", "start_date"] as const;
   const reminders: Record<string, { enabled: boolean; channel: string }> = {};
   for (const k of kinds) {
@@ -291,7 +284,8 @@ export async function setReminderSettings(
     };
   }
 
-  const supabase = await createClient();
+  const { db: supabase, companyId } = await settingsContext(formData);
+  if (!companyId) return { error: "Missing company" };
   const { data: company } = await supabase
     .from("companies")
     .select("settings")
@@ -316,14 +310,12 @@ export async function setEmployeeNumberSettings(
   _prev: SettingsState,
   formData: FormData
 ): Promise<SettingsState> {
-  const companyId = formData.get("companyId");
-  if (typeof companyId !== "string") return { error: "Missing company" };
-
   const mode = formData.get("mode") === "manual" ? "manual" : "auto";
   let prefix = (formData.get("prefix")?.toString() ?? "").trim().slice(0, 20);
   if (mode === "auto" && !prefix) prefix = "EMP-";
 
-  const supabase = await createClient();
+  const { db: supabase, companyId } = await settingsContext(formData);
+  if (!companyId) return { error: "Missing company" };
   const { data: company } = await supabase
     .from("companies")
     .select("settings")

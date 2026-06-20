@@ -89,10 +89,18 @@ export default async function CompaniesPage() {
                       joincarenow.com/careers/{c.slug}
                     </p>
                   </div>
-                  <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-                    {companyAdmins.length} admin
-                    {companyAdmins.length === 1 ? "" : "s"}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                      {companyAdmins.length} admin
+                      {companyAdmins.length === 1 ? "" : "s"}
+                    </span>
+                    <a
+                      href={`/admin/companies/${c.id}`}
+                      className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700"
+                    >
+                      Set up
+                    </a>
+                  </div>
                 </div>
 
                 {companyAdmins.length > 0 && (

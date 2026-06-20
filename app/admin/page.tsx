@@ -14,12 +14,9 @@ export default async function FounderHomePage() {
   const head = { count: "exact" as const, head: true };
 
   const [
-    companies, users, applicants, active, hires, liveJobs, emails, sms, errors, syncErrors, newFeedback, newRequests,
+    companies, hires, liveJobs, emails, sms, errors, syncErrors, newFeedback, newRequests,
   ] = await Promise.all([
     db.from("companies").select("id", head),
-    db.from("company_users").select("id", head),
-    db.from("applicants").select("id", head),
-    db.from("applications").select("id", head).in("stage", ["applied", "reviewing", "interview", "right_to_work", "offer"]),
     db.from("employees").select("id", head),
     db.from("jobs").select("id", head).eq("status", "published"),
     db.from("messages").select("id", head).eq("channel", "email").eq("direction", "outbound").gte("created_at", monthStart),
@@ -38,9 +35,6 @@ export default async function FounderHomePage() {
 
   const stats: { label: string; value: number; href?: string; alert?: boolean }[] = [
     { label: "Companies", value: n(companies), href: "/admin/companies" },
-    { label: "Users", value: n(users), href: "/admin/users" },
-    { label: "Applicants", value: n(applicants) },
-    { label: "Active applicants", value: n(active) },
     { label: "Hires", value: n(hires) },
     { label: "Live jobs", value: n(liveJobs) },
     { label: "Emails this month", value: n(emails) },

@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { sendEmail, sendSms, renderMergeFields } from "@/lib/comms/send";
+import { buildAndInsertDraft } from "@/lib/prospects/ai-drafts";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/prospects";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ProspectState = { error?: string; ok?: boolean } | undefined;
 
@@ -203,6 +205,22 @@ export async function sendProspectMessage(_prev: ProspectState, formData: FormDa
 
   revalidatePath(`/admin/sales/${companyId}`);
   if (!result.ok) return { error: result.error ?? "Could not send." };
+  return { ok: true };
+}
+
+/** Draft the next message for a contact with AI, into the approval queue. */
+export async function draftWithAi(_prev: ProspectState, formData: FormData): Promise<ProspectState> {
+  const { supabase } = await requirePlatformAdmin();
+  const id = formData.get("id")?.toString();
+  const contactId = formData.get("contactId")?.toString();
+  const channel = formData.get("channel")?.toString() === "sms" ? "sms" : "email";
+  if (!id || !contactId) return { error: "Pick a contact first." };
+
+  const r = await buildAndInsertDraft(supabase as unknown as SupabaseClient, id, contactId, channel);
+  if (r.error) return { error: r.error };
+
+  revalidatePath(`/admin/sales/${id}`);
+  revalidatePath("/admin/sales/approvals");
   return { ok: true };
 }
 

@@ -234,6 +234,26 @@ export async function draftWithAi(_prev: ProspectState, formData: FormData): Pro
   return { ok: true };
 }
 
+/** Delete a contact from a prospect. */
+export async function deleteProspectContact(formData: FormData): Promise<void> {
+  const { supabase } = await requirePlatformAdmin();
+  const contactId = formData.get("contactId")?.toString();
+  const id = formData.get("id")?.toString();
+  if (!contactId) return;
+  await supabase.from("prospect_contacts").delete().eq("id", contactId);
+  if (id) revalidatePath(`/admin/sales/${id}`);
+}
+
+/** Delete an entire prospect company (cascades contacts, activities, tasks). */
+export async function deleteProspect(formData: FormData): Promise<void> {
+  const { supabase } = await requirePlatformAdmin();
+  const id = formData.get("id")?.toString();
+  if (!id) return;
+  await supabase.from("prospect_companies").delete().eq("id", id);
+  revalidatePath("/admin/sales");
+  redirect("/admin/sales");
+}
+
 /** Tick / untick a task. */
 export async function toggleTask(formData: FormData): Promise<void> {
   const { supabase } = await requirePlatformAdmin();

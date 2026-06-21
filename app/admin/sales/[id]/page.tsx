@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { addNote, addContact, addTask, toggleTask } from "@/modules/prospects/actions";
+import { addNote, addContact, addTask, toggleTask, deleteProspectContact } from "@/modules/prospects/actions";
+import { ProspectDelete } from "@/components/dashboard/prospect-delete";
 import { stopEnrolment } from "@/modules/prospects/sequence-actions";
 import { ProspectStageSelect } from "@/components/dashboard/prospect-stage-select";
 import { ProspectComposer } from "@/components/dashboard/prospect-composer";
@@ -17,13 +18,14 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
   await requirePlatformAdmin();
   const db = createAdminClient();
 
-  const [{ data: company }, { data: contacts }, { data: activities }, { data: tasks }, { data: sequences }, { data: enrolments }] = await Promise.all([
+  const [{ data: company }, { data: contacts }, { data: activities }, { data: tasks }, { data: sequences }, { data: enrolments }, { count: draftCount }] = await Promise.all([
     db.from("prospect_companies").select("*").eq("id", id).single(),
     db.from("prospect_contacts").select("*").eq("prospect_company_id", id).order("created_at"),
-    db.from("prospect_activities").select("*").eq("prospect_company_id", id).order("created_at", { ascending: false }).limit(200),
+    db.from("prospect_activities").select("*").eq("prospect_company_id", id).neq("needs_approval", true).order("created_at", { ascending: false }).limit(200),
     db.from("prospect_tasks").select("*").eq("prospect_company_id", id).order("due_date", { nullsFirst: false }),
     db.from("prospect_sequences").select("id, name").eq("active", true).order("name"),
     db.from("prospect_enrolments").select("id, status, step_index, stopped_reason, prospect_sequences(name), prospect_contacts(name, email)").eq("prospect_company_id", id).order("created_at", { ascending: false }),
+    db.from("prospect_activities").select("id", { count: "exact", head: true }).eq("prospect_company_id", id).eq("needs_approval", true),
   ]);
   if (!company) notFound();
 
@@ -53,8 +55,21 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
             {[c.setting_type?.replace("_", " "), c.region, c.size_band].filter(Boolean).join(" · ") || "Prospect"}
           </p>
         </div>
-        <ProspectStageSelect id={id} stage={c.stage} />
+        <div className="flex items-center gap-3">
+          <ProspectStageSelect id={id} stage={c.stage} />
+          <ProspectDelete id={id} />
+        </div>
       </div>
+
+      {!!draftCount && (
+        <Link
+          href="/admin/sales/approvals"
+          className="mt-4 flex items-center justify-between rounded-xl border border-amber-300/60 bg-amber-400/20 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-400/30"
+        >
+          <span>{draftCount} AI draft{draftCount === 1 ? "" : "s"} waiting for your approval</span>
+          <span className="text-xs">Review in Needs approval →</span>
+        </Link>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left: contacts + tasks */}
@@ -63,12 +78,21 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
             <h2 className="text-sm font-semibold text-gray-900">Contacts</h2>
             <ul className="mt-2 divide-y divide-gray-100">
               {conts.map((ct) => (
-                <li key={ct.id} className="py-2 text-sm">
-                  <p className="font-medium text-gray-900">{ct.name || ct.email || ct.phone}</p>
-                  <p className="text-xs text-gray-500">
-                    {[ct.role, ct.email, ct.phone].filter(Boolean).join(" · ")}
-                    {ct.opted_out && <span className="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-gray-600">opted out</span>}
-                  </p>
+                <li key={ct.id} className="flex items-start justify-between gap-2 py-2 text-sm">
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900">{ct.name || ct.email || ct.phone}</p>
+                    <p className="text-xs text-gray-500">
+                      {[ct.role, ct.email, ct.phone].filter(Boolean).join(" · ")}
+                      {ct.opted_out && <span className="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-gray-600">opted out</span>}
+                    </p>
+                  </div>
+                  <form action={deleteProspectContact}>
+                    <input type="hidden" name="contactId" value={ct.id} />
+                    <input type="hidden" name="id" value={id} />
+                    <button className="shrink-0 rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label="Delete contact">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </form>
                 </li>
               ))}
               {conts.length === 0 && <li className="py-2 text-xs text-gray-400">No contacts yet.</li>}

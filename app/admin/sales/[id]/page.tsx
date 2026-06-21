@@ -4,8 +4,10 @@ import { ArrowLeft } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addNote, addContact, addTask, toggleTask } from "@/modules/prospects/actions";
+import { stopEnrolment } from "@/modules/prospects/sequence-actions";
 import { ProspectStageSelect } from "@/components/dashboard/prospect-stage-select";
 import { ProspectComposer } from "@/components/dashboard/prospect-composer";
+import { ProspectEnrol } from "@/components/dashboard/prospect-enrol";
 
 const input = "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
@@ -14,11 +16,13 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
   await requirePlatformAdmin();
   const db = createAdminClient();
 
-  const [{ data: company }, { data: contacts }, { data: activities }, { data: tasks }] = await Promise.all([
+  const [{ data: company }, { data: contacts }, { data: activities }, { data: tasks }, { data: sequences }, { data: enrolments }] = await Promise.all([
     db.from("prospect_companies").select("*").eq("id", id).single(),
     db.from("prospect_contacts").select("*").eq("prospect_company_id", id).order("created_at"),
     db.from("prospect_activities").select("*").eq("prospect_company_id", id).order("created_at", { ascending: false }).limit(200),
     db.from("prospect_tasks").select("*").eq("prospect_company_id", id).order("due_date", { nullsFirst: false }),
+    db.from("prospect_sequences").select("id, name").eq("active", true).order("name"),
+    db.from("prospect_enrolments").select("id, status, step_index, stopped_reason, prospect_sequences(name), prospect_contacts(name, email)").eq("prospect_company_id", id).order("created_at", { ascending: false }),
   ]);
   if (!company) notFound();
 
@@ -30,6 +34,10 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
   const conts = (contacts ?? []) as any[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tks = (tasks ?? []) as any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const enrols = (enrolments ?? []) as any[];
+  const seqOpts = (sequences ?? []).map((s) => ({ id: s.id as string, label: s.name as string }));
+  const contactOpts = conts.map((ct) => ({ id: ct.id as string, label: (ct.name || ct.email || ct.phone) as string }));
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -99,6 +107,33 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
               <input name="due_date" type="date" className="rounded-lg border border-gray-300 px-2 py-2 text-sm" />
               <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Add</button>
             </form>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+            <h2 className="text-sm font-semibold text-gray-900">Sequences</h2>
+            <ul className="mt-2 space-y-1.5">
+              {enrols.map((en) => (
+                <li key={en.id} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="text-gray-700">
+                    {en.prospect_sequences?.name ?? "Sequence"}
+                    <span className="ml-1 text-xs text-gray-400">
+                      · {en.status}{en.status === "active" ? ` (step ${en.step_index + 1})` : en.stopped_reason ? ` (${en.stopped_reason})` : ""}
+                    </span>
+                  </span>
+                  {en.status === "active" && (
+                    <form action={stopEnrolment}>
+                      <input type="hidden" name="enrolId" value={en.id} />
+                      <input type="hidden" name="companyId" value={id} />
+                      <button className="rounded border border-gray-300 px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-100">Stop</button>
+                    </form>
+                  )}
+                </li>
+              ))}
+              {enrols.length === 0 && <li className="text-xs text-gray-400">Not in any sequence.</li>}
+            </ul>
+            <div className="mt-3 border-t border-gray-100 pt-3">
+              <ProspectEnrol companyId={id} sequences={seqOpts} contacts={contactOpts} />
+            </div>
           </section>
         </div>
 

@@ -22,7 +22,12 @@ export default async function SalesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Sales</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Sales</h1>
+        <Link href="/admin/sales/sequences" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
+          Sequences
+        </Link>
+      </div>
       <p className="mt-1 text-sm text-white/80">Your prospect pipeline. Add a company and move it through to Won.</p>
 
       <div className="mt-4">

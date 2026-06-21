@@ -51,6 +51,7 @@ export async function createProspect(_prev: ProspectState, formData: FormData): 
       region: formData.get("region")?.toString() || null,
       website: formData.get("website")?.toString() || null,
       source: formData.get("source")?.toString() || null,
+      value_monthly: parseFloat(formData.get("value_monthly")?.toString() ?? "") || null,
       created_by: user.id,
     })
     .select("id")
@@ -84,7 +85,8 @@ export async function updateStage(formData: FormData): Promise<void> {
 
   const { data: before } = await supabase
     .from("prospect_companies").select("stage").eq("id", id).single();
-  await supabase.from("prospect_companies").update({ stage, updated_at: new Date().toISOString() }).eq("id", id);
+  const nowIso = new Date().toISOString();
+  await supabase.from("prospect_companies").update({ stage, updated_at: nowIso, stage_changed_at: nowIso }).eq("id", id);
   await logActivity(supabase, id, user.id, "stage_change", {
     body: `${STAGE_LABEL[(before?.stage as Stage) ?? "new"]} → ${STAGE_LABEL[stage as Stage]}`,
     meta: { from: before?.stage, to: stage },
@@ -232,6 +234,18 @@ export async function draftWithAi(_prev: ProspectState, formData: FormData): Pro
   revalidatePath(`/admin/sales/${id}`);
   revalidatePath("/admin/sales/approvals");
   return { ok: true };
+}
+
+/** Set a prospect's estimated monthly value. */
+export async function setProspectValue(formData: FormData): Promise<void> {
+  const { supabase } = await requirePlatformAdmin();
+  const id = formData.get("id")?.toString();
+  if (!id) return;
+  const raw = formData.get("value_monthly")?.toString() ?? "";
+  const value = raw.trim() === "" ? null : parseFloat(raw) || null;
+  await supabase.from("prospect_companies").update({ value_monthly: value }).eq("id", id);
+  revalidatePath(`/admin/sales/${id}`);
+  revalidatePath("/admin/sales");
 }
 
 /** Delete a contact from a prospect. */

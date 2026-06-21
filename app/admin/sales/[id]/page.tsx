@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { addNote, addContact, addTask, toggleTask, deleteProspectContact } from "@/modules/prospects/actions";
+import { addNote, addContact, addTask, toggleTask, deleteProspectContact, setProspectValue } from "@/modules/prospects/actions";
 import { ProspectDelete } from "@/components/dashboard/prospect-delete";
 import { stopEnrolment } from "@/modules/prospects/sequence-actions";
 import { ProspectStageSelect } from "@/components/dashboard/prospect-stage-select";
@@ -54,6 +54,20 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
           <p className="text-sm text-white/80">
             {[c.setting_type?.replace("_", " "), c.region, c.size_band].filter(Boolean).join(" · ") || "Prospect"}
           </p>
+          <form action={setProspectValue} className="mt-1.5 flex items-center gap-1.5">
+            <input type="hidden" name="id" value={id} />
+            <span className="text-xs text-white/70">Est. value £</span>
+            <input
+              name="value_monthly"
+              type="number"
+              min="0"
+              step="1"
+              defaultValue={c.value_monthly ?? ""}
+              placeholder="/month"
+              className="w-24 rounded border border-white/40 bg-white/90 px-2 py-0.5 text-sm text-gray-900"
+            />
+            <button className="text-xs font-medium text-white/90 underline">Save</button>
+          </form>
         </div>
         <div className="flex items-center gap-3">
           <ProspectStageSelect id={id} stage={c.stage} />

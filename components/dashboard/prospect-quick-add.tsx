@@ -71,6 +71,10 @@ export function ProspectQuickAdd() {
             Source
             <input name="source" placeholder="e.g. LinkedIn, referral" className={input} />
           </label>
+          <label className="text-xs font-medium text-gray-600">
+            Est. value (£/month)
+            <input name="value_monthly" type="number" min="0" step="1" placeholder="e.g. 99" className={input} />
+          </label>
         </div>
       )}
 

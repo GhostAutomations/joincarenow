@@ -3,20 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
+import { STAGES, STAGE_LABEL, type Stage } from "@/lib/prospects";
 
 export type ProspectState = { error?: string; ok?: boolean } | undefined;
-
-export const STAGES = ["new", "contacted", "engaged", "demo", "proposal", "won", "lost"] as const;
-export type Stage = (typeof STAGES)[number];
-export const STAGE_LABEL: Record<Stage, string> = {
-  new: "New",
-  contacted: "Contacted",
-  engaged: "Engaged",
-  demo: "Demo booked",
-  proposal: "Proposal",
-  won: "Won",
-  lost: "Lost",
-};
 
 async function logActivity(
   supabase: Awaited<ReturnType<typeof requirePlatformAdmin>>["supabase"],

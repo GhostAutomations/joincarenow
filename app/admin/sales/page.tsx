@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { STAGES, STAGE_LABEL } from "@/modules/prospects/actions";
+import { STAGES, STAGE_LABEL } from "@/lib/prospects";
 import { ProspectQuickAdd } from "@/components/dashboard/prospect-quick-add";
 
 type Row = { id: string; name: string; stage: string; region: string | null; setting_type: string | null };

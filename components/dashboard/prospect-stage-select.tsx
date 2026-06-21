@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import { updateStage, STAGES, STAGE_LABEL } from "@/modules/prospects/actions";
+import { updateStage } from "@/modules/prospects/actions";
+import { STAGES, STAGE_LABEL } from "@/lib/prospects";
 
 export function ProspectStageSelect({ id, stage }: { id: string; stage: string }) {
   const ref = useRef<HTMLFormElement>(null);

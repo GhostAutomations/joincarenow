@@ -10,9 +10,11 @@ export default async function SalesPage() {
   await requirePlatformAdmin();
   const db = createAdminClient();
 
-  const [{ data }, { count: approvalCount }] = await Promise.all([
+  const since7 = new Date(Date.now() - 7 * 86400e3).toISOString();
+  const [{ data }, { count: approvalCount }, { count: replyCount }] = await Promise.all([
     db.from("prospect_companies").select("id, name, stage, region, setting_type").order("created_at", { ascending: false }),
     db.from("prospect_activities").select("id", { count: "exact", head: true }).eq("needs_approval", true),
+    db.from("prospect_activities").select("id", { count: "exact", head: true }).eq("type", "message").eq("direction", "inbound").gte("created_at", since7),
   ]);
   const rows = (data ?? []) as Row[];
 
@@ -25,6 +27,9 @@ export default async function SalesPage() {
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Sales</h1>
         <div className="flex items-center gap-2">
+          <Link href="/admin/sales/replies" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
+            Replies{replyCount ? ` (${replyCount})` : ""}
+          </Link>
           <Link href="/admin/sales/approvals" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
             Needs approval{approvalCount ? ` (${approvalCount})` : ""}
           </Link>

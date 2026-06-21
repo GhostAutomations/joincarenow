@@ -10,16 +10,18 @@ export async function sendEmail(opts: {
   to: string;
   subject: string;
   text: string;
+  from?: string; // override the default sending identity (e.g. cold-outbound domain)
+  replyTo?: string;
   attachments?: { filename: string; content: string }[]; // content = base64
 }): Promise<SendResult> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM; // e.g. "Join Care Now <no-reply@joincarenow.com>"
+  const from = opts.from || process.env.RESEND_FROM; // e.g. "Join Care Now <no-reply@joincarenow.com>"
   if (!key || !from) {
     return { ok: false, error: "Email is not configured yet (missing RESEND_API_KEY / RESEND_FROM)." };
   }
 
   // Optional: route replies to a Resend inbound address so they're captured.
-  const replyTo = process.env.RESEND_REPLY_TO;
+  const replyTo = opts.replyTo || process.env.RESEND_REPLY_TO;
 
   try {
     const res = await fetch("https://api.resend.com/emails", {

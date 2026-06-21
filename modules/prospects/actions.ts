@@ -3,9 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
+import { sendEmail, sendSms, renderMergeFields } from "@/lib/comms/send";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/prospects";
 
 export type ProspectState = { error?: string; ok?: boolean } | undefined;
+
+const BASE_URL = "https://www.joincarenow.com";
+
+function normalizeUkPhone(raw: string | null): string | null {
+  if (!raw) return null;
+  const t = raw.replace(/[\s()-]/g, "");
+  if (t.startsWith("+")) return t;
+  if (t.startsWith("0")) return "+44" + t.slice(1);
+  if (t.startsWith("44")) return "+" + t;
+  return t;
+}
 
 async function logActivity(
   supabase: Awaited<ReturnType<typeof requirePlatformAdmin>>["supabase"],
@@ -120,6 +132,78 @@ export async function addTask(formData: FormData): Promise<void> {
     created_by: user.id,
   });
   revalidatePath(`/admin/sales/${id}`);
+}
+
+/** Send an email or SMS to a prospect contact via the comms hub, on the
+ *  separate prospecting domain, and log it to the timeline. Suppressed /
+ *  opted-out contacts are blocked. */
+export async function sendProspectMessage(_prev: ProspectState, formData: FormData): Promise<ProspectState> {
+  const { supabase, user } = await requirePlatformAdmin();
+  const companyId = formData.get("id")?.toString();
+  const contactId = formData.get("contactId")?.toString();
+  const channel = formData.get("channel")?.toString() === "sms" ? "sms" : "email";
+  const subject = (formData.get("subject")?.toString() ?? "").trim();
+  const body = (formData.get("body")?.toString() ?? "").trim();
+  if (!companyId || !contactId) return { error: "Missing prospect or contact" };
+  if (body.length < 2) return { error: "Write a message first." };
+
+  const { data: contact } = await supabase
+    .from("prospect_contacts")
+    .select("name, email, phone, opted_out, unsub_token")
+    .eq("id", contactId)
+    .single();
+  const { data: company } = await supabase
+    .from("prospect_companies").select("name").eq("id", companyId).single();
+  if (!contact) return { error: "Contact not found" };
+  if (contact.opted_out) return { error: "This contact has opted out and can't be messaged." };
+
+  const to = channel === "email" ? (contact.email as string | null) : normalizeUkPhone(contact.phone as string | null);
+  if (!to) return { error: channel === "email" ? "No email on this contact." : "No phone on this contact." };
+
+  // Global suppression check.
+  const { data: supp } = await supabase
+    .from("prospect_suppressions")
+    .select("id")
+    .or(channel === "email" ? `email.ilike.${(contact.email as string)}` : `phone.eq.${to}`)
+    .limit(1);
+  if (supp && supp.length > 0) return { error: "This address is on the suppression list." };
+
+  const values = {
+    first_name: ((contact.name as string) ?? "").split(" ")[0] ?? "",
+    company_name: (company?.name as string) ?? "",
+  };
+  const renderedSubject = renderMergeFields(subject || "A message from Join Care Now", values);
+  let renderedBody = renderMergeFields(body, values);
+
+  let result: { ok: boolean; id?: string; error?: string };
+  if (channel === "email") {
+    const from = process.env.RESEND_PROSPECT_FROM;
+    if (!from) return { error: "Prospecting email isn't set up yet (RESEND_PROSPECT_FROM)." };
+    const unsubUrl = `${BASE_URL}/unsubscribe/${contact.unsub_token}`;
+    renderedBody += `\n\n—\nYou're receiving this because we think Join Care Now could help your service. To opt out, click here: ${unsubUrl}`;
+    result = await sendEmail({ to, subject: renderedSubject, text: renderedBody, from });
+  } else {
+    renderedBody += "\n\nReply STOP to opt out.";
+    result = await sendSms({ to, body: renderedBody });
+  }
+
+  await supabase.from("prospect_activities").insert({
+    prospect_company_id: companyId,
+    contact_id: contactId,
+    type: "message",
+    channel,
+    direction: "outbound",
+    subject: channel === "email" ? renderedSubject : null,
+    body: renderedBody,
+    status: result.ok ? "sent" : "failed",
+    provider_id: result.id ?? null,
+    to_address: to,
+    actor_id: user.id,
+  });
+
+  revalidatePath(`/admin/sales/${companyId}`);
+  if (!result.ok) return { error: result.error ?? "Could not send." };
+  return { ok: true };
 }
 
 /** Tick / untick a task. */

@@ -5,6 +5,7 @@ import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addNote, addContact, addTask, toggleTask } from "@/modules/prospects/actions";
 import { ProspectStageSelect } from "@/components/dashboard/prospect-stage-select";
+import { ProspectComposer } from "@/components/dashboard/prospect-composer";
 
 const input = "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
@@ -104,6 +105,11 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
         {/* Right: timeline + note */}
         <div className="lg:col-span-2">
           <section className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+            <h2 className="text-sm font-semibold text-gray-900">Send a message</h2>
+            <ProspectComposer companyId={id} contacts={conts} />
+          </section>
+
+          <section className="mt-6 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
             <h2 className="text-sm font-semibold text-gray-900">Activity</h2>
             <form action={addNote} className="mt-2 flex items-start gap-2">
               <input type="hidden" name="id" value={id} />

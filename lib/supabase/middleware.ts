@@ -19,6 +19,8 @@ const PUBLIC_PATHS = [
   "/offer",
   // Talent-pool opt-in links from rejection emails (token-secured, no login).
   "/talent-pool",
+  // Prospect email unsubscribe links (token-secured, no login).
+  "/unsubscribe",
   // Guarded at the page level (redirects to the applicant sign-in, not staff).
   "/portal",
   // Inbound webhooks — authenticated by provider signature, not a user session.

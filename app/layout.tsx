@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: "%s | Join Care Now",
   },
   description:
-    "Advertise jobs, manage applicants, complete onboarding and sync staff into your training platform — built for the UK care sector.",
+    "Advertise jobs, manage applicants and complete onboarding — recruitment and onboarding software built for the UK care sector.",
 };
 
 export default function RootLayout({

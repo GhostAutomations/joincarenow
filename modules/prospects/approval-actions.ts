@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { sendEmail, sendSms, renderMergeFields } from "@/lib/comms/send";
+import { buildProspectEmail } from "@/lib/comms/email-template";
 
 const BASE_URL = "https://www.joincarenow.com";
 
@@ -54,8 +55,9 @@ export async function approveDraft(formData: FormData): Promise<{ ok?: boolean; 
   if (channel === "email") {
     const from = process.env.RESEND_PROSPECT_FROM;
     if (!from) return { error: "Prospecting email isn't set up yet (RESEND_PROSPECT_FROM)." };
-    renderedBody += `\n\n—\nTo opt out, click here: ${BASE_URL}/unsubscribe/${contact.unsub_token}`;
-    result = await sendEmail({ to, subject: renderedSubject, text: renderedBody, from, replyTo: process.env.RESEND_PROSPECT_REPLY_TO });
+    const built = buildProspectEmail(renderedBody, `${BASE_URL}/unsubscribe/${contact.unsub_token}`);
+    renderedBody = built.text;
+    result = await sendEmail({ to, subject: renderedSubject, text: built.text, html: built.html, from, replyTo: process.env.RESEND_PROSPECT_REPLY_TO });
   } else {
     renderedBody += "\n\nReply STOP to opt out.";
     result = await sendSms({ to, body: renderedBody });

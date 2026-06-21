@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { sendEmail, sendSms, renderMergeFields } from "@/lib/comms/send";
+import { buildProspectEmail } from "@/lib/comms/email-template";
 import { buildAndInsertDraft } from "@/lib/prospects/ai-drafts";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/prospects";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -182,8 +183,9 @@ export async function sendProspectMessage(_prev: ProspectState, formData: FormDa
     const from = process.env.RESEND_PROSPECT_FROM;
     if (!from) return { error: "Prospecting email isn't set up yet (RESEND_PROSPECT_FROM)." };
     const unsubUrl = `${BASE_URL}/unsubscribe/${contact.unsub_token}`;
-    renderedBody += `\n\n—\nYou're receiving this because we think Join Care Now could help your service. To opt out, click here: ${unsubUrl}`;
-    result = await sendEmail({ to, subject: renderedSubject, text: renderedBody, from, replyTo: process.env.RESEND_PROSPECT_REPLY_TO });
+    const built = buildProspectEmail(renderedBody, unsubUrl);
+    renderedBody = built.text;
+    result = await sendEmail({ to, subject: renderedSubject, text: built.text, html: built.html, from, replyTo: process.env.RESEND_PROSPECT_REPLY_TO });
   } else {
     renderedBody += "\n\nReply STOP to opt out.";
     result = await sendSms({ to, body: renderedBody });

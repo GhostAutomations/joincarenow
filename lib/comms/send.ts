@@ -10,6 +10,7 @@ export async function sendEmail(opts: {
   to: string;
   subject: string;
   text: string;
+  html?: string; // optional HTML version (text is sent as the fallback)
   from?: string; // override the default sending identity (e.g. cold-outbound domain)
   replyTo?: string;
   attachments?: { filename: string; content: string }[]; // content = base64
@@ -35,6 +36,7 @@ export async function sendEmail(opts: {
         to: [opts.to],
         subject: opts.subject,
         text: opts.text,
+        ...(opts.html ? { html: opts.html } : {}),
         ...(replyTo ? { reply_to: replyTo } : {}),
         ...(opts.attachments?.length ? { attachments: opts.attachments } : {}),
       }),

@@ -1,10 +1,11 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutGrid, Building2, Store, MessageSquareText, ListChecks, Users, ScrollText, Plug, TriangleAlert, MessageSquarePlus, Lightbulb, BarChart3, CreditCard } from "lucide-react";
+import { LayoutGrid, Building2, Store, MessageSquareText, ListChecks, Users, ScrollText, Plug, TriangleAlert, MessageSquarePlus, Lightbulb, BarChart3, CreditCard, Target } from "lucide-react";
 
 const ITEMS = [
   { href: "/admin", label: "Home", icon: LayoutGrid, grad: "from-slate-500 to-slate-700" },
+  { href: "/admin/sales", label: "Sales", icon: Target, grad: "from-rose-500 to-pink-600" },
   { href: "/admin/companies", label: "Companies", icon: Building2, grad: "from-teal-400 to-teal-600" },
   { href: "/admin/statistics", label: "Statistics", icon: BarChart3, grad: "from-blue-400 to-blue-600" },
   { href: "/admin/billing", label: "Billing", icon: CreditCard, grad: "from-amber-400 to-amber-500" },

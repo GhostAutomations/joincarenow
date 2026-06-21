@@ -27,8 +27,8 @@ export default async function SalesPage() {
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Sales</h1>
         <div className="flex items-center gap-2">
-          <Link href="/admin/sales/replies" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
-            Replies{replyCount ? ` (${replyCount})` : ""}
+          <Link href="/admin/sales/conversations" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
+            Conversations{replyCount ? ` (${replyCount})` : ""}
           </Link>
           <Link href="/admin/sales/approvals" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
             Needs approval{approvalCount ? ` (${approvalCount})` : ""}

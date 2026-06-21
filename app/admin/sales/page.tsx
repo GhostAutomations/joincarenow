@@ -10,10 +10,10 @@ export default async function SalesPage() {
   await requirePlatformAdmin();
   const db = createAdminClient();
 
-  const { data } = await db
-    .from("prospect_companies")
-    .select("id, name, stage, region, setting_type")
-    .order("created_at", { ascending: false });
+  const [{ data }, { count: approvalCount }] = await Promise.all([
+    db.from("prospect_companies").select("id, name, stage, region, setting_type").order("created_at", { ascending: false }),
+    db.from("prospect_activities").select("id", { count: "exact", head: true }).eq("needs_approval", true),
+  ]);
   const rows = (data ?? []) as Row[];
 
   const byStage = new Map<string, Row[]>();
@@ -24,9 +24,14 @@ export default async function SalesPage() {
     <div>
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Sales</h1>
-        <Link href="/admin/sales/sequences" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
-          Sequences
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/sales/approvals" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
+            Needs approval{approvalCount ? ` (${approvalCount})` : ""}
+          </Link>
+          <Link href="/admin/sales/sequences" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
+            Sequences
+          </Link>
+        </div>
       </div>
       <p className="mt-1 text-sm text-white/80">Your prospect pipeline. Add a company and move it through to Won.</p>
 

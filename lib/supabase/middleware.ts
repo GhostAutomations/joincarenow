@@ -30,6 +30,8 @@ const PUBLIC_PATHS = [
   "/api/cron",
   // Client error reporting — no session (errors can happen anywhere).
   "/api/log-error",
+  // Agent endpoints — authenticated by AGENT_API_KEY bearer, not a session.
+  "/api/agent",
 ];
 
 function isPublicPath(pathname: string) {

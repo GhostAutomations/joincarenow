@@ -66,9 +66,35 @@ export async function POST(req: Request) {
   if (!from) return xml(200);
 
   const admin = createAdminClient();
+  const fromKey = last10(from);
+
+  // 1) Prospect CRM contact? Thread the reply onto the prospect timeline (auto-
+  //    stops their sequence). STOP / UNSUBSCRIBE also opts them out + suppresses.
+  const { data: pContacts } = await admin
+    .from("prospect_contacts")
+    .select("id, prospect_company_id, phone")
+    .not("phone", "is", null);
+  const pContact = (pContacts ?? []).find((c) => last10(c.phone) === fromKey);
+  if (pContact) {
+    await admin.from("prospect_activities").insert({
+      prospect_company_id: pContact.prospect_company_id,
+      contact_id: pContact.id,
+      type: "message",
+      channel: "sms",
+      direction: "inbound",
+      to_address: from,
+      body,
+      status: "delivered",
+    });
+    const upper = body.trim().toUpperCase();
+    if (["STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT"].includes(upper)) {
+      await admin.from("prospect_contacts").update({ opted_out: true }).eq("id", pContact.id);
+      await admin.from("prospect_suppressions").insert({ phone: from, reason: "SMS STOP" });
+    }
+    return xml(200);
+  }
 
   // Match the sender to an applicant by the last 10 digits of their phone.
-  const fromKey = last10(from);
   const { data: applicants } = await admin
     .from("applicants")
     .select("id, phone, first_name, last_name")

@@ -78,6 +78,49 @@ export async function POST(req: Request) {
   if (!fromEmail) return ok(200);
 
   const admin = createAdminClient();
+  const apiKeyEnv = process.env.RESEND_API_KEY;
+
+  // Shared body fetch from Resend's Received Emails API.
+  const fetchBody = async (): Promise<{ body: string; subject: string | null }> => {
+    let body = "";
+    let subject = event.data?.subject ?? null;
+    if (apiKeyEnv && event.data?.email_id) {
+      try {
+        const res = await fetch(`https://api.resend.com/emails/receiving/${event.data.email_id}`, {
+          headers: { Authorization: `Bearer ${apiKeyEnv}` },
+        });
+        const email = (await res.json().catch(() => ({}))) as { text?: string | null; html?: string | null; subject?: string | null };
+        body = email.text?.trim() || (email.html ? stripHtml(email.html) : "");
+        subject = email.subject ?? subject;
+      } catch { /* metadata only */ }
+    }
+    if (!body) body = "(email received — open in your inbox to read)";
+    return { body, subject };
+  };
+
+  // 1) Prospect CRM contact? Thread the reply onto the prospect timeline (this
+  //    also auto-stops any active sequence on the next cron run).
+  const { data: pContacts } = await admin
+    .from("prospect_contacts")
+    .select("id, prospect_company_id")
+    .ilike("email", fromEmail)
+    .limit(1);
+  const pContact = (pContacts ?? [])[0];
+  if (pContact) {
+    const { body, subject } = await fetchBody();
+    await admin.from("prospect_activities").insert({
+      prospect_company_id: pContact.prospect_company_id,
+      contact_id: pContact.id,
+      type: "message",
+      channel: "email",
+      direction: "inbound",
+      to_address: fromEmail,
+      subject,
+      body: body.slice(0, 5000),
+      status: "delivered",
+    });
+    return ok(200);
+  }
 
   // Match the sender to an applicant by email.
   const { data: applicants } = await admin

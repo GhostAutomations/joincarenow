@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { autoStage } from "@/lib/prospects/auto-stage";
 
 export const runtime = "nodejs";
 
@@ -119,6 +120,7 @@ export async function POST(req: Request) {
       body: body.slice(0, 5000),
       status: "delivered",
     });
+    await autoStage(admin, pContact.prospect_company_id as string, "reply");
     return ok(200);
   }
 

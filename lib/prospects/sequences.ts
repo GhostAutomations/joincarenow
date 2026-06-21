@@ -1,6 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, sendSms, renderMergeFields } from "@/lib/comms/send";
 import { buildProspectEmail } from "@/lib/comms/email-template";
+import { autoStage } from "@/lib/prospects/auto-stage";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Db = ReturnType<typeof createAdminClient>;
 const BASE_URL = "https://www.joincarenow.com";
@@ -67,6 +69,8 @@ export async function sendToProspectContact(
     provider_id: result.id ?? null,
     to_address: to,
   });
+
+  if (result.ok) await autoStage(db as unknown as SupabaseClient, companyId, "sent");
 
   return { ok: result.ok, error: result.error };
 }

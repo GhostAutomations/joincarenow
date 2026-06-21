@@ -6,6 +6,7 @@ import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { sendEmail, sendSms, renderMergeFields } from "@/lib/comms/send";
 import { buildProspectEmail } from "@/lib/comms/email-template";
 import { buildAndInsertDraft } from "@/lib/prospects/ai-drafts";
+import { autoStage } from "@/lib/prospects/auto-stage";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/prospects";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -215,7 +216,10 @@ export async function sendProspectMessage(_prev: ProspectState, formData: FormDa
     if (result.ok) anyOk = true; else lastError = result.error ?? "Could not send.";
   }
 
+  if (anyOk) await autoStage(supabase as unknown as SupabaseClient, companyId, "sent");
+
   revalidatePath(`/admin/sales/${companyId}`);
+  revalidatePath("/admin/sales");
   if (!anyOk) return { error: lastError ?? "Could not send." };
   return { ok: true };
 }

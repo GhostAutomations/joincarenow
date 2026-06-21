@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { autoStage } from "@/lib/prospects/auto-stage";
 
 export const runtime = "nodejs";
 
@@ -90,6 +91,9 @@ export async function POST(req: Request) {
     if (["STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT"].includes(upper)) {
       await admin.from("prospect_contacts").update({ opted_out: true }).eq("id", pContact.id);
       await admin.from("prospect_suppressions").insert({ phone: from, reason: "SMS STOP" });
+      await autoStage(admin, pContact.prospect_company_id as string, "optout");
+    } else {
+      await autoStage(admin, pContact.prospect_company_id as string, "reply");
     }
     return xml(200);
   }

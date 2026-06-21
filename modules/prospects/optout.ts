@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { autoStage } from "@/lib/prospects/auto-stage";
 
 export type UnsubInfo = { companyName: string; opted: boolean } | null;
 
@@ -23,7 +24,7 @@ export async function optOutByToken(token: string): Promise<{ ok?: boolean; erro
   const db = createAdminClient();
   const { data: contact } = await db
     .from("prospect_contacts")
-    .select("id, email, phone")
+    .select("id, email, phone, prospect_company_id")
     .eq("unsub_token", token)
     .maybeSingle();
   if (!contact) return { error: "Link not found." };
@@ -34,5 +35,6 @@ export async function optOutByToken(token: string): Promise<{ ok?: boolean; erro
     phone: (contact.phone as string) ?? null,
     reason: "unsubscribe link",
   });
+  await autoStage(db, contact.prospect_company_id as string, "optout");
   return { ok: true };
 }

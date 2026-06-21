@@ -59,11 +59,13 @@ export async function createProspect(_prev: ProspectState, formData: FormData): 
 
   const email = (formData.get("email")?.toString() ?? "").trim();
   const contactName = (formData.get("contact_name")?.toString() ?? "").trim();
-  if (email || contactName) {
+  const contactPhone = (formData.get("contact_phone")?.toString() ?? "").trim();
+  if (email || contactName || contactPhone) {
     await supabase.from("prospect_contacts").insert({
       prospect_company_id: company.id,
       name: contactName || null,
       email: email || null,
+      phone: contactPhone || null,
       role: formData.get("role")?.toString() || null,
     });
   }
@@ -144,7 +146,9 @@ export async function sendProspectMessage(_prev: ProspectState, formData: FormDa
   const { supabase, user } = await requirePlatformAdmin();
   const companyId = formData.get("id")?.toString();
   const contactId = formData.get("contactId")?.toString();
-  const channel = formData.get("channel")?.toString() === "sms" ? "sms" : "email";
+  const channelRaw = formData.get("channel")?.toString();
+  const channels: ("email" | "sms")[] =
+    channelRaw === "both" ? ["email", "sms"] : channelRaw === "sms" ? ["sms"] : ["email"];
   const subject = (formData.get("subject")?.toString() ?? "").trim();
   const body = (formData.get("body")?.toString() ?? "").trim();
   if (!companyId || !contactId) return { error: "Missing prospect or contact" };
@@ -160,53 +164,57 @@ export async function sendProspectMessage(_prev: ProspectState, formData: FormDa
   if (!contact) return { error: "Contact not found" };
   if (contact.opted_out) return { error: "This contact has opted out and can't be messaged." };
 
-  const to = channel === "email" ? (contact.email as string | null) : normalizeUkPhone(contact.phone as string | null);
-  if (!to) return { error: channel === "email" ? "No email on this contact." : "No phone on this contact." };
-
-  // Global suppression check.
-  const { data: supp } = await supabase
-    .from("prospect_suppressions")
-    .select("id")
-    .or(channel === "email" ? `email.ilike.${(contact.email as string)}` : `phone.eq.${to}`)
-    .limit(1);
-  if (supp && supp.length > 0) return { error: "This address is on the suppression list." };
-
   const values = {
     first_name: ((contact.name as string) ?? "").split(" ")[0] ?? "",
     company_name: (company?.name as string) ?? "",
   };
   const renderedSubject = renderMergeFields(subject || "A message from Join Care Now", values);
-  let renderedBody = renderMergeFields(body, values);
+  const renderedBodyBase = renderMergeFields(body, values);
 
-  let result: { ok: boolean; id?: string; error?: string };
-  if (channel === "email") {
-    const from = process.env.RESEND_PROSPECT_FROM;
-    if (!from) return { error: "Prospecting email isn't set up yet (RESEND_PROSPECT_FROM)." };
-    const unsubUrl = `${BASE_URL}/unsubscribe/${contact.unsub_token}`;
-    const built = buildProspectEmail(renderedBody, unsubUrl);
-    renderedBody = built.text;
-    result = await sendEmail({ to, subject: renderedSubject, text: built.text, html: built.html, from, replyTo: process.env.RESEND_PROSPECT_REPLY_TO });
-  } else {
-    renderedBody += "\n\nReply STOP to opt out.";
-    result = await sendSms({ to, body: renderedBody });
+  let anyOk = false;
+  let lastError: string | null = null;
+  for (const ch of channels) {
+    const to = ch === "email" ? (contact.email as string | null) : normalizeUkPhone(contact.phone as string | null);
+    if (!to) { lastError = ch === "email" ? "No email on this contact." : "No phone on this contact."; continue; }
+
+    const { data: supp } = await supabase
+      .from("prospect_suppressions")
+      .select("id")
+      .or(ch === "email" ? `email.ilike.${contact.email}` : `phone.eq.${to}`)
+      .limit(1);
+    if (supp && supp.length > 0) { lastError = "This address is on the suppression list."; continue; }
+
+    let outBody = renderedBodyBase;
+    let result: { ok: boolean; id?: string; error?: string };
+    if (ch === "email") {
+      const from = process.env.RESEND_PROSPECT_FROM;
+      if (!from) { lastError = "Prospecting email isn't set up yet (RESEND_PROSPECT_FROM)."; continue; }
+      const built = buildProspectEmail(renderedBodyBase, `${BASE_URL}/unsubscribe/${contact.unsub_token}`);
+      outBody = built.text;
+      result = await sendEmail({ to, subject: renderedSubject, text: built.text, html: built.html, from, replyTo: process.env.RESEND_PROSPECT_REPLY_TO });
+    } else {
+      outBody = `${renderedBodyBase}\n\nReply STOP to opt out.`;
+      result = await sendSms({ to, body: outBody });
+    }
+
+    await supabase.from("prospect_activities").insert({
+      prospect_company_id: companyId,
+      contact_id: contactId,
+      type: "message",
+      channel: ch,
+      direction: "outbound",
+      subject: ch === "email" ? renderedSubject : null,
+      body: outBody,
+      status: result.ok ? "sent" : "failed",
+      provider_id: result.id ?? null,
+      to_address: to,
+      actor_id: user.id,
+    });
+    if (result.ok) anyOk = true; else lastError = result.error ?? "Could not send.";
   }
 
-  await supabase.from("prospect_activities").insert({
-    prospect_company_id: companyId,
-    contact_id: contactId,
-    type: "message",
-    channel,
-    direction: "outbound",
-    subject: channel === "email" ? renderedSubject : null,
-    body: renderedBody,
-    status: result.ok ? "sent" : "failed",
-    provider_id: result.id ?? null,
-    to_address: to,
-    actor_id: user.id,
-  });
-
   revalidatePath(`/admin/sales/${companyId}`);
-  if (!result.ok) return { error: result.error ?? "Could not send." };
+  if (!anyOk) return { error: lastError ?? "Could not send." };
   return { ok: true };
 }
 

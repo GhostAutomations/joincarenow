@@ -46,6 +46,10 @@ export function ProspectQuickAdd() {
             <input name="role" placeholder="Registered manager" className={input} />
           </label>
           <label className="text-xs font-medium text-gray-600">
+            Contact phone
+            <input name="contact_phone" placeholder="07…" className={input} />
+          </label>
+          <label className="text-xs font-medium text-gray-600">
             Care setting
             <select name="setting_type" className={input} defaultValue="">
               <option value="">—</option>

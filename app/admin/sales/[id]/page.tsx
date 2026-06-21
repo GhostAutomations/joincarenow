@@ -74,6 +74,7 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
               {conts.length === 0 && <li className="py-2 text-xs text-gray-400">No contacts yet.</li>}
             </ul>
             <form action={addContact} className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+              <p className="text-xs font-medium text-gray-500">Add a contact</p>
               <input type="hidden" name="id" value={id} />
               <input name="name" placeholder="Name" className={input} />
               <input name="email" type="email" placeholder="Email" className={input} />

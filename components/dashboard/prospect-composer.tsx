@@ -12,7 +12,7 @@ type Contact = { id: string; name: string | null; email: string | null; phone: s
 export function ProspectComposer({ companyId, contacts }: { companyId: string; contacts: Contact[] }) {
   const router = useRouter();
   const ref = useRef<HTMLFormElement>(null);
-  const [channel, setChannel] = useState<"email" | "sms">("email");
+  const [channel, setChannel] = useState<"email" | "sms" | "both">("email");
   const [state, action] = useActionState<ProspectState, FormData>(sendProspectMessage, undefined);
 
   useEffect(() => {
@@ -22,21 +22,23 @@ export function ProspectComposer({ companyId, contacts }: { companyId: string; c
     }
   }, [state, router]);
 
-  const reachable = contacts.filter((c) => !c.opted_out && (channel === "email" ? c.email : c.phone));
+  const reachable = contacts.filter((c) =>
+    !c.opted_out && (channel === "email" ? c.email : channel === "sms" ? c.phone : c.email || c.phone)
+  );
 
   return (
     <form ref={ref} action={action} className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
       <input type="hidden" name="id" value={companyId} />
       <div className="flex flex-wrap items-center gap-2">
         <div className="inline-flex rounded-lg border border-gray-300 bg-white p-0.5 text-sm">
-          {(["email", "sms"] as const).map((c) => (
+          {(["email", "sms", "both"] as const).map((c) => (
             <button
               key={c}
               type="button"
               onClick={() => setChannel(c)}
               className={`rounded-md px-3 py-1 capitalize ${channel === c ? "bg-brand-600 text-white" : "text-gray-600"}`}
             >
-              {c}
+              {c === "both" ? "Both" : c}
             </button>
           ))}
         </div>

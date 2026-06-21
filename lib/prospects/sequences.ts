@@ -47,7 +47,7 @@ export async function sendToProspectContact(
     const from = process.env.RESEND_PROSPECT_FROM;
     if (!from) return { ok: false, error: "RESEND_PROSPECT_FROM not set" };
     body += `\n\n—\nTo opt out, click here: ${BASE_URL}/unsubscribe/${contact.unsub_token}`;
-    result = await sendEmail({ to, subject, text: body, from });
+    result = await sendEmail({ to, subject, text: body, from, replyTo: process.env.RESEND_PROSPECT_REPLY_TO });
   } else {
     body += "\n\nReply STOP to opt out.";
     result = await sendSms({ to, body });

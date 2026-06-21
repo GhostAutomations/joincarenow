@@ -55,7 +55,7 @@ export async function approveDraft(formData: FormData): Promise<{ ok?: boolean; 
     const from = process.env.RESEND_PROSPECT_FROM;
     if (!from) return { error: "Prospecting email isn't set up yet (RESEND_PROSPECT_FROM)." };
     renderedBody += `\n\n—\nTo opt out, click here: ${BASE_URL}/unsubscribe/${contact.unsub_token}`;
-    result = await sendEmail({ to, subject: renderedSubject, text: renderedBody, from });
+    result = await sendEmail({ to, subject: renderedSubject, text: renderedBody, from, replyTo: process.env.RESEND_PROSPECT_REPLY_TO });
   } else {
     renderedBody += "\n\nReply STOP to opt out.";
     result = await sendSms({ to, body: renderedBody });

@@ -181,7 +181,7 @@ export async function sendProspectMessage(_prev: ProspectState, formData: FormDa
     if (!from) return { error: "Prospecting email isn't set up yet (RESEND_PROSPECT_FROM)." };
     const unsubUrl = `${BASE_URL}/unsubscribe/${contact.unsub_token}`;
     renderedBody += `\n\n—\nYou're receiving this because we think Join Care Now could help your service. To opt out, click here: ${unsubUrl}`;
-    result = await sendEmail({ to, subject: renderedSubject, text: renderedBody, from });
+    result = await sendEmail({ to, subject: renderedSubject, text: renderedBody, from, replyTo: process.env.RESEND_PROSPECT_REPLY_TO });
   } else {
     renderedBody += "\n\nReply STOP to opt out.";
     result = await sendSms({ to, body: renderedBody });

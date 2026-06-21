@@ -135,6 +135,40 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Compliance / inspection-ready — the hook, right under the hero */}
+      <section id="compliance" className="border-b border-gray-100 bg-white">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">Inspection-ready</p>
+              <h2 className="mt-3 text-2xl font-bold text-gray-900 sm:text-3xl">Walk into inspection with the evidence ready</h2>
+              <p className="mt-4 text-gray-600">
+                Safe recruitment is at the heart of CQC Regulation 19 (fit and proper persons)
+                and Regulation 17 (good governance and records) — with the equivalent
+                expectations from CIW and Social Care Wales for Welsh providers. Join Care Now
+                captures each check, time-stamps it, and stores it against the person, so the
+                evidence is in one place when you need it.
+              </p>
+              <p className="mt-4 text-sm text-gray-500">
+                Join Care Now helps you stay organised and evidence safe recruitment. It does
+                not replace your own checks — legal responsibility for compliance stays with
+                your organisation.
+              </p>
+            </div>
+            <ul className="space-y-3">
+              {["Right to Work captured and stored", "DBS status recorded against each person", "References requested and tracked", "Employment history and gaps", "Signed contracts and policies", "Every document, time-stamped in one place"].map((item) => (
+                <li key={item} className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-700">
+                    <Check className="h-3 w-3" aria-hidden />
+                  </span>
+                  <span className="text-sm text-gray-700">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* Problem → Solution */}
       <section className="border-b border-gray-100 bg-gray-50">
         <div className="mx-auto max-w-5xl px-6 py-16">
@@ -181,41 +215,6 @@ export default function LandingPage() {
           ))}
         </div>
         {/* PLACEHOLDER: product screenshots could sit here */}
-      </section>
-
-      {/* Compliance / inspection-ready */}
-      <section className="jcn-app-bg relative overflow-hidden text-white">
-        <div className="jcn-blob jcn-blob-2 pointer-events-none absolute -right-24 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-        <div className="relative mx-auto max-w-5xl px-6 py-20">
-          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-white/80">Inspection-ready</p>
-              <h2 className="mt-3 text-2xl font-bold sm:text-3xl">Walk into inspection with the evidence ready</h2>
-              <p className="mt-4 text-white/90">
-                Safe recruitment is at the heart of CQC Regulation 19 (fit and proper persons)
-                and Regulation 17 (good governance and records) — with the equivalent
-                expectations from CIW and Social Care Wales for Welsh providers. Join Care Now
-                captures each check, time-stamps it, and stores it against the person, so the
-                evidence is in one place when you need it.
-              </p>
-              <p className="mt-4 text-sm text-white/70">
-                Join Care Now helps you stay organised and evidence safe recruitment. It does
-                not replace your own checks — legal responsibility for compliance stays with
-                your organisation.
-              </p>
-            </div>
-            <ul className="space-y-3">
-              {["Right to Work captured and stored", "DBS status recorded against each person", "References requested and tracked", "Employment history and gaps", "Signed contracts and policies", "Every document, time-stamped in one place"].map((item) => (
-                <li key={item} className="flex items-start gap-3 rounded-xl bg-white/10 p-3 backdrop-blur">
-                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white/90 text-brand-700">
-                    <Check className="h-3 w-3" aria-hidden />
-                  </span>
-                  <span className="text-sm">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
       </section>
 
       {/* Pricing */}

@@ -236,6 +236,17 @@ export async function draftWithAi(_prev: ProspectState, formData: FormData): Pro
   return { ok: true };
 }
 
+/** Founder sets the AI auto-send mode (off | low_risk | all). */
+export async function setAutoSendMode(formData: FormData): Promise<void> {
+  const { supabase } = await requirePlatformAdmin();
+  const mode = formData.get("mode")?.toString();
+  if (!["off", "low_risk", "all"].includes(mode ?? "")) return;
+  await supabase
+    .from("platform_settings")
+    .upsert({ key: "prospect_autosend", value: mode, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  revalidatePath("/admin/sales");
+}
+
 /** Set a prospect's estimated monthly value. */
 export async function setProspectValue(formData: FormData): Promise<void> {
   const { supabase } = await requirePlatformAdmin();

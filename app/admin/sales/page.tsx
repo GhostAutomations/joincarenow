@@ -3,6 +3,8 @@ import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ProspectQuickAdd } from "@/components/dashboard/prospect-quick-add";
 import { ProspectBoard, type BoardCard } from "@/components/dashboard/prospect-board";
+import { AutoSendToggle } from "@/components/dashboard/autosend-toggle";
+import { getAutoSendMode } from "@/lib/prospects/ai-drafts";
 
 type Row = {
   id: string; name: string; stage: string; setting_type: string | null;
@@ -57,6 +59,7 @@ export default async function SalesPage({
     stageChangedAt: r.stage_changed_at,
   }));
 
+  const autoSendMode = await getAutoSendMode(db);
   const openValue = rows.filter((r) => !["won", "lost"].includes(r.stage)).reduce((s, r) => s + (r.value_monthly ?? 0), 0);
   const wonValue = rows.filter((r) => r.stage === "won").reduce((s, r) => s + (r.value_monthly ?? 0), 0);
   const openCount = rows.filter((r) => !["won", "lost"].includes(r.stage)).length;
@@ -66,7 +69,8 @@ export default async function SalesPage({
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Sales</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <AutoSendToggle mode={autoSendMode} />
           <Link href="/admin/sales/conversations" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
             Conversations{replyCount ? ` (${replyCount})` : ""}
           </Link>

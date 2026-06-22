@@ -40,8 +40,9 @@ export function BranchBilling({
         {branches.length} total · {extra} extra · £{monthly.toFixed(2)}/mo
       </p>
       <p className="mt-1 text-sm text-gray-600">
-        Your plan includes 1 branch. Each additional branch is £{RATE.toFixed(2)}/month, charged
-        from the day you add it.
+        Your plan includes 1 branch. Each additional branch is £{RATE.toFixed(2)}/month. Adding one
+        charges your saved card straight away (a part‑month amount for the rest of this period),
+        then £{RATE.toFixed(2)}/month after.
       </p>
 
       <ul className="mt-4 divide-y divide-gray-100">
@@ -85,7 +86,7 @@ export function BranchBilling({
             <input type="hidden" name="companyId" value={companyId} />
             <label className="mt-3 flex items-start gap-2 text-sm text-gray-700">
               <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
-              I accept the additional <strong>£{RATE.toFixed(2)}/month</strong> charge for this branch, billed from today.
+              I understand my saved card will be <strong>charged now</strong> for the rest of this billing period, then <strong>£{RATE.toFixed(2)}/month</strong> for this branch.
             </label>
             <div className="mt-3 flex items-center gap-2">
               <button

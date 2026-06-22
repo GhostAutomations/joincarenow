@@ -92,9 +92,13 @@ export async function createCheckoutSession(opts: {
   const lineItems: { price: string; quantity?: number }[] = [{ price: basePrice, quantity: 1 }];
   // Setup fee applies on monthly; waived when committing annually.
   if (opts.interval === "month" && PRICES.setup) lineItems.push({ price: PRICES.setup, quantity: 1 });
-  // Metered add-ons (no quantity at checkout).
-  if (PRICES.sms) lineItems.push({ price: PRICES.sms });
-  if (PRICES.ai) lineItems.push({ price: PRICES.ai });
+  // Metered add-ons (monthly prices). Stripe forbids mixing billing intervals
+  // in one subscription, so only attach these to the monthly plan. Annual
+  // usage billing is handled separately (see report-usage / follow-up).
+  if (opts.interval === "month") {
+    if (PRICES.sms) lineItems.push({ price: PRICES.sms });
+    if (PRICES.ai) lineItems.push({ price: PRICES.ai });
+  }
 
   // Defensive: Stripe rejects the same recurring price twice. If env vars
   // accidentally reuse a Price ID, keep only the first occurrence.

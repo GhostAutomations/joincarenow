@@ -72,23 +72,20 @@ const PROBLEMS = [
   { pain: "Spreadsheets and inboxes everywhere", fix: "One simple system from advert to hired." },
 ];
 
-const TIERS = [
-  {
-    name: "Starter",
-    blurb: "For smaller teams getting organised.",
-    points: ["Branded careers page", "Applicant tracking", "Core compliance: Right to Work, DBS, references", "Email & SMS messaging"],
-  },
-  {
-    name: "Growth",
-    blurb: "For growing providers hiring regularly.",
-    points: ["Everything in Starter", "Full onboarding workflows", "Contracts & policies with e-signature", "Document collection & approval"],
-    featured: true,
-  },
-  {
-    name: "Enterprise",
-    blurb: "For multi-branch organisations.",
-    points: ["Everything in Growth", "Multiple branches & locations", "Advanced reporting", "Priority support"],
-  },
+const PLAN_INCLUDES = [
+  "Every feature included — recruitment, onboarding and employee records",
+  "Core compliance always in the base: Right to Work, DBS, references",
+  "Branded careers page & applicant tracking",
+  "Contracts & policies with e-signature",
+  "Email & SMS messaging (100 SMS / month included)",
+  "1 branch included",
+];
+
+const ADD_ONS = [
+  { label: "Extra branch", price: "£7.50 / month each" },
+  { label: "Extra SMS", price: "8p each after your 100/month" },
+  { label: "AI actions", price: "10p per action" },
+  { label: "Forms", price: "from the Form Store, priced per form" },
 ];
 
 const STEPS = [
@@ -217,41 +214,62 @@ export default function LandingPage() {
       {/* Pricing */}
       <section id="pricing" className="mx-auto max-w-6xl px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Simple, honest pricing</h2>
+          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">One plan. Everything included.</h2>
           <p className="mt-3 text-gray-600">
-            No quote-chasing and no hidden fees. Core compliance — Right to Work, DBS and
-            references — is included on every plan, never gated.
+            No quote-chasing, no tiers to decode and no hidden fees. Every feature is in the
+            box — core compliance (Right to Work, DBS and references) is always in the base,
+            never an add-on.
           </p>
         </div>
-        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {TIERS.map((t) => (
-            <div
-              key={t.name}
-              className={`relative flex flex-col rounded-2xl border bg-white p-6 ${t.featured ? "border-brand-400 shadow-lg ring-1 ring-brand-200" : "border-gray-200"}`}
-            >
-              {t.featured && (
-                <span className="absolute -top-3 left-6 rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold text-white">Most popular</span>
-              )}
-              <h3 className="text-lg font-semibold text-gray-900">{t.name}</h3>
-              <p className="mt-1 text-sm text-gray-500">{t.blurb}</p>
-              <p className="mt-4 text-2xl font-bold text-gray-900">
-                Pricing on request
-                {/* PLACEHOLDER: £/mo for the {t.name} tier — confirm before launch */}
+
+        <div className="mx-auto mt-12 max-w-3xl overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-lg ring-1 ring-brand-100">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            {/* Price */}
+            <div className="jcn-app-bg flex flex-col justify-center p-8 text-white">
+              <p className="text-xs font-semibold uppercase tracking-wider text-white/80">Join Care Now</p>
+              <p className="mt-3 flex items-baseline gap-1">
+                <span className="text-5xl font-bold">£55</span>
+                <span className="text-lg text-white/80">/ month</span>
               </p>
-              <ul className="mt-5 flex-1 space-y-2.5">
-                {t.points.map((pt) => (
+              <p className="mt-2 text-sm text-white/90">
+                or <span className="font-semibold">£550 / year</span> — 2 months free
+              </p>
+              <p className="mt-4 text-sm text-white/80">
+                £150 one-off setup, <span className="font-semibold text-white">waived</span> when you
+                commit to a 12-month term.
+              </p>
+              <a href="#demo" className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
+                Book a demo
+              </a>
+            </div>
+            {/* Includes */}
+            <div className="p-8">
+              <p className="text-sm font-semibold text-gray-900">What&apos;s included</p>
+              <ul className="mt-4 space-y-2.5">
+                {PLAN_INCLUDES.map((pt) => (
                   <li key={pt} className="flex items-start gap-2 text-sm text-gray-700">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
                     {pt}
                   </li>
                 ))}
               </ul>
-              <a href="#demo" className={`mt-6 inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition ${t.featured ? "bg-brand-600 text-white hover:bg-brand-700" : "border border-gray-300 text-gray-900 hover:bg-gray-50"}`}>
-                Book a demo
-              </a>
             </div>
-          ))}
+          </div>
+
+          {/* Add-ons */}
+          <div className="border-t border-gray-100 bg-gray-50 px-8 py-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Pay only for what you use</p>
+            <div className="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
+              {ADD_ONS.map((a) => (
+                <div key={a.label} className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="text-gray-700">{a.label}</span>
+                  <span className="font-medium text-gray-900">{a.price}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
+
         <p className="mt-6 text-center text-sm text-gray-500">
           A training-platform integration (Carer.Academy) is coming soon.
         </p>

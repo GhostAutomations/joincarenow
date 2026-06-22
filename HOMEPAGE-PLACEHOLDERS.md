@@ -4,13 +4,11 @@ The rebuilt marketing homepage (`app/(marketing)/page.tsx`) is live-ready except
 items below, which are intentionally left as clearly-marked placeholders so nothing is
 fabricated. Fill these in before promoting the page.
 
-## Pricing (`#pricing` section)
-- **Final prices** for each tier — currently every tier shows "Pricing on request".
-  - Starter — `[PLACEHOLDER: £/mo]`
-  - Growth — `[PLACEHOLDER: £/mo]`
-  - Enterprise — `[PLACEHOLDER: £/mo]`
-- **Confirm tier names** (Starter / Growth / Enterprise are placeholders) and **what's
-  included in each** — the feature bullets are a sensible draft, not confirmed scope.
+## Pricing (`#pricing` section) — DONE
+Pricing is now live and confirmed from `PRICING.md`: one plan, £55/mo or £550/yr (2 months
+free), £150 setup waived on a 12-month commit, everything included with 1 branch + 100 SMS/mo.
+Add-ons shown: extra branch £7.50/mo, SMS 8p over, AI 10p/action, Forms via the Form Store.
+No placeholder remains here.
 
 ## Social proof (`Trusted by care teams` section)
 - Three **outcome stats** (e.g. time saved, time-to-hire, candidates not lost) — all show

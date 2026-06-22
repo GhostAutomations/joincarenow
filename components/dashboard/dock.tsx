@@ -1,11 +1,12 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutGrid, Briefcase, KanbanSquare, CalendarClock, Users, ClipboardCheck,
   IdCard, FileText, Store, MessageSquareText, BarChart3, Settings, ShieldCheck,
   CreditCard, MessageSquarePlus, Lightbulb,
 } from "lucide-react";
+import { ResponsiveDock } from "@/components/dashboard/responsive-dock";
 
 const BASE = [
   { href: "/dashboard", label: "Home", icon: LayoutGrid, grad: "from-slate-500 to-slate-700" },
@@ -26,7 +27,6 @@ const BASE = [
 
 export function Dock({ feedbackOpen = false, isAdmin = false }: { feedbackOpen?: boolean; isAdmin?: boolean }) {
   const pathname = usePathname();
-  const router = useRouter();
   if (pathname === "/dashboard") return null;
 
   const ITEMS = [
@@ -36,27 +36,9 @@ export function Dock({ feedbackOpen = false, isAdmin = false }: { feedbackOpen?:
   ];
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-3">
-      <div className="pointer-events-auto flex max-w-[94vw] flex-wrap items-center justify-center gap-1.5 rounded-2xl border border-white/50 bg-white/70 px-2.5 py-2 shadow-xl backdrop-blur-xl">
-        {ITEMS.map(({ href, label, icon: Icon, grad }) => {
-          const active = pathname === href || pathname.startsWith(href + "/");
-          return (
-            <button
-              key={href}
-              onClick={() => router.push(href)}
-              aria-label={label}
-              className={`group relative grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${grad} text-white shadow transition-transform hover:-translate-y-1 ${
-                active ? "ring-2 ring-brand-600 ring-offset-2 ring-offset-white/60" : ""
-              }`}
-            >
-              <Icon className="h-8 w-8" strokeWidth={1.9} />
-              <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white opacity-0 shadow transition-opacity duration-75 group-hover:opacity-100">
-                {label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <ResponsiveDock
+      items={ITEMS}
+      primary={["/dashboard", "/jobs", "/pipeline", "/onboarding-board"]}
+    />
   );
 }

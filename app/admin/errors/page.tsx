@@ -1,5 +1,6 @@
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { dismissError, clearErrors } from "@/modules/admin/error-actions";
 
 type ErrRow = {
   id: string;
@@ -38,17 +39,27 @@ export default async function AdminErrorsPage({
         The 200 most recent platform errors (server exceptions and failed email/SMS sends).
       </p>
 
-      <form method="get" className="mt-4">
-        <select name="source" defaultValue={source ?? ""} className="rounded-lg border border-white/40 bg-white/90 px-3 py-2 text-sm text-gray-900">
-          <option value="">All sources</option>
-          {sources.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-        <button className="ml-2 rounded-lg border border-white/40 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
-          Filter
-        </button>
-      </form>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <form method="get" className="flex items-center gap-2">
+          <select name="source" defaultValue={source ?? ""} className="rounded-lg border border-white/40 bg-white/90 px-3 py-2 text-sm text-gray-900">
+            <option value="">All sources</option>
+            {sources.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <button className="rounded-lg border border-white/40 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
+            Filter
+          </button>
+        </form>
+        {errors.length > 0 && (
+          <form action={clearErrors} className="ml-auto">
+            <input type="hidden" name="source" value={source ?? ""} />
+            <button className="rounded-lg border border-white/40 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
+              Clear {source ? `“${source}”` : "all"}
+            </button>
+          </form>
+        )}
+      </div>
 
       <div className="mt-4 space-y-2">
         {errors.length === 0 && (
@@ -63,6 +74,12 @@ export default async function AdminErrorsPage({
               {e.code && <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-gray-700">{e.code}</span>}
               {e.companies?.name && <span>{e.companies.name}</span>}
               <span className="ml-auto">{new Date(e.created_at).toLocaleString("en-GB")}</span>
+              <form action={dismissError}>
+                <input type="hidden" name="id" value={e.id} />
+                <button aria-label="Dismiss" className="rounded-md px-2 py-0.5 font-medium text-gray-400 hover:bg-gray-100 hover:text-gray-700">
+                  Dismiss
+                </button>
+              </form>
             </div>
             <p className="mt-1.5 text-sm font-medium text-gray-900">{e.message}</p>
             {e.detail != null && (

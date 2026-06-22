@@ -116,7 +116,13 @@ export default async function BillingPage() {
           </div>
 
           <CollapsibleSection title="Branches" count={branches?.length ?? 0} defaultOpen={false}>
-            <BranchBilling branches={branches ?? []} companyId={current.company_id} canManage={isAdmin} />
+            <BranchBilling
+              branches={branches ?? []}
+              companyId={current.company_id}
+              canManage={isAdmin}
+              rate={interval === "year" ? 75 : 7.5}
+              period={interval === "year" ? "year" : "month"}
+            />
           </CollapsibleSection>
 
           <CollapsibleSection title="Invoices" count={invoices.length} defaultOpen={false}>

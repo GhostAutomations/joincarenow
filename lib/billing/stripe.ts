@@ -9,9 +9,14 @@ export const PRICES = {
   monthly: process.env.STRIPE_PRICE_MONTHLY, // £55 / month recurring
   annual: process.env.STRIPE_PRICE_ANNUAL, // £550 / year recurring
   setup: process.env.STRIPE_PRICE_SETUP, // £150 one-time
-  branch: process.env.STRIPE_PRICE_BRANCH, // £7.50 / month recurring (licensed)
-  sms: process.env.STRIPE_PRICE_SMS, // 8p metered
-  ai: process.env.STRIPE_PRICE_AI, // 10p metered
+  // Add-ons come in interval variants so they can attach to either base plan
+  // (Stripe forbids mixing intervals within one subscription).
+  branch: process.env.STRIPE_PRICE_BRANCH, // £7.50 / month (licensed)
+  branchYear: process.env.STRIPE_PRICE_BRANCH_YEAR, // £75 / year (licensed)
+  sms: process.env.STRIPE_PRICE_SMS, // 8p metered, monthly
+  smsYear: process.env.STRIPE_PRICE_SMS_YEAR, // 8p metered, yearly
+  ai: process.env.STRIPE_PRICE_AI, // 10p metered, monthly
+  aiYear: process.env.STRIPE_PRICE_AI_YEAR, // 10p metered, yearly
 };
 
 function key(): string {
@@ -92,13 +97,12 @@ export async function createCheckoutSession(opts: {
   const lineItems: { price: string; quantity?: number }[] = [{ price: basePrice, quantity: 1 }];
   // Setup fee applies on monthly; waived when committing annually.
   if (opts.interval === "month" && PRICES.setup) lineItems.push({ price: PRICES.setup, quantity: 1 });
-  // Metered add-ons (monthly prices). Stripe forbids mixing billing intervals
-  // in one subscription, so only attach these to the monthly plan. Annual
-  // usage billing is handled separately (see report-usage / follow-up).
-  if (opts.interval === "month") {
-    if (PRICES.sms) lineItems.push({ price: PRICES.sms });
-    if (PRICES.ai) lineItems.push({ price: PRICES.ai });
-  }
+  // Metered add-ons must match the base interval (Stripe forbids mixing).
+  const isYear = opts.interval === "year";
+  const smsPrice = isYear ? PRICES.smsYear : PRICES.sms;
+  const aiPrice = isYear ? PRICES.aiYear : PRICES.ai;
+  if (smsPrice) lineItems.push({ price: smsPrice });
+  if (aiPrice) lineItems.push({ price: aiPrice });
 
   // Defensive: Stripe rejects the same recurring price twice. If env vars
   // accidentally reuse a Price ID, keep only the first occurrence.
@@ -165,12 +169,17 @@ export async function reportMeterEvent(eventName: string, customerId: string, va
  *  branch line item if needed, removes it when the count drops to zero. No-op if
  *  branch billing isn't configured. Best-effort. */
 export async function syncBranchQuantity(subscriptionId: string | null, quantity: number) {
-  if (!subscriptionId || !PRICES.branch || !process.env.STRIPE_SECRET_KEY) return;
+  if (!subscriptionId || !process.env.STRIPE_SECRET_KEY) return;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sub = (await getSubscription(subscriptionId)) as any;
   const items = sub?.items?.data ?? [];
+  // Match the branch add-on interval to the base plan (no mixed intervals).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const existing = items.find((it: any) => it?.price?.id === PRICES.branch);
+  const isYear = items.some((it: any) => it?.price?.id === PRICES.annual);
+  const branchPrice = isYear ? PRICES.branchYear : PRICES.branch;
+  if (!branchPrice) return;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const existing = items.find((it: any) => it?.price?.id === PRICES.branch || it?.price?.id === PRICES.branchYear);
   if (existing) {
     const oldQty = (existing.quantity as number) ?? 0;
     if (quantity === oldQty) return;
@@ -187,7 +196,7 @@ export async function syncBranchQuantity(subscriptionId: string | null, quantity
     // First extra branch — add the line item and charge immediately.
     await stripeRequest("/subscription_items", "POST", {
       subscription: subscriptionId,
-      price: PRICES.branch,
+      price: branchPrice,
       quantity,
       proration_behavior: "always_invoice",
     });

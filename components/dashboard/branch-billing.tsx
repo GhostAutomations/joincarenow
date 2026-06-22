@@ -5,17 +5,21 @@ import { useRouter } from "next/navigation";
 import { Trash2, Plus, Building2, X, AlertTriangle, Loader2 } from "lucide-react";
 import { createBranch, deleteBranch, type BranchState } from "@/modules/branches/actions";
 
-const RATE = 7.5; // £/month per extra branch
-
 export function BranchBilling({
   branches,
   companyId,
   canManage,
+  rate = 7.5,
+  period = "month",
 }: {
   branches: { id: string; name: string }[];
   companyId: string;
   canManage: boolean;
+  rate?: number;
+  period?: "month" | "year";
 }) {
+  const RATE = rate;
+  const per = period === "year" ? "year" : "month";
   const router = useRouter();
   const [state, action, pending] = useActionState<BranchState, FormData>(createBranch, undefined);
   const ref = useRef<HTMLFormElement>(null);
@@ -49,12 +53,12 @@ export function BranchBilling({
   return (
     <div>
       <p className="text-sm font-medium text-gray-700">
-        {branches.length} total · {extra} extra · £{monthly.toFixed(2)}/mo
+        {branches.length} total · {extra} extra · £{monthly.toFixed(2)}/{per === "year" ? "yr" : "mo"}
       </p>
       <p className="mt-1 text-sm text-gray-600">
-        Your plan includes 1 branch. Each additional branch is £{RATE.toFixed(2)}/month. Adding one
-        charges your saved card straight away (a part‑month amount for the rest of this period),
-        then £{RATE.toFixed(2)}/month after.
+        Your plan includes 1 branch. Each additional branch is £{RATE.toFixed(2)}/{per}. Adding one
+        charges your saved card straight away (a part‑period amount for the rest of this {per}),
+        then £{RATE.toFixed(2)}/{per} after.
       </p>
 
       <ul className="mt-4 grid grid-cols-1 gap-x-8 sm:grid-cols-2">
@@ -83,7 +87,7 @@ export function BranchBilling({
           onClick={() => setOpen(true)}
           className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
         >
-          <Plus className="h-4 w-4" /> Add a branch (£{RATE.toFixed(2)}/mo)
+          <Plus className="h-4 w-4" /> Add a branch (£{RATE.toFixed(2)}/{per === "year" ? "yr" : "mo"})
         </button>
       )}
 
@@ -103,7 +107,7 @@ export function BranchBilling({
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>
                 Your saved card will be <strong>charged now</strong> for the rest of this billing
-                period, then <strong>£{RATE.toFixed(2)}/month</strong> for this branch.
+                period, then <strong>£{RATE.toFixed(2)}/{per}</strong> for this branch.
               </span>
             </div>
 
@@ -149,7 +153,7 @@ export function BranchBilling({
               </button>
             </div>
             <p className="mt-3 text-sm text-gray-600">
-              Remove <strong>{removing.name}</strong>? The £{RATE.toFixed(2)}/month charge stops, and
+              Remove <strong>{removing.name}</strong>? The £{RATE.toFixed(2)}/{per} charge stops, and
               you&apos;ll be credited the unused part of this period against your next invoice.
             </p>
             {removePending && (

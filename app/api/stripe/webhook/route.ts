@@ -86,9 +86,10 @@ export async function POST(req: Request) {
             text:
               `Hi ${name},\n\n` +
               `Thanks for subscribing to Join Care Now — your subscription is now active and your account is ready to use.\n\n` +
-              `You can manage your plan, payment method and invoices any time from the Billing area in your dashboard: https://www.joincarenow.com/billing\n\n` +
+              `You can manage your plan, payment method and invoices any time from the Billing area in your dashboard.\n\n` +
               `If you have any questions, just reply to this email and we'll be glad to help.\n\n` +
               `The Join Care Now team`,
+            cta: { label: "Go to Billing", url: "https://www.joincarenow.com/billing" },
             footerNote: "You're receiving this because you started a subscription on joincarenow.com.",
           });
         }

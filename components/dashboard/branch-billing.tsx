@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Plus, Building2, X, AlertTriangle, Loader2 } from "lucide-react";
 import { createBranch, deleteBranch, type BranchState } from "@/modules/branches/actions";
@@ -20,6 +20,8 @@ export function BranchBilling({
   const [state, action, pending] = useActionState<BranchState, FormData>(createBranch, undefined);
   const ref = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
+  const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null);
+  const [removePending, startRemove] = useTransition();
 
   useEffect(() => {
     if (state?.ok) {
@@ -28,6 +30,18 @@ export function BranchBilling({
       router.refresh();
     }
   }, [state, router]);
+
+  function confirmRemove() {
+    if (!removing) return;
+    const fd = new FormData();
+    fd.set("id", removing.id);
+    fd.set("companyId", companyId);
+    startRemove(async () => {
+      await deleteBranch(fd);
+      setRemoving(null);
+      router.refresh();
+    });
+  }
 
   const extra = Math.max(0, branches.length - 1);
   const monthly = extra * RATE;
@@ -52,18 +66,13 @@ export function BranchBilling({
               {i === 0 && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-500">included</span>}
             </span>
             {canManage && i > 0 && (
-              <form
-                action={deleteBranch}
-                onSubmit={(e) => {
-                  if (!confirm(`Remove "${b.name}"? You'll be credited the unused part of this month on your next invoice.`)) e.preventDefault();
-                }}
+              <button
+                onClick={() => setRemoving({ id: b.id, name: b.name })}
+                className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                aria-label="Remove branch"
               >
-                <input type="hidden" name="id" value={b.id} />
-                <input type="hidden" name="companyId" value={companyId} />
-                <button className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label="Remove branch">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </form>
+                <Trash2 className="h-4 w-4" />
+              </button>
             )}
           </li>
         ))}
@@ -124,6 +133,37 @@ export function BranchBilling({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Remove confirmation popup */}
+      {removing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Remove branch">
+          <button aria-label="Close" onClick={() => !removePending && setRemoving(null)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Remove branch</h3>
+              <button onClick={() => !removePending && setRemoving(null)} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mt-3 text-sm text-gray-600">
+              Remove <strong>{removing.name}</strong>? The £{RATE.toFixed(2)}/month charge stops, and
+              you&apos;ll be credited the unused part of this period against your next invoice.
+            </p>
+            {removePending && (
+              <p className="mt-3 text-xs text-gray-500">Removing the branch and updating your billing… this can take a few seconds.</p>
+            )}
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" disabled={removePending} onClick={() => setRemoving(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+                Cancel
+              </button>
+              <button type="button" disabled={removePending} onClick={confirmRemove} className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-70">
+                {removePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                {removePending ? "Removing…" : "Remove branch"}
+              </button>
+            </div>
           </div>
         </div>
       )}

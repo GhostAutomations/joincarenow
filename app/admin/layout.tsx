@@ -36,7 +36,7 @@ export default async function AdminLayout({
         </div>
       </header>
       <main className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24">
-        <div className="mx-auto max-w-5xl">{children}</div>
+        {children}
       </main>
       <FounderDock />
     </div>

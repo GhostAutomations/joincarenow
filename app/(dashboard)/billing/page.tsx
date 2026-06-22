@@ -93,16 +93,6 @@ export default async function BillingPage() {
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-2.5 p-6 sm:grid-cols-2">
-              {INCLUDED.map((f) => (
-                <p key={f} className="flex items-start gap-2 text-sm text-gray-700">
-                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600">
-                    <Check className="h-3 w-3" />
-                  </span>
-                  {f}
-                </p>
-              ))}
-            </div>
           </div>
 
           {/* Usage this month */}

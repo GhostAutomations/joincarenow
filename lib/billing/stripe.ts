@@ -96,10 +96,15 @@ export async function createCheckoutSession(opts: {
   if (PRICES.sms) lineItems.push({ price: PRICES.sms });
   if (PRICES.ai) lineItems.push({ price: PRICES.ai });
 
+  // Defensive: Stripe rejects the same recurring price twice. If env vars
+  // accidentally reuse a Price ID, keep only the first occurrence.
+  const seen = new Set<string>();
+  const uniqueItems = lineItems.filter((li) => (seen.has(li.price) ? false : (seen.add(li.price), true)));
+
   const session = await stripeRequest<{ url: string }>("/checkout/sessions", "POST", {
     mode: "subscription",
     customer: opts.customerId,
-    line_items: lineItems,
+    line_items: uniqueItems,
     success_url: `${BASE_URL}/billing?status=success`,
     cancel_url: `${BASE_URL}/billing?status=cancelled`,
     subscription_data: { metadata: { company_id: opts.companyId } },

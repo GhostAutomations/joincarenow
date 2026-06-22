@@ -53,7 +53,7 @@ export default async function BillingPage() {
     .from("branches")
     .select("id, name")
     .eq("company_id", current.company_id)
-    .order("name");
+    .order("created_at", { ascending: true });
 
   return (
     <div className="mx-auto max-w-5xl">

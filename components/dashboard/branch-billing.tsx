@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Plus, Building2 } from "lucide-react";
+import { Trash2, Plus, Building2, X, AlertTriangle } from "lucide-react";
 import { createBranch, deleteBranch, type BranchState } from "@/modules/branches/actions";
 
 const RATE = 7.5; // £/month per extra branch
@@ -19,14 +19,12 @@ export function BranchBilling({
   const router = useRouter();
   const [state, action] = useActionState<BranchState, FormData>(createBranch, undefined);
   const ref = useRef<HTMLFormElement>(null);
-  const [accepted, setAccepted] = useState(false);
-  const [adding, setAdding] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (state?.ok) {
       ref.current?.reset();
-      setAccepted(false);
-      setAdding(false);
+      setOpen(false);
       router.refresh();
     }
   }, [state, router]);
@@ -72,43 +70,58 @@ export function BranchBilling({
       </ul>
 
       {canManage && (
-        adding ? (
-          <form ref={ref} action={action} className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-            {state?.error && <p className="mb-2 text-xs text-red-600">{state.error}</p>}
-            <label className="block text-sm font-medium text-gray-700">
-              New branch name
-              <input
-                name="name"
-                placeholder="e.g. Cardiff, Newport, North Team"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-              />
-            </label>
-            <input type="hidden" name="companyId" value={companyId} />
-            <label className="mt-3 flex items-start gap-2 text-sm text-gray-700">
-              <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
-              I understand my saved card will be <strong>charged now</strong> for the rest of this billing period, then <strong>£{RATE.toFixed(2)}/month</strong> for this branch.
-            </label>
-            <div className="mt-3 flex items-center gap-2">
-              <button
-                type="submit"
-                disabled={!accepted}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-              >
-                <Plus className="h-4 w-4" /> Add branch
-              </button>
-              <button type="button" onClick={() => { setAdding(false); setAccepted(false); }} className="text-sm text-gray-500 hover:text-gray-700">
-                Cancel
+        <button
+          onClick={() => setOpen(true)}
+          className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
+        >
+          <Plus className="h-4 w-4" /> Add a branch (£{RATE.toFixed(2)}/mo)
+        </button>
+      )}
+
+      {/* Confirmation popup */}
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Add a branch">
+          <button aria-label="Close" onClick={() => setOpen(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Add a branch</h3>
+              <button onClick={() => setOpen(false)} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200">
+                <X className="h-4 w-4" />
               </button>
             </div>
-          </form>
-        ) : (
-          <button
-            onClick={() => setAdding(true)}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
-          >
-            <Plus className="h-4 w-4" /> Add a branch (£{RATE.toFixed(2)}/mo)
-          </button>
-        )
+
+            <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>
+                Your saved card will be <strong>charged now</strong> for the rest of this billing
+                period, then <strong>£{RATE.toFixed(2)}/month</strong> for this branch.
+              </span>
+            </div>
+
+            <form ref={ref} action={action} className="mt-4">
+              {state?.error && <p className="mb-2 text-sm text-red-600">{state.error}</p>}
+              <input type="hidden" name="companyId" value={companyId} />
+              <label className="block text-sm font-medium text-gray-700">
+                Branch name
+                {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
+                <input
+                  name="name"
+                  autoFocus
+                  placeholder="e.g. Cardiff, North Team"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                />
+              </label>
+              <div className="mt-5 flex justify-end gap-2">
+                <button type="button" onClick={() => setOpen(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  Cancel
+                </button>
+                <button type="submit" className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
+                  <Plus className="h-4 w-4" /> Confirm &amp; add
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

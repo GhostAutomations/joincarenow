@@ -66,3 +66,34 @@ ${task}`;
   }
   return { subject: null, body: text };
 }
+
+/**
+ * Classify whether a single inbound message means the prospect is booking,
+ * scheduling, accepting or confirming a demo/call. Returns false on any error
+ * so it never blocks the reply flow.
+ */
+export async function classifyDemoIntent(lastInbound: string): Promise<boolean> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey || !lastInbound.trim()) return false;
+  try {
+    const client = new Anthropic({ apiKey, maxRetries: 1, timeout: 30_000 });
+    const model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
+    const msg = await client.messages.create({
+      model,
+      max_tokens: 5,
+      system:
+        "You classify ONE inbound B2B message from a sales prospect. Reply with exactly YES or NO. Answer YES only if the sender is agreeing to, requesting, proposing a time for, accepting, or confirming a demo or a call/meeting to see the product (e.g. 'let's book a demo', 'happy to have a call', 'how about Tuesday at 2', 'yes that time works'). Otherwise answer NO.",
+      messages: [{ role: "user", content: lastInbound.slice(0, 1500) }],
+    });
+    const text = msg.content
+      .filter((b) => b.type === "text")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((b) => (b as any).text as string)
+      .join("")
+      .trim()
+      .toUpperCase();
+    return text.startsWith("Y");
+  } catch {
+    return false;
+  }
+}

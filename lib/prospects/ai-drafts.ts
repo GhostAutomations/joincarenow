@@ -1,9 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { draftProspectMessage } from "@/lib/ai/draft-prospect";
+import { draftProspectMessage, classifyDemoIntent } from "@/lib/ai/draft-prospect";
 import { detectHighRisk } from "@/lib/prospects";
 import { getSendWindow, isWithinSendingWindow } from "@/lib/prospects/send-window";
 import { sendToProspectContact } from "@/lib/prospects/sequences";
+import { autoStage } from "@/lib/prospects/auto-stage";
 
 export type AutoSendMode = "off" | "low_risk" | "all";
 
@@ -97,7 +98,7 @@ export async function runProspectDrafts(): Promise<DraftRun> {
 
   const { data: inbounds } = await db
     .from("prospect_activities")
-    .select("prospect_company_id, contact_id, created_at, channel")
+    .select("prospect_company_id, contact_id, created_at, channel, body")
     .eq("type", "message")
     .eq("direction", "inbound")
     .gte("created_at", since)
@@ -117,6 +118,12 @@ export async function runProspectDrafts(): Promise<DraftRun> {
     if (laterOut && laterOut.length) { res.skipped += 1; continue; }
 
     const channel = ib.channel === "sms" ? "sms" : "email";
+
+    // Demo-booked detection: if their reply confirms/books a demo, move the card.
+    if (await classifyDemoIntent((ib.body as string) ?? "")) {
+      await autoStage(db, cid, "demo");
+    }
+
     const g = await generateDraft(db, cid, ib.contact_id as string, channel);
     if ("error" in g) { res.skipped += 1; continue; }
 

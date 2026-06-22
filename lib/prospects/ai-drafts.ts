@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { draftProspectMessage } from "@/lib/ai/draft-prospect";
-import { detectHighRisk, isWithinSendingWindow } from "@/lib/prospects";
+import { detectHighRisk } from "@/lib/prospects";
+import { getSendWindow, isWithinSendingWindow } from "@/lib/prospects/send-window";
 import { sendToProspectContact } from "@/lib/prospects/sequences";
 
 export type AutoSendMode = "off" | "low_risk" | "all";
@@ -85,10 +86,11 @@ export type DraftRun = { drafted: number; sent: number; skipped: number };
  *  the auto-send mode, replies either send automatically or park for approval. */
 export async function runProspectDrafts(): Promise<DraftRun> {
   const res: DraftRun = { drafted: 0, sent: 0, skipped: 0 };
-  // Quiet hours: never send outside 08:00–18:00 Europe/London.
-  if (!isWithinSendingWindow()) return res;
-
   const db = createAdminClient();
+  // Quiet hours: never send outside the configured window (Europe/London).
+  const win = await getSendWindow(db);
+  if (!isWithinSendingWindow(win.start, win.end)) return res;
+
   const CAP = 8;
   const mode = await getAutoSendMode(db);
   const since = new Date(Date.now() - 14 * 86400e3).toISOString();

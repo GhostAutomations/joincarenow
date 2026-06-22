@@ -251,6 +251,24 @@ export async function setAutoSendMode(formData: FormData): Promise<void> {
   revalidatePath("/admin/sales");
 }
 
+/** Founder sets the CRM agent sending window (hours, Europe/London). */
+export async function setSendWindow(formData: FormData): Promise<void> {
+  const { supabase } = await requirePlatformAdmin();
+  const start = parseInt(formData.get("start_hour")?.toString() ?? "", 10);
+  const end = parseInt(formData.get("end_hour")?.toString() ?? "", 10);
+  if (!Number.isInteger(start) || !Number.isInteger(end)) return;
+  if (start < 0 || start > 23 || end < 0 || end > 23 || start >= end) return;
+  const now = new Date().toISOString();
+  await supabase.from("platform_settings").upsert(
+    [
+      { key: "prospect_send_start_hour", value: String(start), updated_at: now },
+      { key: "prospect_send_end_hour", value: String(end), updated_at: now },
+    ],
+    { onConflict: "key" }
+  );
+  revalidatePath("/admin/sales/settings");
+}
+
 /** Set a prospect's estimated monthly value. */
 export async function setProspectValue(formData: FormData): Promise<void> {
   const { supabase } = await requirePlatformAdmin();

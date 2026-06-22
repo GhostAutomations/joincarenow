@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCompany } from "@/modules/auth/queries";
 import { generateContractDraft } from "@/lib/ai/generate-contract";
 import { generatePolicyDraft } from "@/lib/ai/generate-policy";
+import { recordUsage } from "@/lib/billing/usage";
 
 // AI generation of a full contract/policy can take 60-90s — give the function
 // plenty of room (Vercel Pro allows up to 300s).
@@ -24,6 +25,8 @@ export async function POST(req: NextRequest) {
       kind === "policy"
         ? await generatePolicyDraft(name ?? "", brief ?? "")
         : await generateContractDraft(brief ?? "");
+
+    await recordUsage(current.company_id, "ai");
 
     return NextResponse.json({ text });
   } catch (e) {

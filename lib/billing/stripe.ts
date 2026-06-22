@@ -131,6 +131,28 @@ export async function getSubscription(id: string) {
   return stripeRequest<Record<string, unknown>>(`/subscriptions/${id}`, "GET");
 }
 
+export type InvoiceRow = {
+  id: string;
+  number: string | null;
+  created: number;
+  total: number; // pence
+  currency: string;
+  status: string | null;
+  invoice_pdf: string | null;
+  hosted_invoice_url: string | null;
+};
+
+/** List a customer's invoices (newest first). Returns [] on any error. */
+export async function listInvoices(customerId: string, limit = 24): Promise<InvoiceRow[]> {
+  if (!process.env.STRIPE_SECRET_KEY) return [];
+  try {
+    const res = await stripeRequest<{ data: InvoiceRow[] }>("/invoices", "GET", { customer: customerId, limit });
+    return res.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 /** Report metered usage to Stripe via the Billing Meters API (per customer). */
 export async function reportMeterEvent(eventName: string, customerId: string, value: number) {
   return stripeRequest("/billing/meter_events", "POST", {

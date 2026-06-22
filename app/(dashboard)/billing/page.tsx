@@ -1,9 +1,10 @@
-import { CreditCard, Check, MessageSquareText, Sparkles, Building2, ShieldCheck, CalendarClock } from "lucide-react";
+import { CreditCard, Check, MessageSquareText, Sparkles, Building2, ShieldCheck, CalendarClock, Download } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { requireCompany } from "@/modules/auth/queries";
 import { startCheckout, openBillingPortal } from "@/modules/billing/actions";
 import { BranchBilling } from "@/components/dashboard/branch-billing";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
+import { listInvoices } from "@/lib/billing/stripe";
 
 const INCLUDED = [
   "Every feature — recruitment, onboarding & employee records",
@@ -31,7 +32,7 @@ export default async function BillingPage() {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("billing_status, billing_interval, current_period_end, extra_branches")
+    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id")
     .eq("id", current.company_id)
     .single();
 
@@ -54,6 +55,10 @@ export default async function BillingPage() {
     .select("id, name")
     .eq("company_id", current.company_id)
     .order("created_at", { ascending: true });
+
+  const customerId = company?.stripe_customer_id as string | null;
+  const invoices = active && customerId ? await listInvoices(customerId) : [];
+  const money = (pence: number) => "£" + (pence / 100).toFixed(2);
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -112,6 +117,40 @@ export default async function BillingPage() {
 
           <CollapsibleSection title="Branches" count={branches?.length ?? 0} defaultOpen={false}>
             <BranchBilling branches={branches ?? []} companyId={current.company_id} canManage={isAdmin} />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Invoices" count={invoices.length} defaultOpen={false}>
+            {invoices.length === 0 ? (
+              <p className="px-1 py-2 text-sm text-gray-500">No invoices yet — they appear here once your first one is issued.</p>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {invoices.map((inv) => (
+                  <li key={inv.id} className="flex flex-wrap items-center justify-between gap-3 px-1 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900">
+                        {inv.number || inv.id}
+                        <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${inv.status === "paid" ? "bg-green-100 text-green-700" : inv.status === "open" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-500"}`}>
+                          {inv.status ?? "—"}
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(inv.created * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · {money(inv.total)}
+                      </p>
+                    </div>
+                    {inv.invoice_pdf && (
+                      <a
+                        href={inv.invoice_pdf}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        <Download className="h-3.5 w-3.5" /> Download
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </CollapsibleSection>
         </div>
       ) : (

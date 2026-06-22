@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Plus, Building2, X, AlertTriangle } from "lucide-react";
+import { Trash2, Plus, Building2, X, AlertTriangle, Loader2 } from "lucide-react";
 import { createBranch, deleteBranch, type BranchState } from "@/modules/branches/actions";
 
 const RATE = 7.5; // £/month per extra branch
@@ -17,7 +17,7 @@ export function BranchBilling({
   canManage: boolean;
 }) {
   const router = useRouter();
-  const [state, action] = useActionState<BranchState, FormData>(createBranch, undefined);
+  const [state, action, pending] = useActionState<BranchState, FormData>(createBranch, undefined);
   const ref = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
 
@@ -111,12 +111,16 @@ export function BranchBilling({
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </label>
+              {pending && (
+                <p className="mt-3 text-xs text-gray-500">Adding the branch and updating your billing… this can take a few seconds.</p>
+              )}
               <div className="mt-5 flex justify-end gap-2">
-                <button type="button" onClick={() => setOpen(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <button type="button" disabled={pending} onClick={() => setOpen(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
                   Cancel
                 </button>
-                <button type="submit" className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-                  <Plus className="h-4 w-4" /> Confirm &amp; add
+                <button type="submit" disabled={pending} className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-70">
+                  {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  {pending ? "Adding…" : "Confirm & add"}
                 </button>
               </div>
             </form>

@@ -32,6 +32,8 @@ export async function submitDemoLead(
   const role = clean(formData.get("role"), 80);
   const email = clean(formData.get("email"));
   const phone = clean(formData.get("phone"), 40);
+  const region = clean(formData.get("region"), 120);
+  const website = clean(formData.get("website"), 200);
   const settingRaw = clean(formData.get("setting"), 40);
   const setting = (SETTINGS as readonly string[]).includes(settingRaw) ? settingRaw : null;
   const consent = formData.get("consent") === "on";
@@ -47,6 +49,8 @@ export async function submitDemoLead(
     .insert({
       name: company,
       setting_type: setting,
+      region: region || null,
+      website: website || null,
       source: "website",
       notes: `Demo request from the website${role ? ` — ${role}` : ""}.`,
     })

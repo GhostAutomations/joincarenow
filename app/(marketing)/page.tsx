@@ -9,8 +9,6 @@ import {
   MessageSquare,
   UserCheck,
   FileCheck2,
-  Clock,
-  Inbox,
   FolderKanban,
 } from "lucide-react";
 import { DemoForm } from "@/components/marketing/demo-form";
@@ -288,23 +286,6 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Social proof (placeholders) */}
-      <section className="mx-auto max-w-5xl px-6 py-20">
-        <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">Trusted by care teams</h2>
-        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {[Clock, Inbox, ClipboardList].map((Icon, i) => (
-            <div key={i} className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center">
-              <Icon className="mx-auto h-6 w-6 text-gray-400" aria-hidden />
-              <p className="mt-3 text-2xl font-bold text-gray-400">[PLACEHOLDER]</p>
-              <p className="mt-1 text-sm text-gray-400">Outcome stat to add</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-6 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-400">
-          [PLACEHOLDER: customer testimonials and logos to add once available]
         </div>
       </section>
 

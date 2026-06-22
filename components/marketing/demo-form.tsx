@@ -70,6 +70,14 @@ export function DemoForm() {
           <label htmlFor="df-phone" className={label}>Phone <span className="text-gray-400">(optional)</span></label>
           <input id="df-phone" name="phone" type="tel" autoComplete="tel" className={field} placeholder="07700 900000" />
         </div>
+        <div>
+          <label htmlFor="df-region" className={label}>Region <span className="text-gray-400">(optional)</span></label>
+          <input id="df-region" name="region" className={field} placeholder="e.g. South Wales" />
+        </div>
+        <div>
+          <label htmlFor="df-website" className={label}>Website <span className="text-gray-400">(optional)</span></label>
+          <input id="df-website" name="website" type="url" autoComplete="url" className={field} placeholder="https://sunrisecare.co.uk" />
+        </div>
       </div>
 
       <div className="mt-4 flex items-start gap-2.5">

@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail, sendSms, renderMergeFields } from "@/lib/comms/send";
+import { sendSms, renderMergeFields } from "@/lib/comms/send";
+import { sendBrandedEmail } from "@/lib/comms/branded";
 
 // Runs from the hourly cron (no user session) using the service-role client.
 // RLS is bypassed, so every query is explicitly company-scoped via the joins.
@@ -136,7 +137,7 @@ async function fire(
 
   let anyOk = false;
   if (wantEmail) {
-    const r = await sendEmail({ to: ctx.email!, subject: subject || "(no subject)", text: body });
+    const r = await sendBrandedEmail(db, ctx.companyId, { to: ctx.email!, subject: subject || "(no subject)", text: body });
     await logMessage(db, ctx, "email", ctx.email!, subject, body, r.ok, r.id, r.error);
     anyOk = anyOk || r.ok;
   }

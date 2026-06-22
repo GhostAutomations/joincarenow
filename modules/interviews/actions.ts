@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail, sendSms } from "@/lib/comms/send";
+import { sendSms } from "@/lib/comms/send";
+import { sendBrandedEmail } from "@/lib/comms/branded";
 import { londonToUtcIso, formatLondon } from "@/lib/time";
 import { isWithinOpeningHours, type OpeningHours } from "@/lib/opening-hours";
 import { buildIcs, calendarLinks, type CalEvent } from "@/lib/calendar/ics";
@@ -189,7 +190,7 @@ async function sendInterviewInvite(
 
     if ((channel === "email" || channel === "both") && ap?.email) {
       const bodyWithCal = emailBody + calBlock(applicantLinks.google, applicantLinks.outlook);
-      const r = await sendEmail({
+      const r = await sendBrandedEmail(supabase, app?.company_id, {
         to: ap.email,
         subject: emailSubject,
         text: bodyWithCal,
@@ -256,7 +257,7 @@ async function sendInterviewInvite(
             (ap?.phone ? `Candidate phone: ${ap.phone}\n` : "") +
             calBlock(il.google, il.outlook);
           const subj = `Interview scheduled: ${applicantName} — ${jobTitle}`;
-          const r = await sendEmail({
+          const r = await sendBrandedEmail(supabase, app.company_id, {
             to: interviewerEmail,
             subject: subj,
             text: interviewerBody,

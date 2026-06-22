@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireCompany } from "@/modules/auth/queries";
-import { sendEmail } from "@/lib/comms/send";
+import { sendBrandedEmail } from "@/lib/comms/branded";
 
 const BASE_URL = "https://www.joincarenow.com";
 
@@ -84,7 +84,7 @@ export async function sendReferenceRequest(id: string) {
     [applicant?.first_name, applicant?.last_name].filter(Boolean).join(" ") || "an applicant";
   const companyName = company?.name || "our team";
 
-  const res = await sendEmail({
+  const res = await sendBrandedEmail(supabase, current.company_id, {
     to: rr.referee_email as string,
     subject: `Reference request for ${applicantName}`,
     text:

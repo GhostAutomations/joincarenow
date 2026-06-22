@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { requireCompany } from "@/modules/auth/queries";
-import { sendSms, renderMergeFields } from "@/lib/comms/send";
+import { renderMergeFields } from "@/lib/comms/send";
 import { sendBrandedEmail } from "@/lib/comms/branded";
+import { sendCompanySms } from "@/lib/billing/usage";
 
 export type Msg = {
   id: string;
@@ -121,7 +122,7 @@ export async function sendMessage(_prev: SendState, formData: FormData): Promise
   const result =
     channel === "email"
       ? await sendBrandedEmail(supabase, current.company_id, { to, subject: subject || "(no subject)", text: body })
-      : await sendSms({ to, body });
+      : await sendCompanySms(current.company_id, { to, body });
 
   await supabase.from("messages").insert({
     company_id: current.company_id,
@@ -167,7 +168,7 @@ export async function notifyApplicant(opts: {
   const result =
     channel === "email"
       ? await sendBrandedEmail(supabase, current.company_id, { to, subject: subject || "(no subject)", text: body })
-      : await sendSms({ to, body });
+      : await sendCompanySms(current.company_id, { to, body });
 
   await supabase.from("messages").insert({
     company_id: current.company_id,

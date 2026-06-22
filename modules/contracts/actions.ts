@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireCompany } from "@/modules/auth/queries";
 import { generateContractDraft } from "@/lib/ai/generate-contract";
 import { generatePolicyDraft } from "@/lib/ai/generate-policy";
+import { recordUsage } from "@/lib/billing/usage";
 
 export type DocResult = { ok?: boolean; error?: string; id?: string };
 
@@ -66,6 +67,7 @@ export async function generateContract(
   if (current.role !== "admin") return { error: "Only admins can generate contracts." };
   try {
     const text = await generateContractDraft(brief ?? "");
+    await recordUsage(current.company_id, "ai");
     return { text };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not generate the contract." };
@@ -82,6 +84,7 @@ export async function generatePolicy(
   if (current.role !== "admin") return { error: "Only admins can generate policies." };
   try {
     const text = await generatePolicyDraft(name ?? "", brief ?? "");
+    await recordUsage(current.company_id, "ai");
     return { text };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not generate the policy." };

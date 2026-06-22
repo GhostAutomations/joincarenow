@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendSms } from "@/lib/comms/send";
 import { sendBrandedEmail } from "@/lib/comms/branded";
+import { sendCompanySms } from "@/lib/billing/usage";
 import { londonToUtcIso, formatLondon } from "@/lib/time";
 import { isWithinOpeningHours, type OpeningHours } from "@/lib/opening-hours";
 import { buildIcs, calendarLinks, type CalEvent } from "@/lib/calendar/ics";
@@ -201,7 +201,7 @@ async function sendInterviewInvite(
     if ((channel === "sms" || channel === "both")) {
       const phone = ukPhone(ap?.phone ?? null);
       if (phone) {
-        const r = await sendSms({ to: phone, body: smsBody });
+        const r = await sendCompanySms(app?.company_id, { to: phone, body: smsBody });
         await log("sms", phone, null, smsBody, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);
       }
     }

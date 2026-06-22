@@ -42,7 +42,7 @@ function encode(obj: Record<string, unknown>, prefix = ""): string[] {
 
 async function stripeRequest<T = Record<string, unknown>>(
   path: string,
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "DELETE",
   params?: Record<string, unknown>
 ): Promise<T> {
   const body = params ? encode(params).join("&") : undefined;
@@ -122,13 +122,37 @@ export async function getSubscription(id: string) {
   return stripeRequest<Record<string, unknown>>(`/subscriptions/${id}`, "GET");
 }
 
-/** Report a metered usage quantity to a subscription item (Slice 2). */
-export async function reportUsage(subscriptionItemId: string, quantity: number, timestamp?: number) {
-  return stripeRequest(`/subscription_items/${subscriptionItemId}/usage_records`, "POST", {
-    quantity,
-    timestamp: timestamp ?? Math.floor(Date.now() / 1000),
-    action: "increment",
+/** Report metered usage to Stripe via the Billing Meters API (per customer). */
+export async function reportMeterEvent(eventName: string, customerId: string, value: number) {
+  return stripeRequest("/billing/meter_events", "POST", {
+    event_name: eventName,
+    payload: { stripe_customer_id: customerId, value: String(value) },
   });
+}
+
+/** Set the extra-branch licensed quantity on a company's subscription. Adds the
+ *  branch line item if needed, removes it when the count drops to zero. No-op if
+ *  branch billing isn't configured. Best-effort. */
+export async function syncBranchQuantity(subscriptionId: string | null, quantity: number) {
+  if (!subscriptionId || !PRICES.branch || !process.env.STRIPE_SECRET_KEY) return;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sub = (await getSubscription(subscriptionId)) as any;
+  const items = sub?.items?.data ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const existing = items.find((it: any) => it?.price?.id === PRICES.branch);
+  if (existing) {
+    if (quantity > 0) {
+      await stripeRequest(`/subscription_items/${existing.id}`, "POST", { quantity });
+    } else {
+      await stripeRequest(`/subscription_items/${existing.id}`, "DELETE");
+    }
+  } else if (quantity > 0) {
+    await stripeRequest("/subscription_items", "POST", {
+      subscription: subscriptionId,
+      price: PRICES.branch,
+      quantity,
+    });
+  }
 }
 
 /** Verify a Stripe webhook signature (t=…,v1=… header) over the raw body. */

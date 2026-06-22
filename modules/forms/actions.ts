@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireCompany, requireUser, requirePlatformAdmin } from "@/modules/auth/queries";
 import { extractFormFields } from "@/lib/ai/extract-form";
+import { recordUsage } from "@/lib/billing/usage";
 import { TIERS, tierRank } from "@/modules/forms/tiers";
 
 const FIELD_TYPES = [
@@ -478,7 +479,7 @@ export async function importFormFromPdf(
   const { supabase } = await requireUser();
   const { data: form } = await supabase
     .from("forms")
-    .select("id")
+    .select("id, company_id")
     .eq("id", formId)
     .single();
   if (!form) return { error: "Form not found" };
@@ -487,6 +488,7 @@ export async function importFormFromPdf(
   try {
     const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
     fields = await extractFormFields(base64);
+    await recordUsage(form.company_id as string | null, "ai");
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not read that PDF." };
   }

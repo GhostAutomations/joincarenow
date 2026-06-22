@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { settingsContext } from "@/modules/auth/queries";
+import { syncExtraBranches } from "@/lib/billing/branches";
 
 export type BranchState = { error?: string; ok?: boolean } | undefined;
 
@@ -20,6 +21,7 @@ export async function createBranch(
     if (error.code === "23505") return { error: "A branch with that name already exists" };
     return { error: "Could not add the branch." };
   }
+  await syncExtraBranches(companyId);
   revalidatePath("/settings");
   revalidatePath("/jobs");
   return { ok: true };
@@ -31,6 +33,7 @@ export async function deleteBranch(formData: FormData) {
   const { db, companyId } = await settingsContext(formData);
   if (!companyId) return;
   await db.from("branches").delete().eq("id", id).eq("company_id", companyId);
+  await syncExtraBranches(companyId);
   revalidatePath("/settings");
   revalidatePath("/jobs");
 }

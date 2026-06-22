@@ -120,7 +120,7 @@ export default async function BillingPage() {
               branches={branches ?? []}
               companyId={current.company_id}
               canManage={isAdmin}
-              rate={interval === "year" ? 75 : 7.5}
+              rate={interval === "year" ? 90 : 7.5}
               period={interval === "year" ? "year" : "month"}
             />
           </CollapsibleSection>

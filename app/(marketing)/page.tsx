@@ -98,8 +98,11 @@ export default function LandingPage() {
       {/* Nav */}
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/jcn-logo-reversed.png" alt="Join Care Now" className="h-10 w-auto drop-shadow-sm" />
+          <span className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/jcn-mark-white.png" alt="" className="h-11 w-auto drop-shadow-sm" />
+            <span className="text-2xl font-bold text-white drop-shadow-sm">Join Care Now</span>
+          </span>
           <nav className="flex items-center gap-3 sm:gap-5">
             <a href="#pricing" className="hidden text-sm font-medium text-white/90 hover:text-white sm:inline">Pricing</a>
             <a href="#features" className="hidden text-sm font-medium text-white/90 hover:text-white sm:inline">Features</a>
@@ -319,8 +322,11 @@ export default function LandingPage() {
       <footer className="border-t border-gray-200 bg-white">
         <div className="mx-auto max-w-6xl px-6 py-10">
           <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/jcn-logo-full-transparent.png" alt="Join Care Now" className="h-9 w-auto" />
+            <span className="flex items-center gap-2.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/jcn-mark-transparent.png" alt="" className="h-9 w-auto" />
+              <span className="text-xl font-bold text-brand-700">Join Care Now</span>
+            </span>
             <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
               <a href="#features" className="hover:text-gray-900">Features</a>
               <a href="#pricing" className="hover:text-gray-900">Pricing</a>

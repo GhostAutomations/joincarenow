@@ -28,7 +28,7 @@ export async function sendBrandedEmail(
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
   let heading = "Join Care Now";
   // Platform (non-company) emails use the white JCN logo on the teal header band.
-  let logoUrl: string | null = companyId ? null : "https://www.joincarenow.com/brand/jcn-logo-white-mono.png";
+  let logoUrl: string | null = companyId ? null : "https://www.joincarenow.com/brand/jcn-mark-white.png";
   let brandColor: string | undefined;
 
   if (companyId) {

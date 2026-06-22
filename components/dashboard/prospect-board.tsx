@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Clock, CalendarClock, AlertTriangle } from "lucide-react";
 import { updateStage } from "@/modules/prospects/actions";
@@ -38,6 +38,12 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
   const [cards, setCards] = useState(initial);
   const [dragId, setDragId] = useState<string | null>(null);
 
+  // Re-sync to server truth when fresh data arrives (e.g. realtime refresh
+  // after an inbound email/SMS auto-moves a prospect).
+  useEffect(() => {
+    setCards(initial);
+  }, [initial]);
+
   function move(id: string, stage: string) {
     const card = cards.find((c) => c.id === id);
     if (!card || card.stage === stage) return;
@@ -49,7 +55,7 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
   }
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-4">
+    <div className="flex gap-2 overflow-x-auto pb-4 lg:grid lg:grid-cols-7 lg:overflow-visible">
       {STAGES.map((s) => {
         const items = cards.filter((c) => c.stage === s);
         const colValue = items.reduce((sum, c) => sum + (c.value ?? 0), 0);
@@ -58,7 +64,7 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
             key={s}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => { if (dragId) move(dragId, s); setDragId(null); }}
-            className="w-72 shrink-0"
+            className="w-64 shrink-0 lg:w-auto lg:min-w-0"
           >
             <div className="flex items-center justify-between px-1">
               <span className="text-sm font-semibold text-white drop-shadow-sm">{STAGE_LABEL[s as Stage]}</span>

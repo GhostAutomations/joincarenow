@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ProspectQuickAdd } from "@/components/dashboard/prospect-quick-add";
 import { ProspectBoard, type BoardCard } from "@/components/dashboard/prospect-board";
 import { AutoSendToggle } from "@/components/dashboard/autosend-toggle";
+import { ProspectLive } from "@/components/dashboard/prospect-live";
 import { getAutoSendMode } from "@/lib/prospects/ai-drafts";
 
 type Row = {
@@ -67,6 +68,7 @@ export default async function SalesPage({
 
   return (
     <div>
+      <ProspectLive />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Sales</h1>
         <div className="flex flex-wrap items-center gap-2">
@@ -84,26 +86,26 @@ export default async function SalesPage({
       </div>
 
       {/* Metrics */}
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {[
           { label: "Open prospects", value: openCount.toString() },
           { label: "Open value /mo", value: money(openValue) },
           { label: "Won value /mo", value: money(wonValue) },
           { label: "Total prospects", value: allRows.length.toString() },
         ].map((m) => (
-          <div key={m.label} className="rounded-2xl border border-white/25 bg-white/15 p-3 backdrop-blur-md">
+          <div key={m.label} className="flex items-baseline justify-between rounded-xl border border-white/25 bg-white/15 px-3 py-2 backdrop-blur-md">
             <p className="text-xs text-white/70">{m.label}</p>
-            <p className="mt-0.5 text-2xl font-semibold text-white">{m.value}</p>
+            <p className="text-lg font-semibold text-white">{m.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3">
         <ProspectQuickAdd />
       </div>
 
       {/* Filters */}
-      <form method="get" className="mt-4 flex flex-wrap items-center gap-2">
+      <form method="get" className="mt-3 flex flex-wrap items-center gap-2">
         <input name="q" defaultValue={q ?? ""} placeholder="Search company or contact…" className="w-56 rounded-lg border border-white/40 bg-white/90 px-3 py-1.5 text-sm text-gray-900" />
         <select name="setting" defaultValue={setting ?? ""} className="rounded-lg border border-white/40 bg-white/90 px-3 py-1.5 text-sm text-gray-900">
           <option value="">All settings</option>
@@ -119,7 +121,7 @@ export default async function SalesPage({
         )}
       </form>
 
-      <div className="mt-6">
+      <div className="mt-4">
         <ProspectBoard initial={cards} />
       </div>
     </div>

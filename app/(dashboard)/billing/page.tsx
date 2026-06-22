@@ -2,6 +2,7 @@ import { CreditCard, Check } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { requireCompany } from "@/modules/auth/queries";
 import { startCheckout, openBillingPortal } from "@/modules/billing/actions";
+import { BranchBilling } from "@/components/dashboard/branch-billing";
 
 const ADD_ONS = [
   ["Extra branch", "£7.50 / month each"],
@@ -37,6 +38,12 @@ export default async function BillingPage() {
     .gte("created_at", monthStartIso());
   const sms = (usage ?? []).filter((u) => u.kind === "sms").reduce((s, u) => s + (u.quantity ?? 0), 0);
   const ai = (usage ?? []).filter((u) => u.kind === "ai").reduce((s, u) => s + (u.quantity ?? 0), 0);
+
+  const { data: branches } = await supabase
+    .from("branches")
+    .select("id, name")
+    .eq("company_id", current.company_id)
+    .order("name");
 
   return (
     <div>
@@ -149,6 +156,10 @@ export default async function BillingPage() {
             </ul>
           </div>
         </div>
+      </div>
+
+      <div className="mt-4">
+        <BranchBilling branches={branches ?? []} companyId={current.company_id} canManage={isAdmin} />
       </div>
 
       {status === "none" && (

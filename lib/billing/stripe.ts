@@ -53,7 +53,7 @@ async function stripeRequest<T = Record<string, unknown>>(
       Authorization: `Bearer ${key()}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: method === "POST" ? body : undefined,
+    body: method === "POST" || method === "DELETE" ? body : undefined,
   });
   const json = await res.json();
   if (!res.ok) {
@@ -150,16 +150,24 @@ export async function syncBranchQuantity(subscriptionId: string | null, quantity
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const existing = items.find((it: any) => it?.price?.id === PRICES.branch);
   if (existing) {
+    const oldQty = (existing.quantity as number) ?? 0;
+    if (quantity === oldQty) return;
     if (quantity > 0) {
-      await stripeRequest(`/subscription_items/${existing.id}`, "POST", { quantity });
+      // Increases bill the prorated amount immediately (in advance); decreases
+      // credit the unused part against the next invoice.
+      const proration = quantity > oldQty ? "always_invoice" : "create_prorations";
+      await stripeRequest(`/subscription_items/${existing.id}`, "POST", { quantity, proration_behavior: proration });
     } else {
-      await stripeRequest(`/subscription_items/${existing.id}`, "DELETE");
+      // Removed the last extra branch — drop the line item, credit next invoice.
+      await stripeRequest(`/subscription_items/${existing.id}`, "DELETE", { proration_behavior: "create_prorations" });
     }
   } else if (quantity > 0) {
+    // First extra branch — add the line item and charge immediately.
     await stripeRequest("/subscription_items", "POST", {
       subscription: subscriptionId,
       price: PRICES.branch,
       quantity,
+      proration_behavior: "always_invoice",
     });
   }
 }

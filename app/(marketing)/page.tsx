@@ -14,6 +14,7 @@ import {
   FolderKanban,
 } from "lucide-react";
 import { DemoForm } from "@/components/marketing/demo-form";
+import { BoardMockup, OnboardingMockup } from "@/components/marketing/mockups";
 
 export const metadata: Metadata = {
   title: "Care recruitment & onboarding software | Join Care Now",
@@ -132,6 +133,11 @@ export default function LandingPage() {
               See pricing
             </a>
           </div>
+
+          {/* Product preview */}
+          <div className="mx-auto mt-16 max-w-5xl">
+            <BoardMockup />
+          </div>
         </div>
       </section>
 
@@ -155,16 +161,7 @@ export default function LandingPage() {
                 your organisation.
               </p>
             </div>
-            <ul className="space-y-3">
-              {["Right to Work captured and stored", "DBS status recorded against each person", "References requested and tracked", "Employment history and gaps", "Signed contracts and policies", "Every document, time-stamped in one place"].map((item) => (
-                <li key={item} className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-700">
-                    <Check className="h-3 w-3" aria-hidden />
-                  </span>
-                  <span className="text-sm text-gray-700">{item}</span>
-                </li>
-              ))}
-            </ul>
+            <OnboardingMockup />
           </div>
         </div>
       </section>

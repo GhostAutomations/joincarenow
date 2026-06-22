@@ -136,6 +136,25 @@ export async function reviewReference(formData: FormData) {
   return { ok: true };
 }
 
+export type ApplicationReference = {
+  id: string;
+  referee_name: string;
+  referee_email: string;
+  status: string;
+};
+
+/** Staff: list an application's referees + their statuses (for the pipeline panel). */
+export async function getApplicationReferences(applicationId: string): Promise<ApplicationReference[]> {
+  const { supabase, current } = await requireCompany();
+  const { data } = await supabase
+    .from("reference_requests")
+    .select("id, referee_name, referee_email, status")
+    .eq("application_id", applicationId)
+    .eq("company_id", current.company_id)
+    .order("created_at", { ascending: true });
+  return (data ?? []) as ApplicationReference[];
+}
+
 /** Staff: load a reference's questions + the referee's answers for review. */
 export async function getReferenceReview(id: string): Promise<ReferenceReview | null> {
   const { supabase, current } = await requireCompany();

@@ -8,6 +8,7 @@ import { scheduleInterview, acceptInterviewTime } from "@/modules/interviews/act
 import { InterviewSlotPicker, type BookedInterview } from "@/components/dashboard/interview-slot-picker";
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { ApplicantForms } from "@/components/dashboard/applicant-forms";
+import { ApplicantReferences } from "@/components/dashboard/applicant-references";
 import { CvRequest } from "@/components/dashboard/cv-request";
 import { RightToWork } from "@/components/dashboard/right-to-work";
 import { OfferModal } from "@/components/dashboard/offer-modal";
@@ -780,6 +781,9 @@ function ApplicantPanel({
               availableForms={availableForms}
             />
           )}
+
+          {/* References */}
+          <ApplicantReferences applicationId={app.id} />
 
           {app.cover_message && (
             <div>

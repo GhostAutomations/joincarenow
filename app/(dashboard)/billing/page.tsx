@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { requireCompany } from "@/modules/auth/queries";
 import { startCheckout, openBillingPortal } from "@/modules/billing/actions";
 import { BranchBilling } from "@/components/dashboard/branch-billing";
+import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
 
 const INCLUDED = [
   "Every feature — recruitment, onboarding & employee records",
@@ -124,7 +125,9 @@ export default async function BillingPage() {
             </div>
           </div>
 
-          <BranchBilling branches={branches ?? []} companyId={current.company_id} canManage={isAdmin} />
+          <CollapsibleSection title="Branches" count={branches?.length ?? 0} defaultOpen={false}>
+            <BranchBilling branches={branches ?? []} companyId={current.company_id} canManage={isAdmin} />
+          </CollapsibleSection>
         </div>
       ) : (
         /* Not subscribed — pricing card */

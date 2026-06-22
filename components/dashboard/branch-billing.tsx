@@ -35,13 +35,10 @@ export function BranchBilling({
   const monthly = extra * RATE;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Branches</h2>
-        <span className="text-sm text-gray-500">
-          {branches.length} total · {extra} extra · £{monthly.toFixed(2)}/mo
-        </span>
-      </div>
+    <div>
+      <p className="text-sm font-medium text-gray-700">
+        {branches.length} total · {extra} extra · £{monthly.toFixed(2)}/mo
+      </p>
       <p className="mt-1 text-sm text-gray-600">
         Your plan includes 1 branch. Each additional branch is £{RATE.toFixed(2)}/month, charged
         from the day you add it.

@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyStripeSignature } from "@/lib/billing/stripe";
+import { sendBrandedEmail } from "@/lib/comms/branded";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,6 +74,24 @@ export async function POST(req: Request) {
           .from("companies")
           .update({ stripe_subscription_id: obj.subscription as string, billing_status: "active", setup_fee_paid: true })
           .eq("id", id);
+
+        // Branded "subscription confirmed" email (JCN-branded platform email).
+        const to = (obj.customer_details?.email as string) ?? null;
+        if (to) {
+          const { data: co } = await db.from("companies").select("name").eq("id", id).single();
+          const name = (co?.name as string) ?? "there";
+          await sendBrandedEmail(db, null, {
+            to,
+            subject: "Your Join Care Now subscription is active",
+            text:
+              `Hi ${name},\n\n` +
+              `Thanks for subscribing to Join Care Now — your subscription is now active and your account is ready to use.\n\n` +
+              `You can manage your plan, payment method and invoices any time from the Billing area in your dashboard: https://www.joincarenow.com/billing\n\n` +
+              `If you have any questions, just reply to this email and we'll be glad to help.\n\n` +
+              `The Join Care Now team`,
+            footerNote: "You're receiving this because you started a subscription on joincarenow.com.",
+          });
+        }
       }
       break;
     }

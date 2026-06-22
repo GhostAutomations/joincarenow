@@ -61,67 +61,52 @@ export default async function BillingPage() {
 
       {active ? (
         <div className="mt-6 space-y-4">
-          {/* Current plan hero */}
-          <div className="overflow-hidden rounded-3xl border border-white/20 bg-white shadow-sm">
-            <div className="jcn-app-bg relative overflow-hidden p-6 text-white sm:p-8">
-              <div className="jcn-blob pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-              <div className="relative flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold backdrop-blur">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-300" />
-                    {status === "trialing" ? "Trialing" : "Active"}
-                  </span>
-                  <h2 className="mt-3 text-2xl font-bold">Join Care Now</h2>
-                  <p className="mt-1 text-white/90">
-                    <span className="text-xl font-semibold">{interval === "year" ? "£550" : "£55"}</span>
-                    <span className="text-white/70"> / {interval === "year" ? "year" : "month"}</span>
-                  </p>
-                  {periodEnd && (
-                    <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-white/80">
-                      <CalendarClock className="h-3.5 w-3.5" />
-                      Renews {new Date(periodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                    </p>
-                  )}
-                </div>
-                {isAdmin ? (
-                  <form action={openBillingPortal}>
-                    <button className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">
-                      <CreditCard className="h-4 w-4" /> Manage billing
-                    </button>
-                  </form>
-                ) : (
-                  <span className="text-sm text-white/80">Ask a company admin to manage billing.</span>
-                )}
-              </div>
+          {/* Compact plan bar */}
+          <div className="jcn-app-bg relative flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-2xl px-5 py-3.5 text-white shadow-sm">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold backdrop-blur">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-300" />
+                {status === "trialing" ? "Trialing" : "Active"}
+              </span>
+              <span className="font-semibold">Join Care Now</span>
+              <span className="text-white/90">{interval === "year" ? "£550 / year" : "£55 / month"}</span>
+              {periodEnd && (
+                <span className="inline-flex items-center gap-1 text-sm text-white/70">
+                  <CalendarClock className="h-3.5 w-3.5" />
+                  renews {new Date(periodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                </span>
+              )}
             </div>
+            {isAdmin ? (
+              <form action={openBillingPortal}>
+                <button className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-1.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">
+                  <CreditCard className="h-4 w-4" /> Manage billing
+                </button>
+              </form>
+            ) : (
+              <span className="text-sm text-white/80">Ask an admin to manage billing.</span>
+            )}
           </div>
 
-          {/* Usage this month */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-900">This month&apos;s usage</h3>
-              <span className="text-xs text-gray-400">Resets on renewal</span>
+          {/* Usage stat cards */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="flex items-center gap-2 text-sm text-gray-500"><MessageSquareText className="h-4 w-4 text-brand-600" /> SMS sent</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900">{sms}<span className="text-sm font-normal text-gray-400"> / 100</span></p>
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                <div className="h-full rounded-full bg-brand-500" style={{ width: `${smsPct}%` }} />
+              </div>
+              <p className="mt-1.5 text-xs text-gray-400">{sms > 100 ? `${sms - 100} over — 8p each` : "100 included, then 8p"}</p>
             </div>
-            <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {/* SMS with meter */}
-              <div>
-                <p className="flex items-center gap-2 text-sm text-gray-600"><MessageSquareText className="h-4 w-4 text-brand-600" /> SMS sent</p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{sms}<span className="text-sm font-normal text-gray-400"> / 100 incl.</span></p>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                  <div className="h-full rounded-full bg-brand-500" style={{ width: `${smsPct}%` }} />
-                </div>
-                {sms > 100 && <p className="mt-1 text-xs text-amber-600">{sms - 100} over — billed at 8p each</p>}
-              </div>
-              <div>
-                <p className="flex items-center gap-2 text-sm text-gray-600"><Sparkles className="h-4 w-4 text-brand-600" /> AI actions</p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{ai}</p>
-                <p className="mt-1 text-xs text-gray-400">10p each</p>
-              </div>
-              <div>
-                <p className="flex items-center gap-2 text-sm text-gray-600"><Building2 className="h-4 w-4 text-brand-600" /> Branches</p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{1 + (company?.extra_branches ?? 0)}</p>
-                <p className="mt-1 text-xs text-gray-400">1 included, then £7.50/mo</p>
-              </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="flex items-center gap-2 text-sm text-gray-500"><Sparkles className="h-4 w-4 text-brand-600" /> AI actions</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900">{ai}</p>
+              <p className="mt-1.5 text-xs text-gray-400">10p each</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="flex items-center gap-2 text-sm text-gray-500"><Building2 className="h-4 w-4 text-brand-600" /> Branches</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900">{1 + (company?.extra_branches ?? 0)}</p>
+              <p className="mt-1.5 text-xs text-gray-400">1 included, then £7.50/mo</p>
             </div>
           </div>
 

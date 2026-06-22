@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, sendSms, renderMergeFields } from "@/lib/comms/send";
 import { buildProspectEmail } from "@/lib/comms/email-template";
 import { autoStage } from "@/lib/prospects/auto-stage";
+import { isWithinSendingWindow } from "@/lib/prospects";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Db = ReturnType<typeof createAdminClient>;
@@ -79,8 +80,11 @@ export type SequenceRun = { sent: number; stopped: number; skipped: number };
 
 /** Process all due enrolments: send the next step, advance or stop. */
 export async function runProspectSequences(): Promise<SequenceRun> {
-  const db = createAdminClient();
   const res: SequenceRun = { sent: 0, stopped: 0, skipped: 0 };
+  // Quiet hours: never send outside 08:00–18:00 Europe/London.
+  if (!isWithinSendingWindow()) return res;
+
+  const db = createAdminClient();
   const nowIso = new Date().toISOString();
 
   const { data: due } = await db

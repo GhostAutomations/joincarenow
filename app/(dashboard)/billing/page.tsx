@@ -32,14 +32,15 @@ export default async function BillingPage() {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id, commitment_until")
+    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id, commitment_until, billing_comped")
     .eq("id", current.company_id)
     .single();
 
   const status = (company?.billing_status as string) ?? "none";
   const interval = company?.billing_interval as string | null;
   const periodEnd = company?.current_period_end as string | null;
-  const active = status === "active" || status === "trialing";
+  const comped = company?.billing_comped === true;
+  const active = status === "active" || status === "trialing" || comped;
   const commitmentUntil = company?.commitment_until as string | null;
   const committed = commitmentUntil ? new Date(commitmentUntil) > new Date() : false;
 
@@ -73,11 +74,11 @@ export default async function BillingPage() {
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold backdrop-blur">
                 <span className="h-1.5 w-1.5 rounded-full bg-green-300" />
-                {status === "trialing" ? "Trialing" : "Active"}
+                {comped ? "Complimentary" : status === "trialing" ? "Trialing" : "Active"}
               </span>
               <span className="font-semibold">Join Care Now</span>
-              <span className="text-white/90">{interval === "year" ? "£550 / year" : "£55 / month"}</span>
-              {periodEnd && (
+              <span className="text-white/90">{comped ? "Complimentary access" : interval === "year" ? "£550 / year" : "£55 / month"}</span>
+              {!comped && periodEnd && (
                 <span className="inline-flex items-center gap-1 text-sm text-white/70">
                   <CalendarClock className="h-3.5 w-3.5" />
                   renews {new Date(periodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
@@ -94,7 +95,9 @@ export default async function BillingPage() {
                 </span>
               )}
             </div>
-            {isAdmin ? (
+            {comped ? (
+              <span className="text-sm text-white/80">Provided by Join Care Now</span>
+            ) : isAdmin ? (
               <form action={openBillingPortal}>
                 <button className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-1.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">
                   <CreditCard className="h-4 w-4" /> Manage billing

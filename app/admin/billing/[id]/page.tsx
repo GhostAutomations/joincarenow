@@ -4,6 +4,7 @@ import { Download, ExternalLink, MessageSquareText, Sparkles, Building2 } from "
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listInvoices } from "@/lib/billing/stripe";
+import { FounderBillingControls } from "@/components/dashboard/founder-billing-controls";
 
 const STATUS_BADGE: Record<string, string> = {
   active: "bg-green-100 text-green-700",
@@ -26,7 +27,7 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
 
   const { data: company } = await db
     .from("companies")
-    .select("id, name, billing_status, billing_interval, current_period_end, commitment_until, extra_branches, stripe_customer_id, billing_comped, created_at")
+    .select("id, name, billing_status, billing_interval, current_period_end, commitment_until, extra_branches, stripe_customer_id, stripe_subscription_id, billing_comped, created_at")
     .eq("id", id)
     .single();
   if (!company) notFound();
@@ -129,6 +130,15 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
             ))}
           </ul>
         )}
+      </div>
+
+      {/* Founder controls */}
+      <div className="mt-4">
+        <FounderBillingControls
+          companyId={company.id as string}
+          comped={comped}
+          hasSubscription={Boolean(company.stripe_subscription_id)}
+        />
       </div>
     </div>
   );

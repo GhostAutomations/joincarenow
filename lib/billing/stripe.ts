@@ -140,6 +140,11 @@ export async function getSubscription(id: string) {
   return stripeRequest<Record<string, unknown>>(`/subscriptions/${id}`, "GET");
 }
 
+/** Cancel a subscription at the end of the current period (founder override). */
+export async function cancelSubscription(id: string) {
+  return stripeRequest(`/subscriptions/${id}`, "POST", { cancel_at_period_end: true });
+}
+
 export type InvoiceRow = {
   id: string;
   number: string | null;

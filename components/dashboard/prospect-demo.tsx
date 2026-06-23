@@ -40,7 +40,7 @@ export function ProspectDemo({
               <option key={c.id} value={c.id}>{c.name || c.email}</option>
             ))}
           </select>
-          <DateTimePicker name="at" minToday />
+          <DemoDateTime name="at" />
           <select name="duration" defaultValue="30" className={sel}>
             <option value="15">15 min</option>
             <option value="30">30 min</option>

@@ -10,11 +10,15 @@ export default async function FounderHomePage() {
 
   const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/London" });
   const monthStart = londonToUtcIso(`${todayStr.slice(0, 7)}-01T00:00`);
+  const todayStartUtc = londonToUtcIso(`${todayStr}T00:00`);
+  const tomorrowStr = new Date(new Date(`${todayStr}T12:00:00Z`).getTime() + 86400e3).toISOString().slice(0, 10);
+  const tomorrowStartUtc = londonToUtcIso(`${tomorrowStr}T00:00`);
+  const nowIso = new Date().toISOString();
   const n = (r: { count: number | null }) => r.count ?? 0;
   const head = { count: "exact" as const, head: true };
 
   const [
-    companies, hires, liveJobs, emails, sms, errors, syncErrors, newFeedback, newRequests,
+    companies, hires, liveJobs, emails, sms, errors, syncErrors, newFeedback, newRequests, demosToday, upcomingDemos,
   ] = await Promise.all([
     db.from("companies").select("id", head),
     db.from("employees").select("id", head),
@@ -25,6 +29,8 @@ export default async function FounderHomePage() {
     db.from("integration_events").select("id", head).eq("status", "error"),
     db.from("feedback").select("id", head).is("response", null),
     db.from("feature_requests").select("id", head).eq("status", "new"),
+    db.from("prospect_companies").select("id", head).not("demo_at", "is", null).gte("demo_at", todayStartUtc).lt("demo_at", tomorrowStartUtc),
+    db.from("prospect_companies").select("id", head).not("demo_at", "is", null).gte("demo_at", nowIso),
   ]);
 
   const first = profile?.full_name?.split(" ")[0] ?? "there";
@@ -33,10 +39,11 @@ export default async function FounderHomePage() {
   );
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
-  const stats: { label: string; value: number; href?: string; alert?: boolean }[] = [
+  const stats: { label: string; value: number | string; href?: string; alert?: boolean }[] = [
     { label: "Companies", value: n(companies), href: "/admin/companies" },
-    { label: "Hires", value: n(hires) },
-    { label: "Live jobs", value: n(liveJobs) },
+    { label: "Live jobs / Hires", value: `${n(liveJobs)} / ${n(hires)}` },
+    { label: "Demos today", value: n(demosToday), href: "/admin/sales/demos" },
+    { label: "Upcoming demos", value: n(upcomingDemos), href: "/admin/sales/demos" },
     { label: "Emails this month", value: n(emails) },
     { label: "SMS this month", value: n(sms), href: "/admin/sms" },
     { label: "New feedback", value: n(newFeedback), href: "/admin/feedback", alert: n(newFeedback) > 0 },

@@ -1,22 +1,33 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Send } from "lucide-react";
 import { sendProposal, getProspectContacts, type ProspectState } from "@/modules/prospects/actions";
 
 type Contact = { id: string; name: string | null; email: string | null };
 
-function defaultProposal(firstName: string): string {
+type Plan = "monthly" | "commit" | "annual";
+
+const PLAN_OPTIONS: { value: Plan; label: string }[] = [
+  { value: "monthly", label: "Monthly — £55/mo, cancel anytime (£150 setup)" },
+  { value: "commit", label: "12-month plan — £55/mo, no setup fee" },
+  { value: "annual", label: "Annual — £550/year (2 months free), no setup" },
+];
+
+const PLAN_LINE: Record<Plan, string> = {
+  monthly: "the Monthly plan — £55 a month, cancel anytime, with a one-off £150 setup fee.",
+  commit: "the 12-month plan — £55 a month on a 12-month term, with no setup fee.",
+  annual: "the Annual plan — £550 for the year (two months free), with no setup fee.",
+};
+
+function planProposal(firstName: string, plan: Plan): string {
   return (
     `Hi ${firstName},\n\n` +
-    `Thanks for taking the time to look at Join Care Now. Here's a simple proposal.\n\n` +
-    `One plan, everything included — recruitment, onboarding and compliance in one place. Three ways to pay:\n\n` +
-    `• Monthly — £55/month, cancel anytime (£150 one-off setup)\n` +
-    `• 12-month plan — £55/month, no setup fee\n` +
-    `• Annual — £550/year (2 months free), no setup fee\n\n` +
-    `Included on every plan: every feature, core compliance (Right to Work, DBS, references), 1 branch and 100 SMS a month. ` +
-    `Add-ons as you grow: extra branches £7.50/mo, SMS 8p after your 100, AI actions 10p each.\n\n` +
+    `Thanks for taking the time to look at Join Care Now. As discussed, here's the proposal.\n\n` +
+    `You'd be on ${PLAN_LINE[plan]}\n\n` +
+    `Everything is included — recruitment, onboarding and compliance (Right to Work, DBS, references) in one place, ` +
+    `plus 1 branch and 100 SMS a month. Add-ons as you grow: extra branches £7.50/mo, SMS 8p after your 100, AI actions 10p each.\n\n` +
     `Happy to answer anything or get you started — just reply to this email.\n\nThe Join Care Now team`
   );
 }
@@ -24,7 +35,11 @@ function defaultProposal(firstName: string): string {
 export function ProposalModal({ prospectId, name, onClose }: { prospectId: string; name: string; onClose: () => void }) {
   const router = useRouter();
   const [contacts, setContacts] = useState<Contact[] | null>(null);
+  const [firstName, setFirstName] = useState("there");
+  const [plan, setPlan] = useState<Plan>("monthly");
   const [message, setMessage] = useState("");
+  const [edited, setEdited] = useState(false);
+  const editedRef = useRef(false);
   const [state, action, pending] = useActionState<ProspectState, FormData>(sendProposal, undefined);
 
   useEffect(() => {
@@ -32,9 +47,16 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
       setContacts(cs);
       const first = cs.find((c) => c.email);
       const fn = (first?.name ?? "").split(" ")[0] || "there";
-      setMessage(defaultProposal(fn));
+      setFirstName(fn);
+      setMessage(planProposal(fn, "monthly"));
     });
   }, [prospectId]);
+
+  // Switching plan regenerates the body — unless the founder has hand-edited it.
+  function changePlan(next: Plan) {
+    setPlan(next);
+    if (!editedRef.current) setMessage(planProposal(firstName, next));
+  }
 
   useEffect(() => {
     if (state?.ok) {
@@ -64,10 +86,17 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
         ) : (
           <form action={action} className="mt-4 space-y-3">
             <input type="hidden" name="id" value={prospectId} />
+            <input type="hidden" name="plan" value={plan} />
             <label className="block text-sm font-medium text-gray-700">
               To
               <select name="contactId" defaultValue={emailable[0].id} className={`mt-1 block w-full ${field}`}>
                 {emailable.map((c) => <option key={c.id} value={c.id}>{c.name || c.email} ({c.email})</option>)}
+              </select>
+            </label>
+            <label className="block text-sm font-medium text-gray-700">
+              Plan they&apos;ll go on
+              <select value={plan} onChange={(e) => changePlan(e.target.value as Plan)} className={`mt-1 block w-full ${field}`}>
+                {PLAN_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
             </label>
             <label className="block text-sm font-medium text-gray-700">
@@ -76,8 +105,23 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
             </label>
             <label className="block text-sm font-medium text-gray-700">
               Message
-              <textarea name="message" rows={12} value={message} onChange={(e) => setMessage(e.target.value)} className={`mt-1 block w-full ${field} font-mono text-xs`} />
+              <textarea
+                name="message"
+                rows={12}
+                value={message}
+                onChange={(e) => { setMessage(e.target.value); setEdited(true); editedRef.current = true; }}
+                className={`mt-1 block w-full ${field} font-mono text-xs`}
+              />
             </label>
+            {edited && (
+              <button
+                type="button"
+                onClick={() => { editedRef.current = false; setEdited(false); setMessage(planProposal(firstName, plan)); }}
+                className="text-xs font-medium text-brand-600 hover:underline"
+              >
+                Reset to template for this plan
+              </button>
+            )}
             {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
             <div className="flex justify-end gap-2 pt-1">
               <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>

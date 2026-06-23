@@ -127,6 +127,9 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
   const contactId = formData.get("contactId")?.toString();
   const subject = (formData.get("subject")?.toString() ?? "").trim() || "Your Join Care Now proposal";
   const message = (formData.get("message")?.toString() ?? "").trim();
+  const planRaw = formData.get("plan")?.toString();
+  const plan = ["monthly", "commit", "annual"].includes(planRaw ?? "") ? planRaw! : null;
+  const planLabel = plan === "annual" ? "Annual (£550/yr)" : plan === "commit" ? "12-month (£55/mo)" : plan === "monthly" ? "Monthly (£55/mo)" : null;
   if (!prospectId || !contactId) return { error: "Pick a contact." };
   if (message.length < 10) return { error: "Write the proposal message first." };
 
@@ -145,7 +148,9 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
   // Move the card to Proposal and log it.
   const { data: before } = await supabase.from("prospect_companies").select("stage").eq("id", prospectId).single();
   const nowIso = new Date().toISOString();
-  await supabase.from("prospect_companies").update({ stage: "proposal", updated_at: nowIso, stage_changed_at: nowIso }).eq("id", prospectId);
+  const update: Record<string, unknown> = { stage: "proposal", updated_at: nowIso, stage_changed_at: nowIso };
+  if (plan) update.proposed_plan = plan;
+  await supabase.from("prospect_companies").update(update).eq("id", prospectId);
   await logActivity(supabase, prospectId, user.id, "stage_change", {
     body: `${STAGE_LABEL[(before?.stage as Stage) ?? "new"]} → Proposal`,
     meta: { from: before?.stage, to: "proposal" },
@@ -154,7 +159,9 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
     prospect_company_id: prospectId,
     contact_id: contactId,
     type: "system",
-    body: res.ok ? `Proposal sent to ${contact.email}.` : `Proposal email failed: ${res.error}`,
+    body: res.ok
+      ? `Proposal sent to ${contact.email}${planLabel ? ` — ${planLabel}` : ""}.`
+      : `Proposal email failed: ${res.error}`,
   });
 
   revalidatePath(`/admin/sales/${prospectId}`);

@@ -114,7 +114,9 @@ export default async function AdminBillingPage() {
                 : "£55 / mo";
               return (
                 <tr key={c.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">
+                    <a href={`/admin/billing/${c.id}`} className="hover:text-brand-700 hover:underline">{c.name}</a>
+                  </td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_BADGE[status] ?? STATUS_BADGE.none}`}>
                       {status === "none" ? "No subscription" : status.replace("_", " ")}

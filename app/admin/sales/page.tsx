@@ -79,6 +79,9 @@ export default async function SalesPage({
           <Link href="/admin/sales/approvals" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
             Needs approval{approvalCount ? ` (${approvalCount})` : ""}
           </Link>
+          <Link href="/admin/sales/demos" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
+            Demos
+          </Link>
           <Link href="/admin/sales/sequences" className="rounded-lg border border-white/40 bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
             Sequences
           </Link>

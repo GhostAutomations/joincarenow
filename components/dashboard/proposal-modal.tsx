@@ -21,11 +21,17 @@ const PLAN_LINE: Record<Plan, string> = {
   annual: "the Annual plan — £550 for the year (two months free), with no setup fee.",
 };
 
-function planProposal(firstName: string, plan: Plan): string {
+const OFFER_PRESETS = ["1 month free", "2 months free", "3 months free", "+100 SMS a month", "+200 SMS a month"];
+
+function planProposal(firstName: string, plan: Plan, offer: string): string {
+  const offerLine = offer.trim()
+    ? `As a thank-you for coming on board, we'll also include: ${offer.trim()}.\n\n`
+    : "";
   return (
     `Hi ${firstName},\n\n` +
     `Thanks for taking the time to look at Join Care Now. As discussed, here's the proposal.\n\n` +
     `You'd be on ${PLAN_LINE[plan]}\n\n` +
+    offerLine +
     `Everything is included — recruitment, onboarding and compliance (Right to Work, DBS, references) in one place, ` +
     `plus 1 branch and 100 SMS a month. Add-ons as you grow: extra branches £7.50/mo, SMS 8p after your 100, AI actions 10p each.\n\n` +
     `Happy to answer anything or get you started — just reply to this email.\n\nThe Join Care Now team`
@@ -37,6 +43,7 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
   const [contacts, setContacts] = useState<Contact[] | null>(null);
   const [firstName, setFirstName] = useState("there");
   const [plan, setPlan] = useState<Plan>("monthly");
+  const [offer, setOffer] = useState("");
   const [message, setMessage] = useState("");
   const [edited, setEdited] = useState(false);
   const editedRef = useRef(false);
@@ -48,14 +55,18 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
       const first = cs.find((c) => c.email);
       const fn = (first?.name ?? "").split(" ")[0] || "there";
       setFirstName(fn);
-      setMessage(planProposal(fn, "monthly"));
+      setMessage(planProposal(fn, "monthly", ""));
     });
   }, [prospectId]);
 
-  // Switching plan regenerates the body — unless the founder has hand-edited it.
+  // Switching plan or offer regenerates the body — unless the founder has hand-edited it.
   function changePlan(next: Plan) {
     setPlan(next);
-    if (!editedRef.current) setMessage(planProposal(firstName, next));
+    if (!editedRef.current) setMessage(planProposal(firstName, next, offer));
+  }
+  function changeOffer(next: string) {
+    setOffer(next);
+    if (!editedRef.current) setMessage(planProposal(firstName, plan, next));
   }
 
   useEffect(() => {
@@ -87,6 +98,7 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
           <form action={action} className="mt-4 space-y-3">
             <input type="hidden" name="id" value={prospectId} />
             <input type="hidden" name="plan" value={plan} />
+            <input type="hidden" name="offer" value={offer} />
             <label className="block text-sm font-medium text-gray-700">
               To
               <select name="contactId" defaultValue={emailable[0].id} className={`mt-1 block w-full ${field}`}>
@@ -99,6 +111,31 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
                 {PLAN_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
             </label>
+            <div className="block text-sm font-medium text-gray-700">
+              Special offer <span className="font-normal text-gray-400">(optional)</span>
+              <input
+                value={offer}
+                onChange={(e) => changeOffer(e.target.value)}
+                placeholder="e.g. 3 months free, +100 SMS/mo, £45/mo"
+                className={`mt-1 block w-full ${field}`}
+              />
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {OFFER_PRESETS.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => changeOffer(offer.trim() === p ? "" : p)}
+                    className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                      offer.trim() === p
+                        ? "border-brand-500 bg-brand-50 text-brand-700"
+                        : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
             <label className="block text-sm font-medium text-gray-700">
               Subject
               <input name="subject" defaultValue="Your Join Care Now proposal" className={`mt-1 block w-full ${field}`} />
@@ -116,7 +153,7 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
             {edited && (
               <button
                 type="button"
-                onClick={() => { editedRef.current = false; setEdited(false); setMessage(planProposal(firstName, plan)); }}
+                onClick={() => { editedRef.current = false; setEdited(false); setMessage(planProposal(firstName, plan, offer)); }}
                 className="text-xs font-medium text-brand-600 hover:underline"
               >
                 Reset to template for this plan

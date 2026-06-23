@@ -130,6 +130,7 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
   const planRaw = formData.get("plan")?.toString();
   const plan = ["monthly", "commit", "annual"].includes(planRaw ?? "") ? planRaw! : null;
   const planLabel = plan === "annual" ? "Annual (£550/yr)" : plan === "commit" ? "12-month (£55/mo)" : plan === "monthly" ? "Monthly (£55/mo)" : null;
+  const offer = (formData.get("offer")?.toString() ?? "").trim().slice(0, 200) || null;
   if (!prospectId || !contactId) return { error: "Pick a contact." };
   if (message.length < 10) return { error: "Write the proposal message first." };
 
@@ -150,6 +151,7 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
   const nowIso = new Date().toISOString();
   const update: Record<string, unknown> = { stage: "proposal", updated_at: nowIso, stage_changed_at: nowIso };
   if (plan) update.proposed_plan = plan;
+  update.proposed_offer = offer;
   await supabase.from("prospect_companies").update(update).eq("id", prospectId);
   await logActivity(supabase, prospectId, user.id, "stage_change", {
     body: `${STAGE_LABEL[(before?.stage as Stage) ?? "new"]} → Proposal`,
@@ -160,7 +162,7 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
     contact_id: contactId,
     type: "system",
     body: res.ok
-      ? `Proposal sent to ${contact.email}${planLabel ? ` — ${planLabel}` : ""}.`
+      ? `Proposal sent to ${contact.email}${planLabel ? ` — ${planLabel}` : ""}${offer ? ` + ${offer}` : ""}.`
       : `Proposal email failed: ${res.error}`,
   });
 

@@ -6,6 +6,7 @@ import { Clock, CalendarClock, AlertTriangle } from "lucide-react";
 import { updateStage } from "@/modules/prospects/actions";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/prospects";
 import { DemoScheduleModal } from "@/components/dashboard/demo-schedule-modal";
+import { ProposalModal } from "@/components/dashboard/proposal-modal";
 
 export type BoardCard = {
   id: string;
@@ -40,6 +41,7 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
   const [cards, setCards] = useState(initial);
   const [dragId, setDragId] = useState<string | null>(null);
   const [demoFor, setDemoFor] = useState<{ id: string; name: string } | null>(null);
+  const [proposalFor, setProposalFor] = useState<{ id: string; name: string } | null>(null);
 
   // Re-sync to server truth when fresh data arrives (e.g. realtime refresh
   // after an inbound email/SMS auto-moves a prospect).
@@ -54,6 +56,11 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
     // just moving the card. The booking itself moves it once confirmed.
     if (stage === "demo") {
       setDemoFor({ id, name: card.name });
+      return;
+    }
+    // Proposal is composed in a popup; sending it moves the card.
+    if (stage === "proposal") {
+      setProposalFor({ id, name: card.name });
       return;
     }
     setCards((prev) => prev.map((c) => (c.id === id ? { ...c, stage, stageChangedAt: new Date().toISOString() } : c)));
@@ -123,6 +130,9 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
     </div>
     {demoFor && (
       <DemoScheduleModal prospectId={demoFor.id} name={demoFor.name} onClose={() => setDemoFor(null)} />
+    )}
+    {proposalFor && (
+      <ProposalModal prospectId={proposalFor.id} name={proposalFor.name} onClose={() => setProposalFor(null)} />
     )}
     </>
   );

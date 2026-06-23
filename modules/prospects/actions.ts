@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { sendEmail, sendSms, renderMergeFields } from "@/lib/comms/send";
 import { buildProspectEmail } from "@/lib/comms/email-template";
+import { sendBrandedEmail } from "@/lib/comms/branded";
 import { buildAndInsertDraft } from "@/lib/prospects/ai-drafts";
 import { autoStage } from "@/lib/prospects/auto-stage";
 import { scheduleProspectDemo } from "@/lib/prospects/demo";
-import { sendProposalEmail } from "@/lib/prospects/proposal";
 import { provisionCompanyFromProspect } from "@/lib/prospects/provision";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/prospects";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -97,9 +97,9 @@ export async function updateStage(formData: FormData): Promise<void> {
   });
 
   // Stage automations (best-effort — the move is already saved).
+  // Note: Proposal is sent via the proposal popup (sendProposal), not here.
   if (before?.stage !== stage) {
     try {
-      if (stage === "proposal") await sendProposalEmail(supabase as unknown as SupabaseClient, id);
       if (stage === "won") await provisionCompanyFromProspect(supabase as unknown as SupabaseClient, id);
     } catch {
       /* automation failed; stage move stands */
@@ -118,6 +118,49 @@ export async function setVideoLink(formData: FormData): Promise<void> {
     .from("platform_settings")
     .upsert({ key: "prospect_video_link", value: link, updated_at: new Date().toISOString() }, { onConflict: "key" });
   revalidatePath("/admin/sales/settings");
+}
+
+/** Send a (composed) proposal email to a prospect contact and move to Proposal. */
+export async function sendProposal(_prev: ProspectState, formData: FormData): Promise<ProspectState> {
+  const { supabase, user } = await requirePlatformAdmin();
+  const prospectId = formData.get("id")?.toString();
+  const contactId = formData.get("contactId")?.toString();
+  const subject = (formData.get("subject")?.toString() ?? "").trim() || "Your Join Care Now proposal";
+  const message = (formData.get("message")?.toString() ?? "").trim();
+  if (!prospectId || !contactId) return { error: "Pick a contact." };
+  if (message.length < 10) return { error: "Write the proposal message first." };
+
+  const { data: contact } = await supabase
+    .from("prospect_contacts").select("email, opted_out").eq("id", contactId).single();
+  if (!contact?.email) return { error: "That contact has no email address." };
+  if (contact.opted_out) return { error: "That contact has opted out." };
+
+  const res = await sendBrandedEmail(supabase as unknown as SupabaseClient, null, {
+    to: contact.email as string,
+    subject,
+    text: message,
+    cta: { label: "Get started", url: "https://www.joincarenow.com/billing" },
+  });
+
+  // Move the card to Proposal and log it.
+  const { data: before } = await supabase.from("prospect_companies").select("stage").eq("id", prospectId).single();
+  const nowIso = new Date().toISOString();
+  await supabase.from("prospect_companies").update({ stage: "proposal", updated_at: nowIso, stage_changed_at: nowIso }).eq("id", prospectId);
+  await logActivity(supabase, prospectId, user.id, "stage_change", {
+    body: `${STAGE_LABEL[(before?.stage as Stage) ?? "new"]} → Proposal`,
+    meta: { from: before?.stage, to: "proposal" },
+  });
+  await supabase.from("prospect_activities").insert({
+    prospect_company_id: prospectId,
+    contact_id: contactId,
+    type: "system",
+    body: res.ok ? `Proposal sent to ${contact.email}.` : `Proposal email failed: ${res.error}`,
+  });
+
+  revalidatePath(`/admin/sales/${prospectId}`);
+  revalidatePath("/admin/sales");
+  if (!res.ok) return { error: res.error ?? "Could not send the proposal." };
+  return { ok: true };
 }
 
 /** Contacts for a prospect (used by the drag-to-Demo-booked scheduler popup). */

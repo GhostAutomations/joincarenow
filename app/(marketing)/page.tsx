@@ -233,13 +233,18 @@ export default function LandingPage() {
                 <span className="text-5xl font-bold">£55</span>
                 <span className="text-lg text-white/80">/ month</span>
               </p>
-              <p className="mt-2 text-sm text-white/90">
-                or <span className="font-semibold">£550 / year</span> — 2 months free
-              </p>
-              <p className="mt-4 text-sm text-white/80">
-                £150 one-off setup, <span className="font-semibold text-white">waived</span> when you
-                commit to a 12-month term.
-              </p>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-white/70">Three ways to pay</p>
+              <ul className="mt-2 space-y-2 text-sm">
+                <li className="rounded-lg bg-white/10 px-3 py-2">
+                  <span className="font-semibold">Monthly</span> — £55/mo, cancel anytime. <span className="text-white/70">£150 one-off setup.</span>
+                </li>
+                <li className="rounded-lg bg-white/10 px-3 py-2">
+                  <span className="font-semibold">12-month plan</span> — £55/mo, <span className="text-white/90">no setup fee</span>. Committed for 12 months.
+                </li>
+                <li className="rounded-lg bg-white/10 px-3 py-2">
+                  <span className="font-semibold">Annual</span> — £550/year (<span className="text-white/90">2 months free</span>), no setup fee.
+                </li>
+              </ul>
               <a href="#demo" className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
                 Book a demo
               </a>

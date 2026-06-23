@@ -5,8 +5,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const WEEK = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-const SLOTS: string[] = [];
-for (let h = 8; h <= 19; h++) for (const m of ["00", "15", "30", "45"]) SLOTS.push(`${String(h).padStart(2, "0")}:${m}`);
+const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
+const MINUTES = ["00", "15", "30", "45"];
 
 /** Inline calendar (click a day) + time dropdown. Emits "YYYY-MM-DDTHH:MM" in a
  *  hidden input — no native browser pickers, so it behaves consistently. */
@@ -15,7 +15,8 @@ export function DemoDateTime({ name }: { name: string }) {
   today.setHours(0, 0, 0, 0);
   const [view, setView] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+  const [hour, setHour] = useState("");
+  const [minute, setMinute] = useState("");
 
   const year = view.getFullYear();
   const month = view.getMonth();
@@ -27,7 +28,8 @@ export function DemoDateTime({ name }: { name: string }) {
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  const value = date && time ? `${date}T${time}` : "";
+  const value = date && hour && minute ? `${date}T${hour}:${minute}` : "";
+  const selStyle = "rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
   return (
     <div className="rounded-xl border border-gray-200 p-3">
@@ -60,11 +62,16 @@ export function DemoDateTime({ name }: { name: string }) {
       </div>
       <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
         <span className="text-sm font-medium text-gray-700">Time</span>
-        <select value={time} onChange={(e) => setTime(e.target.value)} className="rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-          <option value="">Pick a time…</option>
-          {SLOTS.map((s) => <option key={s} value={s}>{s}</option>)}
+        <select aria-label="Hour" value={hour} onChange={(e) => setHour(e.target.value)} className={selStyle}>
+          <option value="">HH</option>
+          {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
         </select>
-        {date && time && <span className="text-xs text-green-700">✓ selected</span>}
+        <span className="text-sm text-gray-400">:</span>
+        <select aria-label="Minute" value={minute} onChange={(e) => setMinute(e.target.value)} className={selStyle}>
+          <option value="">MM</option>
+          {MINUTES.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+        {date && hour && minute && <span className="text-xs text-green-700">✓ selected</span>}
       </div>
       <input type="hidden" name={name} value={value} />
     </div>

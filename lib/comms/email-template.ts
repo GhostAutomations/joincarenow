@@ -37,6 +37,8 @@ export function renderEmailHtml(opts: {
   footerNote?: string;
   unsubUrl?: string;
   cta?: { label: string; url: string };
+  // Multiple side-by-side buttons (e.g. Accept / Decline). Takes precedence over cta.
+  ctas?: { label: string; url: string; style?: "primary" | "danger" | "ghost" }[];
 }): string {
   const brand = opts.brandColor || "#2d6d6a"; // JCN brand-600 teal
   const brandDark = shade(brand, 0.82);
@@ -44,11 +46,21 @@ export function renderEmailHtml(opts: {
     ? `<img src="${esc(opts.logoUrl)}" alt="${esc(opts.heading || "Join Care Now")}" height="30" style="height:30px;width:auto;display:block"/>`
     : `<span style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:-0.01em">${esc(opts.heading || "Join Care Now")}</span>`;
 
-  const button = opts.cta
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 6px"><tr><td style="border-radius:10px;background:${esc(brand)}">
-<a href="${esc(opts.cta.url)}" style="display:inline-block;padding:11px 22px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:10px">${esc(opts.cta.label)}</a>
-</td></tr></table>`
+  const btnCell = (b: { label: string; url: string; style?: "primary" | "danger" | "ghost" }) => {
+    const bg = b.style === "danger" ? "#dc2626" : b.style === "ghost" ? "#ffffff" : brand;
+    const fg = b.style === "ghost" ? "#374151" : "#ffffff";
+    const border = b.style === "ghost" ? "border:1px solid #d1d5db;" : "";
+    return `<td style="padding:0 6px 0 0"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:10px;background:${bg};${border}">
+<a href="${esc(b.url)}" style="display:inline-block;padding:11px 22px;font-size:14px;font-weight:600;color:${fg};text-decoration:none;border-radius:10px">${esc(b.label)}</a>
+</td></tr></table></td>`;
+  };
+
+  const buttons = opts.ctas?.length
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:10px 0 6px"><tr>${opts.ctas.map(btnCell).join("")}</tr></table>`
+    : opts.cta
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 6px"><tr>${btnCell(opts.cta)}</tr></table>`
     : "";
+  const button = buttons;
 
   const footer = [
     opts.footerNote ? `<div style="margin-bottom:6px">${esc(opts.footerNote)}</div>` : "",

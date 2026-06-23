@@ -20,6 +20,7 @@ export type BoardCard = {
   nextTaskDue: string | null;
   stageChangedAt: string | null;
   demoAt: string | null;
+  proposalResponse: string | null;
 };
 
 const STALE_DAYS = 7;
@@ -106,6 +107,12 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
                       <p className="truncate text-sm font-medium text-gray-900">{c.name}</p>
                       {c.value ? <span className="shrink-0 text-xs font-semibold text-emerald-700">{money(c.value)}/mo</span> : null}
                     </div>
+                    {c.proposalResponse === "accepted" && (
+                      <span className="mt-1 inline-flex items-center gap-1 rounded bg-green-100 px-1.5 py-0.5 text-[11px] font-semibold text-green-800">✓ Proposal accepted</span>
+                    )}
+                    {c.proposalResponse === "declined" && (
+                      <span className="mt-1 inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-600">Proposal declined</span>
+                    )}
                     <p className="mt-0.5 truncate text-xs text-gray-500">
                       {[c.contact, c.setting?.replace("_", " "), c.region].filter(Boolean).join(" · ") || "—"}
                     </p>

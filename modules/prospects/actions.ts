@@ -139,17 +139,33 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
   if (!contact?.email) return { error: "That contact has no email address." };
   if (contact.opted_out) return { error: "That contact has opted out." };
 
+  // Mint (or reuse) a token for the Accept / Decline links.
+  const { data: existing } = await supabase
+    .from("prospect_companies").select("proposal_token").eq("id", prospectId).single();
+  let token = existing?.proposal_token as string | null;
+  if (!token) {
+    token = crypto.randomUUID();
+    await supabase.from("prospect_companies").update({ proposal_token: token }).eq("id", prospectId);
+  }
+  const respondUrl = (r: "accept" | "decline") => `${BASE_URL}/proposal/${token}?r=${r}`;
+
   const res = await sendBrandedEmail(supabase as unknown as SupabaseClient, null, {
     to: contact.email as string,
     subject,
-    text: message,
-    cta: { label: "Get started", url: "https://www.joincarenow.com/billing" },
+    text: `${message}\n\nAccept: ${respondUrl("accept")}\nDecline: ${respondUrl("decline")}`,
+    ctas: [
+      { label: "Accept proposal", url: respondUrl("accept"), style: "primary" },
+      { label: "Decline", url: respondUrl("decline"), style: "ghost" },
+    ],
   });
 
   // Move the card to Proposal and log it.
   const { data: before } = await supabase.from("prospect_companies").select("stage").eq("id", prospectId).single();
   const nowIso = new Date().toISOString();
-  const update: Record<string, unknown> = { stage: "proposal", updated_at: nowIso, stage_changed_at: nowIso };
+  const update: Record<string, unknown> = {
+    stage: "proposal", updated_at: nowIso, stage_changed_at: nowIso,
+    proposal_response: null, proposal_responded_at: null,
+  };
   if (plan) update.proposed_plan = plan;
   update.proposed_offer = offer;
   await supabase.from("prospect_companies").update(update).eq("id", prospectId);
@@ -170,6 +186,65 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
   revalidatePath("/admin/sales");
   if (!res.ok) return { error: res.error ?? "Could not send the proposal." };
   return { ok: true };
+}
+
+/** Public (no-login) — a prospect accepts or declines a proposal via the token
+ *  link in the proposal email. Records the answer, logs it and (on decline)
+ *  moves the card to Lost. Accept does NOT auto-provision — the founder closes
+ *  to Won manually so billing/account setup happens on their terms. */
+export async function recordProposalResponse(
+  token: string,
+  response: "accepted" | "declined"
+): Promise<{ ok?: boolean; error?: string }> {
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const db = createAdminClient();
+  const { data: prospect } = await db
+    .from("prospect_companies")
+    .select("id, name, proposal_response, stage")
+    .eq("proposal_token", token)
+    .single();
+  if (!prospect) return { error: "This proposal link is not valid." };
+
+  const nowIso = new Date().toISOString();
+  const update: Record<string, unknown> = { proposal_response: response, proposal_responded_at: nowIso, updated_at: nowIso };
+  // A declined proposal moves the prospect to Lost. Accept is left for the
+  // founder to close to Won (controls provisioning + billing timing).
+  if (response === "declined" && prospect.stage !== "lost") {
+    update.stage = "lost";
+    update.stage_changed_at = nowIso;
+  }
+  await db.from("prospect_companies").update(update).eq("id", prospect.id);
+
+  await db.from("prospect_activities").insert({
+    prospect_company_id: prospect.id,
+    type: "system",
+    body: response === "accepted" ? "✅ Prospect ACCEPTED the proposal." : "✗ Prospect DECLINED the proposal.",
+    meta: { proposal_response: response },
+  });
+
+  revalidatePath("/admin/sales");
+  revalidatePath(`/admin/sales/${prospect.id}`);
+  return { ok: true };
+}
+
+/** Public — load the proposal summary for the response page (by token). */
+export async function getProposalByToken(token: string): Promise<
+  { name: string; plan: string | null; offer: string | null; response: string | null } | null
+> {
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const db = createAdminClient();
+  const { data } = await db
+    .from("prospect_companies")
+    .select("name, proposed_plan, proposed_offer, proposal_response")
+    .eq("proposal_token", token)
+    .single();
+  if (!data) return null;
+  return {
+    name: data.name as string,
+    plan: (data.proposed_plan as string) ?? null,
+    offer: (data.proposed_offer as string) ?? null,
+    response: (data.proposal_response as string) ?? null,
+  };
 }
 
 /** Contacts for a prospect (used by the drag-to-Demo-booked scheduler popup). */

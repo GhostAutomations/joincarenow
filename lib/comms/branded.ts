@@ -24,6 +24,7 @@ export async function sendBrandedEmail(
     replyTo?: string;
     attachments?: { filename: string; content: string }[];
     cta?: { label: string; url: string };
+    ctas?: { label: string; url: string; style?: "primary" | "danger" | "ghost" }[];
   }
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
   let heading = "Join Care Now";
@@ -57,6 +58,7 @@ export async function sendBrandedEmail(
     brandColor,
     footerNote: opts.footerNote,
     cta: opts.cta,
+    ctas: opts.ctas,
   });
 
   return sendEmail({

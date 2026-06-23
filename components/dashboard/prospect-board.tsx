@@ -18,6 +18,7 @@ export type BoardCard = {
   lastContactAt: string | null;
   nextTaskDue: string | null;
   stageChangedAt: string | null;
+  demoAt: string | null;
 };
 
 const STALE_DAYS = 7;
@@ -90,7 +91,9 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
                     draggable
                     onDragStart={() => setDragId(c.id)}
                     onClick={() => router.push(`/admin/sales/${c.id}`)}
-                    className="cursor-pointer rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md active:cursor-grabbing"
+                    className={`cursor-pointer rounded-xl border p-3 shadow-sm transition hover:shadow-md active:cursor-grabbing ${
+                      c.demoAt ? "border-green-300 bg-green-50" : "border-slate-200 bg-white"
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="truncate text-sm font-medium text-gray-900">{c.name}</p>

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, CalendarClock } from "lucide-react";
 import { scheduleDemo, getProspectContacts, type ProspectState } from "@/modules/prospects/actions";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
 
 type Contact = { id: string; name: string | null; email: string | null };
 
@@ -52,21 +53,19 @@ export function DemoScheduleModal({ prospectId, name, onClose }: { prospectId: s
                 {emailable.map((c) => <option key={c.id} value={c.id}>{c.name || c.email}</option>)}
               </select>
             </label>
-            <div className="flex gap-3">
-              <label className="flex-1 text-sm font-medium text-gray-700">
-                Date & time
-                <input type="datetime-local" name="at" required className={`mt-1 block w-full ${field}`} />
-              </label>
-              <label className="text-sm font-medium text-gray-700">
-                Length
-                <select name="duration" defaultValue="30" className={`mt-1 block ${field}`}>
-                  <option value="15">15 min</option>
-                  <option value="30">30 min</option>
-                  <option value="45">45 min</option>
-                  <option value="60">60 min</option>
-                </select>
-              </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Date &amp; time</label>
+              <div className="mt-1"><DateTimePicker name="at" minToday /></div>
             </div>
+            <label className="block text-sm font-medium text-gray-700">
+              Length
+              <select name="duration" defaultValue="30" className={`mt-1 block ${field}`}>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">60 min</option>
+              </select>
+            </label>
             {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
             <div className="flex justify-end gap-2 pt-1">
               <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>

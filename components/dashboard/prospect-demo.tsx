@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { CalendarClock } from "lucide-react";
 import { scheduleDemo, type ProspectState } from "@/modules/prospects/actions";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
 
 type Contact = { id: string; name: string | null; email: string | null };
 
@@ -39,7 +40,7 @@ export function ProspectDemo({
               <option key={c.id} value={c.id}>{c.name || c.email}</option>
             ))}
           </select>
-          <input type="datetime-local" name="at" required className={sel} />
+          <DateTimePicker name="at" minToday />
           <select name="duration" defaultValue="30" className={sel}>
             <option value="15">15 min</option>
             <option value="30">30 min</option>

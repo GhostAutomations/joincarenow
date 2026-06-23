@@ -9,7 +9,7 @@ import { getAutoSendMode } from "@/lib/prospects/ai-drafts";
 
 type Row = {
   id: string; name: string; stage: string; setting_type: string | null;
-  region: string | null; source: string | null; value_monthly: number | null; stage_changed_at: string | null;
+  region: string | null; source: string | null; value_monthly: number | null; stage_changed_at: string | null; demo_at: string | null;
 };
 
 export default async function SalesPage({
@@ -23,7 +23,7 @@ export default async function SalesPage({
 
   const since7 = new Date(Date.now() - 7 * 86400e3).toISOString();
   const [{ data: companies }, { data: msgs }, { data: tasks }, { data: contacts }, { count: approvalCount }, { count: replyCount }] = await Promise.all([
-    db.from("prospect_companies").select("id, name, stage, setting_type, region, source, value_monthly, stage_changed_at").order("created_at", { ascending: false }),
+    db.from("prospect_companies").select("id, name, stage, setting_type, region, source, value_monthly, stage_changed_at, demo_at").order("created_at", { ascending: false }),
     db.from("prospect_activities").select("prospect_company_id, created_at").eq("type", "message").eq("direction", "outbound").order("created_at", { ascending: false }),
     db.from("prospect_tasks").select("prospect_company_id, due_date").eq("done", false).not("due_date", "is", null).order("due_date", { ascending: true }),
     db.from("prospect_contacts").select("prospect_company_id, name, email").order("created_at", { ascending: true }),
@@ -57,7 +57,7 @@ export default async function SalesPage({
     id: r.id, name: r.name, stage: r.stage, setting: r.setting_type, region: r.region,
     value: r.value_monthly, contact: firstContact.get(r.id) ?? null,
     lastContactAt: lastContact.get(r.id) ?? null, nextTaskDue: nextTask.get(r.id) ?? null,
-    stageChangedAt: r.stage_changed_at,
+    stageChangedAt: r.stage_changed_at, demoAt: r.demo_at,
   }));
 
   const autoSendMode = await getAutoSendMode(db);

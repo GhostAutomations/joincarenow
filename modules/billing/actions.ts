@@ -10,6 +10,7 @@ export async function startCheckout(formData: FormData): Promise<void> {
   const { current, profile } = await requireCompany();
   if (current.role !== "admin") return;
   const interval = formData.get("interval") === "year" ? "year" : "month";
+  const commit = formData.get("commit") === "true";
 
   const db = createAdminClient();
   const { data: company } = await db
@@ -28,7 +29,7 @@ export async function startCheckout(formData: FormData): Promise<void> {
     await db.from("companies").update({ stripe_customer_id: customerId }).eq("id", current.company_id);
   }
 
-  const url = await createCheckoutSession({ customerId, companyId: current.company_id, interval });
+  const url = await createCheckoutSession({ customerId, companyId: current.company_id, interval, commit });
   redirect(url);
 }
 
@@ -39,11 +40,14 @@ export async function openBillingPortal(): Promise<void> {
   const db = createAdminClient();
   const { data: company } = await db
     .from("companies")
-    .select("stripe_customer_id")
+    .select("stripe_customer_id, commitment_until")
     .eq("id", current.company_id)
     .single();
   const customerId = company?.stripe_customer_id as string | null;
   if (!customerId) return;
-  const url = await createPortalSession(customerId);
+  const committed = company?.commitment_until
+    ? new Date(company.commitment_until as string) > new Date()
+    : false;
+  const url = await createPortalSession(customerId, committed);
   redirect(url);
 }

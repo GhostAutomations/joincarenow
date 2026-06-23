@@ -71,10 +71,18 @@ export async function POST(req: Request) {
     case "checkout.session.completed": {
       const id = await findCompany();
       if (id && obj.subscription) {
-        await db
-          .from("companies")
-          .update({ stripe_subscription_id: obj.subscription as string, billing_status: "active", setup_fee_paid: true })
-          .eq("id", id);
+        const commitMonths = parseInt(obj?.metadata?.commitment_months ?? "", 10);
+        const update: Record<string, unknown> = {
+          stripe_subscription_id: obj.subscription as string,
+          billing_status: "active",
+          setup_fee_paid: true,
+        };
+        if (Number.isInteger(commitMonths) && commitMonths > 0) {
+          const d = new Date();
+          d.setMonth(d.getMonth() + commitMonths);
+          update.commitment_until = d.toISOString();
+        }
+        await db.from("companies").update(update).eq("id", id);
 
         // Reconcile existing branches onto the new subscription (interval-matched).
         await syncExtraBranches(id);

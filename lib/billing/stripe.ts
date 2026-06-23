@@ -90,13 +90,16 @@ export async function createCheckoutSession(opts: {
   customerId: string;
   companyId: string;
   interval: "month" | "year";
+  commit?: boolean; // monthly with a 12-month commitment (no setup fee)
 }): Promise<string> {
   const basePrice = opts.interval === "year" ? PRICES.annual : PRICES.monthly;
   if (!basePrice) throw new Error("Plan price isn't configured.");
 
+  const committed = opts.interval === "month" && opts.commit === true;
   const lineItems: { price: string; quantity?: number }[] = [{ price: basePrice, quantity: 1 }];
-  // Setup fee applies on monthly; waived when committing annually.
-  if (opts.interval === "month" && PRICES.setup) lineItems.push({ price: PRICES.setup, quantity: 1 });
+  // Setup fee applies on monthly, but is waived for annual and for the
+  // 12-month monthly commitment.
+  if (opts.interval === "month" && !committed && PRICES.setup) lineItems.push({ price: PRICES.setup, quantity: 1 });
   // Metered add-ons must match the base interval (Stripe forbids mixing).
   const isYear = opts.interval === "year";
   const smsPrice = isYear ? PRICES.smsYear : PRICES.sms;
@@ -115,19 +118,21 @@ export async function createCheckoutSession(opts: {
     line_items: uniqueItems,
     success_url: `${BASE_URL}/billing?status=success`,
     cancel_url: `${BASE_URL}/billing?status=cancelled`,
-    subscription_data: { metadata: { company_id: opts.companyId } },
-    metadata: { company_id: opts.companyId },
+    subscription_data: { metadata: { company_id: opts.companyId, commitment_months: committed ? "12" : "" } },
+    metadata: { company_id: opts.companyId, commitment_months: committed ? "12" : "" },
     allow_promotion_codes: true,
   });
   return session.url;
 }
 
-/** Create a Stripe Customer Portal session so the company can manage billing. */
-export async function createPortalSession(customerId: string): Promise<string> {
-  const session = await stripeRequest<{ url: string }>("/billing_portal/sessions", "POST", {
-    customer: customerId,
-    return_url: `${BASE_URL}/billing`,
-  });
+/** Create a Stripe Customer Portal session so the company can manage billing.
+ *  Pass `noCancel` for committed customers to use a portal configuration that
+ *  doesn't allow cancellation (STRIPE_PORTAL_CONFIG_NOCANCEL). */
+export async function createPortalSession(customerId: string, noCancel = false): Promise<string> {
+  const params: Record<string, unknown> = { customer: customerId, return_url: `${BASE_URL}/billing` };
+  const cfg = process.env.STRIPE_PORTAL_CONFIG_NOCANCEL;
+  if (noCancel && cfg) params.configuration = cfg;
+  const session = await stripeRequest<{ url: string }>("/billing_portal/sessions", "POST", params);
   return session.url;
 }
 

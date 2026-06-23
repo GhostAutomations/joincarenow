@@ -32,7 +32,7 @@ export default async function BillingPage() {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id")
+    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id, commitment_until")
     .eq("id", current.company_id)
     .single();
 
@@ -40,6 +40,8 @@ export default async function BillingPage() {
   const interval = company?.billing_interval as string | null;
   const periodEnd = company?.current_period_end as string | null;
   const active = status === "active" || status === "trialing";
+  const commitmentUntil = company?.commitment_until as string | null;
+  const committed = commitmentUntil ? new Date(commitmentUntil) > new Date() : false;
 
   const { data: usage } = await supabase
     .from("usage_events")
@@ -79,6 +81,11 @@ export default async function BillingPage() {
                 <span className="inline-flex items-center gap-1 text-sm text-white/70">
                   <CalendarClock className="h-3.5 w-3.5" />
                   renews {new Date(periodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                </span>
+              )}
+              {committed && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium backdrop-blur">
+                  12‑month commitment · until {new Date(commitmentUntil!).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                 </span>
               )}
             </div>
@@ -196,18 +203,32 @@ export default async function BillingPage() {
                 ))}
               </ul>
               {isAdmin ? (
-                <div className="mt-6 flex flex-wrap gap-2.5">
-                  <form action={startCheckout}>
-                    <input type="hidden" name="interval" value="year" />
-                    <button className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700">
-                      Subscribe annually <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">2 months free</span>
-                    </button>
-                  </form>
-                  <form action={startCheckout}>
+                <div className="mt-6 space-y-2.5">
+                  <div className="flex flex-wrap gap-2.5">
+                    <form action={startCheckout}>
+                      <input type="hidden" name="interval" value="year" />
+                      <button className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700">
+                        Subscribe annually <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">2 months free</span>
+                      </button>
+                    </form>
+                    <form action={startCheckout}>
+                      <input type="hidden" name="interval" value="month" />
+                      <button className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50">
+                        Subscribe monthly
+                      </button>
+                    </form>
+                  </div>
+                  <form action={startCheckout} className="rounded-xl border border-brand-200 bg-brand-50 p-3">
                     <input type="hidden" name="interval" value="month" />
-                    <button className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50">
-                      Subscribe monthly
-                    </button>
+                    <input type="hidden" name="commit" value="true" />
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm text-gray-700">
+                        <span className="font-semibold text-gray-900">£55/month, 12‑month commitment</span> — no £150 setup fee. Can&apos;t be cancelled before the term ends.
+                      </p>
+                      <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700">
+                        Commit to 12 months
+                      </button>
+                    </div>
                   </form>
                 </div>
               ) : (

@@ -40,7 +40,7 @@ export async function openBillingPortal(): Promise<void> {
   const db = createAdminClient();
   const { data: company } = await db
     .from("companies")
-    .select("stripe_customer_id, commitment_until")
+    .select("stripe_customer_id, commitment_until, billing_interval")
     .eq("id", current.company_id)
     .single();
   const customerId = company?.stripe_customer_id as string | null;
@@ -48,6 +48,8 @@ export async function openBillingPortal(): Promise<void> {
   const committed = company?.commitment_until
     ? new Date(company.commitment_until as string) > new Date()
     : false;
-  const url = await createPortalSession(customerId, committed);
+  // Annual plans are paid a year up front, so they're locked in too.
+  const locked = committed || company?.billing_interval === "year";
+  const url = await createPortalSession(customerId, locked);
   redirect(url);
 }

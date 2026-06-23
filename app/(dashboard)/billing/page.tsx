@@ -88,6 +88,11 @@ export default async function BillingPage() {
                   12‑month commitment · until {new Date(commitmentUntil!).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                 </span>
               )}
+              {!committed && interval === "year" && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium backdrop-blur">
+                  Annual term · no cancellation until renewal
+                </span>
+              )}
             </div>
             {isAdmin ? (
               <form action={openBillingPortal}>

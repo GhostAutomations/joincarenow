@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Clock, CalendarClock, AlertTriangle } from "lucide-react";
 import { updateStage } from "@/modules/prospects/actions";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/prospects";
+import { DemoScheduleModal } from "@/components/dashboard/demo-schedule-modal";
 
 export type BoardCard = {
   id: string;
@@ -37,6 +38,7 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
   const router = useRouter();
   const [cards, setCards] = useState(initial);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [demoFor, setDemoFor] = useState<{ id: string; name: string } | null>(null);
 
   // Re-sync to server truth when fresh data arrives (e.g. realtime refresh
   // after an inbound email/SMS auto-moves a prospect).
@@ -47,6 +49,12 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
   function move(id: string, stage: string) {
     const card = cards.find((c) => c.id === id);
     if (!card || card.stage === stage) return;
+    // Demo booked is reached by scheduling: open the booking popup instead of
+    // just moving the card. The booking itself moves it once confirmed.
+    if (stage === "demo") {
+      setDemoFor({ id, name: card.name });
+      return;
+    }
     setCards((prev) => prev.map((c) => (c.id === id ? { ...c, stage, stageChangedAt: new Date().toISOString() } : c)));
     const fd = new FormData();
     fd.set("id", id);
@@ -55,6 +63,7 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
   }
 
   return (
+    <>
     <div className="flex gap-2 overflow-x-auto pb-4 lg:grid lg:grid-cols-7 lg:overflow-visible">
       {STAGES.map((s) => {
         const items = cards.filter((c) => c.stage === s);
@@ -109,5 +118,9 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
         );
       })}
     </div>
+    {demoFor && (
+      <DemoScheduleModal prospectId={demoFor.id} name={demoFor.name} onClose={() => setDemoFor(null)} />
+    )}
+    </>
   );
 }

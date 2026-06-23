@@ -97,3 +97,37 @@ export async function classifyDemoIntent(lastInbound: string): Promise<boolean> 
     return false;
   }
 }
+
+/**
+ * Extract a single specific demo date+time from an inbound message as a UTC ISO
+ * timestamp, or null if the sender didn't propose a concrete date AND time.
+ */
+export async function extractDemoDateTime(text: string, nowIso: string): Promise<string | null> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey || !text.trim()) return null;
+  try {
+    const client = new Anthropic({ apiKey, maxRetries: 1, timeout: 30_000 });
+    const model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
+    const msg = await client.messages.create({
+      model,
+      max_tokens: 30,
+      system:
+        `The current date and time is ${nowIso} (UK timezone). Extract a single specific meeting date AND time the sender proposes or confirms for a demo or call. ` +
+        `Reply with ONLY an ISO 8601 UTC timestamp like 2026-07-01T14:00:00Z. If there is no specific date and time (e.g. just "next week", "sometime", or a day with no time), reply with exactly NONE.`,
+      messages: [{ role: "user", content: text.slice(0, 1500) }],
+    });
+    const out = msg.content
+      .filter((b) => b.type === "text")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((b) => (b as any).text as string)
+      .join("")
+      .trim();
+    if (/^none$/i.test(out)) return null;
+    const t = Date.parse(out);
+    if (Number.isNaN(t)) return null;
+    // Only accept future times (ignore parsed-past nonsense).
+    return t > Date.now() ? new Date(t).toISOString() : null;
+  } catch {
+    return null;
+  }
+}

@@ -1,10 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { draftProspectMessage, classifyDemoIntent } from "@/lib/ai/draft-prospect";
+import { draftProspectMessage, classifyDemoIntent, extractDemoDateTime } from "@/lib/ai/draft-prospect";
 import { detectHighRisk } from "@/lib/prospects";
 import { getSendWindow, isWithinSendingWindow } from "@/lib/prospects/send-window";
 import { sendToProspectContact } from "@/lib/prospects/sequences";
 import { autoStage } from "@/lib/prospects/auto-stage";
+import { scheduleProspectDemo } from "@/lib/prospects/demo";
 
 export type AutoSendMode = "off" | "low_risk" | "all";
 
@@ -119,9 +120,16 @@ export async function runProspectDrafts(): Promise<DraftRun> {
 
     const channel = ib.channel === "sms" ? "sms" : "email";
 
-    // Demo-booked detection: if their reply confirms/books a demo, move the card.
+    // Demo detection: if their reply books a demo, try to schedule a concrete
+    // time (sends the calendar invite); otherwise just move to Demo booked.
     if (await classifyDemoIntent((ib.body as string) ?? "")) {
-      await autoStage(db, cid, "demo");
+      const when = await extractDemoDateTime((ib.body as string) ?? "", new Date().toISOString());
+      let booked = false;
+      if (when && ib.contact_id) {
+        const r = await scheduleProspectDemo(db, { prospectId: cid, contactId: ib.contact_id as string, startIso: when, durationMinutes: 30 });
+        booked = !!r.ok;
+      }
+      if (!booked) await autoStage(db, cid, "demo");
     }
 
     const g = await generateDraft(db, cid, ib.contact_id as string, channel);

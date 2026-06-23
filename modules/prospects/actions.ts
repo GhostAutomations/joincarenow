@@ -120,6 +120,17 @@ export async function setVideoLink(formData: FormData): Promise<void> {
   revalidatePath("/admin/sales/settings");
 }
 
+/** Contacts for a prospect (used by the drag-to-Demo-booked scheduler popup). */
+export async function getProspectContacts(prospectId: string): Promise<{ id: string; name: string | null; email: string | null }[]> {
+  const { supabase } = await requirePlatformAdmin();
+  const { data } = await supabase
+    .from("prospect_contacts")
+    .select("id, name, email")
+    .eq("prospect_company_id", prospectId)
+    .order("created_at");
+  return (data ?? []) as { id: string; name: string | null; email: string | null }[];
+}
+
 /** Book a demo with a prospect contact (sends a branded calendar invite). */
 export async function scheduleDemo(_prev: ProspectState, formData: FormData): Promise<ProspectState> {
   const { supabase } = await requirePlatformAdmin();

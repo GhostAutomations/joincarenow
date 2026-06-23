@@ -99,7 +99,7 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
                     onDragStart={() => setDragId(c.id)}
                     onClick={() => router.push(`/admin/sales/${c.id}`)}
                     className={`cursor-pointer rounded-xl border p-3 shadow-sm transition hover:shadow-md active:cursor-grabbing ${
-                      c.demoAt ? "border-green-300 bg-green-50" : "border-slate-200 bg-white"
+                      c.demoAt ? "border-green-400 border-l-4 border-l-green-600 bg-green-100" : "border-slate-200 bg-white"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">

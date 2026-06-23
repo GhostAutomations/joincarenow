@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { CalendarClock } from "lucide-react";
 import { scheduleDemo, type ProspectState } from "@/modules/prospects/actions";
-import { DateTimePicker } from "@/components/ui/datetime-picker";
+import { DemoDateTime } from "@/components/dashboard/demo-datetime";
 
 type Contact = { id: string; name: string | null; email: string | null };
 

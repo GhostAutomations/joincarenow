@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, CalendarClock } from "lucide-react";
 import { scheduleDemo, getProspectContacts, type ProspectState } from "@/modules/prospects/actions";
-import { DateTimePicker } from "@/components/ui/datetime-picker";
+import { DemoDateTime } from "@/components/dashboard/demo-datetime";
 
 type Contact = { id: string; name: string | null; email: string | null };
 
@@ -55,7 +55,7 @@ export function DemoScheduleModal({ prospectId, name, onClose }: { prospectId: s
             </label>
             <div>
               <label className="block text-sm font-medium text-gray-700">Date &amp; time</label>
-              <div className="mt-1"><DateTimePicker name="at" minToday /></div>
+              <div className="mt-1"><DemoDateTime name="at" /></div>
             </div>
             <label className="block text-sm font-medium text-gray-700">
               Length

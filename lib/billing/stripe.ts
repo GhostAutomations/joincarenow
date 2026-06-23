@@ -181,6 +181,22 @@ export async function syncBranchQuantity(subscriptionId: string | null, quantity
   if (!branchPrice) return;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const existing = items.find((it: any) => it?.price?.id === PRICES.branch || it?.price?.id === PRICES.branchYear);
+
+  // If an existing branch item is on the wrong interval (e.g. a £7.50/mo item on
+  // a yearly plan), swap it: remove it and re-add at the correct interval price.
+  if (existing && existing.price?.id !== branchPrice) {
+    await stripeRequest(`/subscription_items/${existing.id}`, "DELETE", { proration_behavior: "create_prorations" });
+    if (quantity > 0) {
+      await stripeRequest("/subscription_items", "POST", {
+        subscription: subscriptionId,
+        price: branchPrice,
+        quantity,
+        proration_behavior: "always_invoice",
+      });
+    }
+    return;
+  }
+
   if (existing) {
     const oldQty = (existing.quantity as number) ?? 0;
     if (quantity === oldQty) return;

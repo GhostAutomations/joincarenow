@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyStripeSignature } from "@/lib/billing/stripe";
 import { sendBrandedEmail } from "@/lib/comms/branded";
+import { syncExtraBranches } from "@/lib/billing/branches";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,6 +75,9 @@ export async function POST(req: Request) {
           .from("companies")
           .update({ stripe_subscription_id: obj.subscription as string, billing_status: "active", setup_fee_paid: true })
           .eq("id", id);
+
+        // Reconcile existing branches onto the new subscription (interval-matched).
+        await syncExtraBranches(id);
 
         // Branded "subscription confirmed" email (JCN-branded platform email).
         const to = (obj.customer_details?.email as string) ?? null;

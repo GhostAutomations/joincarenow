@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const WEEK = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
+const HOURS = Array.from({ length: 14 }, (_, i) => String(i + 7).padStart(2, "0")); // 07–20
 const MINUTES = ["00", "15", "30", "45"];
 
 /** Inline calendar (click a day) + time dropdown. Emits "YYYY-MM-DDTHH:MM" in a

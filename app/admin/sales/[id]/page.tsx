@@ -9,6 +9,7 @@ import { stopEnrolment } from "@/modules/prospects/sequence-actions";
 import { ProspectStageSelect } from "@/components/dashboard/prospect-stage-select";
 import { ProspectComposer } from "@/components/dashboard/prospect-composer";
 import { ProspectAiDraft } from "@/components/dashboard/prospect-ai-draft";
+import { ProspectDemo } from "@/components/dashboard/prospect-demo";
 import { ProspectEnrol } from "@/components/dashboard/prospect-enrol";
 
 const input = "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -184,6 +185,8 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
             <ProspectComposer companyId={id} contacts={conts} />
             <ProspectAiDraft companyId={id} contacts={conts} />
           </section>
+
+          <ProspectDemo prospectId={id} contacts={conts} demoAt={c.demo_at ?? null} />
 
           <section className="mt-6 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
             <h2 className="text-sm font-semibold text-gray-900">Activity</h2>

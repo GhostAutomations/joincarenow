@@ -7,6 +7,9 @@ import { sendEmail, sendSms, renderMergeFields } from "@/lib/comms/send";
 import { buildProspectEmail } from "@/lib/comms/email-template";
 import { buildAndInsertDraft } from "@/lib/prospects/ai-drafts";
 import { autoStage } from "@/lib/prospects/auto-stage";
+import { scheduleProspectDemo } from "@/lib/prospects/demo";
+import { sendProposalEmail } from "@/lib/prospects/proposal";
+import { provisionCompanyFromProspect } from "@/lib/prospects/provision";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/prospects";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -93,8 +96,48 @@ export async function updateStage(formData: FormData): Promise<void> {
     meta: { from: before?.stage, to: stage },
   });
 
+  // Stage automations (best-effort — the move is already saved).
+  if (before?.stage !== stage) {
+    try {
+      if (stage === "proposal") await sendProposalEmail(supabase as unknown as SupabaseClient, id);
+      if (stage === "won") await provisionCompanyFromProspect(supabase as unknown as SupabaseClient, id);
+    } catch {
+      /* automation failed; stage move stands */
+    }
+  }
+
   revalidatePath("/admin/sales");
   revalidatePath(`/admin/sales/${id}`);
+}
+
+/** Founder sets the demo video link (Zoom/Meet) used in demo invites. */
+export async function setVideoLink(formData: FormData): Promise<void> {
+  const { supabase } = await requirePlatformAdmin();
+  const link = (formData.get("video_link")?.toString() ?? "").trim();
+  await supabase
+    .from("platform_settings")
+    .upsert({ key: "prospect_video_link", value: link, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  revalidatePath("/admin/sales/settings");
+}
+
+/** Book a demo with a prospect contact (sends a branded calendar invite). */
+export async function scheduleDemo(_prev: ProspectState, formData: FormData): Promise<ProspectState> {
+  const { supabase } = await requirePlatformAdmin();
+  const prospectId = formData.get("id")?.toString();
+  const contactId = formData.get("contactId")?.toString();
+  const at = formData.get("at")?.toString();
+  const duration = parseInt(formData.get("duration")?.toString() ?? "30", 10) || 30;
+  if (!prospectId || !contactId || !at) return { error: "Pick a contact and a time." };
+  const startIso = new Date(at).toISOString();
+  if (Number.isNaN(Date.parse(startIso))) return { error: "That date/time looks invalid." };
+
+  const r = await scheduleProspectDemo(supabase as unknown as SupabaseClient, {
+    prospectId, contactId, startIso, durationMinutes: duration,
+  });
+  revalidatePath(`/admin/sales/${prospectId}`);
+  revalidatePath("/admin/sales");
+  if (r.error) return { error: r.error };
+  return { ok: true };
 }
 
 /** Add a free-text note to the timeline. */

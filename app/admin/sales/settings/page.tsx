@@ -3,7 +3,7 @@ import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSendWindow } from "@/lib/prospects/send-window";
 import { getAutoSendMode } from "@/lib/prospects/ai-drafts";
-import { setSendWindow } from "@/modules/prospects/actions";
+import { setSendWindow, setVideoLink } from "@/modules/prospects/actions";
 import { AutoSendToggle } from "@/components/dashboard/autosend-toggle";
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
@@ -12,7 +12,12 @@ const hourLabel = (h: number) => `${String(h).padStart(2, "0")}:00`;
 export default async function CrmSettingsPage() {
   await requirePlatformAdmin();
   const db = createAdminClient();
-  const [win, autoSendMode] = await Promise.all([getSendWindow(db), getAutoSendMode(db)]);
+  const [win, autoSendMode, { data: vlRow }] = await Promise.all([
+    getSendWindow(db),
+    getAutoSendMode(db),
+    db.from("platform_settings").select("value").eq("key", "prospect_video_link").maybeSingle(),
+  ]);
+  const videoLink = (vlRow?.value as string) ?? "";
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -63,6 +68,24 @@ export default async function CrmSettingsPage() {
         <div className="mt-4">
           <AutoSendToggle mode={autoSendMode} />
         </div>
+      </section>
+
+      {/* Demo video link */}
+      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900">Demo video link</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Your Zoom or Google Meet link. It&apos;s included in every demo calendar invite you send from a prospect.
+        </p>
+        <form action={setVideoLink} className="mt-4 flex flex-wrap items-end gap-2">
+          <input
+            name="video_link"
+            type="url"
+            defaultValue={videoLink}
+            placeholder="https://us05web.zoom.us/j/your-personal-room"
+            className="min-w-[280px] flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+          <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">Save link</button>
+        </form>
       </section>
     </div>
   );

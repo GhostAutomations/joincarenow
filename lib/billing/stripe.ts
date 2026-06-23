@@ -173,9 +173,10 @@ export async function syncBranchQuantity(subscriptionId: string | null, quantity
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sub = (await getSubscription(subscriptionId)) as any;
   const items = sub?.items?.data ?? [];
-  // Match the branch add-on interval to the base plan (no mixed intervals).
+  // Match the branch add-on interval to the plan. Detect it from the base
+  // plan's recurring interval (robust — no dependency on env price-ID matching).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const isYear = items.some((it: any) => it?.price?.id === PRICES.annual);
+  const isYear = items.some((it: any) => it?.price?.recurring?.interval === "year");
   const branchPrice = isYear ? PRICES.branchYear : PRICES.branch;
   if (!branchPrice) return;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

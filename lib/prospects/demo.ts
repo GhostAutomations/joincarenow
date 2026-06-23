@@ -11,12 +11,29 @@ export async function scheduleProspectDemo(
 ): Promise<{ ok?: boolean; error?: string }> {
   const { prospectId, contactId, startIso, durationMinutes } = opts;
 
-  const [{ data: company }, { data: contact }, { data: vlRow }] = await Promise.all([
+  const startMs = Date.parse(startIso);
+  if (Number.isNaN(startMs)) return { error: "That date/time looks invalid." };
+  if (startMs <= Date.now()) return { error: "Pick a time in the future." };
+  const endIso = new Date(startMs + durationMinutes * 60000).toISOString();
+
+  const [{ data: company }, { data: contact }, { data: vlRow }, { data: clashes }] = await Promise.all([
     db.from("prospect_companies").select("name").eq("id", prospectId).single(),
     db.from("prospect_contacts").select("name, email").eq("id", contactId).single(),
     db.from("platform_settings").select("value").eq("key", "prospect_video_link").maybeSingle(),
+    // Overlap: an existing demo that starts before this ends and ends after this starts.
+    db.from("prospect_companies")
+      .select("name, demo_at")
+      .neq("id", prospectId)
+      .not("demo_at", "is", null)
+      .lt("demo_at", endIso)
+      .gt("demo_end_at", startIso)
+      .limit(1),
   ]);
   if (!contact?.email) return { error: "That contact has no email address." };
+  if (clashes && clashes.length > 0) {
+    const clashWhen = new Date(clashes[0].demo_at as string).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    return { error: `That time clashes with a demo for ${clashes[0].name} (${clashWhen}). Pick another slot.` };
+  }
 
   const videoLink = ((vlRow?.value as string) || "").trim();
   const companyName = (company?.name as string) ?? "your team";
@@ -51,7 +68,7 @@ export async function scheduleProspectDemo(
     attachments: [{ filename: "demo.ics", content: ics }],
   });
 
-  await db.from("prospect_companies").update({ demo_at: startIso, demo_contact_id: contactId }).eq("id", prospectId);
+  await db.from("prospect_companies").update({ demo_at: startIso, demo_end_at: endIso, demo_contact_id: contactId }).eq("id", prospectId);
   await db.from("prospect_activities").insert({
     prospect_company_id: prospectId,
     contact_id: contactId,

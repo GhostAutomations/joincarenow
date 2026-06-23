@@ -2,6 +2,20 @@ import Link from "next/link";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ExportCsvButton } from "@/components/dashboard/export-csv-button";
+import { recordBillingSnapshot } from "@/lib/billing/snapshot";
+
+/** Build an SVG polyline (and min/max) from a numeric series. */
+function sparkline(values: number[], w = 600, h = 100, pad = 8) {
+  if (values.length < 2) return null;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const stepX = (w - pad * 2) / (values.length - 1);
+  const points = values
+    .map((v, i) => `${(pad + i * stepX).toFixed(1)},${(pad + (h - pad * 2) * (1 - (v - min) / range)).toFixed(1)}`)
+    .join(" ");
+  return { points, min, max };
+}
 
 type Row = {
   id: string;
@@ -38,6 +52,15 @@ export default async function AdminBillingPage({
   await requirePlatformAdmin();
   const { q, status: statusFilter, plan: planFilter } = await searchParams;
   const db = createAdminClient();
+
+  // Capture today's snapshot (idempotent per day) so trends build from now on.
+  await recordBillingSnapshot();
+  const { data: snaps } = await db
+    .from("billing_snapshots")
+    .select("snapshot_date, mrr")
+    .order("snapshot_date", { ascending: true });
+  const series = (snaps ?? []) as { snapshot_date: string; mrr: number }[];
+  const chart = sparkline(series.map((s) => Number(s.mrr)));
 
   const [{ data: companies }, { data: usage }] = await Promise.all([
     db.from("companies")
@@ -123,6 +146,25 @@ export default async function AdminBillingPage({
           </div>
         ))}
       </div>
+
+      {/* MRR trend */}
+      {chart ? (
+        <div className="mt-3 rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-white">MRR trend</p>
+            <p className="text-xs text-white/70">{series.length} day{series.length === 1 ? "" : "s"}</p>
+          </div>
+          <svg viewBox="0 0 600 100" preserveAspectRatio="none" className="mt-2 h-24 w-full">
+            <polyline points={chart.points} fill="none" stroke="white" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+          </svg>
+          <div className="mt-1 flex justify-between text-xs text-white/70">
+            <span>{money(chart.min)}</span>
+            <span>{money(chart.max)}</span>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-3 text-xs text-white/60">MRR trend builds over time — a daily snapshot is recorded automatically.</p>
+      )}
 
       {/* Revenue by plan */}
       <div className="mt-3 flex flex-wrap gap-2 text-xs">

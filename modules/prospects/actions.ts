@@ -152,7 +152,7 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
   const res = await sendBrandedEmail(supabase as unknown as SupabaseClient, null, {
     to: contact.email as string,
     subject,
-    text: `${message}\n\nAccept: ${respondUrl("accept")}\nDecline: ${respondUrl("decline")}`,
+    text: message,
     ctas: [
       { label: "Accept proposal", url: respondUrl("accept"), style: "primary" },
       { label: "Decline", url: respondUrl("decline"), style: "ghost" },

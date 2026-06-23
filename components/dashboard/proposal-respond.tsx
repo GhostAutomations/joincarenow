@@ -77,19 +77,25 @@ export function ProposalRespond({
         >
           <Check className="h-4 w-4" /> {pending ? "Saving…" : "Accept proposal"}
         </button>
-        <button
-          onClick={() => respond("declined")}
-          disabled={pending}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-70"
-        >
-          <X className="h-4 w-4" /> Decline
-        </button>
+        {/* Hide Decline when they arrived via the Accept button; keep both when
+            they arrived via Decline so they can still change their mind. */}
+        {initialChoice !== "accept" && (
+          <button
+            onClick={() => respond("declined")}
+            disabled={pending}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-70"
+          >
+            <X className="h-4 w-4" /> Decline
+          </button>
+        )}
       </div>
-      {initialChoice && (
-        <p className="mt-3 text-center text-xs text-gray-400">
-          You clicked “{initialChoice === "accept" ? "Accept" : "Decline"}” — please confirm above.
-        </p>
-      )}
+      <p className="mt-3 text-center text-xs text-gray-400">
+        {initialChoice === "accept"
+          ? "Please confirm to accept your proposal."
+          : initialChoice === "decline"
+          ? "Changed your mind? You can still accept above."
+          : "Choose an option above to confirm."}
+      </p>
     </div>
   );
 }

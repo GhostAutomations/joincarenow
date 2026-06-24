@@ -64,7 +64,7 @@ export async function provisionCompanyFromProspect(
       text:
         `Hi ${firstName},\n\n` +
         `Great to have you on board. Your Join Care Now account for ${prospect.name} is ready.\n\n` +
-        `Click below to set your password and log in. From there you can add your jobs, branding and team.\n\n${link}\n\n` +
+        `Click the button below to set your password and log in. From there you can add your jobs, branding and team.\n\n` +
         `Welcome aboard,\nThe Join Care Now team`,
       cta: { label: "Set up your account", url: link },
     });

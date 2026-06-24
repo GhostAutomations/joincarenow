@@ -189,9 +189,9 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
 }
 
 /** Public (no-login) — a prospect accepts or declines a proposal via the token
- *  link in the proposal email. Records the answer, logs it and (on decline)
- *  moves the card to Lost. Accept does NOT auto-provision — the founder closes
- *  to Won manually so billing/account setup happens on their terms. */
+ *  link in the proposal email. Accept auto-closes the prospect to Won (which
+ *  creates their company + sends the admin invite); Decline moves it to Lost.
+ *  The founder's board updates live via realtime. */
 export async function recordProposalResponse(
   token: string,
   response: "accepted" | "declined"
@@ -207,10 +207,10 @@ export async function recordProposalResponse(
 
   const nowIso = new Date().toISOString();
   const update: Record<string, unknown> = { proposal_response: response, proposal_responded_at: nowIso, updated_at: nowIso };
-  // A declined proposal moves the prospect to Lost. Accept is left for the
-  // founder to close to Won (controls provisioning + billing timing).
-  if (response === "declined" && prospect.stage !== "lost") {
-    update.stage = "lost";
+  const targetStage = response === "accepted" ? "won" : "lost";
+  const movedStage = prospect.stage !== targetStage;
+  if (movedStage) {
+    update.stage = targetStage;
     update.stage_changed_at = nowIso;
   }
   await db.from("prospect_companies").update(update).eq("id", prospect.id);
@@ -218,9 +218,29 @@ export async function recordProposalResponse(
   await db.from("prospect_activities").insert({
     prospect_company_id: prospect.id,
     type: "system",
-    body: response === "accepted" ? "✅ Prospect ACCEPTED the proposal." : "✗ Prospect DECLINED the proposal.",
+    body: response === "accepted"
+      ? "✅ Prospect ACCEPTED the proposal — moved to Won."
+      : "✗ Prospect DECLINED the proposal — moved to Lost.",
     meta: { proposal_response: response },
   });
+
+  if (movedStage) {
+    await db.from("prospect_activities").insert({
+      prospect_company_id: prospect.id,
+      type: "stage_change",
+      body: `${STAGE_LABEL[(prospect.stage as Stage) ?? "new"]} → ${STAGE_LABEL[targetStage as Stage]}`,
+      meta: { from: prospect.stage, to: targetStage, via: "proposal_response" },
+    });
+  }
+
+  // On Won: create the company tenant + send the admin invite (idempotent).
+  if (response === "accepted") {
+    try {
+      await provisionCompanyFromProspect(db as unknown as SupabaseClient, prospect.id as string);
+    } catch {
+      /* provisioning failed; the Won move stands and can be retried */
+    }
+  }
 
   revalidatePath("/admin/sales");
   revalidatePath(`/admin/sales/${prospect.id}`);

@@ -51,7 +51,7 @@ export function ProposalRespond({
         </h2>
         <p className="mt-1 text-sm text-gray-600">
           {done === "accepted"
-            ? "We've let the team know. We'll be in touch shortly to get your account set up."
+            ? "Welcome aboard! We're setting up your account now — keep an eye on your inbox for an email to log in and get started."
             : "No problem at all. If anything changes, just reply to our email — we'd love to help."}
         </p>
       </div>

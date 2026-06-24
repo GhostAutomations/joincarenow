@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { requireCompany } from "@/modules/auth/queries";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Topbar } from "@/components/dashboard/topbar";
@@ -19,6 +20,14 @@ export default async function DashboardLayout({
   const ctx = await requireCompany();
   const { supabase, profile, current } = ctx;
   const acting = "acting" in ctx && ctx.acting === true;
+
+  // Subscription-agreement gate: a real customer admin must e-sign before the
+  // dashboard unlocks. Founder / "managing as" and non-admins are not gated.
+  if (!acting && !profile?.is_platform_admin && current.role === "admin") {
+    const { data: signed } = await supabase
+      .from("company_agreements").select("id").eq("company_id", current.company_id).limit(1);
+    if (!signed || signed.length === 0) redirect("/agreement");
+  }
 
   const { data: companyRow } = await supabase
     .from("companies").select("settings, created_at").eq("id", current.company_id).single();

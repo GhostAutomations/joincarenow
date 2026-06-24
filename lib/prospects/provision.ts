@@ -15,7 +15,7 @@ export async function provisionCompanyFromProspect(
 ): Promise<{ ok?: boolean; error?: string; companyId?: string }> {
   const { data: prospect } = await db
     .from("prospect_companies")
-    .select("name, provisioned_company_id")
+    .select("name, provisioned_company_id, proposed_plan, proposed_offer")
     .eq("id", prospectId)
     .single();
   if (!prospect) return { error: "Prospect not found." };
@@ -53,6 +53,12 @@ export async function provisionCompanyFromProspect(
   if (!companyId) return { error: "Could not create the company." };
 
   await db.from("prospect_companies").update({ provisioned_company_id: companyId }).eq("id", prospectId);
+  // Carry the sold plan + any concession onto the company so the subscription
+  // agreement (signed at account setup) reflects what they were sold.
+  await db.from("companies").update({
+    agreed_plan: (prospect.proposed_plan as string) ?? null,
+    agreed_offer: (prospect.proposed_offer as string) ?? null,
+  }).eq("id", companyId);
 
   let note = "no admin email on file — invite manually";
   if (admin?.email && inviteToken) {

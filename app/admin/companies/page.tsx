@@ -5,12 +5,17 @@ import { CompanyForm } from "@/components/dashboard/company-form";
 import { DeleteCompany } from "@/components/dashboard/delete-company";
 import { InviteForm } from "@/components/dashboard/invite-form";
 import { PendingInvites } from "@/components/dashboard/pending-invites";
+import { parseConcession, describeConcession } from "@/lib/billing/concession";
 type AdminRow = {
   company_id: string;
   profiles: { full_name: string | null; email: string } | null;
 };
 
-const PLAN_LABEL: Record<string, string> = { monthly: "Monthly", commit: "12-month", annual: "Annual" };
+const PLAN_LABEL: Record<string, string> = {
+  monthly: "12 Month + Setup",
+  commit: "12 Month Fixed",
+  annual: "Annual",
+};
 
 /** Read-only billing status for a company (customers subscribe via the CRM
  *  onboarding + Stripe, so the founder doesn't set a plan here). */
@@ -42,7 +47,7 @@ export default async function CompaniesPage() {
 
   const [{ data: companies }, { data: admins }, { data: adminInvites }] =
     await Promise.all([
-      supabase.from("companies").select("id, name, slug, billing_status, billing_comped, billing_interval, agreed_plan").order("name"),
+      supabase.from("companies").select("id, name, slug, billing_status, billing_comped, billing_interval, agreed_plan, agreed_offer").order("name"),
       supabase
         .from("company_users")
         .select("company_id, profiles ( full_name, email )")
@@ -152,14 +157,25 @@ export default async function CompaniesPage() {
 
                 {(() => {
                   const b = billingStatus(c as Parameters<typeof billingStatus>[0]);
+                  const offer = describeConcession(parseConcession((c as { agreed_offer?: string | null }).agreed_offer ?? null));
                   return (
-                    <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
-                      <span className="text-sm text-gray-600">Subscription</span>
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.cls}`}>{b.label}</span>
-                      {b.plan && <span className="text-xs text-gray-500">· {b.plan}</span>}
-                      <a href={`/admin/billing/${c.id}`} className="ml-auto text-xs font-medium text-brand-600 hover:underline">
-                        Billing details →
-                      </a>
+                    <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-20 shrink-0 text-sm text-gray-600">Subscription</span>
+                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.cls}`}>{b.label}</span>
+                        {b.plan && <span className="text-xs text-gray-500">· {b.plan}</span>}
+                        <a href={`/admin/billing/${c.id}`} className="ml-auto text-xs font-medium text-brand-600 hover:underline">
+                          Billing details →
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-20 shrink-0 text-sm text-gray-600">Sign-up offer</span>
+                        {offer ? (
+                          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">{offer}</span>
+                        ) : (
+                          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-400">No offer</span>
+                        )}
+                      </div>
                     </div>
                   );
                 })()}

@@ -62,6 +62,9 @@ export default async function BillingPage() {
 
   const customerId = company?.stripe_customer_id as string | null;
   const invoices = active && customerId ? await listInvoices(customerId) : [];
+  const { data: agreementRow } = await supabase
+    .from("company_agreements").select("agreed_at, signer_name").eq("company_id", current.company_id)
+    .order("agreed_at", { ascending: false }).limit(1).maybeSingle();
   const money = (pence: number) => "£" + (pence / 100).toFixed(2);
 
   return (
@@ -174,6 +177,23 @@ export default async function BillingPage() {
               </ul>
             )}
           </CollapsibleSection>
+
+          {agreementRow && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-900">Your subscription agreement</p>
+                <p className="text-xs text-gray-500">
+                  Signed {new Date(agreementRow.agreed_at as string).toLocaleDateString("en-GB")} by {agreementRow.signer_name as string}
+                </p>
+              </div>
+              <a
+                href="/api/agreement/pdf"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <Download className="h-3.5 w-3.5" /> Download PDF
+              </a>
+            </div>
+          )}
         </div>
       ) : (
         /* Not subscribed — pricing card */

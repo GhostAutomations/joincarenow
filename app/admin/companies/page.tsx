@@ -45,7 +45,7 @@ function billingStatus(c: {
 export default async function CompaniesPage() {
   const { supabase } = await requirePlatformAdmin();
 
-  const [{ data: companies }, { data: admins }, { data: adminInvites }] =
+  const [{ data: companies }, { data: admins }, { data: adminInvites }, { data: agreements }] =
     await Promise.all([
       supabase.from("companies").select("id, name, slug, billing_status, billing_comped, billing_interval, agreed_plan, agreed_offer").order("name"),
       supabase
@@ -58,7 +58,18 @@ export default async function CompaniesPage() {
         .eq("status", "pending")
         .eq("role", "admin")
         .order("created_at", { ascending: false }),
+      supabase
+        .from("company_agreements")
+        .select("company_id, signer_name, agreed_at")
+        .order("agreed_at", { ascending: false }),
     ]);
+
+  const agreementByCompany = new Map<string, { signer_name: string; agreed_at: string }>();
+  for (const ag of agreements ?? []) {
+    if (!agreementByCompany.has(ag.company_id)) {
+      agreementByCompany.set(ag.company_id, { signer_name: ag.signer_name as string, agreed_at: ag.agreed_at as string });
+    }
+  }
 
   const adminsByCompany = new Map<string, AdminRow[]>();
   for (const a of (admins ?? []) as unknown as AdminRow[]) {
@@ -176,6 +187,27 @@ export default async function CompaniesPage() {
                           <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-400">No offer</span>
                         )}
                       </div>
+                      {(() => {
+                        const ag = agreementByCompany.get(c.id);
+                        return (
+                          <div className="flex items-center gap-2">
+                            <span className="w-20 shrink-0 text-sm text-gray-600">Agreement</span>
+                            {ag ? (
+                              <>
+                                <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                                  Signed {new Date(ag.agreed_at).toLocaleDateString("en-GB")}
+                                </span>
+                                <span className="text-xs text-gray-500">by {ag.signer_name}</span>
+                                <a href={`/api/agreement/pdf?company=${c.id}`} className="ml-auto text-xs font-medium text-brand-600 hover:underline">
+                                  Download PDF
+                                </a>
+                              </>
+                            ) : (
+                              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-400">Not signed</span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })()}

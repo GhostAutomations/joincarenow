@@ -20,7 +20,7 @@ export default async function ActivatePage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  const ctx = await requireCompany();
+  const ctx = await requireCompany({ allowSetup: true });
   const acting = "acting" in ctx && ctx.acting === true;
   if (acting || ctx.profile?.is_platform_admin) redirect("/dashboard");
   if (ctx.current.role !== "admin") redirect("/dashboard"); // managers can't pay; don't gate them here

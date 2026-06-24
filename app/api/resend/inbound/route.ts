@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { autoStage } from "@/lib/prospects/auto-stage";
+import { isProduction } from "@/lib/security/prod";
 
 export const runtime = "nodejs";
 
@@ -63,7 +64,9 @@ export async function POST(req: Request) {
   const apiKey = process.env.RESEND_API_KEY;
   const rawBody = await req.text();
 
-  if (secret && !verifySvix(secret, req.headers, rawBody)) {
+  if (!secret) {
+    if (isProduction()) return new Response("Webhook not configured", { status: 500 });
+  } else if (!verifySvix(secret, req.headers, rawBody)) {
     return new Response("Invalid signature", { status: 403 });
   }
 

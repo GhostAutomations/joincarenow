@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyStripeSignature } from "@/lib/billing/stripe";
+import { isProduction } from "@/lib/security/prod";
 import { sendBrandedEmail } from "@/lib/comms/branded";
 import { syncExtraBranches } from "@/lib/billing/branches";
 
@@ -23,7 +24,10 @@ function periodEnd(sub: any): string | null {
 export async function POST(req: Request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   const raw = await req.text();
-  if (secret && !verifyStripeSignature(raw, req.headers.get("stripe-signature"), secret)) {
+  if (!secret) {
+    // Fail closed in production; allow unsigned in dev for local testing.
+    if (isProduction()) return new Response("Webhook not configured", { status: 500 });
+  } else if (!verifyStripeSignature(raw, req.headers.get("stripe-signature"), secret)) {
     return new Response("Invalid signature", { status: 403 });
   }
 

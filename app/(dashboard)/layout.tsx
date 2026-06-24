@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { requireCompany } from "@/modules/auth/queries";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Topbar } from "@/components/dashboard/topbar";
@@ -17,23 +16,12 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // requireCompany() enforces the account-setup gates (sign agreement, then pay
+  // to activate) for a real customer admin — including for the server actions
+  // these pages call, not just navigation.
   const ctx = await requireCompany();
   const { supabase, profile, current } = ctx;
   const acting = "acting" in ctx && ctx.acting === true;
-
-  // Account-setup gates for a real customer admin (founder / "managing as" and
-  // non-admins are never gated): 1) e-sign the subscription agreement, then
-  // 2) pay to activate, before the dashboard unlocks.
-  if (!acting && !profile?.is_platform_admin && current.role === "admin") {
-    const [{ data: signed }, { data: billing }] = await Promise.all([
-      supabase.from("company_agreements").select("id").eq("company_id", current.company_id).limit(1),
-      supabase.from("companies").select("billing_status, billing_comped").eq("id", current.company_id).single(),
-    ]);
-    if (!signed || signed.length === 0) redirect("/agreement");
-    const status = (billing?.billing_status as string) ?? "none";
-    const active = billing?.billing_comped === true || status === "active" || status === "trialing";
-    if (!active) redirect("/activate");
-  }
 
   const { data: companyRow } = await supabase
     .from("companies").select("settings, created_at").eq("id", current.company_id).single();

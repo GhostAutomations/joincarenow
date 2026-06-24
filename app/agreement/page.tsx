@@ -7,7 +7,7 @@ import { AgreementSign } from "@/components/agreements/agreement-sign";
  *  here before the dashboard unlocks. Outside the dashboard layout so the gate
  *  can't redirect-loop. */
 export default async function AgreementPage() {
-  const ctx = await requireCompany();
+  const ctx = await requireCompany({ allowSetup: true });
   const acting = "acting" in ctx && ctx.acting === true;
   // Founder / "managing as" is never gated, and non-admins can't sign.
   if (acting || ctx.profile?.is_platform_admin) redirect("/dashboard");

@@ -16,7 +16,7 @@ function planToCheckout(plan: AgreedPlan | null): { interval: "month" | "year"; 
 /** New customer pays to activate: starts Checkout for the plan they were sold,
  *  with any agreed concession applied (free months, custom price, SMS bonus). */
 export async function startActivationCheckout(): Promise<void> {
-  const { current, profile } = await requireCompany();
+  const { current, profile } = await requireCompany({ allowSetup: true });
   if (current.role !== "admin") return;
 
   const db = createAdminClient();
@@ -56,7 +56,7 @@ export async function startActivationCheckout(): Promise<void> {
 
 /** Company admin starts a subscription checkout (monthly or annual). */
 export async function startCheckout(formData: FormData): Promise<void> {
-  const { current, profile } = await requireCompany();
+  const { current, profile } = await requireCompany({ allowSetup: true });
   if (current.role !== "admin") return;
   const interval = formData.get("interval") === "year" ? "year" : "month";
   const commit = formData.get("commit") === "true";
@@ -84,7 +84,7 @@ export async function startCheckout(formData: FormData): Promise<void> {
 
 /** Company admin opens the Stripe Customer Portal to manage their subscription. */
 export async function openBillingPortal(): Promise<void> {
-  const { current } = await requireCompany();
+  const { current } = await requireCompany({ allowSetup: true });
   if (current.role !== "admin") return;
   const db = createAdminClient();
   const { data: company } = await db

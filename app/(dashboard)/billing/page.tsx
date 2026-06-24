@@ -27,7 +27,7 @@ function monthStartIso() {
 }
 
 export default async function BillingPage() {
-  const { supabase, current } = await requireCompany();
+  const { supabase, current } = await requireCompany({ allowSetup: true });
   const isAdmin = current.role === "admin";
 
   const { data: company } = await supabase

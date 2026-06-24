@@ -10,7 +10,7 @@ export type AgreementState = { error?: string } | undefined;
  *  tick). Only a real company admin can sign; the founder "managing as" a
  *  company is never gated and does not sign on the customer's behalf. */
 export async function signAgreement(_prev: AgreementState, formData: FormData): Promise<AgreementState> {
-  const ctx = await requireCompany();
+  const ctx = await requireCompany({ allowSetup: true });
   const acting = "acting" in ctx && ctx.acting === true;
   if (acting || ctx.profile?.is_platform_admin) redirect("/dashboard");
   if (ctx.current.role !== "admin") return { error: "Only a company admin can accept the agreement." };

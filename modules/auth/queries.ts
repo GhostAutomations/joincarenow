@@ -49,7 +49,15 @@ export async function getMemberships() {
 
 /** Require at least one company membership. Founders go to their console;
  *  applicants go to their portal; anyone else has no access. */
-export async function requireCompany() {
+/**
+ * Resolve the caller's company context. By default this also ENFORCES the
+ * account-setup gates for a real customer admin (sign the subscription
+ * agreement, then activate billing) — so the gate holds for server actions too,
+ * not just page navigation. Pass `{ allowSetup: true }` on the setup screens
+ * themselves (agreement, activate, billing) and the actions that run them, so
+ * they don't redirect-loop.
+ */
+export async function requireCompany(opts?: { allowSetup?: boolean }) {
   const ctx = await getMemberships();
 
   // Founder "managing as" a company: resolve current to the cookie's company so
@@ -87,7 +95,22 @@ export async function requireCompany() {
     redirect(applicant ? "/portal" : "/no-access");
   }
   // Single-company users go straight in; multi-company picker comes later.
-  return { ...ctx, current: ctx.memberships[0] };
+  const current = ctx.memberships[0];
+
+  // Account-setup gate (real customer admins only — not founders, not managers/
+  // recruiters who can't pay). Enforced here so it covers server actions too.
+  if (!opts?.allowSetup && current.role === "admin") {
+    const [{ data: signed }, { data: co }] = await Promise.all([
+      ctx.supabase.from("company_agreements").select("id").eq("company_id", current.company_id).limit(1),
+      ctx.supabase.from("companies").select("billing_status, billing_comped").eq("id", current.company_id).single(),
+    ]);
+    if (!signed || signed.length === 0) redirect("/agreement");
+    const status = (co?.billing_status as string) ?? "none";
+    const active = co?.billing_comped === true || status === "active" || status === "trialing";
+    if (!active) redirect("/activate");
+  }
+
+  return { ...ctx, current };
 }
 
 /** Resolve the client + target company for a settings write. A platform admin

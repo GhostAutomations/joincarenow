@@ -32,7 +32,7 @@ export default async function BillingPage() {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id, commitment_until, billing_comped")
+    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id, commitment_until, billing_comped, sms_bonus")
     .eq("id", current.company_id)
     .single();
 
@@ -51,7 +51,8 @@ export default async function BillingPage() {
     .gte("created_at", monthStartIso());
   const sms = (usage ?? []).filter((u) => u.kind === "sms").reduce((s, u) => s + (u.quantity ?? 0), 0);
   const ai = (usage ?? []).filter((u) => u.kind === "ai").reduce((s, u) => s + (u.quantity ?? 0), 0);
-  const smsPct = Math.min(100, Math.round((sms / 100) * 100));
+  const smsAllowance = 100 + ((company?.sms_bonus as number) ?? 0);
+  const smsPct = Math.min(100, Math.round((sms / smsAllowance) * 100));
 
   const { data: branches } = await supabase
     .from("branches")
@@ -112,11 +113,11 @@ export default async function BillingPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <p className="flex items-center gap-2 text-sm text-gray-500"><MessageSquareText className="h-4 w-4 text-brand-600" /> SMS sent</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900">{sms}<span className="text-sm font-normal text-gray-400"> / 100</span></p>
+              <p className="mt-1 text-3xl font-bold text-gray-900">{sms}<span className="text-sm font-normal text-gray-400"> / {smsAllowance}</span></p>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                 <div className="h-full rounded-full bg-brand-500" style={{ width: `${smsPct}%` }} />
               </div>
-              <p className="mt-1.5 text-xs text-gray-400">{sms > 100 ? `${sms - 100} over — 8p each` : "100 included, then 8p"}</p>
+              <p className="mt-1.5 text-xs text-gray-400">{sms > smsAllowance ? `${sms - smsAllowance} over — 8p each` : `${smsAllowance} included, then 8p`}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <p className="flex items-center gap-2 text-sm text-gray-500"><Sparkles className="h-4 w-4 text-brand-600" /> AI actions</p>

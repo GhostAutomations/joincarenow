@@ -10,15 +10,15 @@ export default async function AgreementPage() {
   const ctx = await requireCompany();
   const acting = "acting" in ctx && ctx.acting === true;
   // Founder / "managing as" is never gated, and non-admins can't sign.
-  if (acting || ctx.profile?.is_platform_admin) redirect("/");
-  if (ctx.current.role !== "admin") redirect("/");
+  if (acting || ctx.profile?.is_platform_admin) redirect("/dashboard");
+  if (ctx.current.role !== "admin") redirect("/dashboard");
 
   const { supabase, current } = ctx;
 
   // Already signed → straight in.
   const { data: existing } = await supabase
     .from("company_agreements").select("id").eq("company_id", current.company_id).limit(1);
-  if (existing && existing.length > 0) redirect("/");
+  if (existing && existing.length > 0) redirect("/dashboard");
 
   const { data: company } = await supabase
     .from("companies").select("name, agreed_plan, agreed_offer").eq("id", current.company_id).single();

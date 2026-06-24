@@ -22,8 +22,8 @@ export default async function ActivatePage({
 }) {
   const ctx = await requireCompany();
   const acting = "acting" in ctx && ctx.acting === true;
-  if (acting || ctx.profile?.is_platform_admin) redirect("/");
-  if (ctx.current.role !== "admin") redirect("/"); // managers can't pay; don't gate them here
+  if (acting || ctx.profile?.is_platform_admin) redirect("/dashboard");
+  if (ctx.current.role !== "admin") redirect("/dashboard"); // managers can't pay; don't gate them here
 
   const { supabase, current } = ctx;
   const { status: qStatus } = await searchParams;
@@ -34,7 +34,7 @@ export default async function ActivatePage({
     .eq("id", current.company_id)
     .single();
 
-  if (isActive((company?.billing_status as string) ?? null, company?.billing_comped === true)) redirect("/");
+  if (isActive((company?.billing_status as string) ?? null, company?.billing_comped === true)) redirect("/dashboard");
 
   const plan = (company?.agreed_plan as string) ?? "monthly";
   const concession = describeConcession(parseConcession(company?.agreed_offer as string | null));

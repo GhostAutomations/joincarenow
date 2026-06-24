@@ -12,7 +12,7 @@ export type AgreementState = { error?: string } | undefined;
 export async function signAgreement(_prev: AgreementState, formData: FormData): Promise<AgreementState> {
   const ctx = await requireCompany();
   const acting = "acting" in ctx && ctx.acting === true;
-  if (acting || ctx.profile?.is_platform_admin) redirect("/");
+  if (acting || ctx.profile?.is_platform_admin) redirect("/dashboard");
   if (ctx.current.role !== "admin") return { error: "Only a company admin can accept the agreement." };
 
   const name = (formData.get("signer_name")?.toString() ?? "").trim();
@@ -25,7 +25,7 @@ export async function signAgreement(_prev: AgreementState, formData: FormData): 
   // Already signed? Don't double-record — just let them in.
   const { data: existing } = await supabase
     .from("company_agreements").select("id").eq("company_id", current.company_id).limit(1);
-  if (existing && existing.length > 0) redirect("/");
+  if (existing && existing.length > 0) redirect("/dashboard");
 
   const { data: company } = await supabase
     .from("companies").select("name, agreed_plan, agreed_offer").eq("id", current.company_id).single();
@@ -48,5 +48,5 @@ export async function signAgreement(_prev: AgreementState, formData: FormData): 
   });
   if (error) return { error: "Could not record your acceptance. Please try again." };
 
-  redirect("/");
+  redirect("/dashboard");
 }

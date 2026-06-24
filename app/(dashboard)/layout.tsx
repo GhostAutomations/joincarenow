@@ -21,12 +21,18 @@ export default async function DashboardLayout({
   const { supabase, profile, current } = ctx;
   const acting = "acting" in ctx && ctx.acting === true;
 
-  // Subscription-agreement gate: a real customer admin must e-sign before the
-  // dashboard unlocks. Founder / "managing as" and non-admins are not gated.
+  // Account-setup gates for a real customer admin (founder / "managing as" and
+  // non-admins are never gated): 1) e-sign the subscription agreement, then
+  // 2) pay to activate, before the dashboard unlocks.
   if (!acting && !profile?.is_platform_admin && current.role === "admin") {
-    const { data: signed } = await supabase
-      .from("company_agreements").select("id").eq("company_id", current.company_id).limit(1);
+    const [{ data: signed }, { data: billing }] = await Promise.all([
+      supabase.from("company_agreements").select("id").eq("company_id", current.company_id).limit(1),
+      supabase.from("companies").select("billing_status, billing_comped").eq("id", current.company_id).single(),
+    ]);
     if (!signed || signed.length === 0) redirect("/agreement");
+    const status = (billing?.billing_status as string) ?? "none";
+    const active = billing?.billing_comped === true || status === "active" || status === "trialing";
+    if (!active) redirect("/activate");
   }
 
   const { data: companyRow } = await supabase

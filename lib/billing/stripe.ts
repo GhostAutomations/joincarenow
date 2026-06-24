@@ -84,21 +84,83 @@ export async function ensureCustomer(opts: {
   return c.id;
 }
 
+/** Fetch a Price (to read its product for custom-priced concessions). */
+async function getPrice(priceId: string) {
+  return stripeRequest<{ id: string; product: string }>(`/prices/${priceId}`, "GET");
+}
+
+/** Create (idempotently) a coupon and return its id. Stripe lets us choose the
+ *  id, so the same concession reuses one coupon. */
+async function ensureCoupon(id: string, params: Record<string, unknown>): Promise<string> {
+  try {
+    const c = await stripeRequest<{ id: string }>("/coupons", "POST", { id, ...params });
+    return c.id;
+  } catch (e) {
+    // Already created before — reuse it.
+    if (e instanceof Error && /already exists/i.test(e.message)) return id;
+    throw e;
+  }
+}
+
+/** Turn a parsed concession into a Stripe coupon id (free months), if any. */
+async function concessionCoupon(
+  interval: "month" | "year",
+  freeMonths?: number
+): Promise<string | undefined> {
+  if (!freeMonths || freeMonths < 1) return undefined;
+  if (interval === "month") {
+    // 100% off for N months on a monthly plan.
+    return ensureCoupon(`jcn_free_${freeMonths}m`, {
+      percent_off: 100,
+      duration: "repeating",
+      duration_in_months: freeMonths,
+      name: `${freeMonths} month${freeMonths === 1 ? "" : "s"} free`,
+    });
+  }
+  // Annual plan: apply the equivalent share off the first year's invoice.
+  const pct = Math.min(100, Math.round((freeMonths / 12) * 100));
+  return ensureCoupon(`jcn_annual_off_${pct}`, {
+    percent_off: pct,
+    duration: "once",
+    name: `${freeMonths} month${freeMonths === 1 ? "" : "s"} free (annual)`,
+  });
+}
+
 /** Create a Checkout session for the base subscription (+ one-off setup fee on
- *  monthly). Metered SMS/AI items are attached so usage can be reported later. */
+ *  monthly). Metered SMS/AI items are attached so usage can be reported later.
+ *  An optional sales concession adjusts the price (custom monthly price) and/or
+ *  applies a discount (free months). */
 export async function createCheckoutSession(opts: {
   customerId: string;
   companyId: string;
   interval: "month" | "year";
   commit?: boolean; // monthly with a 12-month commitment (no setup fee)
+  concession?: { freeMonths?: number; customMonthlyPence?: number } | null;
+  successUrl?: string;
+  cancelUrl?: string;
 }): Promise<string> {
   const basePrice = opts.interval === "year" ? PRICES.annual : PRICES.monthly;
   if (!basePrice) throw new Error("Plan price isn't configured.");
 
   const committed = opts.interval === "month" && opts.commit === true;
-  const lineItems: { price: string; quantity?: number }[] = [{ price: basePrice, quantity: 1 }];
-  // Setup fee applies on monthly, but is waived for annual and for the
-  // 12-month monthly commitment.
+  // Base line item — replaced by a custom recurring price if a £x/mo concession
+  // was agreed (monthly plans only; annual custom pricing stays standard).
+  let baseItem: Record<string, unknown> = { price: basePrice, quantity: 1 };
+  if (opts.interval === "month" && opts.concession?.customMonthlyPence && opts.concession.customMonthlyPence > 0) {
+    const { product } = await getPrice(basePrice);
+    baseItem = {
+      price_data: {
+        currency: "gbp",
+        product,
+        unit_amount: opts.concession.customMonthlyPence,
+        recurring: { interval: "month" },
+      },
+      quantity: 1,
+    };
+  }
+  const lineItems: Record<string, unknown>[] = [baseItem];
+
+  // Setup fee applies on monthly, but is waived for annual and the commitment.
   if (opts.interval === "month" && !committed && PRICES.setup) lineItems.push({ price: PRICES.setup, quantity: 1 });
   // Metered add-ons must match the base interval (Stripe forbids mixing).
   const isYear = opts.interval === "year";
@@ -107,21 +169,30 @@ export async function createCheckoutSession(opts: {
   if (smsPrice) lineItems.push({ price: smsPrice });
   if (aiPrice) lineItems.push({ price: aiPrice });
 
-  // Defensive: Stripe rejects the same recurring price twice. If env vars
-  // accidentally reuse a Price ID, keep only the first occurrence.
+  // Defensive: Stripe rejects the same recurring price twice.
   const seen = new Set<string>();
-  const uniqueItems = lineItems.filter((li) => (seen.has(li.price) ? false : (seen.add(li.price), true)));
+  const uniqueItems = lineItems.filter((li) => {
+    const p = li.price as string | undefined;
+    if (!p) return true; // price_data items are always unique
+    return seen.has(p) ? false : (seen.add(p), true);
+  });
 
-  const session = await stripeRequest<{ url: string }>("/checkout/sessions", "POST", {
+  // Free-months concession → a discount coupon. (Can't combine with promo codes.)
+  const coupon = await concessionCoupon(opts.interval, opts.concession?.freeMonths);
+
+  const params: Record<string, unknown> = {
     mode: "subscription",
     customer: opts.customerId,
     line_items: uniqueItems,
-    success_url: `${BASE_URL}/billing?status=success`,
-    cancel_url: `${BASE_URL}/billing?status=cancelled`,
+    success_url: opts.successUrl ?? `${BASE_URL}/billing?status=success`,
+    cancel_url: opts.cancelUrl ?? `${BASE_URL}/billing?status=cancelled`,
     subscription_data: { metadata: { company_id: opts.companyId, commitment_months: committed ? "12" : "" } },
     metadata: { company_id: opts.companyId, commitment_months: committed ? "12" : "" },
-    allow_promotion_codes: true,
-  });
+  };
+  if (coupon) params.discounts = [{ coupon }];
+  else params.allow_promotion_codes = true;
+
+  const session = await stripeRequest<{ url: string }>("/checkout/sessions", "POST", params);
   return session.url;
 }
 

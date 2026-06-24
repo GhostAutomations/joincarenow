@@ -236,9 +236,20 @@ export async function recordProposalResponse(
   // On Won: create the company tenant + send the admin invite (idempotent).
   if (response === "accepted") {
     try {
-      await provisionCompanyFromProspect(db as unknown as SupabaseClient, prospect.id as string);
-    } catch {
-      /* provisioning failed; the Won move stands and can be retried */
+      const r = await provisionCompanyFromProspect(db as unknown as SupabaseClient, prospect.id as string);
+      if (r.error) {
+        await db.from("prospect_activities").insert({
+          prospect_company_id: prospect.id,
+          type: "system",
+          body: `⚠️ Auto-provisioning failed: ${r.error}. Re-drag to Won to retry.`,
+        });
+      }
+    } catch (e) {
+      await db.from("prospect_activities").insert({
+        prospect_company_id: prospect.id,
+        type: "system",
+        body: `⚠️ Auto-provisioning errored: ${e instanceof Error ? e.message : "unknown"}. Re-drag to Won to retry.`,
+      });
     }
   }
 

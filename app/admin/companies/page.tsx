@@ -5,20 +5,44 @@ import { CompanyForm } from "@/components/dashboard/company-form";
 import { DeleteCompany } from "@/components/dashboard/delete-company";
 import { InviteForm } from "@/components/dashboard/invite-form";
 import { PendingInvites } from "@/components/dashboard/pending-invites";
-import { setCompanyTier } from "@/modules/forms/actions";
-import { TIERS, TIER_LABEL } from "@/modules/forms/tiers";
-
 type AdminRow = {
   company_id: string;
   profiles: { full_name: string | null; email: string } | null;
 };
+
+const PLAN_LABEL: Record<string, string> = { monthly: "Monthly", commit: "12-month", annual: "Annual" };
+
+/** Read-only billing status for a company (customers subscribe via the CRM
+ *  onboarding + Stripe, so the founder doesn't set a plan here). */
+function billingStatus(c: {
+  billing_status?: string | null;
+  billing_comped?: boolean | null;
+  billing_interval?: string | null;
+  agreed_plan?: string | null;
+}): { label: string; cls: string; plan: string | null } {
+  const plan =
+    PLAN_LABEL[c.agreed_plan ?? ""] ??
+    (c.billing_interval === "year" ? "Annual" : c.billing_interval === "month" ? "Monthly" : null);
+  if (c.billing_comped) return { label: "Complimentary", cls: "bg-violet-100 text-violet-700", plan };
+  switch (c.billing_status) {
+    case "active":
+    case "trialing":
+      return { label: "Active", cls: "bg-green-100 text-green-700", plan };
+    case "past_due":
+      return { label: "Past due", cls: "bg-amber-100 text-amber-800", plan };
+    case "canceled":
+      return { label: "Cancelled", cls: "bg-gray-200 text-gray-600", plan };
+    default:
+      return { label: "Not subscribed", cls: "bg-gray-100 text-gray-500", plan };
+  }
+}
 
 export default async function CompaniesPage() {
   const { supabase } = await requirePlatformAdmin();
 
   const [{ data: companies }, { data: admins }, { data: adminInvites }] =
     await Promise.all([
-      supabase.from("companies").select("id, name, slug, subscription_tier").order("name"),
+      supabase.from("companies").select("id, name, slug, billing_status, billing_comped, billing_interval, agreed_plan").order("name"),
       supabase
         .from("company_users")
         .select("company_id, profiles ( full_name, email )")
@@ -126,27 +150,19 @@ export default async function CompaniesPage() {
                   </ul>
                 )}
 
-                <form
-                  action={setCompanyTier}
-                  className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3"
-                >
-                  <input type="hidden" name="companyId" value={c.id} />
-                  <label className="text-sm text-gray-600">Subscription plan</label>
-                  <select
-                    name="tier"
-                    defaultValue={
-                      (c as { subscription_tier?: string }).subscription_tier ?? "free"
-                    }
-                    className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm"
-                  >
-                    {TIERS.map((t) => (
-                      <option key={t} value={t}>{TIER_LABEL[t]}</option>
-                    ))}
-                  </select>
-                  <button className="rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-100">
-                    Save plan
-                  </button>
-                </form>
+                {(() => {
+                  const b = billingStatus(c as Parameters<typeof billingStatus>[0]);
+                  return (
+                    <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
+                      <span className="text-sm text-gray-600">Subscription</span>
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.cls}`}>{b.label}</span>
+                      {b.plan && <span className="text-xs text-gray-500">· {b.plan}</span>}
+                      <a href={`/admin/billing/${c.id}`} className="ml-auto text-xs font-medium text-brand-600 hover:underline">
+                        Billing details →
+                      </a>
+                    </div>
+                  );
+                })()}
 
                 <div className="mt-4 border-t border-gray-100 pt-4">
                   <p className="text-sm font-medium text-gray-900">

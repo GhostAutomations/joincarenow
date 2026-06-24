@@ -26,6 +26,14 @@ export function ProspectLive() {
       .on("postgres_changes", { event: "*", schema: "public", table: "prospect_activities" }, refresh)
       .subscribe();
 
+    // Safety net: poll every 10s while the tab is visible, so the board still
+    // catches changes made in another session (e.g. a prospect accepting a
+    // proposal) even if the realtime socket drops an event. Matches the
+    // recruitment pipeline-board pattern.
+    const poll = setInterval(() => {
+      if (!document.hidden) router.refresh();
+    }, 10_000);
+
     const onVisible = () => {
       if (!document.hidden) router.refresh();
     };
@@ -33,6 +41,7 @@ export function ProspectLive() {
 
     return () => {
       if (pending) clearTimeout(pending);
+      clearInterval(poll);
       document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(channel);
     };

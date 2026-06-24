@@ -54,11 +54,16 @@ export async function provisionCompanyFromProspect(
 
   await db.from("prospect_companies").update({ provisioned_company_id: companyId }).eq("id", prospectId);
   // Carry the sold plan + any concession onto the company so the subscription
-  // agreement (signed at account setup) reflects what they were sold.
-  await db.from("companies").update({
-    agreed_plan: (prospect.proposed_plan as string) ?? null,
-    agreed_offer: (prospect.proposed_offer as string) ?? null,
-  }).eq("id", companyId);
+  // agreement (signed at account setup) reflects what they were sold. Best-effort
+  // — must never block the welcome email if the columns aren't present yet.
+  try {
+    await db.from("companies").update({
+      agreed_plan: (prospect.proposed_plan as string) ?? null,
+      agreed_offer: (prospect.proposed_offer as string) ?? null,
+    }).eq("id", companyId);
+  } catch {
+    /* columns missing or update failed — provisioning + invite continue */
+  }
 
   let note = "no admin email on file — invite manually";
   if (admin?.email && inviteToken) {

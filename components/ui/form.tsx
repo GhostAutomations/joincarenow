@@ -10,6 +10,7 @@ export function Field({
   required = true,
   autoComplete,
   placeholder,
+  defaultValue,
 }: {
   label: string;
   name: string;
@@ -17,6 +18,7 @@ export function Field({
   required?: boolean;
   autoComplete?: string;
   placeholder?: string;
+  defaultValue?: string;
 }) {
   return (
     <div>
@@ -33,6 +35,7 @@ export function Field({
         required={required}
         autoComplete={autoComplete}
         placeholder={placeholder}
+        defaultValue={defaultValue}
         className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       />
     </div>

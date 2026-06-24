@@ -18,7 +18,7 @@ function SignInForm() {
         name="next"
         value={searchParams.get("next") ?? ""}
       />
-      <Field label="Email address" name="email" type="email" autoComplete="email" />
+      <Field label="Email address" name="email" type="email" autoComplete="email" defaultValue={searchParams.get("email") ?? undefined} />
       <Field
         label="Password"
         name="password"

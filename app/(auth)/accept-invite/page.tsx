@@ -63,7 +63,7 @@ export default async function AcceptInvitePage({
         <p className="text-sm text-gray-600">{reason}</p>
         <p className="mt-4 text-sm text-gray-600">
           Already set up?{" "}
-          <Link href="/sign-in" className="text-brand-600 hover:underline">
+          <Link href={`/sign-in?email=${encodeURIComponent(invite.email)}`} className="text-brand-600 hover:underline">
             Sign in
           </Link>
         </p>
@@ -122,7 +122,7 @@ export default async function AcceptInvitePage({
           and open the link again.
         </p>
         <p className="mt-4 text-sm">
-          <Link href="/sign-in" className="text-brand-600 hover:underline">
+          <Link href={`/sign-in?email=${encodeURIComponent(invite.email)}`} className="text-brand-600 hover:underline">
             Go to sign in
           </Link>
         </p>
@@ -145,7 +145,7 @@ export default async function AcceptInvitePage({
       <p className="mt-4 text-center text-sm text-gray-600">
         Already have an account?{" "}
         <Link
-          href={`/sign-in?next=${encodeURIComponent(`/accept-invite?token=${token}`)}`}
+          href={`/sign-in?email=${encodeURIComponent(invite.email)}&next=${encodeURIComponent(`/accept-invite?token=${token}`)}`}
           className="text-brand-600 hover:underline"
         >
           Sign in to accept

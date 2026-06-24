@@ -436,6 +436,23 @@ export async function sendProspectMessage(_prev: ProspectState, formData: FormDa
   return { ok: true };
 }
 
+/** Draft a message inline and return it for the composer (no approval queue). */
+export async function draftInline(
+  companyId: string,
+  contactId: string,
+  channel: "email" | "sms"
+): Promise<{ subject?: string | null; body?: string; error?: string }> {
+  const { supabase } = await requirePlatformAdmin();
+  if (!companyId || !contactId) return { error: "Pick a contact first." };
+  const { generateDraftPreview } = await import("@/lib/prospects/ai-drafts");
+  return generateDraftPreview(
+    supabase as unknown as SupabaseClient,
+    companyId,
+    contactId,
+    channel === "sms" ? "sms" : "email"
+  );
+}
+
 /** Draft the next message for a contact with AI, into the approval queue. */
 export async function draftWithAi(_prev: ProspectState, formData: FormData): Promise<ProspectState> {
   const { supabase } = await requirePlatformAdmin();

@@ -8,7 +8,6 @@ import { ProspectDelete } from "@/components/dashboard/prospect-delete";
 import { stopEnrolment } from "@/modules/prospects/sequence-actions";
 import { ProspectStageSelect } from "@/components/dashboard/prospect-stage-select";
 import { ProspectComposer } from "@/components/dashboard/prospect-composer";
-import { ProspectAiDraft } from "@/components/dashboard/prospect-ai-draft";
 import { ProspectDemo } from "@/components/dashboard/prospect-demo";
 import { ProspectEnrol } from "@/components/dashboard/prospect-enrol";
 
@@ -183,7 +182,6 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
           <section className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
             <h2 className="text-sm font-semibold text-gray-900">Send a message</h2>
             <ProspectComposer companyId={id} contacts={conts} />
-            <ProspectAiDraft companyId={id} contacts={conts} />
           </section>
 
           <ProspectDemo prospectId={id} contacts={conts} demoAt={c.demo_at ?? null} />

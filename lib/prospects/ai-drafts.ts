@@ -57,6 +57,19 @@ async function generateDraft(
   }
 }
 
+/** Generate a draft and RETURN it (no DB write, no approval queue) so the
+ *  founder can review + send inline from the composer. */
+export async function generateDraftPreview(
+  db: SupabaseClient,
+  companyId: string,
+  contactId: string,
+  channel: "email" | "sms" = "email"
+): Promise<{ subject?: string | null; body?: string; error?: string }> {
+  const g = await generateDraft(db, companyId, contactId, channel);
+  if ("error" in g) return { error: g.error };
+  return { subject: g.subject, body: g.body };
+}
+
 /** Manual "Draft with AI" — always parks in the approval queue. */
 export async function buildAndInsertDraft(
   db: SupabaseClient,

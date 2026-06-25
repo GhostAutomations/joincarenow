@@ -9,6 +9,7 @@ import {
   type Msg,
   type ThreadTemplate,
 } from "@/modules/comms/actions";
+import { cleanMessageBody } from "@/lib/comms/clean";
 
 const cls =
   "block w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -135,34 +136,30 @@ export function ApplicantComms({
           </p>
         ) : (
           visible.map((m) => {
-            const inbound = m.direction === "inbound";
-            return (
-              <div
-                key={m.id}
-                className={`rounded-lg border p-3 ${
-                  inbound ? "border-blue-200 bg-blue-50" : "border-gray-100 bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span className="inline-flex items-center gap-1 font-medium capitalize text-gray-700">
-                    {CH_ICON[m.channel]} {m.channel}
-                  </span>
-                  {inbound && (
-                    <span className="rounded bg-blue-100 px-1.5 py-0.5 text-blue-700">Received</span>
-                  )}
-                  {!inbound && m.status === "failed" && (
-                    <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-700">Failed</span>
-                  )}
-                  {!inbound && m.status === "sent" && (
-                    <span className="rounded bg-green-100 px-1.5 py-0.5 text-green-700">Sent</span>
-                  )}
-                  <span className="ml-auto">
-                    {new Date(m.created_at).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}
-                  </span>
+            // Internal notes are centred and clearly staff-only.
+            if (m.channel === "note") {
+              return (
+                <div key={m.id} className="flex justify-center">
+                  <div className="max-w-[85%] rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
+                    <span className="font-medium">Internal note</span> · {m.body}
+                  </div>
                 </div>
-                {m.subject && <p className="mt-1 text-sm font-medium text-gray-900">{m.subject}</p>}
-                <p className="mt-0.5 whitespace-pre-wrap text-sm text-gray-700">{m.body}</p>
-                {m.error && <p className="mt-1 text-xs text-red-600">{m.error}</p>}
+              );
+            }
+            const inbound = m.direction === "inbound";
+            // Strip greeting/sign-off from our outbound messages so it reads as chat.
+            const text = inbound ? m.body : cleanMessageBody(m.body);
+            return (
+              <div key={m.id} className={`flex ${inbound ? "justify-start" : "justify-end"}`}>
+                <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${inbound ? "rounded-bl-sm border border-gray-200 bg-white text-gray-800" : "rounded-br-sm bg-brand-600 text-white"}`}>
+                  <p className="whitespace-pre-wrap break-words">{text}</p>
+                  <p className={`mt-1 flex items-center gap-1 text-[10px] ${inbound ? "text-gray-400" : "text-white/70"}`}>
+                    {CH_ICON[m.channel]}
+                    {new Date(m.created_at).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}
+                    {!inbound && m.status === "failed" && <span className="text-red-200">· failed</span>}
+                  </p>
+                  {m.error && !inbound && <p className="mt-0.5 text-[10px] text-red-200">{m.error}</p>}
+                </div>
               </div>
             );
           })

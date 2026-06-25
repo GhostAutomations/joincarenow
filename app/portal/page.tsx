@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MessageSquare } from "lucide-react";
 import { requireApplicant } from "@/modules/auth/queries";
 import { signOut } from "@/modules/auth/actions";
 import {
@@ -148,7 +149,12 @@ export default async function PortalPage({
           </section>
         )}
 
-        <h1 className="text-2xl font-semibold text-white drop-shadow-sm">My applications</h1>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-2xl font-semibold text-white drop-shadow-sm">My applications</h1>
+          <Link href="/portal/conversations" className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/20 px-3 py-2 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
+            <MessageSquare className="h-4 w-4" /> Messages
+          </Link>
+        </div>
 
         {applied && (
           <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 shadow-sm">

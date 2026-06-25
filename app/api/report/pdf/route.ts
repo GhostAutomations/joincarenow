@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { londonToUtcIso } from "@/lib/time";
 import { buildReportPdf, type ReportTable } from "@/lib/reports/pdf";
 import { getRecruitmentReport, getPlatformReport, getBillingReport, rangeKeyOf } from "@/lib/reports/data";
+import { getStaffRegister, getSafeRecruitment, getTurnover, getEstablishment } from "@/lib/reports/compliance";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,53 @@ const money = (n: number) => "GBP " + n.toFixed(2);
 export async function GET(req: NextRequest) {
   const type = req.nextUrl.searchParams.get("type") ?? "recruitment";
   const range = rangeKeyOf(req.nextUrl.searchParams.get("range") ?? undefined);
+
+  // Company compliance reports.
+  if (["staff_register", "safe_recruitment", "turnover", "establishment"].includes(type)) {
+    const { supabase, current } = await requireCompany();
+    const cid = current.company_id;
+    if (type === "staff_register") {
+      const rows = await getStaffRegister(supabase, cid);
+      const bytes = buildReportPdf({
+        title: "Staff register", subtitle: `${rows.length} active staff`,
+        tables: [{ columns: [{ header: "ID", width: 10 }, { header: "Name", width: 24 }, { header: "Role", width: 18 }, { header: "Branch", width: 14 }, { header: "Type", width: 14 }, { header: "Start", width: 11 }], rows: rows.map((r) => [r.ref, r.name, r.role, r.branch, r.type, r.start]) }],
+      });
+      return pdf(bytes, "staff-register.pdf");
+    }
+    if (type === "safe_recruitment") {
+      const rows = await getSafeRecruitment(supabase, cid);
+      const bytes = buildReportPdf({
+        title: "Safe recruitment compliance", subtitle: "Right to Work, references and DBS (CQC Reg 19 / CIW safe recruitment)",
+        stats: [{ label: "Staff with gaps", value: String(rows.filter((r) => r.gaps > 0).length) }],
+        tables: [{ columns: [{ header: "Name", width: 22 }, { header: "Role", width: 16 }, { header: "Right to Work", width: 22 }, { header: "References", width: 14 }, { header: "DBS", width: 12 }], rows: rows.map((r) => [r.name, r.role, r.rtw, r.refs, r.dbs]) }],
+      });
+      return pdf(bytes, "safe-recruitment.pdf");
+    }
+    if (type === "turnover") {
+      const r = await getTurnover(supabase, cid, range);
+      const bytes = buildReportPdf({
+        title: "Turnover & leavers", subtitle: `Period: ${r.rangeLabel}`,
+        stats: [
+          { label: "Headcount", value: String(r.metrics.headcount) },
+          { label: "Joiners", value: String(r.metrics.joiners) },
+          { label: "Leavers", value: String(r.metrics.leavers) },
+          { label: "Turnover", value: `${r.metrics.turnoverPct}%` },
+        ],
+        tables: [{ title: "Leavers", columns: [{ header: "Name", width: 22 }, { header: "Role", width: 16 }, { header: "Branch", width: 14 }, { header: "Left", width: 11 }, { header: "Reason", width: 22 }], rows: r.leaverRows.map((l) => [l.name, l.role, l.branch, l.left, l.reason]) }],
+      });
+      return pdf(bytes, `turnover-${range}.pdf`);
+    }
+    // establishment
+    const r = await getEstablishment(supabase, cid);
+    const bytes = buildReportPdf({
+      title: "Staffing establishment", subtitle: `${r.vacancies} open vacancies`,
+      tables: [{
+        columns: [{ header: "Branch", width: 22 }, { header: "Full time", width: 9, align: "right" }, { header: "Part time", width: 9, align: "right" }, { header: "Student", width: 8, align: "right" }, { header: "Not set", width: 8, align: "right" }, { header: "Total", width: 7, align: "right" }],
+        rows: [...r.branchRows.map((b) => [b.branch, b.full_time, b.part_time, b.student_20, b.not_set, b.total]), ["ALL", r.totals.full_time, r.totals.part_time, r.totals.student_20, r.totals.not_set, r.totals.total]],
+      }],
+    });
+    return pdf(bytes, "establishment.pdf");
+  }
 
   if (type === "recruitment") {
     const { supabase, current } = await requireCompany({ allowSetup: true });

@@ -3,6 +3,7 @@ import { requireCompany } from "@/modules/auth/queries";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
 import { OnboardingTaskReview, type OnbTask } from "@/components/dashboard/onboarding-task-review";
+import { ShieldCheck } from "lucide-react";
 import { ExportCsvButton } from "@/components/dashboard/export-csv-button";
 import { ExportPdfLink } from "@/components/dashboard/export-pdf-link";
 
@@ -127,6 +128,13 @@ export default async function ReportsPage({
   return (
     <div>
       <PageHeader title="Reports" subtitle="Recruitment performance and onboarding progress." />
+
+      <Link
+        href="/reports/compliance"
+        className="mt-4 inline-flex items-center gap-2 rounded-xl border border-white/40 bg-white/20 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur hover:bg-white/30"
+      >
+        <ShieldCheck className="h-4 w-4" /> Compliance reports (CQC / CIW)
+      </Link>
 
       {/* Range filter + exports */}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2">

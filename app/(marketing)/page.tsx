@@ -19,7 +19,7 @@ import { BoardMockup, OnboardingMockup } from "@/components/marketing/mockups";
 export const metadata: Metadata = {
   title: "Care recruitment & onboarding software | Join Care Now",
   description:
-    "Be inspection-ready from the first applicant to their first shift. Branded careers pages, applicant tracking and full onboarding (Right to Work, DBS, references, contracts) in one calm system. Built for UK care providers, from £55/month.",
+    "Hire compliant care staff faster — without the spreadsheet chaos. Branded careers pages, applicant tracking and full onboarding (Right to Work, DBS, references, contracts) in one calm system, kept inspection-ready. Built for UK care providers, from £55/month.",
   alternates: { canonical: "https://www.joincarenow.com" },
   openGraph: {
     title: "Care recruitment & onboarding software | Join Care Now",
@@ -129,12 +129,11 @@ export default function LandingPage() {
             <Sparkles className="h-3.5 w-3.5" aria-hidden /> Founding customers now onboarding
           </span>
           <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            Be inspection-ready from the first applicant to their first shift
+            Hire compliant care staff faster — without the spreadsheet chaos
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-white/90">
-            Join Care Now brings care recruitment and onboarding into one calm system — Right to
-            Work, DBS, references and contracts captured, time-stamped and ready to evidence.
-            No more spreadsheet chaos. No more chasing.
+            One calm system from advert to first shift — track every applicant, capture every
+            check, and keep your evidence inspection-ready. No more spreadsheets, no more chasing.
           </p>
           <p className="mx-auto mt-4 max-w-2xl text-base font-medium text-white">
             From £55 a month — less than a couple of hours of admin time, built to give you back

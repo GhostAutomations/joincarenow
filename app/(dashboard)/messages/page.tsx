@@ -1,90 +1,119 @@
 import Link from "next/link";
-import { MessagesSquare, ChevronRight } from "lucide-react";
+import { MessagesSquare } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
-import { PageHeader } from "@/components/dashboard/page-header";
 import { getStaffContacts } from "@/modules/staff-messages/actions";
 import { StaffMessagesLive } from "@/components/dashboard/staff-messages-live";
+import { StaffChat, type StaffChatMessage, type TagOption } from "@/components/dashboard/staff-chat";
 
-export default async function MessagesPage() {
+export default async function MessagesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ with?: string }>;
+}) {
+  const { with: withId } = await searchParams;
   const { supabase, current, user } = await requireCompany();
   const contacts = await getStaffContacts();
   const nameOf = new Map(contacts.map((c) => [c.id, c]));
 
-  const { data: msgs } = await supabase
+  // Conversation list data: my messages, grouped by the other person.
+  const { data: myMsgs } = await supabase
     .from("staff_messages")
     .select("sender_id, recipient_id, body, created_at, read_at")
     .eq("company_id", current.company_id)
     .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
     .order("created_at", { ascending: false });
 
-  // Group into conversations by the other person.
-  const seen = new Set<string>();
-  const convos: { id: string; name: string; role: string; snippet: string; at: string; unread: number }[] = [];
-  const unreadBy = new Map<string, number>();
-  for (const m of msgs ?? []) {
-    const otherId = (m.sender_id === user.id ? m.recipient_id : m.sender_id) as string;
-    if (m.recipient_id === user.id && !m.read_at) unreadBy.set(otherId, (unreadBy.get(otherId) ?? 0) + 1);
+  const last = new Map<string, { snippet: string; at: string }>();
+  const unread = new Map<string, number>();
+  for (const m of myMsgs ?? []) {
+    const other = (m.sender_id === user.id ? m.recipient_id : m.sender_id) as string;
+    if (!last.has(other)) last.set(other, { snippet: ((m.sender_id === user.id ? "You: " : "") + (m.body as string)).slice(0, 60), at: m.created_at as string });
+    if (m.recipient_id === user.id && !m.read_at) unread.set(other, (unread.get(other) ?? 0) + 1);
   }
-  for (const m of msgs ?? []) {
-    const otherId = (m.sender_id === user.id ? m.recipient_id : m.sender_id) as string;
-    if (seen.has(otherId)) continue;
-    const c = nameOf.get(otherId);
-    if (!c) continue;
-    seen.add(otherId);
-    convos.push({
-      id: otherId, name: c.name, role: c.roleLabel,
-      snippet: ((m.sender_id === user.id ? "You: " : "") + (m.body as string)).slice(0, 80),
-      at: m.created_at as string, unread: unreadBy.get(otherId) ?? 0,
-    });
-  }
+  // Left list = all contacts, ordered by most-recent conversation then name.
+  const rows = contacts
+    .map((c) => ({ ...c, ...(last.get(c.id) ?? { snippet: c.roleLabel, at: "" }), unread: unread.get(c.id) ?? 0 }))
+    .sort((a, b) => (b.at || "").localeCompare(a.at || "") || a.name.localeCompare(b.name));
 
-  const others = contacts.filter((c) => !seen.has(c.id));
+  // Right pane: the open conversation, if any.
+  const active = withId && nameOf.get(withId) ? nameOf.get(withId)! : null;
+  let messages: StaffChatMessage[] = [];
+  let applicants: TagOption[] = [];
+  if (active) {
+    const [{ data: msgs }, { data: appsData }] = await Promise.all([
+      supabase
+        .from("staff_messages")
+        .select("id, sender_id, application_id, body, created_at")
+        .eq("company_id", current.company_id)
+        .or(`and(sender_id.eq.${user.id},recipient_id.eq.${active.id}),and(sender_id.eq.${active.id},recipient_id.eq.${user.id})`)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("applications")
+        .select("id, applicants ( first_name, last_name ), jobs ( title )")
+        .eq("company_id", current.company_id)
+        .order("created_at", { ascending: false })
+        .limit(100),
+    ]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const appName = new Map<string, string>(((appsData ?? []) as any[]).map((a) => {
+      const n = [a.applicants?.first_name, a.applicants?.last_name].filter(Boolean).join(" ") || "Applicant";
+      return [a.id as string, `${n}${a.jobs?.title ? ` · ${a.jobs.title}` : ""}`];
+    }));
+    applicants = [...appName.entries()].map(([applicationId, name]) => ({ applicationId, name }));
+    messages = (msgs ?? []).map((m) => ({
+      id: m.id as string, mine: m.sender_id === user.id, body: m.body as string,
+      at: m.created_at as string, applicant: m.application_id ? appName.get(m.application_id as string) ?? null : null,
+    }));
+    // Mark their messages to me as read.
+    await supabase.from("staff_messages").update({ read_at: new Date().toISOString() })
+      .eq("company_id", current.company_id).eq("recipient_id", user.id).eq("sender_id", active.id).is("read_at", null);
+  }
 
   return (
     <div>
       <StaffMessagesLive />
-      <PageHeader title="Messages" subtitle="Private messages with your team. Tag an applicant to add to their audit trail — applicants never see these." />
+      <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Messages</h1>
+      <p className="mt-1 text-sm text-white/80">Private team chat — tag an applicant to add to their audit trail (applicants never see these).</p>
 
-      {convos.length > 0 && (
-        <ul className="mt-5 space-y-2">
-          {convos.map((c) => (
-            <li key={c.id}>
-              <Link href={`/messages/${c.id}`} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:bg-gray-50">
-                <div className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
-                  {c.name.slice(0, 1).toUpperCase()}
-                  {c.unread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">{c.unread}</span>}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-semibold text-gray-900">{c.name} <span className="font-normal text-gray-400">· {c.role}</span></p>
-                    <span className="shrink-0 text-xs text-gray-400">{new Date(c.at).toLocaleDateString("en-GB")}</span>
-                  </div>
-                  <p className={`truncate text-xs ${c.unread > 0 ? "font-medium text-gray-700" : "text-gray-500"}`}>{c.snippet}</p>
-                </div>
-                <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="mt-6">
-        <p className="flex items-center gap-2 text-sm font-semibold text-white drop-shadow-sm"><MessagesSquare className="h-4 w-4" /> New message</p>
-        {others.length === 0 && convos.length === 0 ? (
-          <p className="mt-2 text-sm text-white/70">No other team members yet. Invite colleagues from Settings.</p>
-        ) : (
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {others.map((c) => (
-              <Link key={c.id} href={`/messages/${c.id}`} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm hover:bg-gray-50">
-                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">{c.name.slice(0, 1).toUpperCase()}</div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900">{c.name}</p>
-                  <p className="truncate text-xs text-gray-500">{c.roleLabel}</p>
-                </div>
-              </Link>
-            ))}
+      <div className="mt-4 grid gap-3 lg:grid-cols-[300px_1fr]">
+        {/* Left: contacts / conversations */}
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3 text-sm font-semibold text-gray-900">
+            <MessagesSquare className="h-4 w-4 text-brand-600" /> Team
           </div>
-        )}
+          {rows.length === 0 ? (
+            <p className="p-4 text-sm text-gray-500">No other team members yet. Invite colleagues in Settings → Team.</p>
+          ) : (
+            <ul className="max-h-[64vh] divide-y divide-gray-100 overflow-y-auto">
+              {rows.map((c) => (
+                <li key={c.id}>
+                  <Link href={`/messages?with=${c.id}`} className={`flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 ${active?.id === c.id ? "bg-brand-50" : ""}`}>
+                    <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
+                      {c.name.slice(0, 1).toUpperCase()}
+                      {c.unread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">{c.unread}</span>}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-gray-900">{c.name}</p>
+                      <p className={`truncate text-xs ${c.unread > 0 ? "font-medium text-gray-700" : "text-gray-500"}`}>{c.snippet}</p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Right: open chat */}
+        <div>
+          {active ? (
+            <StaffChat recipientId={active.id} recipientName={active.name} messages={messages} applicants={applicants} />
+          ) : (
+            <div className="flex h-[70vh] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-center shadow-sm">
+              <MessagesSquare className="h-10 w-10 text-gray-300" />
+              <p className="mt-2 text-sm text-gray-500">{rows.length === 0 ? "Invite a colleague to start messaging." : "Select a team member to start chatting."}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

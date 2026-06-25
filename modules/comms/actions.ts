@@ -35,7 +35,8 @@ export async function getApplicantThread(
       .from("messages")
       .select("id, channel, direction, subject, body, status, error, created_at")
       .eq("application_id", applicationId)
-      .order("created_at", { ascending: false }),
+      // Oldest first so the newest message is at the bottom (chat style).
+      .order("created_at", { ascending: true }),
     supabase
       .from("message_templates")
       .select("id, channel, name, subject, body")

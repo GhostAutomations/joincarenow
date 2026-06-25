@@ -201,6 +201,7 @@ export async function applyToJob(
     await notifyJobOwner(createAdminClient(), {
       applicationId: newAppId as string,
       type: "new_application",
+      prefKey: "new_application",
       title: `New application from ${name}`,
       body: "Applied for one of your jobs.",
       link: `/pipeline?open=${newAppId}`,

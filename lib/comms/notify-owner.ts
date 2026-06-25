@@ -15,6 +15,7 @@ export async function notifyJobOwner(
   opts: {
     applicationId: string;
     type: string; // notification type, e.g. 'new_application'
+    prefKey: "new_application" | "applicant_message"; // which preference governs this
     title: string;
     body?: string | null;
     link: string; // in-app path to open
@@ -42,21 +43,30 @@ export async function notifyJobOwner(
       null;
     if (!ownerId) return;
 
-    await admin.from("notifications").insert({
-      company_id: companyId,
-      user_id: ownerId,
-      type: opts.type,
-      title: opts.title,
-      body: opts.body ?? null,
-      link: opts.link,
-    });
+    // The owner's per-event channel preferences (absent = both on).
+    const { data: prof } = await admin
+      .from("profiles")
+      .select("email, notification_prefs")
+      .eq("id", ownerId)
+      .maybeSingle();
+    const prefs = (prof as { notification_prefs?: Record<string, { inApp?: boolean; email?: boolean }> | null } | null)
+      ?.notification_prefs ?? null;
+    const pref = prefs?.[opts.prefKey] ?? {};
+    const wantInApp = pref.inApp ?? true;
+    const wantEmail = pref.email ?? true;
 
-    if (opts.email) {
-      const { data: prof } = await admin
-        .from("profiles")
-        .select("email")
-        .eq("id", ownerId)
-        .maybeSingle();
+    if (wantInApp) {
+      await admin.from("notifications").insert({
+        company_id: companyId,
+        user_id: ownerId,
+        type: opts.type,
+        title: opts.title,
+        body: opts.body ?? null,
+        link: opts.link,
+      });
+    }
+
+    if (opts.email && wantEmail) {
       const to = (prof as { email?: string | null } | null)?.email;
       if (to) {
         await sendBrandedEmail(admin as unknown as SupabaseClient, null, {

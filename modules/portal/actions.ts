@@ -45,6 +45,7 @@ export async function postApplicantReply(_prev: PortalReplyState, formData: Form
   await notifyJobOwner(createAdminClient(), {
     applicationId: app.id,
     type: "portal_message",
+    prefKey: "applicant_message",
     title: `New message from ${name}`,
     body: body.slice(0, 160),
     link: `/pipeline?open=${app.id}`,

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, MessageSquare } from "lucide-react";
+import { Bell, MessageSquare, Settings } from "lucide-react";
 import {
   getNotifications,
   markNotificationRead,
@@ -85,11 +85,21 @@ export function NotificationsBell() {
         <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm shadow-lg">
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5">
             <span className="text-sm font-medium text-gray-900">Notifications</span>
-            {unread > 0 && (
-              <button onClick={markAll} className="text-xs text-brand-600 hover:underline">
-                Mark all read
+            <div className="flex items-center gap-3">
+              {unread > 0 && (
+                <button onClick={markAll} className="text-xs text-brand-600 hover:underline">
+                  Mark all read
+                </button>
+              )}
+              <button
+                onClick={() => { setOpen(false); router.push("/notifications"); }}
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Notification settings"
+                title="Notification settings"
+              >
+                <Settings className="h-4 w-4" />
               </button>
-            )}
+            </div>
           </div>
           <div className="max-h-96 overflow-y-auto">
             {items.length === 0 ? (

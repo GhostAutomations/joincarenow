@@ -134,6 +134,7 @@ export async function POST(req: Request) {
   await notifyJobOwner(admin, {
     applicationId: app.id,
     type: "sms_received",
+    prefKey: "applicant_message",
     title: `New SMS from ${name}`,
     body: body.slice(0, 160),
     link: `/pipeline?open=${app.id}`,

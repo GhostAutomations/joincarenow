@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { requireCompany } from "@/modules/auth/queries";
 import { deleteTemplateTask, deleteWorkflow } from "@/modules/onboarding/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -18,6 +19,8 @@ const TRIGGER_LABEL: Record<string, string> = {
 
 export default async function OnboardingBoardPage() {
   const { supabase, current } = await requireCompany();
+  // Workflow (onboarding template builder) is admin-only configuration.
+  if (current.role !== "admin") redirect("/dashboard");
   const isAdmin = current.role === "admin";
 
   const [{ data: templates }, { data: forms }, { data: roles }] = await Promise.all([

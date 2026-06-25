@@ -33,8 +33,8 @@ const NAV = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-// Admin-only destinations (Form Store + Settings/team management + billing).
-const ADMIN_HREFS = new Set(["/store", "/settings", "/billing"]);
+// Admin-only destinations (Workflow builder + Form Store + Settings/team management + billing).
+const ADMIN_HREFS = new Set(["/onboarding-board", "/store", "/settings", "/billing"]);
 
 export function Sidebar({
   companyName,

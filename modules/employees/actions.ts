@@ -146,6 +146,16 @@ export async function getStaffFile(employeeId: string): Promise<{
   const fullName = [emp.first_name, emp.last_name].filter(Boolean).join(" ") || emp.employee_ref;
   const admin = createAdminClient();
 
+  // Sensitive bulk export (CV, DBS, signed contracts) — record every download on
+  // the employee's audit trail (who, when). Best-effort; never blocks the download.
+  await supabase.rpc("log_audit", {
+    p_company_id: current.company_id,
+    p_action: "employee.staff_file_downloaded",
+    p_entity_type: "employee",
+    p_entity_id: employeeId,
+    p_after: { employee_ref: emp.employee_ref, name: fullName },
+  });
+
   // --- Signed contracts + policies (immutable snapshots) ---
   const signedDocs: NonNullable<Awaited<ReturnType<typeof getStaffFile>>["signedDocs"]> = [];
   const sdCol = emp.applicant_id ? "applicant_id" : emp.application_id ? "application_id" : null;

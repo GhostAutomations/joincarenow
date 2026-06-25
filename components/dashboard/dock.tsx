@@ -14,18 +14,17 @@ const BASE = [
   { href: "/pipeline", label: "Pipeline", icon: KanbanSquare, grad: "from-indigo-400 to-indigo-600" },
   { href: "/interviews", label: "Interviews", icon: CalendarClock, grad: "from-violet-400 to-violet-600" },
   { href: "/applicants", label: "Talent Pool", icon: Users, grad: "from-sky-400 to-sky-600" },
-  { href: "/onboarding-board", label: "Workflow", icon: ClipboardCheck, grad: "from-emerald-400 to-emerald-600" },
   { href: "/referencing", label: "Referencing", icon: ShieldCheck, grad: "from-lime-400 to-lime-600" },
   { href: "/employees", label: "Employees", icon: IdCard, grad: "from-cyan-400 to-cyan-600" },
   { href: "/forms", label: "Forms", icon: FileText, grad: "from-amber-400 to-amber-500" },
   { href: "/templates", label: "Templates", icon: MessageSquareText, grad: "from-pink-400 to-pink-600" },
-  { href: "/store", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
   { href: "/messages", label: "Messages", icon: MessagesSquare, grad: "from-fuchsia-400 to-fuchsia-600" },
   { href: "/reports", label: "Reports", icon: BarChart3, grad: "from-blue-400 to-blue-600" },
 ];
 
-// Admin-only apps: billing, settings/team management, and the Form Store (paid forms).
+// Admin-only apps: Workflow builder, Form Store (paid forms), billing, settings/team management.
 const ADMIN_ITEMS = [
+  { href: "/onboarding-board", label: "Workflow", icon: ClipboardCheck, grad: "from-emerald-400 to-emerald-600" },
   { href: "/store", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
   { href: "/billing", label: "Billing", icon: CreditCard, grad: "from-amber-400 to-amber-500" },
   { href: "/settings", label: "Settings", icon: Settings, grad: "from-gray-400 to-gray-600" },

@@ -15,6 +15,7 @@ import { CollapsibleCard } from "@/components/dashboard/collapsible-card";
 import { type SignedDoc } from "@/components/documents/signed-docs";
 import { DeleteEmployeeButton } from "@/components/dashboard/delete-employee-button";
 import { EmployeeStatusCard } from "@/components/dashboard/employee-leaver";
+import { StaffFileDownload } from "@/components/dashboard/staff-file-download";
 
 type Employee = {
   id: string;
@@ -282,7 +283,10 @@ export default async function EmployeeDetailPage({
       </div>
 
       <div className="mt-6">
-        <h2 className="mb-3 text-base font-medium text-white drop-shadow-sm">HR record</h2>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="text-base font-medium text-white drop-shadow-sm">HR record</h2>
+          <StaffFileDownload employeeId={employee.id} />
+        </div>
         <EmployeeHr
           employeeId={employee.id}
           absences={(absences ?? []) as Absence[]}

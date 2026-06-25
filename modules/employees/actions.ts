@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireCompany } from "@/modules/auth/queries";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { syncEmployeeToCarerAcademy } from "@/lib/integrations/carer-academy";
 
 export type EmployeeState = { error?: string; ok?: boolean } | undefined;
@@ -103,4 +104,148 @@ export async function resendToCarerAcademy(
   revalidatePath(`/employees/${id}`);
   if (!result.ok) return { error: result.error ?? "Sync failed." };
   return { ok: true };
+}
+
+function extOf(path: string, fallback = "bin"): string {
+  const base = path.split("/").pop() ?? "";
+  const dot = base.lastIndexOf(".");
+  return dot > 0 ? base.slice(dot + 1).toLowerCase() : fallback;
+}
+
+function safeName(s: string): string {
+  return (s || "document").replace(/[\/\\:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 80);
+}
+
+/** Assemble the complete staff file for an employee: signed contracts/policies
+ *  (text + signature), submitted forms (labelled Q&A) and signed URLs for every
+ *  uploaded file (CV, Right to Work, requested documents like DBS, and HR docs).
+ *  Read-access is RLS-scoped to the caller's company; file URLs are short-lived,
+ *  admin-signed. Used by the one-click "Download staff file" (ZIP) on the
+ *  employee record. */
+export async function getStaffFile(employeeId: string): Promise<{
+  error?: string;
+  employeeRef?: string;
+  fullName?: string;
+  signedDocs?: {
+    title: string; docType: string; signerName: string; signedAt: string;
+    signatureMethod: string; signatureImage: string | null; body: string; version: number | null;
+  }[];
+  forms?: { name: string; submittedAt: string | null; fields: { label: string; value: string }[] }[];
+  files?: { filename: string; url: string }[];
+}> {
+  const { supabase, current } = await requireCompany();
+
+  const { data: emp } = await supabase
+    .from("employees")
+    .select("id, company_id, applicant_id, application_id, employee_ref, first_name, last_name")
+    .eq("id", employeeId)
+    .eq("company_id", current.company_id)
+    .maybeSingle();
+  if (!emp) return { error: "Employee not found." };
+
+  const fullName = [emp.first_name, emp.last_name].filter(Boolean).join(" ") || emp.employee_ref;
+  const admin = createAdminClient();
+
+  // --- Signed contracts + policies (immutable snapshots) ---
+  const signedDocs: NonNullable<Awaited<ReturnType<typeof getStaffFile>>["signedDocs"]> = [];
+  const sdCol = emp.applicant_id ? "applicant_id" : emp.application_id ? "application_id" : null;
+  const sdVal = emp.applicant_id ?? emp.application_id;
+  if (sdCol && sdVal) {
+    const { data: sd } = await supabase
+      .from("signed_documents")
+      .select("title, doc_type, signer_name, signed_at, signature_method, signature_image, body_snapshot, version")
+      .eq("company_id", current.company_id)
+      .eq(sdCol, sdVal as string)
+      .order("signed_at", { ascending: false });
+    for (const r of sd ?? []) {
+      signedDocs.push({
+        title: r.title as string,
+        docType: r.doc_type as string,
+        signerName: r.signer_name as string,
+        signedAt: r.signed_at as string,
+        signatureMethod: r.signature_method as string,
+        signatureImage: (r.signature_image as string) ?? null,
+        body: r.body_snapshot as string,
+        version: (r.version as number) ?? null,
+      });
+    }
+  }
+
+  // --- Submitted forms (labelled Q&A) ---
+  const forms: NonNullable<Awaited<ReturnType<typeof getStaffFile>>["forms"]> = [];
+  if (emp.application_id) {
+    const { data: subs } = await supabase
+      .from("form_submissions")
+      .select("form_id, answers, created_at, forms(name)")
+      .eq("application_id", emp.application_id)
+      .eq("company_id", current.company_id)
+      .order("created_at", { ascending: false });
+    const formIds = Array.from(new Set((subs ?? []).map((s) => s.form_id as string).filter(Boolean)));
+    const labelByField = new Map<string, { label: string; position: number }>();
+    if (formIds.length) {
+      const { data: fields } = await supabase
+        .from("form_fields")
+        .select("id, label, position")
+        .in("form_id", formIds);
+      for (const f of fields ?? []) {
+        labelByField.set(f.id as string, { label: (f.label as string) ?? "Field", position: (f.position as number) ?? 0 });
+      }
+    }
+    for (const s of subs ?? []) {
+      const answers = (s.answers as Record<string, string | string[]>) ?? {};
+      const rows = Object.entries(answers)
+        .map(([fieldId, val]) => {
+          const meta = labelByField.get(fieldId);
+          const value = Array.isArray(val) ? val.join(", ") : String(val ?? "");
+          return { label: meta?.label ?? fieldId, value, position: meta?.position ?? 9999 };
+        })
+        .sort((a, b) => a.position - b.position)
+        .map(({ label, value }) => ({ label, value }));
+      const f = s.forms as unknown as { name: string } | null;
+      forms.push({ name: f?.name ?? "Form", submittedAt: (s.created_at as string) ?? null, fields: rows });
+    }
+  }
+
+  // --- Uploaded files (signed URLs) ---
+  const files: { filename: string; url: string }[] = [];
+  async function addFile(bucket: string, path: string | null | undefined, label: string) {
+    if (!path) return;
+    try {
+      const { data } = await admin.storage.from(bucket).createSignedUrl(path, 600);
+      if (data?.signedUrl) files.push({ filename: `${safeName(label)}.${extOf(path)}`, url: data.signedUrl });
+    } catch {
+      /* skip unreadable files */
+    }
+  }
+
+  if (emp.application_id) {
+    const { data: app } = await supabase
+      .from("applications")
+      .select("cv_path, rtw_doc_path")
+      .eq("id", emp.application_id)
+      .maybeSingle();
+    await addFile("applications", app?.cv_path as string | null, "CV");
+    await addFile("applications", app?.rtw_doc_path as string | null, "Right to Work");
+
+    const { data: docTasks } = await supabase
+      .from("onboarding_tasks")
+      .select("title, doc_path, is_cv")
+      .eq("application_id", emp.application_id)
+      .eq("task_type", "document")
+      .not("doc_path", "is", null);
+    for (const t of docTasks ?? []) {
+      if (t.is_cv) continue; // CV already added from the application
+      await addFile("applications", t.doc_path as string, (t.title as string) || "Document");
+    }
+  }
+
+  const { data: hrDocs } = await supabase
+    .from("employee_documents")
+    .select("title, file_path")
+    .eq("employee_id", employeeId);
+  for (const d of hrDocs ?? []) {
+    await addFile("hr-documents", d.file_path as string, (d.title as string) || "HR document");
+  }
+
+  return { employeeRef: emp.employee_ref as string, fullName, signedDocs, forms, files };
 }

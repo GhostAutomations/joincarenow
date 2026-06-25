@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Briefcase, Users, CalendarClock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { BrandStyle } from "@/components/dashboard/brand-style";
+import { buildJobPostingJsonLd, computeValidThrough } from "@/lib/seo/job-posting";
 import type { Metadata } from "next";
 
 type PublicProfile = {
@@ -33,6 +34,7 @@ type PublicJob = {
   salary: string | null;
   vacancies: number;
   closing_date: string | null;
+  created_at: string;
 };
 
 async function loadJob(
@@ -60,6 +62,9 @@ export async function generateMetadata({
   return {
     title: `${data.title} — ${data.company_name}`,
     description: data.description?.slice(0, 160),
+    alternates: {
+      canonical: `https://www.joincarenow.com/careers/${data.company_slug}/${data.job_slug}`,
+    },
   };
 }
 
@@ -70,9 +75,26 @@ export default async function PublicJobPage({
 }) {
   const { company, job } = await params;
   const [data, profile] = await Promise.all([loadJob(company, job), loadProfile(company)]);
-  // A closed/removed job's public link should land on the company careers page
-  // (which shows other roles, or "no vacancies"), not a dead 404.
-  if (!data) redirect(`/careers/${company}`);
+  // Closed/expired jobs return no row → 404 (Google for Jobs requires expired
+  // postings to be gone from the index, not a stale 200 or a soft redirect).
+  if (!data) notFound();
+
+  const validThroughISO = computeValidThrough(data.closing_date, data.created_at);
+  const jsonLd = buildJobPostingJsonLd({
+    title: data.title,
+    description: data.description,
+    datePostedISO: new Date(data.created_at).toISOString(),
+    validThroughISO,
+    companyName: data.company_name,
+    companySlug: data.company_slug,
+    logoUrl: profile?.logo_url ?? null,
+    location: data.location,
+    employmentType: data.employment_type,
+    salary: data.salary,
+    jobId: data.job_id,
+    companySlugForUrl: data.company_slug,
+    jobSlug: data.job_slug,
+  });
 
   const brand = profile
     ? {
@@ -84,6 +106,11 @@ export default async function PublicJobPage({
 
   return (
     <main className="min-h-screen bg-gray-50">
+      {/* Google for Jobs structured data — matches the visible page. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <BrandStyle brand={brand} />
 
       {/* Branded ribbon */}

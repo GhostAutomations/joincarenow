@@ -16,6 +16,7 @@ import { type SignedDoc } from "@/components/documents/signed-docs";
 import { DeleteEmployeeButton } from "@/components/dashboard/delete-employee-button";
 import { EmployeeStatusCard } from "@/components/dashboard/employee-leaver";
 import { StaffFileDownload } from "@/components/dashboard/staff-file-download";
+import { EmployeeActivity, type ActivityEvent } from "@/components/dashboard/employee-activity";
 
 type Employee = {
   id: string;
@@ -117,6 +118,29 @@ export default async function EmployeeDetailPage({
     const p = m.profiles as unknown as { full_name: string | null; email: string } | null;
     return { user_id: m.user_id as string, name: p?.full_name || p?.email || "Team member" };
   });
+
+  // Admin-only activity/audit trail for this employee (audit_logs is admin-read).
+  let activity: ActivityEvent[] = [];
+  if (current.role === "admin") {
+    const { data: auditRows } = await supabase
+      .from("audit_logs")
+      .select("id, action, after, created_at, profiles:actor_id(full_name, email)")
+      .eq("company_id", current.company_id)
+      .eq("entity_type", "employee")
+      .eq("entity_id", id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    activity = (auditRows ?? []).map((r) => {
+      const p = r.profiles as unknown as { full_name: string | null; email: string | null } | null;
+      return {
+        id: r.id as string,
+        action: r.action as string,
+        after: (r.after as Record<string, unknown> | null) ?? null,
+        createdAt: r.created_at as string,
+        actorName: p?.full_name || p?.email || null,
+      };
+    });
+  }
 
   // Signed contracts + policies (by applicant, falling back to application).
   let signedDocs: SignedDoc[] = [];
@@ -298,6 +322,13 @@ export default async function EmployeeDetailPage({
           cvApplicationId={cvApplicationId}
         />
       </div>
+
+      {current.role === "admin" && (
+        <div className="mt-6">
+          <h2 className="mb-3 text-base font-medium text-white drop-shadow-sm">Activity</h2>
+          <EmployeeActivity events={activity} />
+        </div>
+      )}
 
       <div className="mt-6">
         <h2 className="mb-3 text-base font-medium text-white drop-shadow-sm">Connected systems</h2>

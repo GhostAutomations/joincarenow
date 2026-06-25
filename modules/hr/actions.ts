@@ -40,6 +40,13 @@ export async function markLeaver(_prev: HrState, formData: FormData): Promise<Hr
     .eq("id", employeeId)
     .eq("company_id", current.company_id);
   if (error) return { error: "Could not record the leaver." };
+  await supabase.rpc("log_audit", {
+    p_company_id: current.company_id,
+    p_action: "employee.marked_leaver",
+    p_entity_type: "employee",
+    p_entity_id: employeeId,
+    p_after: { reason: reason === "Other" ? custom || "Other" : reason, last_working_day: lastDay },
+  });
   revalidateEmployee(employeeId);
   revalidatePath("/employees");
   return { ok: true };
@@ -55,6 +62,12 @@ export async function reinstateEmployee(formData: FormData): Promise<void> {
     .update({ status: "active", left_at: null, last_working_day: null, leaving_reason: null, leaving_reason_detail: null })
     .eq("id", employeeId)
     .eq("company_id", current.company_id);
+  await supabase.rpc("log_audit", {
+    p_company_id: current.company_id,
+    p_action: "employee.reinstated",
+    p_entity_type: "employee",
+    p_entity_id: employeeId,
+  });
   revalidateEmployee(employeeId);
   revalidatePath("/employees");
 }
@@ -66,6 +79,13 @@ export async function setEmploymentType(formData: FormData): Promise<void> {
   if (!employeeId || !EMPLOYMENT_TYPES.some((t) => t.value === value)) return;
   const { supabase, current } = await requireCompany();
   await supabase.from("employees").update({ employment_type: value }).eq("id", employeeId).eq("company_id", current.company_id);
+  await supabase.rpc("log_audit", {
+    p_company_id: current.company_id,
+    p_action: "employee.employment_type_changed",
+    p_entity_type: "employee",
+    p_entity_id: employeeId,
+    p_after: { employment_type: value },
+  });
   revalidateEmployee(employeeId);
 }
 

@@ -11,6 +11,8 @@ import { ApplicantForms } from "@/components/dashboard/applicant-forms";
 import { ApplicantReferences } from "@/components/dashboard/applicant-references";
 import { ApplicantTeamMessages } from "@/components/dashboard/applicant-team-messages";
 import { CvRequest } from "@/components/dashboard/cv-request";
+import { DocRequest } from "@/components/dashboard/doc-request";
+import { getOnboardingDocUrl } from "@/modules/onboarding/actions";
 import { RightToWork } from "@/components/dashboard/right-to-work";
 import { OfferModal } from "@/components/dashboard/offer-modal";
 import { RejectModal } from "@/components/dashboard/reject-modal";
@@ -683,6 +685,8 @@ function ApplicantPanel({
   }, [app.id]);
 
   const forms = (tasks ?? []).filter((t) => t.task_type === "form");
+  // Requested documents (DBS, etc.) — CV has its own section above.
+  const documents = (tasks ?? []).filter((t) => t.task_type === "document" && !t.is_cv);
 
   async function openCv() {
     setCvError(null);
@@ -691,6 +695,17 @@ function ApplicantPanel({
     setCvLoading(false);
     if (res.url) window.open(res.url, "_blank", "noopener");
     else setCvError(res.error ?? "Could not open CV");
+  }
+
+  const [docErr, setDocErr] = useState<string | null>(null);
+  const [docBusy, setDocBusy] = useState<string | null>(null);
+  async function openDoc(taskId: string) {
+    setDocErr(null);
+    setDocBusy(taskId);
+    const res = await getOnboardingDocUrl(taskId);
+    setDocBusy(null);
+    if (res.url) window.open(res.url, "_blank", "noopener");
+    else setDocErr(res.error ?? "Could not open the document");
   }
 
   return (
@@ -816,6 +831,55 @@ function ApplicantPanel({
               <CvRequest applicationId={app.id} />
             </div>
             {cvError && <p className="mt-1 text-xs text-red-600">{cvError}</p>}
+          </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-wide text-gray-400">Documents</p>
+            {documents.length > 0 && (
+              <ul className="mt-1 divide-y divide-gray-100">
+                {documents.map((d) => {
+                  const submitted = d.status === "submitted" || d.status === "approved";
+                  return (
+                    <li key={d.id} className="flex items-center justify-between gap-2 py-1.5 text-sm">
+                      <span className="min-w-0 truncate text-gray-700">{d.title}</span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            d.status === "approved"
+                              ? "bg-green-100 text-green-800"
+                              : d.status === "submitted"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {d.status === "approved" ? "Approved" : d.status === "submitted" ? "Uploaded" : "Awaiting upload"}
+                        </span>
+                        {submitted && (
+                          <button
+                            onClick={() => openDoc(d.id)}
+                            disabled={docBusy === d.id}
+                            className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                          >
+                            {docBusy === d.id ? "Opening…" : "View"}
+                          </button>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <DocRequest
+                applicationId={app.id}
+                docTitle="Upload your DBS certificate"
+                docKind="dbs"
+                buttonLabel="Request DBS"
+                sentLabel="DBS requested"
+                placeholder="e.g. Please upload a clear copy of your DBS certificate."
+              />
+            </div>
+            {docErr && <p className="mt-1 text-xs text-red-600">{docErr}</p>}
           </div>
 
         </div>

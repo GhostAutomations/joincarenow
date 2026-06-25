@@ -214,6 +214,8 @@ export type HireChecklistItem = {
   task_type: string;
   required: boolean;
   status: string;
+  is_cv?: boolean;
+  doc_kind?: string | null;
 };
 
 /** Workflow items for an application, used by the pre-Hire confirmation.
@@ -225,7 +227,7 @@ export async function getHireChecklist(
   const [{ data: tasks }, { data: refs }, { data: app }] = await Promise.all([
     supabase
       .from("onboarding_tasks")
-      .select("id, title, task_type, required, status")
+      .select("id, title, task_type, required, status, is_cv, doc_kind")
       .eq("application_id", applicationId)
       .order("position"),
     supabase

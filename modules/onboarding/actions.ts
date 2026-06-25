@@ -459,6 +459,51 @@ export async function sendAdHocForm(
   return { ok: true, notifyError };
 }
 
+/** Staff: ask the applicant to upload a named document (e.g. a DBS certificate).
+ *  Creates a required 'document' task in their portal; the upload reuses the
+ *  shared set_onboarding_doc path. `docKind` tags it (e.g. 'dbs') so the staff
+ *  file / pipeline can recognise it. */
+export async function requestDocument(
+  applicationId: string,
+  docTitle: string,
+  message: string,
+  docKind?: string | null,
+  notify?: "email" | "sms" | "both" | null
+): Promise<{ ok?: boolean; error?: string; notifyError?: string }> {
+  const title = (docTitle || "").trim() || "Upload a document";
+  const { supabase } = await requireCompany();
+  const { error } = await supabase.rpc("request_document", {
+    p_application_id: applicationId,
+    p_title: title,
+    p_message: message || null,
+    p_doc_kind: docKind || null,
+  });
+  if (error) return { error: error.message || "Could not request the document. Please try again." };
+
+  const channels: ("email" | "sms")[] =
+    notify === "both" ? ["email", "sms"] : notify === "email" || notify === "sms" ? [notify] : [];
+  let notifyError: string | undefined;
+  if (channels.length) {
+    const intro = message.trim()
+      ? message.trim() + "\n\n"
+      : `{{company_name}} has asked you to upload a document (${title}) for the {{job_title}} role.\n\n`;
+    for (const channel of channels) {
+      const res = await notifyApplicant({
+        applicationId,
+        channel,
+        subject: `Document needed: ${title} — {{company_name}}`,
+        body: `Hi {{first_name}},\n\n${intro}Use the button below to log in to your applicant portal and upload it.\n\nThank you.`,
+        cta: { label: "Upload document", url: "{{portal_link}}" },
+      });
+      if (!res.ok) notifyError = res.error;
+    }
+  }
+
+  revalidatePath("/pipeline");
+  revalidatePath("/onboarding-board");
+  return { ok: true, notifyError };
+}
+
 /** Staff: ask the applicant to upload a CV. Creates a document task in their
  *  portal with an optional message. */
 export async function requestCv(

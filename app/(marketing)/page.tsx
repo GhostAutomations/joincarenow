@@ -95,7 +95,7 @@ const STEPS = [
 ];
 
 const FOUNDING = [
-  "Founding-customer pricing — your rate, kept while you stay",
+  "Founding-customer pricing and special offers, kept while you stay",
   "Hands-on setup: we'll build your first careers page and jobs with you",
   "A direct line to shape what we build next",
 ];
@@ -126,18 +126,14 @@ export default function LandingPage() {
         <div className="jcn-blob jcn-blob-3 pointer-events-none absolute -bottom-24 right-0 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
         <div className="relative mx-auto max-w-4xl px-6 pb-20 pt-32 text-center sm:pb-28 sm:pt-40">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden /> Founding customers now onboarding
+            <Sparkles className="h-3.5 w-3.5" aria-hidden /> Founding customer offers available
           </span>
-          <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            Hire compliant care staff faster — without the spreadsheet chaos
+          <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+            Hire compliant care staff faster, without the chaos of spreadsheets
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-white/90">
-            One calm system from advert to first shift — track every applicant, capture every
-            check, and keep your evidence inspection-ready. No more spreadsheets, no more chasing.
-          </p>
-          <p className="mx-auto mt-4 max-w-2xl text-base font-medium text-white">
-            From £55 a month — less than a couple of hours of admin time, built to give you back
-            far more than that every week.
+            One calm system from advert to first shift: track every applicant, capture every
+            check, and keep your evidence inspection-ready.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a href="#demo" className="inline-flex items-center gap-2 rounded-lg bg-white px-7 py-3.5 text-base font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">
@@ -147,7 +143,7 @@ export default function LandingPage() {
               See pricing
             </a>
           </div>
-          <p className="mt-4 text-sm text-white/80">No hard sell · Cancel anytime · No setup fee on annual</p>
+          <p className="mt-4 text-sm text-white/80">No hard sell · No obligation · No setup fee on annual plans</p>
 
           {/* Product preview */}
           <div className="mx-auto mt-16 max-w-5xl">
@@ -372,12 +368,15 @@ export default function LandingPage() {
               <span className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
                 <Sparkles className="h-3.5 w-3.5" aria-hidden /> Founding customers
               </span>
-              <h2 className="mt-4 text-2xl font-bold text-gray-900 sm:text-3xl">Get in early and help shape it</h2>
+              <h2 className="mt-4 text-2xl font-bold text-gray-900 sm:text-3xl">Book a demo now for special founding-customer offers</h2>
               <p className="mt-4 text-gray-600">
                 We&apos;re building Join Care Now hand in hand with a small group of UK care
-                providers. Join now and you&apos;ll get our best pricing, real help getting set
-                up, and a genuine say in what we build next.
+                providers. Get in early and you&apos;ll get our best pricing and special offers,
+                real help getting set up, and a genuine say in what we build next.
               </p>
+              <a href="#demo" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">
+                Book a demo <ArrowRight className="h-4 w-4" aria-hidden />
+              </a>
             </div>
             <ul className="space-y-3">
               {FOUNDING.map((pt) => (

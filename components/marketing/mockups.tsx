@@ -58,7 +58,7 @@ function Card({
 export function BoardMockup() {
   const columns = [
     {
-      title: "Contact ready",
+      title: "Applied",
       count: 3,
       cards: [
         { initials: "AM", color: "bg-rose-500", name: "Aisha Malik", role: "Care Assistant", chip: "New", chipClass: "bg-gray-100 text-gray-600" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Check, Linkedin, Facebook, Users, QrCode, Link2 } from "lucide-react";
+import { Copy, Check, Linkedin, Facebook, Users, QrCode, Link2, MessageCircle } from "lucide-react";
 
 /** qrcode-generator loaded from the CDN once (no npm dependency needed — mirrors
  *  the jsPDF loader in signed-docs.tsx). Returns the global `qrcode` factory. */
@@ -97,6 +97,29 @@ export function JobPromote(props: JobPromoteProps) {
       "_blank",
       "noopener,width=670,height=620"
     );
+  }
+
+  // LinkedIn (like Facebook) can't pre-fill the caption — copy it, then open the
+  // share dialog with the job link to paste into.
+  async function shareLinkedIn() {
+    try {
+      await navigator.clipboard.writeText(linkedinPost);
+      setCopied("li-share");
+      setTimeout(() => setCopied((c) => (c === "li-share" ? null : c)), 4000);
+    } catch {
+      /* clipboard may be blocked; still open the dialog */
+    }
+    window.open(
+      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(jobUrl)}`,
+      "_blank",
+      "noopener,width=670,height=620"
+    );
+  }
+
+  // WhatsApp DOES allow a pre-filled message, so this is a true one-tap share —
+  // opens WhatsApp with the staff referral message + link ready to send.
+  function shareWhatsApp() {
+    window.open(`https://wa.me/?text=${encodeURIComponent(staffMessage)}`, "_blank", "noopener");
   }
 
   async function openPoster() {
@@ -197,13 +220,25 @@ export function JobPromote(props: JobPromoteProps) {
 
       {/* Pre-written social posts */}
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <PostBlock
-          icon={<Linkedin className="h-3.5 w-3.5" aria-hidden />}
-          label="LinkedIn post"
-          text={linkedinPost}
-          copied={copied === "li"}
-          onCopy={() => copy("li", linkedinPost)}
-        />
+        <div>
+          <PostBlock
+            icon={<Linkedin className="h-3.5 w-3.5" aria-hidden />}
+            label="LinkedIn post"
+            text={linkedinPost}
+            copied={copied === "li"}
+            onCopy={() => copy("li", linkedinPost)}
+          />
+          <button
+            type="button"
+            onClick={shareLinkedIn}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[#0A66C2] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#084e96]"
+          >
+            <Linkedin className="h-3.5 w-3.5" aria-hidden /> Share to LinkedIn
+          </button>
+          {copied === "li-share" && (
+            <p className="mt-1 text-xs text-gray-500">Caption copied — paste it into the LinkedIn post box.</p>
+          )}
+        </div>
         <div>
           <PostBlock
             icon={<Facebook className="h-3.5 w-3.5" aria-hidden />}
@@ -235,6 +270,13 @@ export function JobPromote(props: JobPromoteProps) {
           onCopy={() => copy("staff", staffMessage)}
           rows={3}
         />
+        <button
+          type="button"
+          onClick={shareWhatsApp}
+          className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#1da851]"
+        >
+          <MessageCircle className="h-3.5 w-3.5" aria-hidden /> Share on WhatsApp
+        </button>
       </div>
 
       {/* QR poster */}

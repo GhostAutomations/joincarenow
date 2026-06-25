@@ -77,24 +77,24 @@ export default async function MessagesPage({
 
       <div className="mt-4 grid gap-3 lg:grid-cols-[300px_1fr]">
         {/* Left: contacts / conversations */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3 text-sm font-semibold text-gray-900">
-            <MessagesSquare className="h-4 w-4 text-brand-600" /> Team
+        <div className="overflow-hidden rounded-2xl border border-white/25 bg-white/15 shadow-sm backdrop-blur-md">
+          <div className="flex items-center gap-2 border-b border-white/15 px-4 py-3 text-sm font-semibold text-white">
+            <MessagesSquare className="h-4 w-4 text-white/80" /> Team
           </div>
           {rows.length === 0 ? (
-            <p className="p-4 text-sm text-gray-500">No other team members yet. Invite colleagues in Settings → Team.</p>
+            <p className="p-4 text-sm text-white/70">No other team members yet. Invite colleagues in Settings → Team.</p>
           ) : (
-            <ul className="max-h-[64vh] divide-y divide-gray-100 overflow-y-auto">
+            <ul className="max-h-[64vh] divide-y divide-white/10 overflow-y-auto">
               {rows.map((c) => (
                 <li key={c.id}>
-                  <Link href={`/messages?with=${c.id}`} className={`flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 ${active?.id === c.id ? "bg-brand-50" : ""}`}>
-                    <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
+                  <Link href={`/messages?with=${c.id}`} className={`flex items-center gap-3 px-3 py-2.5 hover:bg-white/10 ${active?.id === c.id ? "bg-white/15" : ""}`}>
+                    <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/25 text-sm font-semibold text-white">
                       {c.name.slice(0, 1).toUpperCase()}
                       {c.unread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">{c.unread}</span>}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-gray-900">{c.name}</p>
-                      <p className={`truncate text-xs ${c.unread > 0 ? "font-medium text-gray-700" : "text-gray-500"}`}>{c.snippet}</p>
+                      <p className="truncate text-sm font-medium text-white">{c.name}</p>
+                      <p className={`truncate text-xs ${c.unread > 0 ? "font-medium text-white/90" : "text-white/60"}`}>{c.snippet}</p>
                     </div>
                   </Link>
                 </li>
@@ -108,9 +108,9 @@ export default async function MessagesPage({
           {active ? (
             <StaffChat recipientId={active.id} recipientName={active.name} messages={messages} applicants={applicants} />
           ) : (
-            <div className="flex h-[70vh] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white text-center shadow-sm">
-              <MessagesSquare className="h-10 w-10 text-gray-300" />
-              <p className="mt-2 text-sm text-gray-500">{rows.length === 0 ? "Invite a colleague to start messaging." : "Select a team member to start chatting."}</p>
+            <div className="flex h-[70vh] flex-col items-center justify-center rounded-2xl border border-white/25 bg-white/15 text-center shadow-sm backdrop-blur-md">
+              <MessagesSquare className="h-10 w-10 text-white/40" />
+              <p className="mt-2 text-sm text-white/70">{rows.length === 0 ? "Invite a colleague to start messaging." : "Select a team member to start chatting."}</p>
             </div>
           )}
         </div>

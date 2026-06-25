@@ -207,13 +207,15 @@ export async function runReminders(): Promise<ReminderRun> {
     }
   }
 
-  // 2) Missing-document chaser — incomplete required onboarding tasks older than
-  //    3 days. One message per application, repeating ~every 3 days.
+  // 2) Missing-document chaser — required onboarding tasks the APPLICANT still
+  //    has to action (pending or sent-back), older than 3 days, repeating ~every
+  //    3 days. Excludes submitted/approved tasks (nothing for them to do) and
+  //    hired / not-progressing applications.
   {
     const { data } = await db
       .from("onboarding_tasks")
-      .select(`application_id, company_id, applicant_id, applications!inner(${appSelect})`)
-      .is("completed_at", null)
+      .select(`application_id, company_id, applicant_id, applications!inner(stage, ${appSelect})`)
+      .in("status", ["pending", "rejected"])
       .eq("required", true)
       .lt("created_at", iso(threeDaysAgo));
     const seen = new Set<string>();
@@ -221,6 +223,7 @@ export async function runReminders(): Promise<ReminderRun> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const row = t as any;
       if (seen.has(row.application_id)) continue;
+      if (["hired", "rejected"].includes(row.applications?.stage)) continue;
       seen.add(row.application_id);
       if (!cfg(row.company_id, "docs").enabled) continue;
       const ctx = ctxFromApp(row.company_id, row.application_id, row.applicant_id, row.applications);
@@ -233,9 +236,8 @@ export async function runReminders(): Promise<ReminderRun> {
   {
     const { data } = await db
       .from("onboarding_tasks")
-      .select(`application_id, company_id, applicant_id, applications!inner(${appSelect})`)
-      .is("completed_at", null)
-      .neq("status", "approved")
+      .select(`application_id, company_id, applicant_id, applications!inner(stage, ${appSelect})`)
+      .in("status", ["pending", "rejected"])
       .gte("due_date", dayStr(now))
       .lte("due_date", dayStr(plus2));
     const seen = new Set<string>();
@@ -243,6 +245,7 @@ export async function runReminders(): Promise<ReminderRun> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const row = t as any;
       if (seen.has(row.application_id)) continue;
+      if (["hired", "rejected"].includes(row.applications?.stage)) continue;
       seen.add(row.application_id);
       if (!cfg(row.company_id, "onboarding").enabled) continue;
       const ctx = ctxFromApp(row.company_id, row.application_id, row.applicant_id, row.applications);

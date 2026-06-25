@@ -19,12 +19,12 @@ import { BoardMockup, OnboardingMockup } from "@/components/marketing/mockups";
 export const metadata: Metadata = {
   title: "Care recruitment & onboarding software | Join Care Now",
   description:
-    "Hire compliant care staff faster — without the spreadsheet chaos. Branded careers pages, applicant tracking and full onboarding (Right to Work, DBS, references, contracts) in one calm system, kept inspection-ready. Built for UK care providers, from £55/month.",
+    "Hire compliant care staff faster, without the chaos of spreadsheets. Branded careers pages, applicant tracking and full onboarding (Right to Work, DBS, references, contracts) in one calm system, kept inspection-ready. Built for UK care providers, from £55/month.",
   alternates: { canonical: "https://www.joincarenow.com" },
   openGraph: {
     title: "Care recruitment & onboarding software | Join Care Now",
     description:
-      "Be inspection-ready from the first applicant to their first shift. Recruitment and onboarding in one calm system, built for UK care providers.",
+      "Hire compliant care staff faster, without the chaos of spreadsheets. Recruitment and onboarding in one calm system, built for UK care providers.",
     url: "https://www.joincarenow.com",
     siteName: "Join Care Now",
     locale: "en_GB",
@@ -46,7 +46,7 @@ const FEATURES = [
   {
     icon: Megaphone,
     title: "Fill roles faster",
-    proof: "Advertise every job on your own branded careers page and share the link anywhere — no job-board fees.",
+    proof: "Advertise every job on your own branded careers page and share the link anywhere, with no job-board fees.",
   },
   {
     icon: FileCheck2,
@@ -56,12 +56,12 @@ const FEATURES = [
   {
     icon: MessageSquare,
     title: "Email & SMS, all in one place",
-    proof: "Message candidates with templates and see what's been sent, delivered and replied to — without leaving the platform.",
+    proof: "Message candidates with templates and see what's been sent, delivered and replied to, without leaving the platform.",
   },
   {
     icon: UserCheck,
     title: "One staff record on hire",
-    proof: "When someone's hired, their whole history becomes a single employee record — no re-keying, nothing lost.",
+    proof: "When someone's hired, their whole history becomes a single employee record, with no re-keying and nothing lost.",
   },
 ];
 
@@ -73,7 +73,7 @@ const PROBLEMS = [
 ];
 
 const PLAN_INCLUDES = [
-  "Every feature included — recruitment, onboarding and employee records",
+  "Every feature included: recruitment, onboarding and employee records",
   "Core compliance always in the base: Right to Work, DBS, references",
   "Branded careers page & applicant tracking",
   "Contracts & policies with e-signature",
@@ -158,17 +158,17 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">Inspection-ready</p>
-              <h2 className="mt-3 text-2xl font-bold text-gray-900 sm:text-3xl">Walk into inspection with the evidence ready</h2>
+              <h2 className="mt-3 text-2xl font-bold text-gray-900 sm:text-3xl">Walk into your next inspection with the evidence ready</h2>
               <p className="mt-4 text-gray-600">
                 Safe recruitment sits at the heart of CQC Regulation 19 (fit and proper persons)
-                and Regulation 17 (good governance and records) — with the equivalent
+                and Regulation 17 (good governance and records), with the equivalent
                 expectations from CIW and Social Care Wales. Join Care Now captures each check,
                 time-stamps it, and stores it against the person, so the evidence is in one place
                 the moment you need it.
               </p>
               <p className="mt-4 text-sm text-gray-500">
                 Join Care Now helps you stay organised and evidence safe recruitment. It does
-                not replace your own checks — legal responsibility for compliance stays with
+                not replace your own checks; legal responsibility for compliance stays with
                 your organisation.
               </p>
             </div>
@@ -184,7 +184,7 @@ export default function LandingPage() {
             Recruitment shouldn&apos;t feel like firefighting
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-center text-gray-600">
-            If hiring lives across spreadsheets, inboxes and sticky notes, things slip — and in
+            If hiring lives across spreadsheets, inboxes and sticky notes, things slip. And in
             care, the things that slip are the ones an inspector asks about. Join Care Now puts
             the whole journey in one calm place.
           </p>
@@ -216,10 +216,10 @@ export default function LandingPage() {
               <h2 className="mt-3 text-2xl font-bold text-gray-900 sm:text-3xl">Stop good carers going cold</h2>
               <p className="mt-4 text-gray-600">
                 In care, the best applicants are gone in days. When CVs are scattered across
-                inboxes, people get missed — and every missed carer is a shift you&apos;re still
-                trying to cover. Join Care Now shows you every applicant at a glance, who&apos;s
-                waiting on what, and who needs a nudge — so you can reply by email or SMS in
-                seconds and move them from &ldquo;applied&rdquo; to started without the gaps.
+                inboxes, people get missed, and every missed carer is a shift you&apos;re still
+                trying to cover. Join Care Now shows you every applicant at a glance: who&apos;s
+                waiting on what, and who needs a nudge. Reply by email or SMS in seconds and move
+                them from applied to their first shift without the gaps.
               </p>
             </div>
           </div>
@@ -233,7 +233,7 @@ export default function LandingPage() {
           <h2 className="text-2xl font-bold sm:text-3xl">It pays for itself in time alone</h2>
           <p className="mx-auto mt-4 max-w-2xl text-white/90">
             At £55 a month, Join Care Now costs less than a couple of hours of admin. It&apos;s
-            built to give you those hours back — and then some — every single week. One vacancy
+            built to give you those hours back, and then some, every single week. One vacancy
             filled sooner, one fewer compliance scramble before an inspection, and it&apos;s
             already more than paid for.
           </p>
@@ -248,7 +248,7 @@ export default function LandingPage() {
             </div>
             <div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur">
               <Heart className="mx-auto h-6 w-6" aria-hidden />
-              <p className="mt-3 text-sm text-white/90">Fewer dropped carers means fewer uncovered shifts</p>
+              <p className="mt-3 text-sm text-white/90">Fewer dropped carers, so fewer uncovered shifts</p>
             </div>
           </div>
         </div>
@@ -259,7 +259,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Everything you need to hire well</h2>
           <p className="mt-3 text-gray-600">
-            Built for the realities of care hiring — and simple enough for a busy registered manager.
+            Built for the realities of care hiring, and simple enough for a busy registered manager.
           </p>
         </div>
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -281,7 +281,7 @@ export default function LandingPage() {
           <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">One plan. Everything included.</h2>
           <p className="mt-3 text-gray-600">
             No quote-chasing, no tiers to decode and no hidden fees. Every feature is in the
-            box — core compliance (Right to Work, DBS and references) is always in the base,
+            box, and core compliance (Right to Work, DBS and references) is always in the base,
             never an add-on.
           </p>
         </div>
@@ -298,13 +298,13 @@ export default function LandingPage() {
               <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-white/70">Three ways to pay</p>
               <ul className="mt-2 space-y-2 text-sm">
                 <li className="rounded-lg bg-white/10 px-3 py-2">
-                  <span className="font-semibold">Monthly</span> — £55/mo, cancel anytime. <span className="text-white/70">£150 one-off setup.</span>
+                  <span className="font-semibold">Monthly:</span> £55/mo, cancel anytime. <span className="text-white/70">£150 one-off setup.</span>
                 </li>
                 <li className="rounded-lg bg-white/10 px-3 py-2">
-                  <span className="font-semibold">12-month plan</span> — £55/mo, <span className="text-white/90">no setup fee</span>. Committed for 12 months.
+                  <span className="font-semibold">12-month plan:</span> £55/mo, <span className="text-white/90">no setup fee</span>. Committed for 12 months.
                 </li>
                 <li className="rounded-lg bg-white/10 px-3 py-2">
-                  <span className="font-semibold">Annual</span> — £550/year (<span className="text-white/90">2 months free</span>), no setup fee.
+                  <span className="font-semibold">Annual:</span> £550/year (<span className="text-white/90">2 months free</span>), no setup fee.
                 </li>
               </ul>
               <a href="#demo" className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">

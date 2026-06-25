@@ -5,6 +5,7 @@ import { requireCompany } from "@/modules/auth/queries";
 import { updateJob, setJobStatus, reopenJob } from "@/modules/jobs/actions";
 import { JobForm } from "@/components/dashboard/job-form";
 import { ArchiveJobButton } from "@/components/dashboard/archive-job";
+import { JobPromote } from "@/components/dashboard/job-promote";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-gray-100 text-gray-700",
@@ -21,11 +22,11 @@ export default async function EditJobPage({
   const { id } = await params;
   const { supabase, current } = await requireCompany();
 
-  const [{ data: job }, { data: forms }, { data: branches }, { data: roles }, { data: contracts }, { data: policies }, { data: jobPolicyRows }] = await Promise.all([
+  const [{ data: job }, { data: forms }, { data: branches }, { data: roles }, { data: contracts }, { data: policies }, { data: jobPolicyRows }, { data: company }] = await Promise.all([
     supabase
       .from("jobs")
       .select(
-        "id, title, slug, description, employment_type, branch_id, role_id, workflow_role_id, salary, vacancies, closing_date, status, application_form_id, contract_template_id"
+        "id, title, slug, description, location, employment_type, branch_id, role_id, workflow_role_id, salary, vacancies, closing_date, status, application_form_id, contract_template_id"
       )
       .eq("id", id)
       .eq("company_id", current.company_id)
@@ -59,6 +60,11 @@ export default async function EditJobPage({
       .from("job_policies")
       .select("policy_id")
       .eq("job_id", id),
+    supabase
+      .from("companies")
+      .select("name, settings")
+      .eq("id", current.company_id)
+      .single(),
   ]);
 
   if (!job) notFound();
@@ -66,6 +72,8 @@ export default async function EditJobPage({
   const jobPolicyIds = (jobPolicyRows ?? []).map((r) => r.policy_id as string);
 
   const careersUrl = `/careers/${current.companies.slug}/${job.slug}`;
+  const companyRow = company as { name: string | null; settings: { brand?: { primary?: string | null; logo_url?: string | null } | null } | null } | null;
+  const brand = companyRow?.settings?.brand ?? null;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -145,6 +153,19 @@ export default async function EditJobPage({
           </p>
         )}
       </div>
+
+      {job.status === "published" && (
+        <JobPromote
+          companyName={companyRow?.name ?? current.companies.name}
+          jobTitle={job.title}
+          location={job.location ?? null}
+          salary={job.salary ?? null}
+          employmentType={job.employment_type ?? null}
+          jobUrl={`https://www.joincarenow.com${careersUrl}`}
+          brandPrimary={brand?.primary ?? null}
+          logoUrl={brand?.logo_url ?? null}
+        />
+      )}
 
       <div className="mt-6 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-6">
         <JobForm

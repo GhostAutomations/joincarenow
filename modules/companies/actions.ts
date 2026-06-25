@@ -275,13 +275,31 @@ export async function setReminderSettings(
   formData: FormData
 ): Promise<SettingsState> {
   const kinds = ["interview", "docs", "onboarding", "start_date"] as const;
-  const reminders: Record<string, { enabled: boolean; channel: string }> = {};
+  const clamp = (raw: string | undefined, def: number, min: number, max: number): number => {
+    const n = parseInt(raw ?? "", 10);
+    return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : def;
+  };
+  const reminders: Record<string, Record<string, unknown>> = {};
   for (const k of kinds) {
     const ch = formData.get(`${k}_channel`)?.toString() ?? "both";
-    reminders[k] = {
+    const base = {
       enabled: formData.get(`${k}_enabled`) === "on",
       channel: ["email", "sms", "both"].includes(ch) ? ch : "both",
     };
+    const num = (field: string) => formData.get(`${k}_${field}`)?.toString();
+    if (k === "interview") {
+      reminders[k] = { ...base, hoursBefore: clamp(num("hoursBefore"), 24, 1, 72) };
+    } else if (k === "docs") {
+      reminders[k] = {
+        ...base,
+        afterDays: clamp(num("afterDays"), 3, 1, 30),
+        repeatDays: clamp(num("repeatDays"), 3, 1, 30),
+      };
+    } else if (k === "onboarding") {
+      reminders[k] = { ...base, daysBefore: clamp(num("daysBefore"), 2, 1, 14) };
+    } else {
+      reminders[k] = { ...base, daysBefore: clamp(num("daysBefore"), 1, 1, 14) };
+    }
   }
 
   const { db: supabase, companyId } = await settingsContext(formData);

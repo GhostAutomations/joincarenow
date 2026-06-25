@@ -25,6 +25,7 @@ export type OfferInfo = {
   startDate: string | null;
   pay: string | null;
   hours: string | null;
+  employmentType: string | null;
   conditional: boolean;
   conditions: string | null;
   message: string | null;
@@ -41,7 +42,7 @@ export async function getOffer(applicationId: string): Promise<OfferInfo | null>
   const { supabase, current } = await requireCompany();
   const { data } = await supabase
     .from("offers")
-    .select("id, role, start_date, pay, hours, conditional, conditions, message, status, sent_at, responded_at, decline_reason, applicant_id")
+    .select("id, role, start_date, pay, hours, employment_type, conditional, conditions, message, status, sent_at, responded_at, decline_reason, applicant_id")
     .eq("application_id", applicationId)
     .eq("company_id", current.company_id)
     .order("created_at", { ascending: false })
@@ -68,6 +69,7 @@ export async function getOffer(applicationId: string): Promise<OfferInfo | null>
     startDate: (data.start_date as string) ?? null,
     pay: (data.pay as string) ?? null,
     hours: (data.hours as string) ?? null,
+    employmentType: (data.employment_type as string) ?? null,
     conditional: !!data.conditional,
     conditions: (data.conditions as string) ?? null,
     message: (data.message as string) ?? null,
@@ -141,6 +143,8 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
   const startDate = formData.get("startDate")?.toString() || null;
   const pay = formData.get("pay")?.toString().trim() || null;
   const hours = formData.get("hours")?.toString().trim() || null;
+  const employmentTypeRaw = formData.get("employment_type")?.toString() || "";
+  const employmentType = ["full_time", "part_time", "student_20"].includes(employmentTypeRaw) ? employmentTypeRaw : null;
   const conditional = formData.get("conditional") === "on";
   const conditions = formData.get("conditions")?.toString().trim() || null;
   const message = formData.get("message")?.toString().trim() || null;
@@ -172,6 +176,7 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
       start_date: startDate,
       pay,
       hours,
+      employment_type: employmentType,
       conditional,
       conditions,
       message,

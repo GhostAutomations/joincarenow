@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Send } from "lucide-react";
 import { sendOffer, getOffer, getOfferDocOptions, type OfferInfo, type OfferDocOptions } from "@/modules/offers/actions";
+import { EMPLOYMENT_TYPES } from "@/lib/hr";
 
 const input =
   "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -97,6 +98,13 @@ export function OfferModal({
               <label className="block">
                 <span className="text-xs font-medium text-gray-600">Hours</span>
                 <input name="hours" defaultValue={p?.hours ?? ""} placeholder="e.g. Full-time, 37.5/wk" className={input} />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="text-xs font-medium text-gray-600">Employment type</span>
+                <select name="employment_type" defaultValue={p?.employmentType ?? ""} className={input}>
+                  <option value="">Not set</option>
+                  {EMPLOYMENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
               </label>
               <label className="block sm:col-span-2">
                 <span className="text-xs font-medium text-gray-600">Manager</span>

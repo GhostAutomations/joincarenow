@@ -210,10 +210,7 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
     conditional && conditions ? `Conditions: ${conditions}` : "",
     message ? `\n${message}` : "",
     "",
-    "Please review and accept or decline your offer here:",
-    link,
-    "",
-    "You can also accept or decline in your applicant portal.",
+    "Use the button below to review and accept or decline your offer. You can also do this any time from your applicant portal.",
     "",
     "Thank you,",
     "{{company_name}}",
@@ -226,6 +223,7 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
     channel: "email",
     subject: "Job offer from {{company_name}}",
     body,
+    cta: { label: "Review your offer", url: link },
   });
 
   revalidatePath("/pipeline");

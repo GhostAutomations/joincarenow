@@ -141,8 +141,7 @@ async function sendInterviewInvite(
       durationMinutes: iv.duration_minutes,
       location: calLocation,
     };
-    const calBlock = (g: string, o: string) =>
-      `\n\nAdd to your calendar:\nGoogle: ${g}\nOutlook: ${o}\n(A calendar invite is attached to this email.)`;
+    const calNote = "\n\nA calendar invite is attached to this email.";
 
     const emailSubject =
       variant === "confirmed"
@@ -152,10 +151,10 @@ async function sendInterviewInvite(
       variant === "confirmed"
         ? `Hi ${first},\n\nGood news — your interview with ${company} is confirmed.\n\n` +
           `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n\n` +
-          `If you need to change anything, use this link:\n${link}\n\nSee you then,\n${company}`
+          `If you need to change anything, use the button below.\n\nSee you then,\n${company}`
         : `Hi ${first},\n\n${company} would like to invite you to an interview.\n\n` +
           `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n\n` +
-          `Please confirm, ask to change the time, or decline here:\n${link}\n\nThank you,\n${company}`;
+          `Use the buttons below to confirm, ask to change the time, or decline.\n\nThank you,\n${company}`;
     const smsBody =
       variant === "confirmed"
         ? `Hi ${first}, your interview with ${company} is confirmed for ${when} (${modeText}). Need to change it? ${link}`
@@ -189,11 +188,16 @@ async function sendInterviewInvite(
     const applicantLinks = calendarLinks(applicantEvent);
 
     if ((channel === "email" || channel === "both") && ap?.email) {
-      const bodyWithCal = emailBody + calBlock(applicantLinks.google, applicantLinks.outlook);
+      const bodyWithCal = emailBody + calNote;
       const r = await sendBrandedEmail(supabase, app?.company_id, {
         to: ap.email,
         subject: emailSubject,
         text: bodyWithCal,
+        ctas: [
+          { label: variant === "confirmed" ? "Manage your interview" : "Respond to invitation", url: link },
+          { label: "Add to Google", url: applicantLinks.google, style: "ghost" },
+          { label: "Add to Outlook", url: applicantLinks.outlook, style: "ghost" },
+        ],
         attachments: [{ filename: "interview.ics", content: applicantIcs }],
       });
       await log("email", ap.email, emailSubject, bodyWithCal, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);
@@ -255,12 +259,16 @@ async function sendInterviewInvite(
             `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n` +
             (ap?.email ? `Candidate email: ${ap.email}\n` : "") +
             (ap?.phone ? `Candidate phone: ${ap.phone}\n` : "") +
-            calBlock(il.google, il.outlook);
+            calNote;
           const subj = `Interview scheduled: ${applicantName} — ${jobTitle}`;
           const r = await sendBrandedEmail(supabase, app.company_id, {
             to: interviewerEmail,
             subject: subj,
             text: interviewerBody,
+            ctas: [
+              { label: "Add to Google", url: il.google, style: "ghost" },
+              { label: "Add to Outlook", url: il.outlook, style: "ghost" },
+            ],
             attachments: [{ filename: "interview.ics", content: interviewerIcs }],
           });
           await log("email", interviewerEmail, `[Interviewer] ${subj}`, interviewerBody, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);

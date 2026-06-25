@@ -32,11 +32,15 @@ export async function sendRejection(
 
   const emailBody =
     talentPool && token
-      ? `${message}\n\nWe'd love to keep your details for future roles. If you're happy for us to, join our talent pool here (you can ask to be removed any time):\n${BASE_URL}/talent-pool/${token}`
+      ? `${message}\n\nWe'd love to keep your details for future roles. If you're happy for us to, use the button below to join our talent pool (you can ask to be removed any time).`
       : message;
+  const talentCta =
+    talentPool && token
+      ? { label: "Join our talent pool", url: `${BASE_URL}/talent-pool/${token}` }
+      : undefined;
 
   if (channel === "email" || channel === "both") {
-    await notifyApplicant({ applicationId, channel: "email", subject: "Update on your application", body: emailBody });
+    await notifyApplicant({ applicationId, channel: "email", subject: "Update on your application", body: emailBody, cta: talentCta });
   }
   if (channel === "sms" || channel === "both") {
     await notifyApplicant({ applicationId, channel: "sms", subject: "Update on your application", body: message });

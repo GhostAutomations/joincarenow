@@ -448,7 +448,8 @@ export async function sendAdHocForm(
       subject: "A form to complete from {{company_name}}",
       body:
         "Hi {{first_name}},\n\n{{company_name}} has sent you a form to complete for the {{job_title}} role. " +
-        "Please log in to your applicant portal to fill it in:\n{{portal_link}}\n\nThank you.",
+        "Use the button below to log in to your applicant portal and fill it in.\n\nThank you.",
+      cta: { label: "Complete the form", url: "{{portal_link}}" },
     });
     if (!res.ok) notifyError = res.error;
   }
@@ -484,7 +485,8 @@ export async function requestCv(
         applicationId,
         channel,
         subject: "Please upload your CV — {{company_name}}",
-        body: `Hi {{first_name}},\n\n${intro}Please log in to your applicant portal to upload it:\n{{portal_link}}\n\nThank you.`,
+        body: `Hi {{first_name}},\n\n${intro}Use the button below to log in to your applicant portal and upload it.\n\nThank you.`,
+        cta: { label: "Upload your CV", url: "{{portal_link}}" },
       });
       if (!res.ok) notifyError = res.error;
     }

@@ -177,7 +177,8 @@ export async function rejectDocument(
       applicationId: doc.application_id as string,
       channel: "email",
       subject: `Please re-sign: ${doc.title}`,
-      body: `Hi {{first_name}},\n\nWe need you to sign "${doc.title}" again. Reason: ${trimmed}\n\nPlease log in to your portal to re-sign:\nhttps://www.joincarenow.com/portal\n\nKind regards,\n{{company_name}}`,
+      body: `Hi {{first_name}},\n\nWe need you to sign "${doc.title}" again. Reason: ${trimmed}\n\nUse the button below to log in and re-sign.\n\nKind regards,\n{{company_name}}`,
+      cta: { label: "Re-sign now", url: "https://www.joincarenow.com/portal" },
     });
   }
 

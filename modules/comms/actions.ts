@@ -156,6 +156,10 @@ export async function notifyApplicant(opts: {
   channel: "email" | "sms";
   subject?: string;
   body: string;
+  /** Branded call-to-action. On email it renders as the branded button (no
+   *  plain-text links in customer emails). On SMS the link is appended inline,
+   *  since SMS has no buttons. Both label and url support merge fields. */
+  cta?: { label: string; url: string };
 }): Promise<{ ok: boolean; error?: string }> {
   const { applicationId, channel } = opts;
   const { supabase, user, current } = await requireCompany();
@@ -167,11 +171,16 @@ export async function notifyApplicant(opts: {
   if (!to) return { ok: false, error: channel === "email" ? "No email on file" : "No phone on file" };
 
   const subject = channel === "email" ? renderMergeFields(opts.subject ?? "", ctx.values) : null;
-  const body = renderMergeFields(opts.body, ctx.values);
+  let body = renderMergeFields(opts.body, ctx.values);
+  const cta = opts.cta
+    ? { label: renderMergeFields(opts.cta.label, ctx.values), url: renderMergeFields(opts.cta.url, ctx.values) }
+    : undefined;
+  // SMS has no buttons: append the link inline so the applicant can still act.
+  if (channel === "sms" && cta) body = `${body}\n\n${cta.url}`;
 
   const result =
     channel === "email"
-      ? await sendBrandedEmail(supabase, current.company_id, { to, subject: subject || "(no subject)", text: body })
+      ? await sendBrandedEmail(supabase, current.company_id, { to, subject: subject || "(no subject)", text: body, cta })
       : await sendCompanySms(current.company_id, { to, body });
 
   await supabase.from("messages").insert({

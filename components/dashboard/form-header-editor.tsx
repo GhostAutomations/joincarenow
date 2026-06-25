@@ -148,7 +148,7 @@ export function FormHeaderEditor({
   );
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
+    <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-6">
       {/* Logo */}
       <div className="mb-4">
         {logoUrl ? (

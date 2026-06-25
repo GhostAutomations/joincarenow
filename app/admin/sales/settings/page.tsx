@@ -29,7 +29,7 @@ export default async function CrmSettingsPage() {
       </div>
 
       {/* Sending hours */}
-      <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="mt-5 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900">Agent sending hours</h2>
         <p className="mt-1 text-sm text-gray-600">
           The AI reply agent and sequences only send emails and SMS between these times
@@ -59,7 +59,7 @@ export default async function CrmSettingsPage() {
       </section>
 
       {/* AI auto-send */}
-      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="mt-4 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900">AI auto-send</h2>
         <p className="mt-1 text-sm text-gray-600">
           Controls whether AI-written replies send automatically or wait for your approval.
@@ -71,7 +71,7 @@ export default async function CrmSettingsPage() {
       </section>
 
       {/* Demo video link */}
-      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="mt-4 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900">Demo video link</h2>
         <p className="mt-1 text-sm text-gray-600">
           Your Zoom or Google Meet link. It&apos;s included in every demo calendar invite you send from a prospect.

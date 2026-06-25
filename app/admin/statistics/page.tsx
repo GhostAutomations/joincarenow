@@ -170,7 +170,7 @@ export default async function AdminStatisticsPage({
       </div>
 
       {/* Per-company table */}
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="mt-4 overflow-hidden rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md shadow-sm">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
             <tr>

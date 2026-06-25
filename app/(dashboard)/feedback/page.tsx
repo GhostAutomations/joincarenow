@@ -35,7 +35,7 @@ export default async function FeedbackPage() {
           <FeedbackForm />
         </div>
       ) : (
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white/60 p-4 text-sm text-gray-600 shadow-sm">
+        <div className="mt-6 rounded-xl border border-white/40 bg-white/70 backdrop-blur-md p-4 text-sm text-gray-600 shadow-sm">
           Your feedback window has closed, but you can still see your past feedback and our replies below.
         </div>
       )}
@@ -43,12 +43,12 @@ export default async function FeedbackPage() {
       <h2 className="mt-8 text-sm font-medium text-white/80">Your feedback</h2>
       <div className="mt-3 space-y-3">
         {items.length === 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+          <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
             No feedback yet.
           </div>
         )}
         {items.map((f) => (
-          <div key={f.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div key={f.id} className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-5 shadow-sm">
             <p className="whitespace-pre-wrap text-sm text-gray-800">{f.body}</p>
             <p className="mt-1 text-xs text-gray-400">{new Date(f.created_at).toLocaleString("en-GB")}</p>
             {f.response && (

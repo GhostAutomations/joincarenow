@@ -30,17 +30,17 @@ export default async function SmsUsagePage() {
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-4 sm:max-w-md">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+        <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-4 shadow-sm">
           <p className="text-xs text-gray-500">This month</p>
           <p className="text-2xl font-semibold text-gray-900">{monthTotal.toLocaleString()}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+        <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-4 shadow-sm">
           <p className="text-xs text-gray-500">All‑time</p>
           <p className="text-2xl font-semibold text-gray-900">{allTotal.toLocaleString()}</p>
         </div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+      <div className="mt-6 overflow-hidden rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm">
         <table className="min-w-full divide-y divide-gray-100 text-sm">
           <thead className="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
             <tr>

@@ -15,7 +15,7 @@ export function BuildTabs({
 
   if (!mode) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+      <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm">
         <h2 className="text-base font-medium text-gray-900">How do you want to build this form?</h2>
         <p className="mt-1 text-sm text-gray-500">
           Start from scratch with the drag-and-drop builder, or import questions

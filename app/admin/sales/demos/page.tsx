@@ -81,7 +81,7 @@ export default async function DemosCalendarPage({ searchParams }: { searchParams
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="mt-4 overflow-hidden rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md shadow-sm">
         <div className="grid grid-cols-7 border-b border-gray-100 bg-gray-50 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
           {WEEKDAYS.map((w) => <div key={w} className="px-2 py-2">{w}</div>)}
         </div>
@@ -110,7 +110,7 @@ export default async function DemosCalendarPage({ searchParams }: { searchParams
       </div>
 
       {/* Upcoming list */}
-      <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mt-4 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-5 shadow-sm">
         <h2 className="text-sm font-semibold text-gray-900">Upcoming demos</h2>
         {(() => {
           const upcoming = demos.filter((d) => new Date(d.demo_at) >= new Date()).sort((a, b) => a.demo_at.localeCompare(b.demo_at));

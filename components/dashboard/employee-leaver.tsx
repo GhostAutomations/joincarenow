@@ -37,7 +37,7 @@ export function EmployeeStatusCard({
   const left = status === "left";
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-gray-900">Employment</span>

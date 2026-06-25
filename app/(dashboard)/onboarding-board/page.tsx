@@ -72,7 +72,7 @@ export default async function OnboardingBoardPage() {
       />
 
       {isAdmin && (
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
+        <section className="mt-6 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-6">
           <h2 className="text-base font-medium text-gray-900">Workflow checklist</h2>
           <p className="mt-1 text-sm text-gray-500">
             Each task is sent automatically when an applicant reaches its trigger point.

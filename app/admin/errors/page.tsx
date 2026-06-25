@@ -63,12 +63,12 @@ export default async function AdminErrorsPage({
 
       <div className="mt-4 space-y-2">
         {errors.length === 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+          <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
             No errors logged. 🎉
           </div>
         )}
         {errors.map((e) => (
-          <div key={e.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div key={e.id} className="rounded-xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
             <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
               <span className="rounded-full bg-red-100 px-2 py-0.5 font-medium text-red-800">{e.source}</span>
               {e.code && <span className="rounded-full bg-gray-100 px-2 py-0.5 font-mono text-gray-700">{e.code}</span>}

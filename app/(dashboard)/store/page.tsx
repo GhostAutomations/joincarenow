@@ -62,7 +62,7 @@ export default async function StorePage() {
 
       <div className="mt-6">
         {cards.length === 0 ? (
-          <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
             No store forms available yet.
           </div>
         ) : (

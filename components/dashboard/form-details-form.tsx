@@ -29,7 +29,7 @@ export function FormDetailsForm({
   );
 
   return (
-    <form action={action} className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6">
+    <form action={action} className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-6">
       {state?.error && (
         <p className="mb-3 rounded-md bg-red-50 px-2 py-1 text-sm text-red-700">
           {state.error}

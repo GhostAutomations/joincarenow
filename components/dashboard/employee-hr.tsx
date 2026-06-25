@@ -75,7 +75,7 @@ export function EmployeeHr({
     documents.length + contracts.length + policies.length + forms.length + (cvApplicationId ? 1 : 0);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+    <section className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm">
       <div className="flex items-center gap-1 border-b border-gray-100 px-3 pt-3">
         {TABS.map((t) => {
           const count = t === "Absences" ? absences.length : t === "Warnings" ? warnings.length : docCount;

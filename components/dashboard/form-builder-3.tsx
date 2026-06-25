@@ -79,7 +79,7 @@ export function FormBuilder3({ form, fields }: { form: FormMeta; fields: Builder
     selected.kind === "field" ? fields.find((f) => f.id === selected.id) : undefined;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm">
       {/* header row */}
       <div className="grid grid-cols-[1fr_1.4fr_1.1fr] border-b border-gray-200 text-sm">
         <div className="border-r border-gray-200 px-4 py-3">

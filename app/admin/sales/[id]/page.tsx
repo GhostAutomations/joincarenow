@@ -88,7 +88,7 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left: contacts + tasks */}
         <div className="space-y-6 lg:col-span-1">
-          <section className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+          <section className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm backdrop-blur">
             <h2 className="text-sm font-semibold text-gray-900">Contacts</h2>
             <ul className="mt-2 divide-y divide-gray-100">
               {conts.map((ct) => (
@@ -122,7 +122,7 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
             </form>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+          <section className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm backdrop-blur">
             <h2 className="text-sm font-semibold text-gray-900">Follow-up tasks</h2>
             <ul className="mt-2 space-y-1.5">
               {tks.map((t) => (
@@ -149,7 +149,7 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
             </form>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+          <section className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm backdrop-blur">
             <h2 className="text-sm font-semibold text-gray-900">Sequences</h2>
             <ul className="mt-2 space-y-1.5">
               {enrols.map((en) => (
@@ -179,14 +179,14 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
 
         {/* Right: timeline + note */}
         <div className="lg:col-span-2">
-          <section className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+          <section className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm backdrop-blur">
             <h2 className="text-sm font-semibold text-gray-900">Send a message</h2>
             <ProspectComposer companyId={id} contacts={conts} />
           </section>
 
           <ProspectDemo prospectId={id} contacts={conts} demoAt={c.demo_at ?? null} />
 
-          <section className="mt-6 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+          <section className="mt-6 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm backdrop-blur">
             <h2 className="text-sm font-semibold text-gray-900">Activity</h2>
             <form action={addNote} className="mt-2 flex items-start gap-2">
               <input type="hidden" name="id" value={id} />

@@ -21,7 +21,7 @@ export function ProspectDemo({
   const sel = "rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
   return (
-    <section className="mt-6 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+    <section className="mt-6 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm backdrop-blur">
       <h2 className="text-sm font-semibold text-gray-900">Book a demo</h2>
       {demoAt && (
         <p className="mt-1 text-sm text-gray-700">

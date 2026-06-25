@@ -40,7 +40,7 @@ export default async function ApprovalsPage() {
 
       <div className="mt-6 space-y-3">
         {drafts.length === 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+          <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
             Nothing waiting for approval.
           </div>
         )}

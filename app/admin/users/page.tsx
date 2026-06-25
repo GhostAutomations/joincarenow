@@ -60,7 +60,7 @@ export default async function AdminUsersPage({
         />
       </form>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+      <div className="mt-4 overflow-hidden rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm">
         <table className="min-w-full divide-y divide-gray-100 text-sm">
           <thead className="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
             <tr>

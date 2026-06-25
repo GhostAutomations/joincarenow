@@ -29,12 +29,12 @@ export default async function AdminFeedbackPage() {
 
       <div className="mt-4 space-y-3">
         {items.length === 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+          <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
             No feedback yet.
           </div>
         )}
         {items.map((f) => (
-          <div key={f.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div key={f.id} className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-5 shadow-sm">
             <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
               <span className="font-medium text-gray-700">{f.companies?.name ?? "—"}</span>
               <span>· {f.profiles?.full_name || f.profiles?.email || "Unknown"}</span>

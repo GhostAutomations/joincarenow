@@ -34,7 +34,7 @@ export default async function SequencesPage() {
         {seqs.map((s) => {
           const mySteps = allSteps.filter((st) => st.sequence_id === s.id);
           return (
-            <section key={s.id} className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+            <section key={s.id} className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm backdrop-blur">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-gray-900">{s.name}</h3>
                 <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs capitalize text-slate-600">{s.channel}</span>

@@ -32,7 +32,7 @@ export function OnboardingTaskItem({ task }: { task: PortalTask }) {
   const s = STATUS[task.status] ?? STATUS.pending;
 
   return (
-    <li className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <li className="rounded-xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-gray-900">{task.title}</p>
         <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${s.cls}`}>

@@ -116,7 +116,7 @@ export default async function ReportsPage({
   }
   const people = [...byPerson.values()];
 
-  const card = "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
+  const card = "rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm";
   const stat = (label: string, value: string | number, sub?: string) => (
     <div className={card}>
       <p className="text-sm text-gray-500">{label}</p>

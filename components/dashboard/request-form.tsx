@@ -18,7 +18,7 @@ export function RequestForm() {
   }, [state, router]);
 
   return (
-    <form ref={ref} action={action} className="rounded-2xl border border-slate-200 bg-white/70 p-5 shadow-sm backdrop-blur">
+    <form ref={ref} action={action} className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-5 shadow-sm backdrop-blur">
       <label className="text-sm font-medium text-gray-900">Request a feature</label>
       <p className="mt-0.5 text-xs text-gray-500">Tell us what you&apos;d like built — we&apos;ll come back with a quote.</p>
       <input

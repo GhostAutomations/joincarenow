@@ -46,7 +46,7 @@ export function CarerAcademySync({
   const StatusIcon = s.icon;
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+    <section className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-50 text-brand-600">

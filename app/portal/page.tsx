@@ -163,7 +163,7 @@ export default async function PortalPage({
         )}
 
         {applications.length === 0 ? (
-          <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+          <div className="mt-6 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
             You haven&apos;t applied for any roles yet. When you apply through an
             employer&apos;s careers page, your applications will appear here.
           </div>
@@ -174,7 +174,7 @@ export default async function PortalPage({
               return (
                 <li
                   key={a.application_id}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm"
+                  className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-5 shadow-sm"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
@@ -252,7 +252,7 @@ export default async function PortalPage({
             <p className="mt-1 text-sm text-white/80">
               The contracts and policies you&apos;ve signed. You can view or save a copy any time.
             </p>
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+            <div className="mt-4 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-5 shadow-sm">
               <SignedDocs docs={signedDocs} />
             </div>
           </section>

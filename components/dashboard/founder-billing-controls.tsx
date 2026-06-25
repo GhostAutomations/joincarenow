@@ -21,7 +21,7 @@ export function FounderBillingControls({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-6 shadow-sm">
       <h2 className="text-sm font-semibold text-gray-900">Founder controls</h2>
       <p className="mt-1 text-xs text-gray-500">Manual overrides. These affect the customer&apos;s billing — use with care.</p>
 

@@ -129,13 +129,13 @@ export function ReferencingBoard({
 
       {showArchive ? (
         archived.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+          <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
             Nothing archived yet. References archive once their applicant is hired.
           </div>
         ) : (
           <div className="space-y-2">
             {archived.map((c) => (
-              <div key={c.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+              <div key={c.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-white/40 bg-white/70 backdrop-blur-md p-3.5 shadow-sm">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900">{c.referee_name}</p>
                   <p className="truncate text-xs text-gray-500">
@@ -158,7 +158,7 @@ export function ReferencingBoard({
           </div>
         )
       ) : cards.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+        <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
           No references yet. When an applicant completes their &quot;Your References&quot; form, their
           referees appear here ready to send.
         </div>
@@ -219,7 +219,7 @@ function Card({
 }) {
   const changesRequested = card.status === "rejected";
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+    <div className="rounded-xl border border-white/40 bg-white/70 backdrop-blur-md p-3 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-gray-900">{card.referee_name}</p>

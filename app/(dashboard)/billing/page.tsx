@@ -118,7 +118,7 @@ export default async function BillingPage() {
 
           {/* Usage stat cards */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
               <p className="flex items-center gap-2 text-sm text-gray-500"><MessageSquareText className="h-4 w-4 text-brand-600" /> SMS sent</p>
               <p className="mt-1 text-3xl font-bold text-gray-900">{sms}<span className="text-sm font-normal text-gray-400"> / {smsAllowance}</span></p>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
@@ -126,12 +126,12 @@ export default async function BillingPage() {
               </div>
               <p className="mt-1.5 text-xs text-gray-400">{sms > smsAllowance ? `${sms - smsAllowance} over — 8p each` : `${smsAllowance} included, then 8p`}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
               <p className="flex items-center gap-2 text-sm text-gray-500"><Sparkles className="h-4 w-4 text-brand-600" /> AI actions</p>
               <p className="mt-1 text-3xl font-bold text-gray-900">{ai}</p>
               <p className="mt-1.5 text-xs text-gray-400">10p each</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
               <p className="flex items-center gap-2 text-sm text-gray-500"><Building2 className="h-4 w-4 text-brand-600" /> Branches</p>
               <p className="mt-1 text-3xl font-bold text-gray-900">{1 + (company?.extra_branches ?? 0)}</p>
               <p className="mt-1.5 text-xs text-gray-400">{diamond ? "unlimited — free on Diamond" : "1 included, then £7.50/mo"}</p>
@@ -192,7 +192,7 @@ export default async function BillingPage() {
               Your last payment failed. Please update your payment method to keep your account active.
             </div>
           )}
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm md:grid md:grid-cols-5">
+          <div className="overflow-hidden rounded-3xl border border-white/40 bg-white/70 backdrop-blur-md shadow-sm md:grid md:grid-cols-5">
             {/* Price panel */}
             <div className="jcn-app-bg relative overflow-hidden p-8 text-white md:col-span-2">
               <div className="jcn-blob pointer-events-none absolute -left-16 -bottom-16 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
@@ -255,7 +255,7 @@ export default async function BillingPage() {
           </div>
 
           {/* Add-ons */}
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mt-4 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-6 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Pay only for what you use</p>
             <div className="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
               {ADD_ONS.map(([label, price]) => (
@@ -270,7 +270,7 @@ export default async function BillingPage() {
       )}
 
       {agreementRow && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
           <div className="min-w-0">
             <p className="text-sm font-medium text-gray-900">Your subscription agreement</p>
             <p className="text-xs text-gray-500">

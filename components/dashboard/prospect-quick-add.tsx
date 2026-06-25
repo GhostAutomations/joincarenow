@@ -12,7 +12,7 @@ export function ProspectQuickAdd() {
   const [more, setMore] = useState(false);
 
   return (
-    <form action={action} className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+    <form action={action} className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm backdrop-blur">
       <div className="flex flex-wrap items-end gap-2">
         <label className="min-w-[180px] flex-1 text-xs font-medium text-gray-600">
           Company name

@@ -10,7 +10,7 @@ export function SignOffList({ docs }: { docs: SignOffDoc[] }) {
 
   if (docs.length === 0) {
     return (
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-white/60 p-10 text-center shadow-sm">
+      <div className="mt-6 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-10 text-center shadow-sm">
         <ShieldCheck className="mx-auto h-8 w-8 text-gray-300" />
         <p className="mt-2 text-sm font-medium text-gray-900">Nothing to sign off</p>
         <p className="mt-1 text-sm text-gray-500">Signed contracts and policies will appear here for checking.</p>
@@ -19,7 +19,7 @@ export function SignOffList({ docs }: { docs: SignOffDoc[] }) {
   }
 
   return (
-    <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white/60 shadow-sm">
+    <div className="mt-6 overflow-hidden rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md shadow-sm">
       <ul className="divide-y divide-slate-100">
         {docs.map((d) => (
           <li key={d.id} className="flex items-center justify-between gap-3 px-4 py-3">

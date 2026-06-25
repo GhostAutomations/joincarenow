@@ -50,7 +50,7 @@ export default async function FounderFormsPage() {
 
       <div className="mt-6 space-y-3">
         {rows.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">No store forms yet.</div>
+          <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">No store forms yet.</div>
         ) : (
           categories.map((cat) => {
             const list = byCategory.get(cat) ?? [];
@@ -63,7 +63,7 @@ export default async function FounderFormsPage() {
                       <li key={f.id}>
                         <Link
                           href={`/admin/forms/${f.id}/build`}
-                          className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 hover:border-brand-300"
+                          className="flex items-center justify-between gap-3 rounded-xl border border-white/40 bg-white/70 backdrop-blur-md p-3.5 hover:border-brand-300"
                         >
                           <span className="font-medium text-gray-900">{f.name}</span>
                           <div className="flex items-center gap-2.5 text-xs text-gray-500">

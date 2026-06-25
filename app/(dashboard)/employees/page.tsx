@@ -88,7 +88,7 @@ export default async function EmployeesPage({
           </div>
           <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {branches.map((r) => (
-              <div key={r.branch} className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-4">
+              <div key={r.branch} className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
                     <MapPin className="h-4 w-4 text-brand-500" />
@@ -140,11 +140,11 @@ export default async function EmployeesPage({
       </div>
 
       {employees.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+        <div className="mt-6 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
           {q ? "No employees match your search." : "No employees yet. Hire an applicant on the Pipeline to create one."}
         </div>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+        <div className="mt-6 overflow-hidden rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm">
           <table className="min-w-full divide-y divide-gray-100 text-sm">
             <thead className="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
               <tr>

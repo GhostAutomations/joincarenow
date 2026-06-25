@@ -61,7 +61,7 @@ export function QuestionBankManager({ questions }: { questions: QuestionTemplate
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+      <section className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm">
         <h2 className="text-base font-medium text-gray-900">
           {editing ? "Edit question" : "Add a question"}
         </h2>
@@ -121,14 +121,14 @@ export function QuestionBankManager({ questions }: { questions: QuestionTemplate
       </section>
 
       {questions.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+        <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
           No questions yet. Add your first above.
         </div>
       ) : (
         [...byCat.entries()].map(([cat, list]) => (
           <section key={cat}>
             <h3 className="text-sm font-medium text-white drop-shadow-sm">{cat}</h3>
-            <ul className="mt-2 divide-y divide-gray-100 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+            <ul className="mt-2 divide-y divide-gray-100 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm">
               {list.map((q) => (
                 <li key={q.id} className="flex items-start justify-between gap-3 p-4">
                   <div className="min-w-0">

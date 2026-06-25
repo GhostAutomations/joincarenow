@@ -218,7 +218,7 @@ export default async function EmployeeDetailPage({
 
       <div className="mt-6 space-y-6">
         {/* Master record (compact read-only summary) */}
-        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+        <section className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-medium text-gray-900">Master profile</h2>
             {employee.applicant_id && (

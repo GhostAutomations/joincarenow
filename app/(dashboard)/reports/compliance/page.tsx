@@ -22,7 +22,7 @@ export default async function ComplianceReportsPage({
     getEstablishment(supabase, cid),
   ]);
 
-  const card = "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
+  const card = "rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm";
   const th = "px-2 py-1.5 text-left text-xs uppercase tracking-wide text-gray-400 font-medium";
   const td = "px-2 py-1.5 text-gray-700";
 

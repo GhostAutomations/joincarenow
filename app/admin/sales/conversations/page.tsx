@@ -46,7 +46,7 @@ export default async function ConversationsPage() {
 
       <div className="mt-4 space-y-2">
         {threads.length === 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+          <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
             No conversations yet.
           </div>
         )}
@@ -56,7 +56,7 @@ export default async function ConversationsPage() {
             <Link
               key={m.prospect_company_id}
               href={`/admin/sales/${m.prospect_company_id}`}
-              className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+              className="block rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm transition hover:shadow-md"
             >
               <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                 {m.channel === "sms" ? <MessageSquare className="h-3.5 w-3.5" /> : <Mail className="h-3.5 w-3.5" />}

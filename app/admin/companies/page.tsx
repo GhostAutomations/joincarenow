@@ -97,7 +97,7 @@ export default async function CompaniesPage() {
         invite their own managers and recruiters.
       </p>
 
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+      <section className="mt-6 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm">
         <h2 className="text-base font-medium text-gray-900">Add a company</h2>
         <div className="mt-4">
           <CompanyForm />
@@ -110,7 +110,7 @@ export default async function CompaniesPage() {
         </h2>
 
         {(companies ?? []).length === 0 && (
-          <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">
+          <div className="mt-3 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
             No companies yet. Create your first one above.
           </div>
         )}
@@ -122,7 +122,7 @@ export default async function CompaniesPage() {
             return (
               <div
                 key={c.id}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm"
+                className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>

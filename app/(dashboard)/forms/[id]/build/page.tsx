@@ -62,7 +62,7 @@ export default async function FormBuildPage({
   );
 
   const importer = (
-    <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+    <div className="mx-auto max-w-2xl rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm">
       <h2 className="text-base font-medium text-gray-900">Import questions from a PDF</h2>
       <p className="mt-1 text-sm text-gray-500">
         Upload an existing application form (PDF) and we&apos;ll read it and add

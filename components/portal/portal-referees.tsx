@@ -53,7 +53,7 @@ export function PortalReferees({
         return (
           <li
             key={app.application_id}
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm"
+            className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-5 shadow-sm"
           >
             <div className="flex items-center justify-between gap-3">
               <div>

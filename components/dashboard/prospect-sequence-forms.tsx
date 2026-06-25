@@ -13,7 +13,7 @@ export function SequenceCreateForm() {
   useEffect(() => { if (state?.ok) { ref.current?.reset(); router.refresh(); } }, [state, router]);
 
   return (
-    <form ref={ref} action={action} className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+    <form ref={ref} action={action} className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm backdrop-blur">
       <h2 className="text-sm font-semibold text-gray-900">New sequence</h2>
       <div className="mt-2 flex flex-wrap items-end gap-2">
         <label className="min-w-[180px] flex-1 text-xs font-medium text-gray-600">

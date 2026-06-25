@@ -74,7 +74,7 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
       </div>
 
       {/* Subscription */}
-      <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mt-5 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-6 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${comped ? "bg-violet-100 text-violet-700" : STATUS_BADGE[status] ?? STATUS_BADGE.none}`}>
             {comped ? "Complimentary" : status === "none" ? "No subscription" : status.replace("_", " ")}
@@ -91,22 +91,22 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
 
       {/* Usage */}
       <div className="mt-4 grid grid-cols-3 gap-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
           <p className="flex items-center gap-2 text-sm text-gray-500"><MessageSquareText className="h-4 w-4 text-brand-600" /> SMS</p>
           <p className="mt-1 text-2xl font-bold text-gray-900">{sms}<span className="text-sm font-normal text-gray-400"> / 100</span></p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
           <p className="flex items-center gap-2 text-sm text-gray-500"><Sparkles className="h-4 w-4 text-brand-600" /> AI</p>
           <p className="mt-1 text-2xl font-bold text-gray-900">{ai}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
           <p className="flex items-center gap-2 text-sm text-gray-500"><Building2 className="h-4 w-4 text-brand-600" /> Branches</p>
           <p className="mt-1 text-2xl font-bold text-gray-900">{1 + ((company.extra_branches as number) ?? 0)}</p>
         </div>
       </div>
 
       {/* Invoices */}
-      <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mt-4 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-6 shadow-sm">
         <h2 className="text-sm font-semibold text-gray-900">Invoices</h2>
         {invoices.length === 0 ? (
           <p className="mt-2 text-sm text-gray-500">No invoices yet.</p>

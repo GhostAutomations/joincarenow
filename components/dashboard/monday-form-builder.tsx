@@ -308,7 +308,7 @@ export function MondayFormBuilder({
         and items-start makes all three tops share one line. */}
     <div className="flex items-start justify-center gap-6 pb-4">
       {/* LEFT: content outline */}
-      <aside className="hidden h-max w-44 shrink-0 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-3 xl:block">
+      <aside className="hidden h-max w-44 shrink-0 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-3 xl:block">
         <p className="mb-2 text-xs font-medium text-gray-900">Content</p>
         <button
           onClick={() => setSelected("title")}
@@ -333,7 +333,7 @@ export function MondayFormBuilder({
       </aside>
 
       {/* MIDDLE: canvas */}
-      <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-6 sm:p-8">
+      <div className="w-full max-w-2xl rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-6 sm:p-8">
         {/* logo */}
         <div className="mb-3">
           {logoUrl ? (

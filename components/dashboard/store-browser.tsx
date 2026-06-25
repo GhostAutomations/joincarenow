@@ -130,7 +130,7 @@ export function StoreBrowser({
                 const unlocked = tierRank(companyTier) >= tierRank(f.store_tier);
                 const isAdded = added.has(f.id);
                 return (
-            <div key={f.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div key={f.id} className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-5 shadow-sm">
               <div className="flex items-start gap-3">
                 {isAdmin && !f.acquired && (
                   <input

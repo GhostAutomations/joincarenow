@@ -32,12 +32,13 @@ export default async function BillingPage() {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id, commitment_until, billing_comped, sms_bonus")
+    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id, commitment_until, billing_comped, sms_bonus, agreed_plan")
     .eq("id", current.company_id)
     .single();
 
   const status = (company?.billing_status as string) ?? "none";
   const interval = company?.billing_interval as string | null;
+  const diamond = company?.agreed_plan === "diamond";
   const periodEnd = company?.current_period_end as string | null;
   const comped = company?.billing_comped === true;
   const active = status === "active" || status === "trialing" || comped;
@@ -78,10 +79,10 @@ export default async function BillingPage() {
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold backdrop-blur">
                 <span className="h-1.5 w-1.5 rounded-full bg-green-300" />
-                {comped ? "Complimentary" : status === "trialing" ? "Trialing" : "Active"}
+                {comped ? "Complimentary" : diamond ? "Diamond" : status === "trialing" ? "Trialing" : "Active"}
               </span>
               <span className="font-semibold">Join Care Now</span>
-              <span className="text-white/90">{comped ? "Complimentary access" : interval === "year" ? "£550 / year" : "£55 / month"}</span>
+              <span className="text-white/90">{comped ? "Complimentary access" : diamond ? "Usage only — no subscription fee" : interval === "year" ? "£550 / year" : "£55 / month"}</span>
               {!comped && periodEnd && (
                 <span className="inline-flex items-center gap-1 text-sm text-white/70">
                   <CalendarClock className="h-3.5 w-3.5" />
@@ -130,7 +131,7 @@ export default async function BillingPage() {
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <p className="flex items-center gap-2 text-sm text-gray-500"><Building2 className="h-4 w-4 text-brand-600" /> Branches</p>
               <p className="mt-1 text-3xl font-bold text-gray-900">{1 + (company?.extra_branches ?? 0)}</p>
-              <p className="mt-1.5 text-xs text-gray-400">1 included, then £7.50/mo</p>
+              <p className="mt-1.5 text-xs text-gray-400">{diamond ? "unlimited — free on Diamond" : "1 included, then £7.50/mo"}</p>
             </div>
           </div>
 
@@ -139,8 +140,9 @@ export default async function BillingPage() {
               branches={branches ?? []}
               companyId={current.company_id}
               canManage={isAdmin}
-              rate={interval === "year" ? 90 : 7.5}
+              rate={diamond ? 0 : interval === "year" ? 90 : 7.5}
               period={interval === "year" ? "year" : "month"}
+              free={diamond}
             />
           </CollapsibleSection>
 

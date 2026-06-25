@@ -15,6 +15,7 @@ const PLAN_LABEL: Record<string, string> = {
   monthly: "12 Month + Setup",
   commit: "12 Month Fixed",
   annual: "Annual",
+  diamond: "Diamond (usage only)",
 };
 
 /** Read-only billing status for a company (customers subscribe via the CRM

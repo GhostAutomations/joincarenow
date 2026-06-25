@@ -26,6 +26,7 @@ type Row = {
   commitment_until: string | null;
   extra_branches: number | null;
   billing_comped: boolean | null;
+  agreed_plan: string | null;
   stripe_customer_id: string | null;
   created_at: string;
 };
@@ -64,7 +65,7 @@ export default async function AdminBillingPage({
 
   const [{ data: companies }, { data: usage }] = await Promise.all([
     db.from("companies")
-      .select("id, name, billing_status, billing_interval, current_period_end, commitment_until, extra_branches, billing_comped, stripe_customer_id, created_at")
+      .select("id, name, billing_status, billing_interval, current_period_end, commitment_until, extra_branches, billing_comped, agreed_plan, stripe_customer_id, created_at")
       .order("name"),
     db.from("usage_events").select("company_id, kind, quantity").gte("created_at", monthStartIso()),
   ]);
@@ -82,9 +83,11 @@ export default async function AdminBillingPage({
   const isPaying = (r: Row) => (r.billing_status === "active" || r.billing_status === "trialing") && !r.billing_comped;
   const comped = (r: Row) => r.billing_comped === true;
   const committed = (r: Row) => !!r.commitment_until && new Date(r.commitment_until) > now;
-  const planType = (r: Row): "none" | "comped" | "annual" | "committed" | "monthly" => {
+  const diamond = (r: Row) => r.agreed_plan === "diamond";
+  const planType = (r: Row): "none" | "comped" | "diamond" | "annual" | "committed" | "monthly" => {
     if (comped(r)) return "comped";
     if (!isPaying(r)) return "none";
+    if (diamond(r)) return "diamond";
     if (r.billing_interval === "year") return "annual";
     if (committed(r)) return "committed";
     return "monthly";
@@ -100,7 +103,7 @@ export default async function AdminBillingPage({
   });
 
   // Metrics + revenue breakdown (over ALL companies).
-  const mrr = allRows.reduce((s, r) => (isPaying(r) ? s + (r.billing_interval === "year" ? 550 / 12 : 55) + (r.extra_branches ?? 0) * 7.5 : s), 0);
+  const mrr = allRows.reduce((s, r) => (isPaying(r) && !diamond(r) ? s + (r.billing_interval === "year" ? 550 / 12 : 55) + (r.extra_branches ?? 0) * 7.5 : s), 0);
   const paying = allRows.filter(isPaying).length;
   const onCommitment = allRows.filter((r) => isPaying(r) && committed(r)).length;
   const pastDue = allRows.filter((r) => r.billing_status === "past_due").length;

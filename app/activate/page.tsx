@@ -7,6 +7,7 @@ const PLAN_LABEL: Record<string, string> = {
   monthly: "Monthly — £55/month (£150 one-off set-up)",
   commit: "12-month plan — £55/month, no set-up fee",
   annual: "Annual — £550/year (2 months free), no set-up fee",
+  diamond: "Diamond — free subscription & set-up; pay only for SMS & AI usage",
 };
 
 function isActive(status: string | null, comped: boolean): boolean {

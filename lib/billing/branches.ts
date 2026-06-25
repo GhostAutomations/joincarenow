@@ -17,11 +17,14 @@ export async function syncExtraBranches(companyId: string): Promise<void> {
 
     const { data: company } = await db
       .from("companies")
-      .select("stripe_subscription_id")
+      .select("stripe_subscription_id, agreed_plan")
       .eq("id", companyId)
       .single();
 
     await db.from("companies").update({ extra_branches: extra }).eq("id", companyId);
+    // Diamond pays only for SMS + AI — extra branches are free, so never push a
+    // branch quantity to their subscription.
+    if (company?.agreed_plan === "diamond") return;
     await syncBranchQuantity((company?.stripe_subscription_id as string) ?? null, extra);
   } catch {
     /* best-effort */

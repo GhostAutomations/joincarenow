@@ -135,33 +135,38 @@ export async function createCheckoutSession(opts: {
   companyId: string;
   interval: "month" | "year";
   commit?: boolean; // monthly with a 12-month commitment (no setup fee)
+  meteredOnly?: boolean; // Diamond: no base/setup, only metered SMS + AI
   concession?: { freeMonths?: number; customMonthlyPence?: number } | null;
   successUrl?: string;
   cancelUrl?: string;
 }): Promise<string> {
-  const basePrice = opts.interval === "year" ? PRICES.annual : PRICES.monthly;
-  if (!basePrice) throw new Error("Plan price isn't configured.");
-
   const committed = opts.interval === "month" && opts.commit === true;
-  // Base line item — replaced by a custom recurring price if a £x/mo concession
-  // was agreed (monthly plans only; annual custom pricing stays standard).
-  let baseItem: Record<string, unknown> = { price: basePrice, quantity: 1 };
-  if (opts.interval === "month" && opts.concession?.customMonthlyPence && opts.concession.customMonthlyPence > 0) {
-    const { product } = await getPrice(basePrice);
-    baseItem = {
-      price_data: {
-        currency: "gbp",
-        product,
-        unit_amount: opts.concession.customMonthlyPence,
-        recurring: { interval: "month" },
-      },
-      quantity: 1,
-    };
-  }
-  const lineItems: Record<string, unknown>[] = [baseItem];
+  const lineItems: Record<string, unknown>[] = [];
 
-  // Setup fee applies on monthly, but is waived for annual and the commitment.
-  if (opts.interval === "month" && !committed && PRICES.setup) lineItems.push({ price: PRICES.setup, quantity: 1 });
+  // Diamond skips the base plan and set-up fee entirely — the subscription is
+  // just the metered SMS/AI items, so the customer pays only for usage.
+  if (!opts.meteredOnly) {
+    const basePrice = opts.interval === "year" ? PRICES.annual : PRICES.monthly;
+    if (!basePrice) throw new Error("Plan price isn't configured.");
+    // Base line item — replaced by a custom recurring price if a £x/mo concession
+    // was agreed (monthly plans only; annual custom pricing stays standard).
+    let baseItem: Record<string, unknown> = { price: basePrice, quantity: 1 };
+    if (opts.interval === "month" && opts.concession?.customMonthlyPence && opts.concession.customMonthlyPence > 0) {
+      const { product } = await getPrice(basePrice);
+      baseItem = {
+        price_data: {
+          currency: "gbp",
+          product,
+          unit_amount: opts.concession.customMonthlyPence,
+          recurring: { interval: "month" },
+        },
+        quantity: 1,
+      };
+    }
+    lineItems.push(baseItem);
+    // Setup fee applies on monthly, but is waived for annual and the commitment.
+    if (opts.interval === "month" && !committed && PRICES.setup) lineItems.push({ price: PRICES.setup, quantity: 1 });
+  }
   // Metered add-ons must match the base interval (Stripe forbids mixing).
   const isYear = opts.interval === "year";
   const smsPrice = isYear ? PRICES.smsYear : PRICES.sms;
@@ -178,7 +183,8 @@ export async function createCheckoutSession(opts: {
   });
 
   // Free-months concession → a discount coupon. (Can't combine with promo codes.)
-  const coupon = await concessionCoupon(opts.interval, opts.concession?.freeMonths);
+  // Not applicable to Diamond (there's no base fee to discount).
+  const coupon = opts.meteredOnly ? undefined : await concessionCoupon(opts.interval, opts.concession?.freeMonths);
 
   const params: Record<string, unknown> = {
     mode: "subscription",

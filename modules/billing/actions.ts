@@ -6,11 +6,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureCustomer, createCheckoutSession, createPortalSession, BASE_URL } from "@/lib/billing/stripe";
 import { parseConcession } from "@/lib/billing/concession";
 
-type AgreedPlan = "monthly" | "commit" | "annual";
-function planToCheckout(plan: AgreedPlan | null): { interval: "month" | "year"; commit: boolean } {
-  if (plan === "annual") return { interval: "year", commit: false };
-  if (plan === "commit") return { interval: "month", commit: true };
-  return { interval: "month", commit: false }; // monthly (default)
+type AgreedPlan = "monthly" | "commit" | "annual" | "diamond";
+function planToCheckout(plan: AgreedPlan | null): { interval: "month" | "year"; commit: boolean; meteredOnly: boolean } {
+  if (plan === "annual") return { interval: "year", commit: false, meteredOnly: false };
+  if (plan === "commit") return { interval: "month", commit: true, meteredOnly: false };
+  if (plan === "diamond") return { interval: "month", commit: false, meteredOnly: true };
+  return { interval: "month", commit: false, meteredOnly: false }; // monthly (default)
 }
 
 /** New customer pays to activate: starts Checkout for the plan they were sold,
@@ -39,12 +40,13 @@ export async function startActivationCheckout(): Promise<void> {
   if (concession?.extraSms) update.sms_bonus = concession.extraSms;
   if (Object.keys(update).length) await db.from("companies").update(update).eq("id", current.company_id);
 
-  const { interval, commit } = planToCheckout((company?.agreed_plan as AgreedPlan) ?? null);
+  const { interval, commit, meteredOnly } = planToCheckout((company?.agreed_plan as AgreedPlan) ?? null);
   const url = await createCheckoutSession({
     customerId,
     companyId: current.company_id,
     interval,
     commit,
+    meteredOnly,
     concession: concession
       ? { freeMonths: concession.freeMonths, customMonthlyPence: concession.customMonthlyPence }
       : null,

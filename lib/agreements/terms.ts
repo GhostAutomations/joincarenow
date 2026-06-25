@@ -4,7 +4,7 @@
 
 export const AGREEMENT_VERSION = 2;
 
-export type AgreementPlan = "monthly" | "commit" | "annual";
+export type AgreementPlan = "monthly" | "commit" | "annual" | "diamond";
 
 type PlanCopy = {
   label: string;
@@ -38,6 +38,14 @@ const PLAN_COPY: Record<AgreementPlan, PlanCopy> = {
     setup: "no set-up fee applies",
     cancellation:
       "This plan is paid annually in advance and cannot be cancelled mid-term. It renews annually unless you cancel before the renewal date.",
+  },
+  diamond: {
+    label: "Diamond",
+    price: "no subscription fee — you pay only for usage: SMS at 8p each (after your 100 included per month) and AI actions at 10p each",
+    term: "a rolling term that continues until cancelled",
+    setup: "no set-up fee applies",
+    cancellation:
+      "You may cancel at any time from your billing settings. As there is no subscription fee there is nothing to refund; any usage already incurred remains payable.",
   },
 };
 

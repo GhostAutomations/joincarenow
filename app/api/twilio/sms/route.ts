@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { autoStage } from "@/lib/prospects/auto-stage";
+import { notifyJobOwner } from "@/lib/comms/notify-owner";
 
 export const runtime = "nodejs";
 
@@ -127,25 +128,22 @@ export async function POST(req: Request) {
     status: "delivered",
   });
 
-  // Notify every team member of the company so they see the reply anywhere.
+  // Route the reply to the job's owner (in-app + email).
   const name =
     [applicant.first_name, applicant.last_name].filter(Boolean).join(" ") || "An applicant";
-  const { data: members } = await admin
-    .from("company_users")
-    .select("user_id")
-    .eq("company_id", app.company_id);
-  if (members && members.length > 0) {
-    await admin.from("notifications").insert(
-      members.map((m) => ({
-        company_id: app.company_id,
-        user_id: m.user_id,
-        type: "sms_received",
-        title: `New SMS from ${name}`,
-        body: body.slice(0, 160),
-        link: `/pipeline?open=${app.id}`,
-      }))
-    );
-  }
+  await notifyJobOwner(admin, {
+    applicationId: app.id,
+    type: "sms_received",
+    title: `New SMS from ${name}`,
+    body: body.slice(0, 160),
+    link: `/pipeline?open=${app.id}`,
+    email: {
+      subject: `${name} replied by SMS`,
+      text: `${name} has sent you an SMS about their application on Join Care Now. Use the button below to read it and reply.`,
+      ctaLabel: "View conversation",
+      ctaUrl: `https://www.joincarenow.com/pipeline?open=${app.id}`,
+    },
+  });
 
   return xml(200);
 }

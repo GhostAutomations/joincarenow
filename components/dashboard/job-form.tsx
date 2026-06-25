@@ -21,6 +21,7 @@ export type JobDefaults = {
   application_form_id?: string;
   contract_template_id?: string;
   policy_ids?: string[];
+  owner_id?: string;
 };
 
 const inputClass =
@@ -43,6 +44,7 @@ export function JobForm({
   roles = [],
   contracts = [],
   policies = [],
+  owners = [],
 }: {
   action: Action;
   defaults?: JobDefaults;
@@ -52,6 +54,7 @@ export function JobForm({
   roles?: { id: string; name: string }[];
   contracts?: { id: string; name: string }[];
   policies?: { id: string; name: string }[];
+  owners?: { user_id: string; name: string }[];
 }) {
   const [state, formAction] = useActionState<JobState, FormData>(action, undefined);
 
@@ -91,6 +94,30 @@ export function JobForm({
           className={inputClass}
         />
       </div>
+
+      {owners.length > 0 && (
+        <div>
+          <label htmlFor="owner_id" className="block text-sm font-medium text-gray-700">
+            Managed by
+          </label>
+          <select
+            id="owner_id"
+            name="owner_id"
+            defaultValue={defaults?.owner_id ?? ""}
+            className={inputClass}
+          >
+            {!defaults?.owner_id && <option value="">Me</option>}
+            {owners.map((o) => (
+              <option key={o.user_id} value={o.user_id}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            The owner receives the notifications for this job&apos;s applicants. You can transfer this any time (e.g. for cover during leave).
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>

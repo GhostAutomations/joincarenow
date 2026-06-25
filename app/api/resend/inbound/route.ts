@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { autoStage } from "@/lib/prospects/auto-stage";
 import { isProduction } from "@/lib/security/prod";
+import { notifyJobOwner } from "@/lib/comms/notify-owner";
 
 export const runtime = "nodejs";
 
@@ -178,22 +179,20 @@ export async function POST(req: Request) {
 
   const name =
     [applicant.first_name, applicant.last_name].filter(Boolean).join(" ") || "An applicant";
-  const { data: members } = await admin
-    .from("company_users")
-    .select("user_id")
-    .eq("company_id", app.company_id);
-  if (members?.length) {
-    await admin.from("notifications").insert(
-      members.map((m) => ({
-        company_id: app.company_id,
-        user_id: m.user_id,
-        type: "email_received",
-        title: `New email from ${name}`,
-        body: (subject ?? body).slice(0, 160),
-        link: `/pipeline?open=${app.id}`,
-      }))
-    );
-  }
+  // Route the reply to the job's owner (in-app + email).
+  await notifyJobOwner(admin, {
+    applicationId: app.id,
+    type: "email_received",
+    title: `New email from ${name}`,
+    body: (subject ?? body).slice(0, 160),
+    link: `/pipeline?open=${app.id}`,
+    email: {
+      subject: `${name} replied to their application`,
+      text: `${name} has sent you a message about their application on Join Care Now. Use the button below to read it and reply.`,
+      ctaLabel: "View conversation",
+      ctaUrl: `https://www.joincarenow.com/pipeline?open=${app.id}`,
+    },
+  });
 
   return ok(200);
 }

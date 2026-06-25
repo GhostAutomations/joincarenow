@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyJobOwner } from "@/lib/comms/notify-owner";
 
 function safeNext(next: FormDataEntryValue | null): string {
   return typeof next === "string" && next.startsWith("/") ? next : "/portal";
@@ -179,7 +181,7 @@ export async function applyToJob(
     }
   }
 
-  const { error } = await supabase.rpc("apply_to_job", {
+  const { data: newAppId, error } = await supabase.rpc("apply_to_job", {
     p_job_id: parsed.data.jobId,
     p_first_name: parsed.data.firstName,
     p_last_name: parsed.data.lastName,
@@ -192,6 +194,24 @@ export async function applyToJob(
   });
 
   if (error) return { error: error.message };
+
+  // Notify the job's owner of the new applicant (in-app + email). Best-effort.
+  if (newAppId) {
+    const name = `${parsed.data.firstName} ${parsed.data.lastName}`.trim();
+    await notifyJobOwner(createAdminClient(), {
+      applicationId: newAppId as string,
+      type: "new_application",
+      title: `New application from ${name}`,
+      body: "Applied for one of your jobs.",
+      link: `/pipeline?open=${newAppId}`,
+      email: {
+        subject: `New applicant: ${name}`,
+        text: `${name} has applied for one of your jobs on Join Care Now. Use the button below to review their application.`,
+        ctaLabel: "View applicant",
+        ctaUrl: `https://www.joincarenow.com/pipeline?open=${newAppId}`,
+      },
+    });
+  }
 
   redirect("/portal?applied=1");
 }

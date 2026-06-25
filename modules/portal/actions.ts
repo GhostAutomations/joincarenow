@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireApplicant } from "@/modules/auth/queries";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyJobOwner } from "@/lib/comms/notify-owner";
 
 export type PortalReplyState = { error?: string; ok?: boolean } | undefined;
 
@@ -32,6 +34,27 @@ export async function postApplicantReply(_prev: PortalReplyState, formData: Form
     status: "delivered",
   });
   if (error) return { error: "Could not send your message." };
+
+  // Notify the job's owner of the applicant's reply (in-app + email).
+  const { data: ap } = await supabase
+    .from("applicants")
+    .select("first_name, last_name")
+    .eq("id", app.applicant_id)
+    .maybeSingle();
+  const name = [ap?.first_name, ap?.last_name].filter(Boolean).join(" ") || "An applicant";
+  await notifyJobOwner(createAdminClient(), {
+    applicationId: app.id,
+    type: "portal_message",
+    title: `New message from ${name}`,
+    body: body.slice(0, 160),
+    link: `/pipeline?open=${app.id}`,
+    email: {
+      subject: `${name} sent you a message`,
+      text: `${name} has replied in their applicant portal on Join Care Now. Use the button below to read it and respond.`,
+      ctaLabel: "View conversation",
+      ctaUrl: `https://www.joincarenow.com/pipeline?open=${app.id}`,
+    },
+  });
 
   revalidatePath(`/portal/conversations/${applicationId}`);
   revalidatePath("/portal/conversations");

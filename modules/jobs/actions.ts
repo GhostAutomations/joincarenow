@@ -18,6 +18,7 @@ const jobSchema = z.object({
   closing_date: z.string().optional().or(z.literal("")),
   application_form_id: z.string().uuid().optional().or(z.literal("")),
   contract_template_id: z.string().uuid().optional().or(z.literal("")),
+  owner_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 export type JobState = { error?: string } | undefined;
@@ -35,6 +36,7 @@ function parseJob(formData: FormData) {
     closing_date: formData.get("closing_date") ?? "",
     application_form_id: formData.get("application_form_id") ?? "",
     contract_template_id: formData.get("contract_template_id") ?? "",
+    owner_id: formData.get("owner_id") ?? "",
   });
 }
 
@@ -59,8 +61,10 @@ export async function createJob(
   const parsed = parseJob(formData);
   if (!parsed.success) return { error: parsed.error.errors[0].message };
 
-  const { supabase, current } = await requireCompany();
+  const { supabase, user, current } = await requireCompany();
   const baseSlug = slugify(parsed.data.title) || "role";
+  // Default owner is the creator; an admin can pick someone else.
+  const ownerId = parsed.data.owner_id || user.id;
 
   let newId: string | null = null;
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -83,6 +87,7 @@ export async function createJob(
         closing_date: parsed.data.closing_date || null,
         application_form_id: parsed.data.application_form_id || null,
         contract_template_id: parsed.data.contract_template_id || null,
+        owner_id: ownerId,
       })
       .select("id")
       .single();
@@ -115,6 +120,16 @@ export async function updateJob(
   if (!parsed.success) return { error: parsed.error.errors[0].message };
 
   const { supabase, current } = await requireCompany();
+
+  // Capture the previous owner so we can audit a transfer.
+  const { data: before } = await supabase
+    .from("jobs")
+    .select("owner_id")
+    .eq("id", id)
+    .eq("company_id", current.company_id)
+    .maybeSingle();
+  const newOwner = parsed.data.owner_id || (before?.owner_id as string | null) || null;
+
   const { error } = await supabase
     .from("jobs")
     .update({
@@ -129,11 +144,24 @@ export async function updateJob(
       closing_date: parsed.data.closing_date || null,
       application_form_id: parsed.data.application_form_id || null,
       contract_template_id: parsed.data.contract_template_id || null,
+      owner_id: newOwner,
     })
     .eq("id", id)
     .eq("company_id", current.company_id);
 
   if (error) return { error: "Could not save changes. Please try again." };
+
+  // Audit a change of owner (transfer).
+  if (newOwner && before?.owner_id !== newOwner) {
+    await supabase.rpc("log_audit", {
+      p_company_id: current.company_id,
+      p_action: "job.owner_changed",
+      p_entity_type: "job",
+      p_entity_id: id,
+      p_before: { owner_id: before?.owner_id ?? null },
+      p_after: { owner_id: newOwner },
+    });
+  }
 
   await syncJobPolicies(supabase, id, formData.getAll("policy_ids").map(String));
 

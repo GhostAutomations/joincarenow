@@ -22,11 +22,11 @@ export default async function EditJobPage({
   const { id } = await params;
   const { supabase, current } = await requireCompany();
 
-  const [{ data: job }, { data: forms }, { data: branches }, { data: roles }, { data: contracts }, { data: policies }, { data: jobPolicyRows }, { data: company }] = await Promise.all([
+  const [{ data: job }, { data: forms }, { data: branches }, { data: roles }, { data: contracts }, { data: policies }, { data: jobPolicyRows }, { data: company }, { data: staff }] = await Promise.all([
     supabase
       .from("jobs")
       .select(
-        "id, title, slug, description, location, employment_type, branch_id, role_id, workflow_role_id, salary, vacancies, closing_date, status, application_form_id, contract_template_id"
+        "id, title, slug, description, location, employment_type, branch_id, role_id, workflow_role_id, salary, vacancies, closing_date, status, application_form_id, contract_template_id, owner_id"
       )
       .eq("id", id)
       .eq("company_id", current.company_id)
@@ -65,11 +65,20 @@ export default async function EditJobPage({
       .select("name, settings")
       .eq("id", current.company_id)
       .single(),
+    supabase
+      .from("company_users")
+      .select("user_id, profiles(full_name, email)")
+      .eq("company_id", current.company_id),
   ]);
 
   if (!job) notFound();
 
   const jobPolicyIds = (jobPolicyRows ?? []).map((r) => r.policy_id as string);
+  const owners = (staff ?? []).map((m) => {
+    const p = m.profiles as unknown as { full_name: string | null; email: string | null } | null;
+    return { user_id: m.user_id as string, name: p?.full_name || p?.email || "Team member" };
+  });
+  const ownerName = owners.find((o) => o.user_id === (job as { owner_id?: string | null }).owner_id)?.name;
 
   const careersUrl = `/careers/${current.companies.slug}/${job.slug}`;
   const companyRow = company as { name: string | null; settings: { brand?: { primary?: string | null; logo_url?: string | null } | null } | null } | null;
@@ -95,6 +104,11 @@ export default async function EditJobPage({
           {job.status}
         </span>
       </div>
+      {ownerName && (
+        <p className="mt-1 text-sm text-white/80">
+          Managed by {ownerName} · they receive this job&apos;s applicant notifications
+        </p>
+      )}
 
       {/* Status controls */}
       <div className="mt-4 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-4">
@@ -176,9 +190,11 @@ export default async function EditJobPage({
           roles={roles ?? []}
           contracts={contracts ?? []}
           policies={policies ?? []}
+          owners={owners}
           defaults={{
             id: job.id,
             title: job.title,
+            owner_id: (job as { owner_id?: string | null }).owner_id ?? "",
             description: job.description ?? "",
             employment_type: job.employment_type ?? "",
             branch_id: job.branch_id ?? "",

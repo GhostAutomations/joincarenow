@@ -874,7 +874,7 @@ function ApplicantPanel({
                 applicationId={app.id}
                 docTitle="Upload your DBS certificate"
                 docKind="dbs"
-                buttonLabel="Request DBS"
+                buttonLabel="Request DBS certificate"
                 sentLabel="DBS requested"
                 placeholder="e.g. Please upload a clear copy of your DBS certificate."
               />

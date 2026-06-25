@@ -13,6 +13,62 @@ function revalidateEmployee(id: string) {
   revalidatePath(`/employees/${id}`);
 }
 
+// ---------- Leaver / employment type ----------
+import { LEAVING_REASONS, EMPLOYMENT_TYPES } from "@/lib/hr";
+
+/** Mark an employee as a leaver (archives them from active lists + reports). */
+export async function markLeaver(_prev: HrState, formData: FormData): Promise<HrState> {
+  const employeeId = formData.get("employeeId")?.toString();
+  if (!employeeId) return { error: "Missing employee" };
+  const reason = (formData.get("reason")?.toString() ?? "").trim();
+  const custom = (formData.get("custom")?.toString() ?? "").trim();
+  if (!reason) return { error: "Choose a reason for leaving." };
+  if (reason === "Other" && custom.length < 2) return { error: "Please describe the reason." };
+  if (reason !== "Other" && !LEAVING_REASONS.includes(reason)) return { error: "Pick a valid reason." };
+  const lastDay = formData.get("last_working_day")?.toString() || null;
+
+  const { supabase, current } = await requireCompany();
+  const { error } = await supabase
+    .from("employees")
+    .update({
+      status: "left",
+      left_at: new Date().toISOString(),
+      last_working_day: lastDay,
+      leaving_reason: reason === "Other" ? "Other" : reason,
+      leaving_reason_detail: custom || null,
+    })
+    .eq("id", employeeId)
+    .eq("company_id", current.company_id);
+  if (error) return { error: "Could not record the leaver." };
+  revalidateEmployee(employeeId);
+  revalidatePath("/employees");
+  return { ok: true };
+}
+
+/** Reinstate a leaver back to active. */
+export async function reinstateEmployee(formData: FormData): Promise<void> {
+  const employeeId = formData.get("employeeId")?.toString();
+  if (!employeeId) return;
+  const { supabase, current } = await requireCompany();
+  await supabase
+    .from("employees")
+    .update({ status: "active", left_at: null, last_working_day: null, leaving_reason: null, leaving_reason_detail: null })
+    .eq("id", employeeId)
+    .eq("company_id", current.company_id);
+  revalidateEmployee(employeeId);
+  revalidatePath("/employees");
+}
+
+/** Set an employee's employment type (full_time | part_time | student_20). */
+export async function setEmploymentType(formData: FormData): Promise<void> {
+  const employeeId = formData.get("employeeId")?.toString();
+  const value = formData.get("employment_type")?.toString() ?? "";
+  if (!employeeId || !EMPLOYMENT_TYPES.some((t) => t.value === value)) return;
+  const { supabase, current } = await requireCompany();
+  await supabase.from("employees").update({ employment_type: value }).eq("id", employeeId).eq("company_id", current.company_id);
+  revalidateEmployee(employeeId);
+}
+
 // ---------- Absences ----------
 export async function addAbsence(_prev: HrState, formData: FormData): Promise<HrState> {
   const employeeId = formData.get("employeeId")?.toString();

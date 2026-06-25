@@ -14,6 +14,7 @@ import { CarerAcademySync, type SyncEvent } from "@/components/dashboard/carer-a
 import { CollapsibleCard } from "@/components/dashboard/collapsible-card";
 import { type SignedDoc } from "@/components/documents/signed-docs";
 import { DeleteEmployeeButton } from "@/components/dashboard/delete-employee-button";
+import { EmployeeStatusCard } from "@/components/dashboard/employee-leaver";
 
 type Employee = {
   id: string;
@@ -34,6 +35,11 @@ type Employee = {
   start_date: string | null;
   training_group: string | null;
   status: "active" | "inactive" | "left";
+  employment_type: string | null;
+  left_at: string | null;
+  last_working_day: string | null;
+  leaving_reason: string | null;
+  leaving_reason_detail: string | null;
   created_at: string;
   carer_academy_status: string;
   carer_academy_user_id: string | null;
@@ -52,7 +58,7 @@ export default async function EmployeeDetailPage({
   const { data: employee } = await supabase
     .from("employees")
     .select(
-      "id, company_id, applicant_id, application_id, employee_ref, first_name, last_name, email, phone, job_title, department, branch_id, branch, worker_category, manager_id, start_date, training_group, status, created_at, carer_academy_status, carer_academy_user_id, carer_academy_synced_at, carer_academy_error"
+      "id, company_id, applicant_id, application_id, employee_ref, first_name, last_name, email, phone, job_title, department, branch_id, branch, worker_category, manager_id, start_date, training_group, status, employment_type, left_at, last_working_day, leaving_reason, leaving_reason_detail, created_at, carer_academy_status, carer_academy_user_id, carer_academy_synced_at, carer_academy_error"
     )
     .eq("id", id)
     .eq("company_id", current.company_id)
@@ -191,6 +197,18 @@ export default async function EmployeeDetailPage({
         Hired {new Date(employee.created_at).toLocaleDateString("en-GB")}
         {managerName && ` · Reports to ${managerName}`}
       </p>
+
+      <div className="mt-4">
+        <EmployeeStatusCard
+          employeeId={employee.id}
+          status={employee.status}
+          employmentType={employee.employment_type}
+          leavingReason={employee.leaving_reason}
+          leavingDetail={employee.leaving_reason_detail}
+          lastWorkingDay={employee.last_working_day}
+          leftAt={employee.left_at}
+        />
+      </div>
 
       {current.role === "admin" && (
         <div className="mt-3">

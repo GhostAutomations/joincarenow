@@ -25,9 +25,10 @@ const STATUS_STYLE: Record<string, string> = {
 export default async function EmployeesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; view?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, view: viewParam } = await searchParams;
+  const view = viewParam === "left" || viewParam === "all" ? viewParam : "active";
   const { supabase, current } = await requireCompany();
 
   const { data } = await supabase
@@ -58,7 +59,7 @@ export default async function EmployeesPage({
     }))
     .sort((a, b) => b.total - a.total);
 
-  let employees = allEmployees;
+  let employees = view === "all" ? allEmployees : allEmployees.filter((e) => (view === "left" ? e.status === "left" : e.status !== "left"));
   if (q && q.trim()) {
     const needle = q.trim().toLowerCase();
     employees = employees.filter((e) => {
@@ -112,17 +113,31 @@ export default async function EmployeesPage({
         </div>
       )}
 
-      <form method="get" className="mt-6 max-w-sm">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-          <input
-            name="q"
-            defaultValue={q ?? ""}
-            placeholder="Search by name, email or ID"
-            className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-          />
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <form method="get" className="max-w-sm flex-1">
+          <input type="hidden" name="view" value={view} />
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+            <input
+              name="q"
+              defaultValue={q ?? ""}
+              placeholder="Search by name, email or ID"
+              className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+          </div>
+        </form>
+        <div className="flex gap-1.5">
+          {([["active", "Active"], ["left", "Leavers"], ["all", "All"]] as const).map(([key, label]) => (
+            <Link
+              key={key}
+              href={`/employees?view=${key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium ${view === key ? "bg-brand-600 text-white" : "bg-white/80 text-gray-700 hover:bg-white"}`}
+            >
+              {label}
+            </Link>
+          ))}
         </div>
-      </form>
+      </div>
 
       {employees.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-gray-500 shadow-sm">

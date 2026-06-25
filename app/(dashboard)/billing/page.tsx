@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { CreditCard, Check, MessageSquareText, Sparkles, Building2, ShieldCheck, CalendarClock, Download } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { requireCompany } from "@/modules/auth/queries";
@@ -28,7 +29,9 @@ function monthStartIso() {
 
 export default async function BillingPage() {
   const { supabase, current } = await requireCompany({ allowSetup: true });
-  const isAdmin = current.role === "admin";
+  // Billing is admin-only — operational roles can't see or manage it.
+  if (current.role !== "admin") redirect("/dashboard");
+  const isAdmin = true;
 
   const { data: company } = await supabase
     .from("companies")

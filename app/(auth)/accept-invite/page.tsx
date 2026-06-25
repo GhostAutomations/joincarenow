@@ -3,12 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AuthCard } from "@/components/auth/auth-card";
 import { NewUserAcceptForm } from "@/components/auth/accept-invite-form";
 import { acceptAsCurrentUser } from "@/modules/invitations/actions";
-
-const ROLE_LABEL: Record<string, string> = {
-  admin: "Administrator",
-  manager: "Manager",
-  recruiter: "Recruiter",
-};
+import { COMPANY_ROLE_LABEL as ROLE_LABEL } from "@/lib/roles";
 
 export default async function AcceptInvitePage({
   searchParams,

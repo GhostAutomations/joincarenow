@@ -33,14 +33,20 @@ const NAV = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+// Admin-only destinations (Form Store + Settings/team management + billing).
+const ADMIN_HREFS = new Set(["/store", "/settings", "/billing"]);
+
 export function Sidebar({
   companyName,
   logoUrl = null,
+  isAdmin = false,
 }: {
   companyName: string;
   logoUrl?: string | null;
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
+  const items = NAV.filter((i) => isAdmin || !ADMIN_HREFS.has(i.href));
 
   return (
     <aside className="hidden md:flex w-60 flex-col jcn-rail-bg text-white">
@@ -56,7 +62,7 @@ export function Sidebar({
         <p className="mt-0.5 truncate text-xs text-white/60">{companyName}</p>
       </div>
       <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
-        {NAV.map(({ href, label, icon: Icon }) => {
+        {items.map(({ href, label, icon: Icon }) => {
           const active =
             pathname === href || pathname.startsWith(href + "/");
           return (

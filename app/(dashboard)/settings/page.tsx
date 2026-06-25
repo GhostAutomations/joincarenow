@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { requireCompany } from "@/modules/auth/queries";
+import { INVITE_ROLES, COMPANY_ROLE_LABEL } from "@/lib/roles";
 import { InviteForm } from "@/components/dashboard/invite-form";
 import { PendingInvites } from "@/components/dashboard/pending-invites";
 import { InterviewAddressForm } from "@/components/dashboard/interview-address-form";
@@ -17,7 +19,10 @@ import type { OpeningHours } from "@/lib/opening-hours";
 
 export default async function SettingsPage() {
   const { supabase, current } = await requireCompany();
-  const isAdmin = current.role === "admin";
+  // Settings (incl. branding, forms config, billing and team management) is
+  // admin-only. Registered Individual / Manager / Recruiter are operational.
+  if (current.role !== "admin") redirect("/dashboard");
+  const isAdmin = true;
 
   const { data: members } = await supabase
     .from("company_users")
@@ -83,8 +88,8 @@ export default async function SettingsPage() {
                 </p>
                 <p className="text-xs text-gray-500">{profile?.email}</p>
               </div>
-              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium capitalize text-gray-700">
-                {m.role}
+              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                {COMPANY_ROLE_LABEL[m.role as string] ?? m.role}
               </span>
             </li>
           );
@@ -214,13 +219,7 @@ export default async function SettingsPage() {
         content: (
           <div className="space-y-6">
             <div>
-              <InviteForm
-                companyId={current.company_id}
-                roles={[
-                  { value: "manager", label: "Manager" },
-                  { value: "recruiter", label: "Recruiter" },
-                ]}
-              />
+              <InviteForm companyId={current.company_id} roles={INVITE_ROLES} />
               <h3 className="mt-6 text-sm font-medium text-gray-900">Pending invitations</h3>
               <PendingInvites invites={invites ?? []} />
             </div>

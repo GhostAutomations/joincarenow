@@ -19,8 +19,12 @@ const BASE: App[] = [
   { href: "/employees", label: "Employees", icon: IdCard, grad: "from-cyan-400 to-cyan-600" },
   { href: "/forms", label: "Forms", icon: FileText, grad: "from-amber-400 to-amber-500" },
   { href: "/templates", label: "Templates", icon: MessageSquareText, grad: "from-pink-400 to-pink-600" },
-  { href: "/store", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
   { href: "/reports", label: "Reports", icon: BarChart3, grad: "from-blue-400 to-blue-600" },
+];
+
+// Admin-only apps: Form Store (paid forms), Billing, and Settings/team management.
+const ADMIN_APPS: App[] = [
+  { href: "/store", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
   { href: "/billing", label: "Billing", icon: CreditCard, grad: "from-amber-400 to-amber-500" },
   { href: "/settings", label: "Settings", icon: Settings, grad: "from-slate-400 to-slate-600" },
 ];
@@ -38,6 +42,7 @@ export function AppGrid({
   const APPS: App[] = [
     ...BASE,
     ...(feedbackOpen ? [{ href: "/feedback", label: "Feedback", icon: MessageSquarePlus, grad: "from-fuchsia-400 to-fuchsia-600" }] : []),
+    ...(isAdmin ? ADMIN_APPS : []),
     ...(isAdmin ? [{ href: "/requests", label: "Requests", icon: Lightbulb, grad: "from-yellow-400 to-amber-500" }] : []),
   ];
   return (

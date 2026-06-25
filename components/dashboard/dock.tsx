@@ -21,6 +21,11 @@ const BASE = [
   { href: "/templates", label: "Templates", icon: MessageSquareText, grad: "from-pink-400 to-pink-600" },
   { href: "/store", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
   { href: "/reports", label: "Reports", icon: BarChart3, grad: "from-blue-400 to-blue-600" },
+];
+
+// Admin-only apps: billing, settings/team management, and the Form Store (paid forms).
+const ADMIN_ITEMS = [
+  { href: "/store", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
   { href: "/billing", label: "Billing", icon: CreditCard, grad: "from-amber-400 to-amber-500" },
   { href: "/settings", label: "Settings", icon: Settings, grad: "from-gray-400 to-gray-600" },
 ];
@@ -32,6 +37,7 @@ export function Dock({ feedbackOpen = false, isAdmin = false }: { feedbackOpen?:
   const ITEMS = [
     ...BASE,
     ...(feedbackOpen ? [{ href: "/feedback", label: "Feedback", icon: MessageSquarePlus, grad: "from-fuchsia-400 to-fuchsia-600" }] : []),
+    ...(isAdmin ? ADMIN_ITEMS : []),
     ...(isAdmin ? [{ href: "/requests", label: "Requests", icon: Lightbulb, grad: "from-yellow-400 to-amber-500" }] : []),
   ];
 

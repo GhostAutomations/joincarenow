@@ -36,7 +36,7 @@ export default async function DashboardLayout({
   return (
     <div className="flex h-screen overflow-hidden jcn-app-bg">
       <BrandStyle brand={brand} />
-      {showSidebar && <Sidebar companyName={current.companies.name} logoUrl={logoUrl} />}
+      {showSidebar && <Sidebar companyName={current.companies.name} logoUrl={logoUrl} isAdmin={isAdmin} />}
       <div className="flex flex-1 flex-col overflow-hidden">
         {acting && <ActingBanner companyName={current.companies.name} />}
         <Topbar

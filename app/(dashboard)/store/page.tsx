@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { requireCompany } from "@/modules/auth/queries";
 import { TIER_LABEL } from "@/modules/forms/tiers";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -14,7 +15,9 @@ type StoreForm = {
 
 export default async function StorePage() {
   const { supabase, current } = await requireCompany();
-  const isAdmin = current.role === "admin";
+  // Form Store purchases affect billing — admin-only.
+  if (current.role !== "admin") redirect("/dashboard");
+  const isAdmin = true;
 
   const [{ data: company }, { data: forms }, { data: mine }] = await Promise.all([
     supabase.from("companies").select("subscription_tier").eq("id", current.company_id).single(),

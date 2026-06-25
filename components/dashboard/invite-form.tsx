@@ -5,7 +5,7 @@ import { createInvitation, type InviteState } from "@/modules/invitations/action
 import { Field, SubmitButton, FormError } from "@/components/ui/form";
 import { InviteLink } from "@/components/dashboard/invite-link";
 
-type Role = { value: "admin" | "manager" | "recruiter"; label: string };
+type Role = { value: "admin" | "registered_individual" | "manager" | "recruiter"; label: string };
 
 export function InviteForm({
   companyId,

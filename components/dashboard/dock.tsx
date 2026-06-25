@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutGrid, Briefcase, KanbanSquare, CalendarClock, Users, ClipboardCheck,
   IdCard, FileText, Store, MessageSquareText, BarChart3, Settings, ShieldCheck,
-  CreditCard, MessageSquarePlus, Lightbulb,
+  CreditCard, MessageSquarePlus, Lightbulb, MessagesSquare,
 } from "lucide-react";
 import { ResponsiveDock } from "@/components/dashboard/responsive-dock";
 
@@ -20,6 +20,7 @@ const BASE = [
   { href: "/forms", label: "Forms", icon: FileText, grad: "from-amber-400 to-amber-500" },
   { href: "/templates", label: "Templates", icon: MessageSquareText, grad: "from-pink-400 to-pink-600" },
   { href: "/store", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
+  { href: "/messages", label: "Messages", icon: MessagesSquare, grad: "from-fuchsia-400 to-fuchsia-600" },
   { href: "/reports", label: "Reports", icon: BarChart3, grad: "from-blue-400 to-blue-600" },
 ];
 

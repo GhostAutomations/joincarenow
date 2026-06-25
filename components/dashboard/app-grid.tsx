@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import {
   Briefcase, KanbanSquare, CalendarClock, Users, ClipboardCheck,
   IdCard, FileText, Store, MessageSquareText, BarChart3, Settings, ShieldCheck,
-  CreditCard, MessageSquarePlus, Lightbulb,
+  CreditCard, MessageSquarePlus, Lightbulb, MessagesSquare,
 } from "lucide-react";
 
 type App = { href: string; label: string; icon: typeof Briefcase; grad: string; badgeKey?: string };
@@ -19,6 +19,7 @@ const BASE: App[] = [
   { href: "/employees", label: "Employees", icon: IdCard, grad: "from-cyan-400 to-cyan-600" },
   { href: "/forms", label: "Forms", icon: FileText, grad: "from-amber-400 to-amber-500" },
   { href: "/templates", label: "Templates", icon: MessageSquareText, grad: "from-pink-400 to-pink-600" },
+  { href: "/messages", label: "Messages", icon: MessagesSquare, grad: "from-fuchsia-400 to-fuchsia-600" },
   { href: "/reports", label: "Reports", icon: BarChart3, grad: "from-blue-400 to-blue-600" },
 ];
 

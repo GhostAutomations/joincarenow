@@ -9,6 +9,7 @@ import { InterviewSlotPicker, type BookedInterview } from "@/components/dashboar
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { ApplicantForms } from "@/components/dashboard/applicant-forms";
 import { ApplicantReferences } from "@/components/dashboard/applicant-references";
+import { ApplicantTeamMessages } from "@/components/dashboard/applicant-team-messages";
 import { CvRequest } from "@/components/dashboard/cv-request";
 import { RightToWork } from "@/components/dashboard/right-to-work";
 import { OfferModal } from "@/components/dashboard/offer-modal";
@@ -784,6 +785,9 @@ function ApplicantPanel({
 
           {/* References */}
           <ApplicantReferences applicationId={app.id} />
+
+          {/* Internal team messages tagged to this applicant (staff-only) */}
+          <ApplicantTeamMessages applicationId={app.id} />
 
           {app.cover_message && (
             <div>

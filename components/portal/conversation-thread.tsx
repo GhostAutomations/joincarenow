@@ -23,14 +23,18 @@ export function ConversationThread({
 }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [state, action, pending] = useActionState<PortalReplyState, FormData>(postApplicantReply, undefined);
 
   useEffect(() => {
     if (state?.ok) { formRef.current?.reset(); router.refresh(); }
   }, [state, router]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages.length]);
+  // Always show the latest message — jump the chat container to the bottom.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages.length]);
 
   return (
     <div className="flex h-[70vh] flex-col rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -39,7 +43,7 @@ export function ConversationThread({
         <p className="text-xs text-gray-400">Messages with the recruitment team</p>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto bg-gray-50 p-4">
+      <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto bg-gray-50 p-4">
         {messages.length === 0 && (
           <p className="mt-8 text-center text-sm text-gray-400">No messages yet.</p>
         )}
@@ -51,7 +55,6 @@ export function ConversationThread({
             </div>
           </div>
         ))}
-        <div ref={endRef} />
       </div>
 
       <form ref={formRef} action={action} className="flex items-end gap-2 border-t border-gray-100 p-3">

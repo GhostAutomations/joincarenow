@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Mail, MessageSquare, StickyNote, Send, MessagesSquare } from "lucide-react";
 import {
   getApplicantThread,
@@ -35,6 +35,7 @@ export function ApplicantComms({
   const [messages, setMessages] = useState<Msg[]>([]);
   const [templates, setTemplates] = useState<ThreadTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const listRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState<Filter>("both");
   const [channel, setChannel] = useState<Channel>("email");
   const [subject, setSubject] = useState("");
@@ -98,6 +99,12 @@ export function ApplicantComms({
     filter === "both" ? true : m.channel === filter
   );
 
+  // Keep the conversation pinned to the latest message (newest is at the bottom).
+  useEffect(() => {
+    const el = listRef.current;
+    if (el && !loading) el.scrollTop = el.scrollHeight;
+  }, [visible.length, filter, loading]);
+
   const FILTERS: { key: Filter; label: string }[] = [
     { key: "both", label: "Both" },
     { key: "email", label: "Email" },
@@ -127,7 +134,7 @@ export function ApplicantComms({
       </div>
 
       {/* Message list (scrolls) */}
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {loading ? (
           <p className="text-sm text-gray-400">Loading…</p>
         ) : visible.length === 0 ? (

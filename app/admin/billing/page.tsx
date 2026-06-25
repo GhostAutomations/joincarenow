@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ExportCsvButton } from "@/components/dashboard/export-csv-button";
+import { ExportPdfLink } from "@/components/dashboard/export-pdf-link";
 import { recordBillingSnapshot } from "@/lib/billing/snapshot";
 
 /** Build an SVG polyline (and min/max) from a numeric series. */
@@ -205,7 +206,10 @@ export default async function AdminBillingPage({
           <button className="rounded-lg border border-white/40 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur hover:bg-white/30">Filter</button>
           {(q || statusFilter || planFilter) && <Link href="/admin/billing" className="text-sm text-white/70 hover:text-white">Clear</Link>}
         </form>
-        <div className="ml-auto"><ExportCsvButton rows={csvRows} /></div>
+        <div className="ml-auto flex gap-2">
+          <ExportCsvButton rows={csvRows} filename="revenue.csv" />
+          <ExportPdfLink href="/api/report/pdf?type=billing" />
+        </div>
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">

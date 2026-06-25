@@ -2,6 +2,8 @@ import Link from "next/link";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { londonToUtcIso } from "@/lib/time";
+import { ExportCsvButton } from "@/components/dashboard/export-csv-button";
+import { ExportPdfLink } from "@/components/dashboard/export-pdf-link";
 
 const FUNNEL = ["applied", "reviewing", "interview", "right_to_work", "offer", "hired"] as const;
 const STAGE_LABEL: Record<string, string> = {
@@ -110,13 +112,31 @@ export default async function AdminStatisticsPage({
       <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Statistics</h1>
       <p className="mt-1 text-sm text-white/80">Platform-wide recruitment activity across every company.</p>
 
-      <div className="mt-4 flex flex-wrap gap-1.5">
-        {Object.entries(RANGES).map(([key, r]) => (
-          <Link key={key} href={`/admin/statistics?range=${key}`}
-            className={`rounded-full px-3 py-1 text-xs font-medium ${range === key ? "bg-white text-brand-700" : "bg-white/20 text-white hover:bg-white/30"}`}>
-            {r.label}
-          </Link>
-        ))}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-1.5">
+          {Object.entries(RANGES).map(([key, r]) => (
+            <Link key={key} href={`/admin/statistics?range=${key}`}
+              className={`rounded-full px-3 py-1 text-xs font-medium ${range === key ? "bg-white text-brand-700" : "bg-white/20 text-white hover:bg-white/30"}`}>
+              {r.label}
+            </Link>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <ExportCsvButton
+            filename={`platform-companies-${range}.csv`}
+            rows={companyRows.map((c) => ({
+              Company: c.name,
+              Billing: c.paying,
+              Applications: c.apps,
+              Active: c.active,
+              Hires: c.hired,
+              "Live jobs": c.live,
+              "Messages (month)": c.msgs,
+              "Last active": c.lastActive ? new Date(c.lastActive).toLocaleDateString("en-GB") : "",
+            }))}
+          />
+          <ExportPdfLink href={`/api/report/pdf?type=platform&range=${range}`} />
+        </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-4 text-white sm:grid-cols-3 lg:grid-cols-5">

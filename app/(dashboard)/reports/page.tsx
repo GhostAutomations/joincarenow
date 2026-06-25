@@ -3,6 +3,8 @@ import { requireCompany } from "@/modules/auth/queries";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
 import { OnboardingTaskReview, type OnbTask } from "@/components/dashboard/onboarding-task-review";
+import { ExportCsvButton } from "@/components/dashboard/export-csv-button";
+import { ExportPdfLink } from "@/components/dashboard/export-pdf-link";
 
 type TaskRow = OnbTask & {
   applicant_id: string;
@@ -126,17 +128,31 @@ export default async function ReportsPage({
     <div>
       <PageHeader title="Reports" subtitle="Recruitment performance and onboarding progress." />
 
-      {/* Range filter */}
-      <div className="mt-4 flex flex-wrap gap-1.5">
-        {Object.entries(RANGES).map(([key, r]) => (
-          <Link
-            key={key}
-            href={`/reports?range=${key}`}
-            className={`rounded-full px-3 py-1 text-xs font-medium ${range === key ? "bg-brand-600 text-white" : "bg-white/80 text-gray-700 hover:bg-white"}`}
-          >
-            {r.label}
-          </Link>
-        ))}
+      {/* Range filter + exports */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-1.5">
+          {Object.entries(RANGES).map(([key, r]) => (
+            <Link
+              key={key}
+              href={`/reports?range=${key}`}
+              className={`rounded-full px-3 py-1 text-xs font-medium ${range === key ? "bg-brand-600 text-white" : "bg-white/80 text-gray-700 hover:bg-white"}`}
+            >
+              {r.label}
+            </Link>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <ExportCsvButton
+            filename={`recruitment-by-job-${range}.csv`}
+            rows={jobRows.map((j) => ({
+              Job: j.title,
+              Applications: j.apps,
+              Hired: j.hired,
+              "Conversion %": j.apps ? Math.round((j.hired / j.apps) * 100) : 0,
+            }))}
+          />
+          <ExportPdfLink href={`/api/report/pdf?type=recruitment&range=${range}`} />
+        </div>
       </div>
 
       {/* Headline stats */}

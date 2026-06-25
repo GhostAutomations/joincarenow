@@ -81,6 +81,24 @@ export function JobPromote(props: JobPromoteProps) {
     }
   }
 
+  // Facebook removed caption pre-fill from its share dialog, so copy the
+  // ready-made caption to the clipboard first, then open the sharer with the
+  // job link — the manager just pastes and posts.
+  async function shareFacebook() {
+    try {
+      await navigator.clipboard.writeText(facebookPost);
+      setCopied("fb-share");
+      setTimeout(() => setCopied((c) => (c === "fb-share" ? null : c)), 4000);
+    } catch {
+      /* clipboard may be blocked; still open the dialog */
+    }
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(jobUrl)}`,
+      "_blank",
+      "noopener,width=670,height=620"
+    );
+  }
+
   async function openPoster() {
     setPosterErr(null);
     // Open the window synchronously on the click so pop-up blockers (Safari)
@@ -186,13 +204,25 @@ export function JobPromote(props: JobPromoteProps) {
           copied={copied === "li"}
           onCopy={() => copy("li", linkedinPost)}
         />
-        <PostBlock
-          icon={<Facebook className="h-3.5 w-3.5" aria-hidden />}
-          label="Facebook post"
-          text={facebookPost}
-          copied={copied === "fb"}
-          onCopy={() => copy("fb", facebookPost)}
-        />
+        <div>
+          <PostBlock
+            icon={<Facebook className="h-3.5 w-3.5" aria-hidden />}
+            label="Facebook post"
+            text={facebookPost}
+            copied={copied === "fb"}
+            onCopy={() => copy("fb", facebookPost)}
+          />
+          <button
+            type="button"
+            onClick={shareFacebook}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[#1877F2] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0f66d0]"
+          >
+            <Facebook className="h-3.5 w-3.5" aria-hidden /> Share to Facebook
+          </button>
+          {copied === "fb-share" && (
+            <p className="mt-1 text-xs text-gray-500">Caption copied — paste it into the Facebook post box.</p>
+          )}
+        </div>
       </div>
 
       {/* Share to staff */}

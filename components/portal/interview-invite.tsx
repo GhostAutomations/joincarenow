@@ -6,6 +6,7 @@ import { respondToInterview } from "@/modules/interviews/actions";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { formatLondon } from "@/lib/time";
 import { buildIcs, calendarLinks, type CalEvent } from "@/lib/calendar/ics";
+import type { OpeningHours } from "@/lib/opening-hours";
 
 export type PortalInterview = {
   interview_id: string;
@@ -14,6 +15,7 @@ export type PortalInterview = {
   mode: string | null;
   location: string | null;
   status: string;
+  opening_hours?: OpeningHours | null;
 };
 
 const STATUS_TEXT: Record<string, string> = {
@@ -162,7 +164,7 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
           <input type="hidden" name="response" value="reschedule_requested" />
           <div>
             <p className="mb-1 text-xs text-gray-600">When would suit you better?</p>
-            <DateTimePicker name="requestedTime" />
+            <DateTimePicker name="requestedTime" openingHours={interview.opening_hours ?? null} />
           </div>
           <textarea
             name="note"

@@ -105,17 +105,17 @@ export default function LandingPage() {
     <main className="min-h-screen bg-white">
       {/* Nav */}
       <header className="absolute inset-x-0 top-0 z-20">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <span className="flex items-center gap-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+          <span className="flex items-center gap-3.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/jcn-mark-white.png" alt="" className="h-11 w-auto drop-shadow-sm" />
-            <span className="text-2xl font-bold text-white drop-shadow-sm">Join Care Now</span>
+            <img src="/brand/jcn-mark-white.png" alt="" className="h-14 w-auto drop-shadow-sm sm:h-16" />
+            <span className="text-3xl font-bold text-white drop-shadow-sm sm:text-4xl">Join Care Now</span>
           </span>
-          <nav className="flex items-center gap-3 sm:gap-5">
-            <a href="#pricing" className="hidden text-sm font-medium text-white/90 hover:text-white sm:inline">Pricing</a>
-            <a href="#features" className="hidden text-sm font-medium text-white/90 hover:text-white sm:inline">Features</a>
-            <Link href="/sign-in" className="text-sm font-medium text-white/90 hover:text-white">Staff sign in</Link>
-            <a href="#demo" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">Book a demo</a>
+          <nav className="flex items-center gap-4 sm:gap-7">
+            <a href="#pricing" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Pricing</a>
+            <a href="#features" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Features</a>
+            <Link href="/sign-in" className="text-base font-medium text-white/90 hover:text-white">Account Sign In</Link>
+            <a href="#demo" className="rounded-lg bg-white px-5 py-2.5 text-base font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">Book a demo</a>
           </nav>
         </div>
       </header>
@@ -431,7 +431,7 @@ export default function LandingPage() {
               <a href="#pricing" className="hover:text-gray-900">Pricing</a>
               <a href="#demo" className="hover:text-gray-900">Book a demo</a>
               <Link href="/privacy" className="hover:text-gray-900">Privacy</Link>
-              <Link href="/sign-in" className="hover:text-gray-900">Staff sign in</Link>
+              <Link href="/sign-in" className="hover:text-gray-900">Account Sign In</Link>
             </nav>
           </div>
           <p className="mt-8 text-sm text-gray-400">

@@ -29,7 +29,7 @@ export function CompanyForm() {
         <Field label="Company name" name="name" placeholder="e.g. Acme Care Ltd" />
 
         {/* Administrator */}
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <div className="rounded-xl border border-white/50 bg-white/70 p-4 backdrop-blur">
           <p className="text-sm font-medium text-gray-900">Administrator</p>
           <p className="mt-0.5 text-xs text-gray-500">
             The person who runs this company&apos;s account. They&apos;ll be invited as admin.
@@ -43,7 +43,7 @@ export function CompanyForm() {
         </div>
 
         {/* Plan & billing */}
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <div className="rounded-xl border border-white/50 bg-white/70 p-4 backdrop-blur">
           <p className="text-sm font-medium text-gray-900">Plan &amp; billing</p>
           <p className="mt-0.5 text-xs text-gray-500">
             Choose what they were sold. They&apos;ll set up the subscription themselves from the
@@ -53,9 +53,11 @@ export function CompanyForm() {
             Plan
             <select
               name="plan"
-              defaultValue="monthly"
+              defaultValue=""
+              required
               className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
             >
+              <option value="" disabled>Select plan…</option>
               <option value="monthly">Monthly — £55/mo (+£150 set-up)</option>
               <option value="commit">12-month commit — £55/mo, no set-up</option>
               <option value="annual">Annual — £550/yr (2 months free), no set-up</option>
@@ -80,7 +82,7 @@ export function CompanyForm() {
         </div>
 
         {/* Branding */}
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <div className="rounded-xl border border-white/50 bg-white/70 p-4 backdrop-blur">
           <p className="text-sm font-medium text-gray-900">Branding</p>
           <p className="mt-0.5 text-xs text-gray-500">
             Choose up to three brand colours and upload a logo. These theme the

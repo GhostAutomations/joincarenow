@@ -33,8 +33,8 @@ export default async function FounderFormsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Form Store</h1>
         <form action={createBlankStoreForm}>
-          <button className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-            <Plus className="h-4 w-4" aria-hidden /> Create form
+          <button className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand-700">
+            <Plus className="h-5 w-5" aria-hidden /> Create form
           </button>
         </form>
       </div>

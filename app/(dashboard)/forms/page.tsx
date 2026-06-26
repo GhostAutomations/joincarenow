@@ -42,8 +42,8 @@ export default async function FormsPage() {
         subtitle="Build custom application forms and assign them to your jobs. Applicants answer these on top of the built-in basics (name, contact, CV)."
       >
         <form action={createBlankForm}>
-          <button className="inline-flex items-center gap-2 rounded-lg border border-white/40 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur hover:bg-white/30">
-            <Plus className="h-4 w-4" aria-hidden />
+          <button className="inline-flex items-center gap-2 rounded-xl border border-white/40 bg-white/20 px-6 py-3 text-base font-semibold text-white shadow-sm backdrop-blur hover:bg-white/30">
+            <Plus className="h-5 w-5" aria-hidden />
             Create a form
           </button>
         </form>

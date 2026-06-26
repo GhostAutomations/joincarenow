@@ -629,6 +629,17 @@ export async function deleteStoreForm(formData: FormData) {
   redirect("/admin/forms");
 }
 
+/** Founder: delete several store templates at once (from the Form Store list). */
+export async function deleteStoreFormsBulk(ids: string[]): Promise<{ ok?: boolean; error?: string }> {
+  const clean = (ids ?? []).filter((x) => typeof x === "string" && x);
+  if (clean.length === 0) return { error: "Nothing selected." };
+  const { supabase } = await requirePlatformAdmin();
+  const { error } = await supabase.from("forms").delete().in("id", clean).eq("is_store", true);
+  if (error) return { error: "Could not delete the selected templates." };
+  revalidatePath("/admin/forms");
+  return { ok: true };
+}
+
 /** Founder: set a company's subscription tier. */
 export async function setCompanyTier(formData: FormData) {
   const companyId = formData.get("companyId");

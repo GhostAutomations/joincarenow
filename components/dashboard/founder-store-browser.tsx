@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { Search, FileText, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, FileText, Pencil, Trash2 } from "lucide-react";
 import { TierBadge } from "@/components/dashboard/store-badge";
+import { deleteStoreFormsBulk } from "@/modules/forms/actions";
 import { categoryLabel, sortCategories } from "@/lib/form-categories";
 
 export type FounderStoreCard = {
@@ -33,8 +35,31 @@ function gradientFor(cat: string): string {
 /** Founder-side Form Store — same App Store look as the company store, but the
  *  cards open the template builder to edit (rather than "Add"). */
 export function FounderStoreBrowser({ forms }: { forms: FounderStoreCard[] }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [pending, startTransition] = useTransition();
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function deleteSelected() {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    if (!confirm(`Delete ${ids.length} template${ids.length === 1 ? "" : "s"}? This can't be undone.`)) return;
+    startTransition(async () => {
+      await deleteStoreFormsBulk(ids);
+      setSelected(new Set());
+      router.refresh();
+    });
+  }
 
   const categories = useMemo(
     () => sortCategories(Array.from(new Set(forms.map((f) => f.category || "other")))),
@@ -77,6 +102,27 @@ export function FounderStoreBrowser({ forms }: { forms: FounderStoreCard[] }) {
         </div>
       </div>
 
+      {/* Founder-only selection actions */}
+      {selected.size > 0 && (
+        <div className="sticky top-2 z-10 mt-3 flex items-center justify-between gap-3 rounded-xl border border-brand-200 bg-white/90 px-4 py-2.5 shadow-sm backdrop-blur">
+          <span className="text-sm text-gray-700">
+            {selected.size} template{selected.size === 1 ? "" : "s"} selected
+          </span>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setSelected(new Set())} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
+              Clear
+            </button>
+            <button
+              onClick={deleteSelected}
+              disabled={pending}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+            >
+              <Trash2 className="h-4 w-4" /> Delete {selected.size}
+            </button>
+          </div>
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         <p className="mt-10 text-center text-sm text-gray-500">
           {forms.length === 0 ? "No store templates yet — create your first one." : "No templates match your search."}
@@ -84,27 +130,38 @@ export function FounderStoreBrowser({ forms }: { forms: FounderStoreCard[] }) {
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {filtered.map((f) => (
-            <Link
+            <div
               key={f.id}
-              href={`/admin/forms/${f.id}/build`}
-              className="group relative flex gap-4 rounded-2xl border border-white/50 bg-white/70 p-4 shadow-sm backdrop-blur-md transition hover:border-brand-200 hover:shadow-md"
+              className={`group relative flex gap-4 rounded-2xl border bg-white/70 p-4 shadow-sm backdrop-blur-md transition hover:shadow-md ${
+                selected.has(f.id) ? "border-brand-400 ring-1 ring-brand-300" : "border-white/50 hover:border-brand-200"
+              }`}
             >
+              <input
+                type="checkbox"
+                checked={selected.has(f.id)}
+                onChange={() => toggle(f.id)}
+                className="absolute right-3 top-3 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                aria-label={`Select ${f.name}`}
+              />
               <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${gradientFor(f.category || "other")} text-white shadow-sm`}>
                 <FileText className="h-6 w-6" aria-hidden />
               </span>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pr-6">
                   <h3 className="truncate font-semibold text-gray-900">{f.name}</h3>
                   <TierBadge tier={f.store_tier} />
                 </div>
                 <p className="truncate text-xs capitalize text-gray-500">
                   {categoryLabel(f.category)} · {f.fieldCount} question{f.fieldCount === 1 ? "" : "s"}
                 </p>
-                <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brand-600 group-hover:underline">
+                <Link
+                  href={`/admin/forms/${f.id}/build`}
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:underline"
+                >
                   <Pencil className="h-3.5 w-3.5" /> Edit template
-                </span>
+                </Link>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}

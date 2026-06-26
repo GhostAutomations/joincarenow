@@ -13,10 +13,14 @@ export const maxDuration = 60;
 
 export default async function FormBuildPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ view?: string }>;
 }) {
   const { id } = await params;
+  const { view } = await searchParams;
+  const initialMode = view === "builder" ? "builder" : view === "import" ? "import" : null;
   const { supabase, current } = await requireCompany();
 
   const { data: form } = await supabase
@@ -109,7 +113,7 @@ export default async function FormBuildPage({
       <p className="text-sm text-white/80">Build your form below.</p>
 
       <div className="mt-3">
-        <BuildTabs builder={builder} importer={importer} />
+        <BuildTabs builder={builder} importer={importer} initialMode={initialMode} />
       </div>
     </div>
   );

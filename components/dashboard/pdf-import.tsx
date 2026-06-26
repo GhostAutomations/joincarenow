@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
 import { FileUp } from "lucide-react";
 import { importFormFromPdf, type ImportState } from "@/modules/forms/actions";
 
@@ -25,11 +24,9 @@ export function PdfImport({ formId }: { formId: string }) {
     importFormFromPdf,
     undefined
   );
-  const router = useRouter();
-
   useEffect(() => {
-    if (state?.added) router.refresh();
-  }, [state, router]);
+    if (state?.added) window.location.assign(`${window.location.pathname}?view=builder`);
+  }, [state]);
 
   return (
     <form action={action} className="space-y-3">

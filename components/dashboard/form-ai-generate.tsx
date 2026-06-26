@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { generateFormFromBrief, type ImportState } from "@/modules/forms/actions";
 
@@ -30,14 +29,14 @@ const EXAMPLES = [
 export function FormAiGenerate({ formId }: { formId: string }) {
   const [state, action] = useActionState<ImportState, FormData>(generateFormFromBrief, undefined);
   const [brief, setBrief] = useState("");
-  const router = useRouter();
 
   useEffect(() => {
     if (state?.added) {
       setBrief("");
-      router.refresh();
+      // Jump to the builder so the new questions are visible to review/edit.
+      window.location.assign(`${window.location.pathname}?view=builder`);
     }
-  }, [state, router]);
+  }, [state]);
 
   return (
     <form action={action} className="space-y-3">

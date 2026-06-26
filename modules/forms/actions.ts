@@ -136,10 +136,11 @@ export async function openBuilder(
 ): Promise<DetailsState> {
   const id = formData.get("id");
   const name = (formData.get("name")?.toString() ?? "").trim();
-  const categoryRaw = formData.get("category")?.toString() ?? "recruitment";
+  const categoryRaw = formData.get("category")?.toString() ?? "";
   if (typeof id !== "string") return { error: "Missing form" };
   if (name.length < 2) return { error: "Give the form a name" };
-  const category = CATEGORIES.includes(categoryRaw) ? categoryRaw : "other";
+  if (!CATEGORIES.includes(categoryRaw)) return { error: "Please choose a category." };
+  const category = categoryRaw;
 
   const { supabase, current } = await requireCompany();
   const { error } = await supabase
@@ -602,16 +603,19 @@ export async function saveStoreSettings(
   formData: FormData
 ): Promise<DetailsState> {
   const id = formData.get("id");
-  const categoryRaw = formData.get("category")?.toString() ?? "other";
+  const name = (formData.get("name")?.toString() ?? "").trim();
+  const categoryRaw = formData.get("category")?.toString() ?? "";
   const tierRaw = formData.get("storeTier")?.toString() ?? "free";
   if (typeof id !== "string") return { error: "Missing form" };
-  const category = CATEGORIES.includes(categoryRaw) ? categoryRaw : "other";
+  if (name.length < 2) return { error: "Give the form a name." };
+  if (!CATEGORIES.includes(categoryRaw)) return { error: "Please choose a category." };
+  const category = categoryRaw;
   const store_tier = TIERS.includes(tierRaw) ? tierRaw : "free";
 
   const { supabase } = await requirePlatformAdmin();
   const { error } = await supabase
     .from("forms")
-    .update({ category, store_tier })
+    .update({ name, category, store_tier })
     .eq("id", id)
     .eq("is_store", true);
   if (error) return { error: "Could not save. Please try again." };

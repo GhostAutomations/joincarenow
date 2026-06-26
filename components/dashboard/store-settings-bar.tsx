@@ -16,10 +16,12 @@ const cls =
 
 export function StoreSettingsBar({
   formId,
+  name,
   category,
   storeTier,
 }: {
   formId: string;
+  name: string;
   category: string;
   storeTier: string;
 }) {
@@ -28,10 +30,21 @@ export function StoreSettingsBar({
   return (
     <form action={action} className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-4">
       <input type="hidden" name="id" value={formId} />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.4fr_1fr_1fr_auto] sm:items-end">
+        <label className="text-sm font-medium text-gray-700">
+          Form name
+          <input
+            name="name"
+            required
+            defaultValue={name}
+            placeholder="e.g. P46 starter form"
+            className={cls}
+          />
+        </label>
         <label className="text-sm font-medium text-gray-700">
           Category
-          <select name="category" defaultValue={category} className={cls}>
+          <select name="category" required defaultValue={category || ""} className={cls}>
+            <option value="" disabled>Select a category…</option>
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
             ))}

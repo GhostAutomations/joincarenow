@@ -15,10 +15,14 @@ export const maxDuration = 60;
 
 export default async function FounderFormBuildPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ view?: string }>;
 }) {
   const { id } = await params;
+  const { view } = await searchParams;
+  const initialMode = view === "builder" ? "builder" : view === "import" ? "import" : null;
   const { supabase } = await requirePlatformAdmin();
 
   const { data: form } = await supabase
@@ -107,13 +111,14 @@ export default async function FounderFormBuildPage({
       <div className="mt-4">
         <StoreSettingsBar
           formId={form.id}
-          category={(form as { category?: string }).category ?? "recruitment"}
+          name={form.name ?? ""}
+          category={(form as { category?: string }).category ?? ""}
           storeTier={(form as { store_tier?: string }).store_tier ?? "free"}
         />
       </div>
 
       <div className="mt-2">
-        <BuildTabs builder={builder} importer={importer} />
+        <BuildTabs builder={builder} importer={importer} initialMode={initialMode} />
       </div>
     </div>
   );

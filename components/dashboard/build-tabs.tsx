@@ -7,11 +7,13 @@ import { useState, type ReactNode } from "react";
 export function BuildTabs({
   builder,
   importer,
+  initialMode = null,
 }: {
   builder: ReactNode;
   importer: ReactNode;
+  initialMode?: "builder" | "import" | null;
 }) {
-  const [mode, setMode] = useState<"builder" | "import" | null>(null);
+  const [mode, setMode] = useState<"builder" | "import" | null>(initialMode);
 
   if (!mode) {
     return (

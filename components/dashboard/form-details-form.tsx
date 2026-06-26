@@ -50,7 +50,8 @@ export function FormDetailsForm({
         </label>
         <label className="text-sm font-medium text-gray-700">
           Category
-          <select name="category" defaultValue={category} className={cls}>
+          <select name="category" required defaultValue={category || ""} className={cls}>
+            <option value="" disabled>Select a category…</option>
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.label}

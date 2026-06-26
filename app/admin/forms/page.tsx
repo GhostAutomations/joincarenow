@@ -1,10 +1,7 @@
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createBlankStoreForm } from "@/modules/forms/actions";
-import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
-import { StoreBadge, TierBadge } from "@/components/dashboard/store-badge";
-import { categoryLabel, sortCategories } from "@/lib/form-categories";
+import { FounderStoreBrowser, type FounderStoreCard } from "@/components/dashboard/founder-store-browser";
 
 type StoreFormRow = {
   id: string;
@@ -23,15 +20,13 @@ export default async function FounderFormsPage() {
     .eq("is_store", true)
     .order("name", { ascending: true });
 
-  const rows = (forms ?? []) as unknown as StoreFormRow[];
-  const byCategory = new Map<string, StoreFormRow[]>();
-  for (const f of rows) {
-    const cat = f.category || "other";
-    const list = byCategory.get(cat) ?? [];
-    list.push(f);
-    byCategory.set(cat, list);
-  }
-  const categories = sortCategories([...byCategory.keys()]);
+  const cards: FounderStoreCard[] = ((forms ?? []) as unknown as StoreFormRow[]).map((f) => ({
+    id: f.id,
+    name: f.name,
+    category: f.category || "other",
+    store_tier: f.store_tier,
+    fieldCount: f.form_fields?.[0]?.count ?? 0,
+  }));
 
   return (
     <div>
@@ -48,38 +43,8 @@ export default async function FounderFormsPage() {
         Admins can add them to their own forms, gated by their subscription plan.
       </p>
 
-      <div className="mt-6 space-y-3">
-        {rows.length === 0 ? (
-          <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">No store forms yet.</div>
-        ) : (
-          categories.map((cat) => {
-            const list = byCategory.get(cat) ?? [];
-            return (
-              <CollapsibleSection key={cat} title={categoryLabel(cat)} count={list.length}>
-                <ul className="space-y-1.5">
-                  {list.map((f) => {
-                    const count = f.form_fields?.[0]?.count ?? 0;
-                    return (
-                      <li key={f.id}>
-                        <Link
-                          href={`/admin/forms/${f.id}/build`}
-                          className="flex items-center justify-between gap-3 rounded-xl border border-white/40 bg-white/70 backdrop-blur-md p-3.5 hover:border-brand-300"
-                        >
-                          <span className="font-medium text-gray-900">{f.name}</span>
-                          <div className="flex items-center gap-2.5 text-xs text-gray-500">
-                            <StoreBadge />
-                            <TierBadge tier={f.store_tier} />
-                            <span>{count} field{count === 1 ? "" : "s"}</span>
-                          </div>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </CollapsibleSection>
-            );
-          })
-        )}
+      <div className="mt-6">
+        <FounderStoreBrowser forms={cards} />
       </div>
     </div>
   );

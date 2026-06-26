@@ -14,6 +14,7 @@ export type FounderStoreCard = {
   category: string;
   store_tier: string;
   fieldCount: number;
+  published: boolean;
 };
 
 const GRADIENTS = [
@@ -150,6 +151,11 @@ export function FounderStoreBrowser({ forms }: { forms: FounderStoreCard[] }) {
                 <div className="flex items-center gap-2 pr-6">
                   <h3 className="truncate font-semibold text-gray-900">{f.name}</h3>
                   <TierBadge tier={f.store_tier} />
+                  {f.published ? (
+                    <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-800">Live</span>
+                  ) : (
+                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">Draft</span>
+                  )}
                 </div>
                 <p className="truncate text-xs capitalize text-gray-500">
                   {categoryLabel(f.category)} · {f.fieldCount} question{f.fieldCount === 1 ? "" : "s"}

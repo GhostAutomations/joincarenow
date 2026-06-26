@@ -8,6 +8,7 @@ type StoreFormRow = {
   name: string;
   category: string | null;
   store_tier: string;
+  store_published: boolean | null;
   form_fields: { count: number }[] | null;
 };
 
@@ -16,7 +17,7 @@ export default async function FounderFormsPage() {
 
   const { data: forms } = await supabase
     .from("forms")
-    .select("id, name, category, store_tier, form_fields(count)")
+    .select("id, name, category, store_tier, store_published, form_fields(count)")
     .eq("is_store", true)
     .order("name", { ascending: true });
 
@@ -26,6 +27,7 @@ export default async function FounderFormsPage() {
     category: f.category || "other",
     store_tier: f.store_tier,
     fieldCount: f.form_fields?.[0]?.count ?? 0,
+    published: f.store_published ?? false,
   }));
 
   return (

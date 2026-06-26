@@ -5,6 +5,7 @@ import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { deleteStoreForm } from "@/modules/forms/actions";
 import { MondayFormBuilder, type BuilderField } from "@/components/dashboard/monday-form-builder";
 import { StoreSettingsBar } from "@/components/dashboard/store-settings-bar";
+import { StorePublishBar } from "@/components/dashboard/store-publish-bar";
 import { DeleteFormButton } from "@/components/dashboard/delete-form-button";
 import { BuildTabs } from "@/components/dashboard/build-tabs";
 import { PdfImport } from "@/components/dashboard/pdf-import";
@@ -27,7 +28,7 @@ export default async function FounderFormBuildPage({
 
   const { data: form } = await supabase
     .from("forms")
-    .select("id, name, description, style, category, store_tier")
+    .select("id, name, description, style, category, store_tier, store_published")
     .eq("id", id)
     .eq("is_store", true)
     .single();
@@ -114,6 +115,13 @@ export default async function FounderFormBuildPage({
           name={form.name ?? ""}
           category={(form as { category?: string }).category ?? ""}
           storeTier={(form as { store_tier?: string }).store_tier ?? "free"}
+        />
+      </div>
+
+      <div className="mt-3">
+        <StorePublishBar
+          formId={form.id}
+          published={(form as { store_published?: boolean }).store_published ?? false}
         />
       </div>
 

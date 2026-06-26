@@ -628,6 +628,42 @@ export async function saveStoreSettings(
   return { ok: true };
 }
 
+/** Founder: publish or unpublish a store template. Publishing makes it appear in
+ *  every company's Form Store; it requires a real name + a category first. */
+export async function setStorePublished(
+  _prev: DetailsState,
+  formData: FormData
+): Promise<DetailsState> {
+  const id = formData.get("id");
+  const publish = formData.get("publish") === "true";
+  if (typeof id !== "string") return { error: "Missing form" };
+
+  const { supabase } = await requirePlatformAdmin();
+
+  if (publish) {
+    const { data: f } = await supabase
+      .from("forms")
+      .select("name, category")
+      .eq("id", id)
+      .eq("is_store", true)
+      .single();
+    if (!f) return { error: "Form not found" };
+    const name = (f.name as string | null)?.trim() ?? "";
+    if (!name || name.toLowerCase() === "untitled form") return { error: "Give the form a name before publishing." };
+    if (!f.category) return { error: "Choose a category before publishing." };
+  }
+
+  const { error } = await supabase
+    .from("forms")
+    .update({ store_published: publish })
+    .eq("id", id)
+    .eq("is_store", true);
+  if (error) return { error: "Could not update. Please try again." };
+  revalidatePath(`/admin/forms/${id}/build`);
+  revalidatePath("/admin/forms");
+  return { ok: true };
+}
+
 /** Founder: delete a store template. */
 export async function deleteStoreForm(formData: FormData) {
   const id = formData.get("id");

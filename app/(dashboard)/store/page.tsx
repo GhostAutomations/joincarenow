@@ -25,6 +25,7 @@ export default async function StorePage() {
       .from("forms")
       .select("id, name, description, category, store_tier, form_fields(count)")
       .eq("is_store", true)
+      .eq("store_published", true)
       .order("created_at", { ascending: false }),
     supabase
       .from("forms")

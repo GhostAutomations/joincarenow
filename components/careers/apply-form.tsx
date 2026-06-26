@@ -362,7 +362,44 @@ export function DynamicField({
     );
   }
 
-  // short_text, number, date, month
+  if (field.field_type === "country") {
+    return (
+      <label className="block">
+        {label}
+        {help}
+        <select name={name} required={req} defaultValue={dvStr || ""} className={inputClass}>
+          <option value="" disabled>Select a country…</option>
+          {COUNTRIES.map((c) => (
+            <option key={c.iso} value={c.name}>{c.name}</option>
+          ))}
+        </select>
+      </label>
+    );
+  }
+  if (field.field_type === "date_range") {
+    // Two date inputs share the field name → collected as [from, to].
+    return (
+      <fieldset>
+        {label}
+        {help}
+        <div className="mt-1 flex flex-wrap items-end gap-3">
+          <label className="text-xs text-gray-500">
+            From
+            <input type="date" name={name} required={req} defaultValue={dvArr[0] ?? ""} className={inputClass} />
+          </label>
+          <label className="text-xs text-gray-500">
+            To
+            <input type="date" name={name} required={req} defaultValue={dvArr[1] ?? ""} className={inputClass} />
+          </label>
+        </div>
+      </fieldset>
+    );
+  }
+  if (field.field_type === "rating") {
+    return <RatingField name={name} label={field.label} required={req} help={field.help_text} initial={dvStr} />;
+  }
+
+  // short_text, number, date, month, time, link
   const type =
     field.field_type === "number"
       ? "number"
@@ -370,12 +407,23 @@ export function DynamicField({
       ? "date"
       : field.field_type === "month"
       ? "month"
+      : field.field_type === "time"
+      ? "time"
+      : field.field_type === "link"
+      ? "url"
       : "text";
   return (
     <label className="block">
       {label}
       {help}
-      <input type={type} name={name} required={req} defaultValue={dvStr} className={inputClass} />
+      <input
+        type={type}
+        name={name}
+        required={req}
+        defaultValue={dvStr}
+        placeholder={field.field_type === "link" ? "https://…" : undefined}
+        className={inputClass}
+      />
     </label>
   );
 }
@@ -500,6 +548,46 @@ function FieldLabel({ label, required, help }: { label: string; required: boolea
       </span>
       {help && <span className="mt-0.5 block text-xs text-gray-500">{help}</span>}
     </>
+  );
+}
+
+/** Star rating (1–5). Submits the chosen number as the field value. */
+function RatingField({
+  name,
+  label,
+  required,
+  help,
+  initial,
+}: {
+  name: string;
+  label: string;
+  required: boolean;
+  help: string | null;
+  initial: string;
+}) {
+  const [value, setValue] = useState(initial ? Number(initial) || 0 : 0);
+  return (
+    <fieldset>
+      <span className="block text-sm font-medium text-gray-700">
+        {label}
+        {required && <span className="ml-0.5 text-red-500">*</span>}
+      </span>
+      {help && <span className="mt-0.5 block text-xs text-gray-500">{help}</span>}
+      <div className="mt-1 flex gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => setValue((v) => (v === n ? 0 : n))}
+            aria-label={`${n} star${n > 1 ? "s" : ""}`}
+            className="text-2xl leading-none"
+          >
+            <span className={n <= value ? "text-amber-400" : "text-gray-300"}>★</span>
+          </button>
+        ))}
+      </div>
+      <input type="hidden" name={name} value={value || ""} />
+    </fieldset>
   );
 }
 

@@ -5,11 +5,21 @@ const FIELD_TYPES = [
   "long_text",
   "number",
   "date",
+  "date_range",
+  "month",
+  "time",
   "dropdown",
   "radio",
   "checkboxes",
   "yes_no",
+  "rating",
+  "country",
+  "link",
+  "email",
+  "phone",
+  "address",
   "file",
+  "signature",
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 
@@ -28,9 +38,10 @@ Return ONLY a JSON array (no prose, no markdown). Each item:
 { "label": string, "field_type": string, "required": boolean, "options": string[], "help_text": string | null }
 
 Rules:
-- field_type MUST be exactly one of: short_text, long_text, number, date, dropdown, radio, checkboxes, yes_no, file.
+- field_type MUST be exactly one of: short_text, long_text, number, date, date_range, month, time, dropdown, radio, checkboxes, yes_no, rating, country, link, email, phone, address, file, signature.
 - yes_no for yes/no questions. radio for "choose one" with set options. checkboxes for "select all that apply". dropdown for long option lists.
-- date for dates, number for numeric-only, file for attachments/signatures/uploads, long_text for paragraph answers, short_text otherwise.
+- date for a single date, date_range for a from–to period, month for month & year, time for a time of day, rating for star scores, country for a country, link for a URL, email/phone/address as named, signature for signatures.
+- number for numeric-only, file for attachments/uploads, long_text for paragraph answers, short_text otherwise.
 - "options" only for dropdown/radio/checkboxes; otherwise [].
 - SKIP the basics already collected elsewhere: first name, last name, email, phone, postcode, CV upload, and right-to-work confirmation.
 - Keep labels concise and faithful to the form.`;

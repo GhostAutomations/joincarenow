@@ -6,11 +6,21 @@ const FIELD_TYPES = [
   "long_text",
   "number",
   "date",
+  "date_range",
+  "month",
+  "time",
   "dropdown",
   "radio",
   "checkboxes",
   "yes_no",
+  "rating",
+  "country",
+  "link",
+  "email",
+  "phone",
+  "address",
   "file",
+  "signature",
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 
@@ -21,9 +31,11 @@ Return ONLY a JSON array (no prose, no markdown). Each item:
 { "label": string, "field_type": string, "required": boolean, "options": string[], "help_text": string | null }
 
 Rules:
-- field_type MUST be exactly one of: short_text, long_text, number, date, dropdown, radio, checkboxes, yes_no, file.
+- field_type MUST be exactly one of: short_text, long_text, number, date, date_range, month, time, dropdown, radio, checkboxes, yes_no, rating, country, link, email, phone, address, file, signature.
 - yes_no for yes/no questions. radio for "choose one" with a small set of options. checkboxes for "select all that apply". dropdown for longer option lists.
-- date for dates, number for numeric-only, file for uploads/attachments/signatures, long_text for paragraph answers, short_text otherwise.
+- date for a single date, date_range for a from–to period, month for month & year, time for a time of day.
+- rating for 1–5 star scores. country for nationality/country. link for a URL/website. email for emails, phone for phone numbers, address for a full postal address. signature for a signature, file for uploads.
+- number for numeric-only, long_text for paragraph answers, short_text otherwise.
 - "options" only for dropdown/radio/checkboxes (provide sensible options); otherwise [].
 - Mark genuinely essential questions as required: true.
 - Use clear, plain-English UK labels. Add short help_text only where it genuinely helps, else null.

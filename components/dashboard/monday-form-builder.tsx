@@ -55,6 +55,11 @@ function clientDefault(id: string, type: string): BuilderField {
   if (type === "transport") return { ...base, label: "Transport" };
   if (type === "email") return { ...base, label: "Email address" };
   if (type === "phone") return { ...base, label: "Phone number" };
+  if (type === "date_range") return { ...base, label: "Date range" };
+  if (type === "time") return { ...base, label: "Time" };
+  if (type === "rating") return { ...base, label: "Rating" };
+  if (type === "country") return { ...base, label: "Country" };
+  if (type === "link") return { ...base, label: "Link" };
   return base;
 }
 
@@ -77,11 +82,16 @@ const PALETTE: { value: string; label: string }[] = [
   { value: "phone", label: "Phone number" },
   { value: "number", label: "Number" },
   { value: "date", label: "Date" },
+  { value: "date_range", label: "Date range" },
   { value: "month", label: "Month & year" },
+  { value: "time", label: "Time" },
   { value: "dropdown", label: "Dropdown" },
   { value: "radio", label: "Single select" },
   { value: "checkboxes", label: "Multi select" },
   { value: "yes_no", label: "Yes / No" },
+  { value: "rating", label: "Rating (stars)" },
+  { value: "country", label: "Country" },
+  { value: "link", label: "Link / URL" },
   { value: "branch", label: "Branch (company list)" },
   { value: "role", label: "Role (company list)" },
   { value: "transport", label: "Transport (Driver / Walker)" },

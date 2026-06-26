@@ -28,6 +28,11 @@ const FIELD_TYPES = [
   "email",
   "phone",
   "month",
+  "time",
+  "date_range",
+  "rating",
+  "country",
+  "link",
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 

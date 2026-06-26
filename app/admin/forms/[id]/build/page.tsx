@@ -4,8 +4,7 @@ import { ArrowLeft, Sparkles, FileUp } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { deleteStoreForm } from "@/modules/forms/actions";
 import { MondayFormBuilder, type BuilderField } from "@/components/dashboard/monday-form-builder";
-import { StoreSettingsBar } from "@/components/dashboard/store-settings-bar";
-import { StorePublishBar } from "@/components/dashboard/store-publish-bar";
+import { StoreFormBar } from "@/components/dashboard/store-form-bar";
 import { DeleteFormButton } from "@/components/dashboard/delete-form-button";
 import { BuildTabs } from "@/components/dashboard/build-tabs";
 import { PdfImport } from "@/components/dashboard/pdf-import";
@@ -110,19 +109,13 @@ export default async function FounderFormBuildPage({
       </h1>
       <p className="text-sm text-white/80">Store form · set its category and plan below.</p>
 
-      {/* Store settings shown once, above the tabs (matches the admin flow). */}
+      {/* Store settings + actions, above the tabs. */}
       <div className="mt-4">
-        <StoreSettingsBar
+        <StoreFormBar
           formId={form.id}
           name={form.name ?? ""}
           category={(form as { category?: string }).category ?? ""}
           storeTier={(form as { store_tier?: string }).store_tier ?? "free"}
-        />
-      </div>
-
-      <div className="mt-3">
-        <StorePublishBar
-          formId={form.id}
           published={(form as { store_published?: boolean }).store_published ?? false}
         />
       </div>

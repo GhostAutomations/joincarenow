@@ -1,0 +1,177 @@
+"use client";
+
+import { useActionState, useEffect, useState, type SyntheticEvent } from "react";
+import { useFormStatus } from "react-dom";
+import { Globe, EyeOff, Sparkles, Save, Check } from "lucide-react";
+import {
+  saveStoreSettings,
+  setStorePublished,
+  regenerateFormFromBrief,
+  type DetailsState,
+  type ImportState,
+} from "@/modules/forms/actions";
+import { TIERS, TIER_LABEL } from "@/modules/forms/tiers";
+
+const CATEGORIES: { value: string; label: string }[] = [
+  { value: "recruitment", label: "Recruitment" },
+  { value: "onboarding", label: "Onboarding" },
+  { value: "referencing", label: "Referencing" },
+  { value: "hr", label: "HR" },
+  { value: "other", label: "Other" },
+];
+const cls =
+  "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+
+export function StoreFormBar({
+  formId,
+  name,
+  category,
+  storeTier,
+  published,
+}: {
+  formId: string;
+  name: string;
+  category: string;
+  storeTier: string;
+  published: boolean;
+}) {
+  const [saveState, saveAction] = useActionState<DetailsState, FormData>(saveStoreSettings, undefined);
+  const [pubState, pubAction] = useActionState<DetailsState, FormData>(setStorePublished, undefined);
+  const [regenState, regenAction] = useActionState<ImportState, FormData>(regenerateFormFromBrief, undefined);
+  const [dirty, setDirty] = useState(false);
+  const [showRegen, setShowRegen] = useState(false);
+  const [brief, setBrief] = useState("");
+
+  // Reset to a fresh "Save" once a save succeeds; mark dirty again on any edit.
+  useEffect(() => { if (saveState?.ok) setDirty(false); }, [saveState]);
+  useEffect(() => {
+    if (regenState?.added) window.location.assign(`${window.location.pathname}?view=builder`);
+  }, [regenState]);
+
+  const autosave = (e: SyntheticEvent<HTMLInputElement | HTMLSelectElement>) =>
+    e.currentTarget.form?.requestSubmit();
+  const saved = !!saveState?.ok && !dirty;
+
+  return (
+    <div className="space-y-3">
+      {/* Settings (auto-save on blur) */}
+      <form
+        id="store-settings-form"
+        action={saveAction}
+        onChange={() => setDirty(true)}
+        className="rounded-2xl border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-md"
+      >
+        <input type="hidden" name="id" value={formId} />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.4fr_1fr_1fr]">
+          <label className="text-sm font-medium text-gray-700">
+            Form name
+            <input name="name" defaultValue={name === "Untitled form" ? "" : name} placeholder="e.g. P46 starter form" onBlur={autosave} className={cls} />
+          </label>
+          <label className="text-sm font-medium text-gray-700">
+            Category
+            <select name="category" defaultValue={category || ""} onBlur={autosave} onChange={autosave} className={cls}>
+              <option value="" disabled>Select a category…</option>
+              {CATEGORIES.map((c) => (<option key={c.value} value={c.value}>{c.label}</option>))}
+            </select>
+          </label>
+          <label className="text-sm font-medium text-gray-700">
+            Required plan
+            <select name="storeTier" defaultValue={storeTier} onChange={autosave} className={cls}>
+              {TIERS.map((t) => (<option key={t} value={t}>{TIER_LABEL[t]}</option>))}
+            </select>
+          </label>
+        </div>
+      </form>
+
+      {/* Action bar */}
+      <div className="rounded-2xl border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-md">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm">
+            {published ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 font-medium text-green-800">
+                <Globe className="h-3.5 w-3.5" /> Live in the Form Store
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 font-medium text-amber-800">
+                <EyeOff className="h-3.5 w-3.5" /> Draft — not visible to companies
+              </span>
+            )}
+            {(pubState?.error || saveState?.error) && (
+              <span className="text-sm text-red-600">{pubState?.error || saveState?.error}</span>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              form="store-settings-form"
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium ${
+                saved
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+              {saved ? "Saved" : "Save"}
+            </button>
+
+            <form action={pubAction}>
+              <input type="hidden" name="id" value={formId} />
+              <input type="hidden" name="publish" value={(!published).toString()} />
+              <button
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium text-white ${
+                  published ? "bg-gray-600 hover:bg-gray-700" : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {published ? <EyeOff className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
+                {published ? "Unpublish" : "Publish"}
+              </button>
+            </form>
+
+            <button
+              type="button"
+              onClick={() => setShowRegen((s) => !s)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              <Sparkles className="h-4 w-4" /> Regenerate with AI
+            </button>
+          </div>
+        </div>
+
+        {showRegen && (
+          <form action={regenAction} className="mt-3 rounded-xl border border-brand-100 bg-brand-50/50 p-3">
+            <input type="hidden" name="formId" value={formId} />
+            <p className="text-xs font-medium text-amber-700">
+              AI can&apos;t edit the questions already on the form — this generates a brand-new form and
+              <strong> replaces all current questions</strong>.
+            </p>
+            <textarea
+              name="brief"
+              required
+              rows={3}
+              value={brief}
+              onChange={(e) => setBrief(e.target.value)}
+              placeholder="Describe the form you want instead…"
+              className="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+            <div className="mt-2 flex items-center gap-3">
+              <RegenSubmit disabled={brief.trim().length < 3} />
+              {regenState?.error && <span className="text-sm text-red-600">{regenState.error}</span>}
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RegenSubmit({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      disabled={pending || disabled}
+      className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+    >
+      <Sparkles className="h-4 w-4" /> {pending ? "Generating…" : "Regenerate form"}
+    </button>
+  );
+}

@@ -41,20 +41,19 @@ export default async function DashboardPage() {
   // pack and what's left to make the account their own. Hidden once complete.
   let checklist: ChecklistItem[] = [];
   if (isAdmin) {
-    const [formsCount, onbCount, tplCount, branchCount, teamCount] = await Promise.all([
-      supabase.from("forms").select("id", { count: "exact", head: true }).eq("company_id", cid).eq("is_store", false),
-      supabase.from("onboarding_templates").select("id", { count: "exact", head: true }).eq("company_id", cid),
-      supabase.from("message_templates").select("id", { count: "exact", head: true }).eq("company_id", cid),
+    // Only genuine actions the admin must take — NOT pre-seeded content (which
+    // would tick before they'd done anything). Forms/onboarding/templates come
+    // pre-loaded and are theirs to tweak; we don't fake-complete them here.
+    const [branchCount, pubJobs, teamCount] = await Promise.all([
       supabase.from("branches").select("id", { count: "exact", head: true }).eq("company_id", cid),
+      supabase.from("jobs").select("id", { count: "exact", head: true }).eq("company_id", cid).eq("status", "published"),
       supabase.from("company_users").select("id", { count: "exact", head: true }).eq("company_id", cid),
     ]);
     const brand = (companyRow?.settings as { brand?: { logo_url?: string | null } } | null)?.brand;
     checklist = [
       { label: "Add your logo and brand colours", hint: "Make the platform and emails look like yours.", href: "/settings", done: Boolean(brand?.logo_url) },
       { label: "Set up your branches", hint: "Add the branches/locations you recruit for.", href: "/settings", done: count(branchCount) > 0 },
-      { label: "Review your application form", hint: "A Care Worker Application is ready — tailor it to your roles.", href: "/forms", done: count(formsCount) > 0 },
-      { label: "Review your onboarding workflow", hint: "Steps are set up — adjust them to your process.", href: "/onboarding-board", done: count(onbCount) > 0 },
-      { label: "Review your message templates", hint: "Branded email + SMS for every stage are ready to use.", href: "/templates", done: count(tplCount) > 0 },
+      { label: "Publish your first job", hint: "Create a role and publish it to start receiving applicants.", href: "/jobs", done: count(pubJobs) > 0 },
       { label: "Invite your team", hint: "Add managers and recruiters to your company.", href: "/settings", done: count(teamCount) > 1 },
     ];
   }

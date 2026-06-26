@@ -2,8 +2,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendBrandedEmail } from "@/lib/comms/branded";
 import { seedCompanyStarter } from "@/lib/setup/seed";
 
-const BASE_URL = "https://www.joincarenow.com";
-
 function slugify(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
 }
@@ -77,19 +75,19 @@ export async function provisionCompanyFromProspect(
 
   let note = "no admin email on file — invite manually";
   if (admin?.email && inviteToken) {
-    const link = `${BASE_URL}/accept-invite?token=${inviteToken}`;
     const firstName = ((admin.name as string) ?? "").split(" ")[0] || "there";
+    // Phase-1 welcome — reassure them setup is underway. The login link comes in
+    // the "account ready" email the founder fires once setup is complete.
     await sendBrandedEmail(db, null, {
       to: admin.email as string,
-      subject: "Welcome to Join Care Now — set up your account",
+      subject: "Welcome to Join Care Now — we're setting up your account",
       text:
         `Hi ${firstName},\n\n` +
-        `Great to have you on board. Your Join Care Now account for ${prospect.name} is ready.\n\n` +
-        `Click the button below to set your password and log in. From there you can add your jobs, branding and team.\n\n` +
+        `Great to have you on board. We're getting ${prospect.name}'s Join Care Now account set up for you now.\n\n` +
+        `There's nothing you need to do yet — we'll email you as soon as it's ready and you can log in.\n\n` +
         `Welcome aboard,\nThe Join Care Now team`,
-      cta: { label: "Set up your account", url: link },
     });
-    note = `admin invite sent to ${admin.email}`;
+    note = `welcome email sent to ${admin.email}`;
   } else if (admin?.email) {
     note = "company created, but the admin invite could not be generated";
   }

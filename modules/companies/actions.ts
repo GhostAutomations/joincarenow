@@ -5,9 +5,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { settingsContext, requireUser } from "@/modules/auth/queries";
+import { settingsContext, requireUser, requirePlatformAdmin } from "@/modules/auth/queries";
 import { slugify } from "@/lib/utils";
 import { seedCompanyStarter } from "@/lib/setup/seed";
+import { sendBrandedEmail } from "@/lib/comms/branded";
 
 /** Build an absolute accept-invite URL from the incoming request host. */
 async function acceptUrl(token: string): Promise<string> {
@@ -147,10 +148,96 @@ export async function createCompany(
     };
   }
 
+  // Phase-1 welcome: reassure them their account is being set up. No login link
+  // yet — that comes in the "account ready" email the founder fires once setup
+  // is complete. Best-effort: never fail company creation on an email hiccup.
+  try {
+    await sendBrandedEmail(createAdminClient(), null, {
+      to: parsed.data.adminEmail,
+      subject: "Welcome to Join Care Now — we're setting up your account",
+      text:
+        `Hi there,\n\n` +
+        `Welcome to Join Care Now! We're getting ${parsed.data.name}'s account set up for you now.\n\n` +
+        `There's nothing you need to do yet — we'll email you as soon as it's ready and you can log in.\n\n` +
+        `Welcome aboard,\nThe Join Care Now team`,
+    });
+  } catch {
+    /* email best-effort */
+  }
+
   return {
     inviteLink: await acceptUrl(invite.token),
     invitedEmail: parsed.data.adminEmail,
   };
+}
+
+/** Founder: "Mark setup complete & email them" — fires the phase-2 "account
+ *  ready" email (with the login button) once the founder has finished setting
+ *  the company up. Idempotent-ish: records when it was last sent. */
+export async function sendAccountReadyEmail(
+  _prev: SettingsState,
+  formData: FormData
+): Promise<SettingsState> {
+  await requirePlatformAdmin();
+  const companyId = formData.get("companyId");
+  if (typeof companyId !== "string" || !companyId) return { error: "Missing company." };
+  const db = createAdminClient();
+
+  const { data: company } = await db
+    .from("companies")
+    .select("name, settings")
+    .eq("id", companyId)
+    .single();
+  if (!company) return { error: "Company not found." };
+
+  // Prefer the pending admin invitation (gives a set-password link); fall back
+  // to a plain sign-in link if they've already accepted.
+  const { data: invite } = await db
+    .from("invitations")
+    .select("token, email, status")
+    .eq("company_id", companyId)
+    .eq("role", "admin")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let to = (invite as { email?: string } | null)?.email ?? null;
+  let url = "https://www.joincarenow.com/sign-in";
+  if (invite && (invite as { status?: string }).status === "pending") {
+    url = `https://www.joincarenow.com/accept-invite?token=${(invite as { token: string }).token}`;
+  }
+  if (!to) {
+    // No invitation row — look up an admin member's email.
+    const { data: admins } = await db
+      .from("company_users")
+      .select("profiles(email)")
+      .eq("company_id", companyId)
+      .eq("role", "admin")
+      .limit(1);
+    to = (admins?.[0] as { profiles?: { email?: string } } | undefined)?.profiles?.email ?? null;
+  }
+  if (!to) return { error: "No admin email on file for this company." };
+
+  const res = await sendBrandedEmail(db, companyId, {
+    to,
+    subject: "Your Join Care Now account is ready",
+    text:
+      `Hi there,\n\n` +
+      `Great news — ${(company as { name: string }).name}'s account on Join Care Now is all set up and ready for you.\n\n` +
+      `Use the button below to set your password and log in. Everything's been pre-configured, so you can get started straight away.\n\n` +
+      `Welcome aboard,\nThe Join Care Now team`,
+    cta: { label: "Set up your account", url },
+  });
+  if (!res.ok) return { error: res.error || "Could not send the email." };
+
+  const settings = {
+    ...((company as { settings?: Record<string, unknown> }).settings ?? {}),
+    setup_complete: true,
+    ready_email_sent_at: new Date().toISOString(),
+  };
+  await db.from("companies").update({ settings }).eq("id", companyId);
+  revalidatePath(`/founder/companies/${companyId}`);
+  return { ok: true };
 }
 
 // ---------- Company profile: interview address ----------

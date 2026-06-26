@@ -13,6 +13,7 @@ import { CareersContentForm } from "@/components/dashboard/careers-content-form"
 import { InterviewAddressForm } from "@/components/dashboard/interview-address-form";
 import { BrandingForm } from "@/components/dashboard/branding-form";
 import { StarterPackPanel } from "@/components/founder/starter-pack-panel";
+import { AccountReadyButton } from "@/components/founder/account-ready-button";
 import { WorkflowApplyPanel } from "@/components/founder/workflow-apply-panel";
 import type { OpeningHours } from "@/lib/opening-hours";
 
@@ -64,6 +65,7 @@ export default async function CompanySetupPage({
     brand?: { primary?: string; secondary?: string; accent?: string; logo_url?: string | null };
     starter_pack_version?: number;
     starter_seeded_at?: string;
+    ready_email_sent_at?: string;
   };
   const seeded = (settings.starter_pack_version ?? 0) >= 1;
 
@@ -153,8 +155,9 @@ export default async function CompanySetupPage({
         Pre-configure this company so their team can start straight away. Contracts, policies and
         application forms are still built inside the company&apos;s own Settings.
       </p>
-      <div className="mt-6">
+      <div className="mt-6 space-y-4">
         <StarterPackPanel companyId={id} seeded={seeded} seededAt={settings.starter_seeded_at ?? null} />
+        <AccountReadyButton companyId={id} sentAt={settings.ready_email_sent_at ?? null} />
       </div>
       <div className="mt-6">
         <SettingsHub sections={sections} />

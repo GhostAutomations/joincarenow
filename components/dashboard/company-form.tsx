@@ -79,9 +79,10 @@ export function CompanyForm() {
         </div>
 
         <p className="text-xs text-gray-500">
-          Creating the company also invites this person as its administrator.
-          Once email sending is connected, the invitation is emailed
-          automatically; for now, copy the link below and send it to them.
+          Creating the company sends this person a welcome email automatically.
+          They get their login link in the &ldquo;account ready&rdquo; email you fire from
+          the company&apos;s setup page once you&apos;ve finished setting them up. The link
+          below is a manual fallback if you need it.
         </p>
         <div className="sm:w-56">
           <SubmitButton>Create company &amp; invite admin</SubmitButton>

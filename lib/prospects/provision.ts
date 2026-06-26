@@ -76,16 +76,19 @@ export async function provisionCompanyFromProspect(
   let note = "no admin email on file — invite manually";
   if (admin?.email && inviteToken) {
     const firstName = ((admin.name as string) ?? "").split(" ")[0] || "there";
-    // Phase-1 welcome — reassure them setup is underway. The login link comes in
-    // the "account ready" email the founder fires once setup is complete.
+    const setupUrl = `https://www.joincarenow.com/accept-invite?token=${inviteToken}`;
+    // Welcome — greet them and send them to set up their subscription. Full
+    // access comes later, in the "account ready" email the founder fires.
     await sendBrandedEmail(db, null, {
       to: admin.email as string,
-      subject: "Welcome to Join Care Now — we're setting up your account",
+      subject: "Welcome to Join Care Now — set up your subscription",
       text:
         `Hi ${firstName},\n\n` +
-        `Great to have you on board. We're getting ${prospect.name}'s Join Care Now account set up for you now.\n\n` +
-        `There's nothing you need to do yet — we'll email you as soon as it's ready and you can log in.\n\n` +
+        `Great to have you on board. We're getting ${prospect.name}'s Join Care Now account ready for you.\n\n` +
+        `To get started, use the button below to set up your subscription. Once that's done we'll finish ` +
+        `configuring your account and email you the moment it's ready to use.\n\n` +
         `Welcome aboard,\nThe Join Care Now team`,
+      cta: { label: "Set up your subscription", url: setupUrl },
     });
     note = `welcome email sent to ${admin.email}`;
   } else if (admin?.email) {

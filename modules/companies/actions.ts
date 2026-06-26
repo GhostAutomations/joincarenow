@@ -27,11 +27,28 @@ const optionalHex = z
 
 const createCompanySchema = z.object({
   name: z.string().min(2, "Company name must be at least 2 characters").max(120),
+  adminName: z.string().trim().min(2, "Enter the administrator's name").max(120),
+  adminRole: z.string().trim().max(120).optional(),
   adminEmail: z.string().email("Enter a valid admin email address"),
+  adminPhone: z.string().trim().max(40).optional(),
+  plan: z.enum(["monthly", "commit", "annual", "diamond"]).default("monthly"),
   brandPrimary: optionalHex,
   brandSecondary: optionalHex,
   brandAccent: optionalHex,
 });
+
+/** Build the free-text concession string parseConcession understands from the
+ *  founder's structured offer inputs (free months / custom £ / extra SMS). */
+function buildOffer(fd: FormData): string {
+  const parts: string[] = [];
+  const months = parseInt(String(fd.get("offerFreeMonths") ?? ""), 10);
+  const price = parseFloat(String(fd.get("offerCustomPrice") ?? ""));
+  const sms = parseInt(String(fd.get("offerExtraSms") ?? ""), 10);
+  if (Number.isFinite(months) && months > 0) parts.push(`${Math.min(12, months)} months free`);
+  if (Number.isFinite(price) && price > 0) parts.push(`£${price.toFixed(2)}/mo`);
+  if (Number.isFinite(sms) && sms > 0) parts.push(`+${sms} SMS`);
+  return parts.join(", ");
+}
 
 export type CompanyState =
   | { error?: string; inviteLink?: string; invitedEmail?: string }
@@ -45,7 +62,11 @@ export async function createCompany(
 ): Promise<CompanyState> {
   const parsed = createCompanySchema.safeParse({
     name: formData.get("name"),
+    adminName: formData.get("adminName"),
+    adminRole: formData.get("adminRole") ?? undefined,
     adminEmail: formData.get("adminEmail"),
+    adminPhone: formData.get("adminPhone") ?? undefined,
+    plan: formData.get("plan") ?? "monthly",
     brandPrimary: formData.get("brandPrimary") ?? undefined,
     brandSecondary: formData.get("brandSecondary") ?? undefined,
     brandAccent: formData.get("brandAccent") ?? undefined,
@@ -53,6 +74,7 @@ export async function createCompany(
   if (!parsed.success) {
     return { error: parsed.error.errors[0].message };
   }
+  const agreedOffer = buildOffer(formData);
 
   const supabase = await createClient();
   const baseSlug = slugify(parsed.data.name);
@@ -109,14 +131,31 @@ export async function createCompany(
     if (pub?.publicUrl) brand.logo_url = pub.publicUrl;
   }
 
-  if (Object.keys(brand).length > 0) {
+  // Persist branding, the sold plan/offer, the admin's details, and comp the
+  // subscription up-front for Diamond (so the pay gate is skipped).
+  {
     const { data: companyRow } = await supabase
       .from("companies").select("settings").eq("id", companyId).single();
-    const settings = {
+    const settings: Record<string, unknown> = {
       ...((companyRow?.settings as Record<string, unknown>) ?? {}),
-      brand,
+      // Explicit false puts this company in the "founder is finishing setup"
+      // holding stage until the founder presses "Mark setup complete". Legacy
+      // companies (no key) are never gated.
+      setup_complete: false,
+      pending_admin: {
+        name: parsed.data.adminName,
+        job_role: parsed.data.adminRole ?? null,
+        phone: parsed.data.adminPhone ?? null,
+      },
     };
-    await supabase.from("companies").update({ settings }).eq("id", companyId);
+    if (Object.keys(brand).length > 0) settings.brand = brand;
+    const update: Record<string, unknown> = {
+      settings,
+      agreed_plan: parsed.data.plan,
+      agreed_offer: agreedOffer || null,
+    };
+    if (parsed.data.plan === "diamond") update.billing_comped = true;
+    await supabase.from("companies").update(update).eq("id", companyId);
   }
 
   // 1c. Seed the full starter pack so the company is turnkey on day one
@@ -148,25 +187,30 @@ export async function createCompany(
     };
   }
 
-  // Phase-1 welcome: reassure them their account is being set up. No login link
-  // yet — that comes in the "account ready" email the founder fires once setup
-  // is complete. Best-effort: never fail company creation on an email hiccup.
+  // Welcome email: greet them and send them to set up their subscription. The
+  // button logs them in straight into the billing-only gate (agreement → pay).
+  // Full access comes later, in the "account ready" email you fire once setup's
+  // complete. Best-effort — never fail company creation on an email hiccup.
+  const setupUrl = await acceptUrl(invite.token);
+  const firstName = parsed.data.adminName.split(" ")[0] || "there";
   try {
     await sendBrandedEmail(createAdminClient(), null, {
       to: parsed.data.adminEmail,
-      subject: "Welcome to Join Care Now — we're setting up your account",
+      subject: "Welcome to Join Care Now — set up your subscription",
       text:
-        `Hi there,\n\n` +
-        `Welcome to Join Care Now! We're getting ${parsed.data.name}'s account set up for you now.\n\n` +
-        `There's nothing you need to do yet — we'll email you as soon as it's ready and you can log in.\n\n` +
+        `Hi ${firstName},\n\n` +
+        `Welcome to Join Care Now! We're getting ${parsed.data.name}'s account ready for you.\n\n` +
+        `To get started, use the button below to set up your subscription. Once that's done we'll ` +
+        `finish configuring your account and email you the moment it's ready to use.\n\n` +
         `Welcome aboard,\nThe Join Care Now team`,
+      cta: { label: "Set up your subscription", url: setupUrl },
     });
   } catch {
     /* email best-effort */
   }
 
   return {
-    inviteLink: await acceptUrl(invite.token),
+    inviteLink: setupUrl,
     invitedEmail: parsed.data.adminEmail,
   };
 }

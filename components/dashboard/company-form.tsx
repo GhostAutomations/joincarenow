@@ -26,19 +26,57 @@ export function CompanyForm() {
     <div className="space-y-4">
       <form ref={formRef} action={action} className="space-y-4">
         <FormError error={state?.error} />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field
-            label="Company name"
-            name="name"
-            placeholder="e.g. Acme Care Ltd"
-          />
-          <Field
-            label="Admin email"
-            name="adminEmail"
-            type="email"
-            autoComplete="off"
-            placeholder="admin@example.com"
-          />
+        <Field label="Company name" name="name" placeholder="e.g. Acme Care Ltd" />
+
+        {/* Administrator */}
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-sm font-medium text-gray-900">Administrator</p>
+          <p className="mt-0.5 text-xs text-gray-500">
+            The person who runs this company&apos;s account. They&apos;ll be invited as admin.
+          </p>
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Full name" name="adminName" placeholder="e.g. Jane Smith" />
+            <Field label="Job role" name="adminRole" required={false} placeholder="e.g. Registered Manager" />
+            <Field label="Email" name="adminEmail" type="email" autoComplete="off" placeholder="admin@example.com" />
+            <Field label="Phone" name="adminPhone" type="tel" required={false} placeholder="e.g. 07700 900000" />
+          </div>
+        </div>
+
+        {/* Plan & billing */}
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-sm font-medium text-gray-900">Plan &amp; billing</p>
+          <p className="mt-0.5 text-xs text-gray-500">
+            Choose what they were sold. They&apos;ll set up the subscription themselves from the
+            welcome email; this sets what they&apos;re charged.
+          </p>
+          <label className="mt-3 block text-sm font-medium text-gray-700">
+            Plan
+            <select
+              name="plan"
+              defaultValue="monthly"
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
+            >
+              <option value="monthly">Monthly — £55/mo (+£150 set-up)</option>
+              <option value="commit">12-month commit — £55/mo, no set-up</option>
+              <option value="annual">Annual — £550/yr (2 months free), no set-up</option>
+              <option value="diamond">Diamond — comped subscription &amp; set-up (pay usage only)</option>
+            </select>
+          </label>
+          <p className="mt-3 text-xs font-medium text-gray-600">Offer / concession (optional)</p>
+          <div className="mt-1 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <label className="block text-xs font-medium text-gray-600">
+              Free months
+              <input type="number" name="offerFreeMonths" min={0} max={12} placeholder="0" className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm" />
+            </label>
+            <label className="block text-xs font-medium text-gray-600">
+              Custom £/month
+              <input type="number" name="offerCustomPrice" min={0} step="0.01" placeholder="e.g. 45" className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm" />
+            </label>
+            <label className="block text-xs font-medium text-gray-600">
+              Extra SMS/month
+              <input type="number" name="offerExtraSms" min={0} placeholder="e.g. 100" className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm" />
+            </label>
+          </div>
         </div>
 
         {/* Branding */}

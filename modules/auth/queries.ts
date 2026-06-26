@@ -97,17 +97,29 @@ export async function requireCompany(opts?: { allowSetup?: boolean }) {
   // Single-company users go straight in; multi-company picker comes later.
   const current = ctx.memberships[0];
 
-  // Account-setup gate (real customer admins only — not founders, not managers/
-  // recruiters who can't pay). Enforced here so it covers server actions too.
-  if (!opts?.allowSetup && current.role === "admin") {
-    const [{ data: signed }, { data: co }] = await Promise.all([
-      ctx.supabase.from("company_agreements").select("id").eq("company_id", current.company_id).limit(1),
-      ctx.supabase.from("companies").select("billing_status, billing_comped").eq("id", current.company_id).single(),
-    ]);
-    if (!signed || signed.length === 0) redirect("/agreement");
-    const status = (co?.billing_status as string) ?? "none";
-    const active = co?.billing_comped === true || status === "active" || status === "trialing";
-    if (!active) redirect("/activate");
+  // Account-setup gate. Enforced here so it covers server actions too.
+  if (!opts?.allowSetup) {
+    const { data: co } = await ctx.supabase
+      .from("companies")
+      .select("billing_status, billing_comped, settings")
+      .eq("id", current.company_id)
+      .single();
+
+    // Billing gate — admins only (managers/recruiters can't pay).
+    if (current.role === "admin") {
+      const { data: signed } = await ctx.supabase
+        .from("company_agreements").select("id").eq("company_id", current.company_id).limit(1);
+      if (!signed || signed.length === 0) redirect("/agreement");
+      const status = (co?.billing_status as string) ?? "none";
+      const active = co?.billing_comped === true || status === "active" || status === "trialing";
+      if (!active) redirect("/activate");
+    }
+
+    // Founder-finishing gate — applies to EVERYONE in the company, but only when
+    // the flag is explicitly false (companies created via the founder setup
+    // flow). Legacy companies with no flag are never held here.
+    const setupComplete = (co?.settings as { setup_complete?: boolean } | null)?.setup_complete;
+    if (setupComplete === false) redirect("/finishing");
   }
 
   return { ...ctx, current };

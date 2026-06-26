@@ -94,9 +94,21 @@ export async function POST(req: Request) {
         // Branded "subscription confirmed" email (JCN-branded platform email).
         const to = (obj.customer_details?.email as string) ?? null;
         if (to) {
-          const { data: co } = await db.from("companies").select("name").eq("id", id).single();
+          const { data: co } = await db.from("companies").select("name, settings").eq("id", id).single();
           const name = (co?.name as string) ?? "there";
-          await sendBrandedEmail(db, null, {
+          // If the founder is still finishing setup, the account isn't usable yet
+          // — tell them they'll be emailed when it's ready (no dashboard CTA).
+          const stillFinishing = (co?.settings as { setup_complete?: boolean } | null)?.setup_complete === false;
+          await sendBrandedEmail(db, null, stillFinishing ? {
+            to,
+            subject: "Your Join Care Now subscription is confirmed",
+            text:
+              `Hi ${name},\n\n` +
+              `Thanks for subscribing to Join Care Now — your subscription is confirmed.\n\n` +
+              `We're now finishing setting up your account. We'll email you the moment it's ready and you can log straight in with full access.\n\n` +
+              `The Join Care Now team`,
+            footerNote: "You're receiving this because you started a subscription on joincarenow.com.",
+          } : {
             to,
             subject: "Your Join Care Now subscription is active",
             text:

@@ -179,6 +179,9 @@ export function MondayFormBuilder({
   const byId = new Map(flds.map((f) => [f.id, f]));
   const ordered = order.map((id) => byId.get(id)).filter(Boolean) as BuilderField[];
 
+  // Tell the store Save button (above) that the form has unsaved changes.
+  const markEdited = () => window.dispatchEvent(new Event("jcn-form-edited"));
+
   /** Swap a temporary field id for the real one returned by the server. */
   function reconcileId(tempId: string, realId: string | null) {
     if (!realId) {
@@ -194,6 +197,7 @@ export function MondayFormBuilder({
   }
 
   async function addAt(afterId: string, type: string) {
+    markEdited();
     // Insert instantly with a temp id (no awaiting), then persist + reconcile.
     // This keeps the field exactly where the "+" was — no scroll jump.
     const tempId = `temp-${Math.random().toString(36).slice(2)}`;
@@ -215,6 +219,7 @@ export function MondayFormBuilder({
   }
 
   async function addFromTemplate(afterId: string, tpl: QuestionBankItem) {
+    markEdited();
     const tempId = `temp-${Math.random().toString(36).slice(2)}`;
     const field: BuilderField = {
       id: tempId,
@@ -245,6 +250,7 @@ export function MondayFormBuilder({
   }
 
   async function addFollowUp(parentId: string, value: string, type: string) {
+    markEdited();
     const tempId = `temp-${Math.random().toString(36).slice(2)}`;
     setFlds((prev) => [
       ...prev,
@@ -266,6 +272,7 @@ export function MondayFormBuilder({
   }
 
   function removeField(id: string) {
+    markEdited();
     setSelected(null);
     setFlds((prev) => prev.filter((f) => f.id !== id));
     setOrder((prev) => prev.filter((x) => x !== id));
@@ -289,6 +296,7 @@ export function MondayFormBuilder({
     const from = dragId.current;
     dragId.current = null;
     if (!from || from === targetId) return;
+    markEdited();
     const next = [...order];
     next.splice(next.indexOf(from), 1);
     next.splice(next.indexOf(targetId), 0, from);
@@ -473,11 +481,12 @@ export function MondayFormBuilder({
                       id: f.id, label: f.label, fieldType: f.field_type, required: f.required,
                       options: f.options ?? [], helpText: f.help_text ?? "", config: f.config ?? null,
                     } as FieldDefaults}
-                    onPatch={(patch) =>
+                    onPatch={(patch) => {
+                      markEdited();
                       setFlds((prev) =>
                         prev.map((x) => (x.id === f.id ? { ...x, ...patch } : x))
-                      )
-                    }
+                      );
+                    }}
                   />
                   {CHOICE_FIELD.includes(f.field_type) && (
                     <LogicPanel
@@ -489,9 +498,10 @@ export function MondayFormBuilder({
                     field={f}
                     allFields={ordered}
                     formId={form.id}
-                    onPatch={(patch) =>
-                      setFlds((prev) => prev.map((x) => (x.id === f.id ? { ...x, ...patch } : x)))
-                    }
+                    onPatch={(patch) => {
+                      markEdited();
+                      setFlds((prev) => prev.map((x) => (x.id === f.id ? { ...x, ...patch } : x)));
+                    }}
                   />
                   <div className="mt-3 flex border-t border-gray-100 pt-3">
                     <button

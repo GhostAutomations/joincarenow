@@ -55,6 +55,12 @@ export function StoreFormBar({
   useEffect(() => {
     if (regenState?.added) window.location.assign(`${window.location.pathname}?view=builder`);
   }, [regenState]);
+  // Editing the questions in the builder below also counts as an unsaved change.
+  useEffect(() => {
+    const onEdited = () => setManualSaved(false);
+    window.addEventListener("jcn-form-edited", onEdited);
+    return () => window.removeEventListener("jcn-form-edited", onEdited);
+  }, []);
 
   const autosave = (e: SyntheticEvent<HTMLInputElement | HTMLSelectElement>) =>
     e.currentTarget.form?.requestSubmit();

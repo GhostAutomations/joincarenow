@@ -98,7 +98,7 @@ export function ProspectBoard({ initial }: { initial: BoardCard[] }) {
                     key={c.id}
                     draggable
                     onDragStart={() => setDragId(c.id)}
-                    onClick={() => router.push(`/admin/sales/${c.id}`)}
+                    onClick={() => router.push(`/founder/sales/${c.id}`)}
                     className={`cursor-pointer rounded-xl border p-3 shadow-sm transition hover:shadow-md active:cursor-grabbing ${
                       c.demoAt ? "border-green-400 border-l-4 border-l-green-600 bg-green-100" : "border-white/40 bg-white/70 backdrop-blur-md"
                     }`}

@@ -23,5 +23,5 @@ export async function manageAsCompany(formData: FormData) {
 /** Founder: stop managing as a company and return to the Founder console. */
 export async function stopManaging() {
   (await cookies()).delete(ACTING_COMPANY_COOKIE);
-  redirect("/admin/companies");
+  redirect("/founder/companies");
 }

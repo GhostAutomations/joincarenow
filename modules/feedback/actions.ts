@@ -44,6 +44,6 @@ export async function respondFeedback(_prev: FeedbackState, formData: FormData):
     .eq("id", id);
   if (error) return { error: "Could not save the response." };
 
-  revalidatePath("/admin/feedback");
+  revalidatePath("/founder/feedback");
   return { ok: true };
 }

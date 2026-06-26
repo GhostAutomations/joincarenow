@@ -85,7 +85,7 @@ export async function requireCompany(opts?: { allowSetup?: boolean }) {
   }
 
   if (ctx.memberships.length === 0) {
-    if (ctx.profile?.is_platform_admin) redirect("/admin");
+    if (ctx.profile?.is_platform_admin) redirect("/founder");
     // Is this person an applicant rather than staff?
     const { data: applicant } = await ctx.supabase
       .from("applicants")

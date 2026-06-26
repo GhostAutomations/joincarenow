@@ -76,8 +76,8 @@ export async function createProspect(_prev: ProspectState, formData: FormData): 
   }
   await logActivity(supabase, company.id as string, user.id, "system", { body: "Prospect created" });
 
-  revalidatePath("/admin/sales");
-  redirect(`/admin/sales/${company.id}`);
+  revalidatePath("/founder/sales");
+  redirect(`/founder/sales/${company.id}`);
 }
 
 /** Move a prospect to a new stage (logged to the timeline). */
@@ -106,8 +106,8 @@ export async function updateStage(formData: FormData): Promise<void> {
     }
   }
 
-  revalidatePath("/admin/sales");
-  revalidatePath(`/admin/sales/${id}`);
+  revalidatePath("/founder/sales");
+  revalidatePath(`/founder/sales/${id}`);
 }
 
 /** Founder sets the demo video link (Zoom/Meet) used in demo invites. */
@@ -117,7 +117,7 @@ export async function setVideoLink(formData: FormData): Promise<void> {
   await supabase
     .from("platform_settings")
     .upsert({ key: "prospect_video_link", value: link, updated_at: new Date().toISOString() }, { onConflict: "key" });
-  revalidatePath("/admin/sales/settings");
+  revalidatePath("/founder/sales/settings");
 }
 
 /** Send a (composed) proposal email to a prospect contact and move to Proposal. */
@@ -182,8 +182,8 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
       : `Proposal email failed: ${res.error}`,
   });
 
-  revalidatePath(`/admin/sales/${prospectId}`);
-  revalidatePath("/admin/sales");
+  revalidatePath(`/founder/sales/${prospectId}`);
+  revalidatePath("/founder/sales");
   if (!res.ok) return { error: res.error ?? "Could not send the proposal." };
   return { ok: true };
 }
@@ -253,8 +253,8 @@ export async function recordProposalResponse(
     }
   }
 
-  revalidatePath("/admin/sales");
-  revalidatePath(`/admin/sales/${prospect.id}`);
+  revalidatePath("/founder/sales");
+  revalidatePath(`/founder/sales/${prospect.id}`);
   return { ok: true };
 }
 
@@ -303,8 +303,8 @@ export async function scheduleDemo(_prev: ProspectState, formData: FormData): Pr
   const r = await scheduleProspectDemo(supabase as unknown as SupabaseClient, {
     prospectId, contactId, startIso, durationMinutes: duration,
   });
-  revalidatePath(`/admin/sales/${prospectId}`);
-  revalidatePath("/admin/sales");
+  revalidatePath(`/founder/sales/${prospectId}`);
+  revalidatePath("/founder/sales");
   if (r.error) return { error: r.error };
   return { ok: true };
 }
@@ -316,7 +316,7 @@ export async function addNote(formData: FormData): Promise<void> {
   const body = (formData.get("body")?.toString() ?? "").trim();
   if (!id || body.length < 1) return;
   await logActivity(supabase, id, user.id, "note", { body });
-  revalidatePath(`/admin/sales/${id}`);
+  revalidatePath(`/founder/sales/${id}`);
 }
 
 /** Add a contact to a prospect company. */
@@ -336,7 +336,7 @@ export async function addContact(formData: FormData): Promise<void> {
     role: formData.get("role")?.toString() || null,
     consent_basis: formData.get("consent_basis")?.toString() || null,
   });
-  revalidatePath(`/admin/sales/${id}`);
+  revalidatePath(`/founder/sales/${id}`);
 }
 
 /** Add a follow-up task. */
@@ -351,7 +351,7 @@ export async function addTask(formData: FormData): Promise<void> {
     due_date: formData.get("due_date")?.toString() || null,
     created_by: user.id,
   });
-  revalidatePath(`/admin/sales/${id}`);
+  revalidatePath(`/founder/sales/${id}`);
 }
 
 /** Send an email or SMS to a prospect contact via the comms hub, on the
@@ -430,8 +430,8 @@ export async function sendProspectMessage(_prev: ProspectState, formData: FormDa
 
   if (anyOk) await autoStage(supabase as unknown as SupabaseClient, companyId, "sent");
 
-  revalidatePath(`/admin/sales/${companyId}`);
-  revalidatePath("/admin/sales");
+  revalidatePath(`/founder/sales/${companyId}`);
+  revalidatePath("/founder/sales");
   if (!anyOk) return { error: lastError ?? "Could not send." };
   return { ok: true };
 }
@@ -464,8 +464,8 @@ export async function draftWithAi(_prev: ProspectState, formData: FormData): Pro
   const r = await buildAndInsertDraft(supabase as unknown as SupabaseClient, id, contactId, channel);
   if (r.error) return { error: r.error };
 
-  revalidatePath(`/admin/sales/${id}`);
-  revalidatePath("/admin/sales/approvals");
+  revalidatePath(`/founder/sales/${id}`);
+  revalidatePath("/founder/sales/approvals");
   return { ok: true };
 }
 
@@ -477,7 +477,7 @@ export async function setAutoSendMode(formData: FormData): Promise<void> {
   await supabase
     .from("platform_settings")
     .upsert({ key: "prospect_autosend", value: mode, updated_at: new Date().toISOString() }, { onConflict: "key" });
-  revalidatePath("/admin/sales");
+  revalidatePath("/founder/sales");
 }
 
 /** Founder sets the CRM agent sending window (hours, Europe/London). */
@@ -495,7 +495,7 @@ export async function setSendWindow(formData: FormData): Promise<void> {
     ],
     { onConflict: "key" }
   );
-  revalidatePath("/admin/sales/settings");
+  revalidatePath("/founder/sales/settings");
 }
 
 /** Set a prospect's estimated monthly value. */
@@ -506,8 +506,8 @@ export async function setProspectValue(formData: FormData): Promise<void> {
   const raw = formData.get("value_monthly")?.toString() ?? "";
   const value = raw.trim() === "" ? null : parseFloat(raw) || null;
   await supabase.from("prospect_companies").update({ value_monthly: value }).eq("id", id);
-  revalidatePath(`/admin/sales/${id}`);
-  revalidatePath("/admin/sales");
+  revalidatePath(`/founder/sales/${id}`);
+  revalidatePath("/founder/sales");
 }
 
 /** Delete a contact from a prospect. */
@@ -517,7 +517,7 @@ export async function deleteProspectContact(formData: FormData): Promise<void> {
   const id = formData.get("id")?.toString();
   if (!contactId) return;
   await supabase.from("prospect_contacts").delete().eq("id", contactId);
-  if (id) revalidatePath(`/admin/sales/${id}`);
+  if (id) revalidatePath(`/founder/sales/${id}`);
 }
 
 /** Delete an entire prospect company (cascades contacts, activities, tasks). */
@@ -526,8 +526,8 @@ export async function deleteProspect(formData: FormData): Promise<void> {
   const id = formData.get("id")?.toString();
   if (!id) return;
   await supabase.from("prospect_companies").delete().eq("id", id);
-  revalidatePath("/admin/sales");
-  redirect("/admin/sales");
+  revalidatePath("/founder/sales");
+  redirect("/founder/sales");
 }
 
 /** Tick / untick a task. */
@@ -538,5 +538,5 @@ export async function toggleTask(formData: FormData): Promise<void> {
   const done = formData.get("done") === "true";
   if (!taskId) return;
   await supabase.from("prospect_tasks").update({ done }).eq("id", taskId);
-  if (id) revalidatePath(`/admin/sales/${id}`);
+  if (id) revalidatePath(`/founder/sales/${id}`);
 }

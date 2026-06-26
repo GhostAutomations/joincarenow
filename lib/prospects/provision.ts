@@ -72,7 +72,7 @@ export async function provisionCompanyFromProspect(
   try {
     await seedCompanyStarter(companyId);
   } catch {
-    /* seeding is best-effort; the founder can re-apply from /admin if it fails */
+    /* seeding is best-effort; the founder can re-apply from /founder if it fails */
   }
 
   let note = "no admin email on file — invite manually";

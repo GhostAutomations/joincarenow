@@ -701,8 +701,8 @@ export async function createBlankStoreForm() {
     .select("id")
     .single();
   if (error || !data) throw new Error("Could not create the form.");
-  revalidatePath("/admin/forms");
-  redirect(`/admin/forms/${data.id}/build`);
+  revalidatePath("/founder/forms");
+  redirect(`/founder/forms/${data.id}/build`);
 }
 
 /** Founder: save a store form's category + required subscription tier. */
@@ -731,7 +731,7 @@ export async function saveStoreSettings(
     .eq("id", id)
     .eq("is_store", true);
   if (error) return { error: "Could not save. Please try again." };
-  revalidatePath(`/admin/forms/${id}/build`);
+  revalidatePath(`/founder/forms/${id}/build`);
   return { ok: true };
 }
 
@@ -766,8 +766,8 @@ export async function setStorePublished(
     .eq("id", id)
     .eq("is_store", true);
   if (error) return { error: "Could not update. Please try again." };
-  revalidatePath(`/admin/forms/${id}/build`);
-  revalidatePath("/admin/forms");
+  revalidatePath(`/founder/forms/${id}/build`);
+  revalidatePath("/founder/forms");
   return { ok: true };
 }
 
@@ -777,8 +777,8 @@ export async function deleteStoreForm(formData: FormData) {
   if (typeof id !== "string") return;
   const { supabase } = await requirePlatformAdmin();
   await supabase.from("forms").delete().eq("id", id).eq("is_store", true);
-  revalidatePath("/admin/forms");
-  redirect("/admin/forms");
+  revalidatePath("/founder/forms");
+  redirect("/founder/forms");
 }
 
 /** Founder: delete several store templates at once (from the Form Store list). */
@@ -788,7 +788,7 @@ export async function deleteStoreFormsBulk(ids: string[]): Promise<{ ok?: boolea
   const { supabase } = await requirePlatformAdmin();
   const { error } = await supabase.from("forms").delete().in("id", clean).eq("is_store", true);
   if (error) return { error: "Could not delete the selected templates." };
-  revalidatePath("/admin/forms");
+  revalidatePath("/founder/forms");
   return { ok: true };
 }
 
@@ -800,7 +800,7 @@ export async function setCompanyTier(formData: FormData) {
   const tier = TIERS.includes(tierRaw) ? tierRaw : "free";
   const { supabase } = await requirePlatformAdmin();
   await supabase.from("companies").update({ subscription_tier: tier }).eq("id", companyId);
-  revalidatePath("/admin");
+  revalidatePath("/founder");
 }
 
 /** Copy one store template into the company's own forms (tier-gated).

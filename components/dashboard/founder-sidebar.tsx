@@ -6,8 +6,8 @@ import { Building2, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/admin", label: "Companies", icon: Building2, exact: true },
-  { href: "/admin/forms", label: "Form Store", icon: Store, exact: false },
+  { href: "/founder", label: "Companies", icon: Building2, exact: true },
+  { href: "/founder/forms", label: "Form Store", icon: Store, exact: false },
 ];
 
 export function FounderSidebar() {
@@ -16,7 +16,7 @@ export function FounderSidebar() {
   return (
     <aside className="hidden md:flex w-60 flex-col jcn-rail-bg text-white">
       <div className="border-b border-white/15 px-5 py-5">
-        <Link href="/admin" className="text-lg font-bold text-white">
+        <Link href="/founder" className="text-lg font-bold text-white">
           Join Care Now
         </Link>
         <p className="mt-0.5 text-xs font-medium text-white/60">Founder</p>

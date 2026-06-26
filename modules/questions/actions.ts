@@ -37,7 +37,7 @@ export async function saveQuestionTemplate(
     : await supabase.from("question_templates").insert(row);
 
   if (error) return { error: "Could not save. Please try again." };
-  revalidatePath("/admin/questions");
+  revalidatePath("/founder/questions");
   return { ok: true };
 }
 
@@ -46,5 +46,5 @@ export async function deleteQuestionTemplate(formData: FormData) {
   const id = formData.get("id")?.toString();
   if (!id) return;
   await supabase.from("question_templates").delete().eq("id", id);
-  revalidatePath("/admin/questions");
+  revalidatePath("/founder/questions");
 }

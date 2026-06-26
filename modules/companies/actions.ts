@@ -137,7 +137,7 @@ export async function createCompany(
     }
   );
 
-  revalidatePath("/admin");
+  revalidatePath("/founder");
 
   if (inviteError) {
     // Company was created; only the invite failed. Tell the founder so they can
@@ -442,7 +442,7 @@ export async function deleteCompany(
   const { error } = await db.from("companies").delete().eq("id", id);
   if (error) return { error: "Could not delete the company." };
 
-  revalidatePath("/admin/companies");
-  revalidatePath("/admin");
+  revalidatePath("/founder/companies");
+  revalidatePath("/founder");
   return { ok: true };
 }

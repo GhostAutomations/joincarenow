@@ -18,6 +18,6 @@ export async function applyStarterPack(
     return { ok: false, error: "Missing company." };
   }
   const result = await seedCompanyStarter(companyId);
-  revalidatePath(`/admin/companies/${companyId}`);
+  revalidatePath(`/founder/companies/${companyId}`);
   return { ...result, applied: result.ok };
 }

@@ -11,8 +11,8 @@ export async function dismissError(formData: FormData): Promise<void> {
   if (!id) return;
   const db = createAdminClient();
   await db.from("error_logs").delete().eq("id", id);
-  revalidatePath("/admin/errors");
-  revalidatePath("/admin");
+  revalidatePath("/founder/errors");
+  revalidatePath("/founder");
 }
 
 /** Clear all logged errors (optionally just one source). */
@@ -23,6 +23,6 @@ export async function clearErrors(formData: FormData): Promise<void> {
   let q = db.from("error_logs").delete();
   q = source ? q.eq("source", source) : q.not("id", "is", null);
   await q;
-  revalidatePath("/admin/errors");
-  revalidatePath("/admin");
+  revalidatePath("/founder/errors");
+  revalidatePath("/founder");
 }

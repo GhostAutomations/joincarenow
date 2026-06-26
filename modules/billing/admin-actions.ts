@@ -14,8 +14,8 @@ export async function founderCompToggle(formData: FormData): Promise<void> {
   const comp = formData.get("comp") === "true";
   const db = createAdminClient();
   await db.from("companies").update({ billing_comped: comp }).eq("id", id);
-  revalidatePath(`/admin/billing/${id}`);
-  revalidatePath("/admin/billing");
+  revalidatePath(`/founder/billing/${id}`);
+  revalidatePath("/founder/billing");
 }
 
 /** Founder: cancel a company's subscription at the end of the current period. */
@@ -33,8 +33,8 @@ export async function founderCancelSubscription(formData: FormData): Promise<voi
       /* surfaced via Stripe; best-effort */
     }
   }
-  revalidatePath(`/admin/billing/${id}`);
-  revalidatePath("/admin/billing");
+  revalidatePath(`/founder/billing/${id}`);
+  revalidatePath("/founder/billing");
 }
 
 /** Founder: clear a stale/invalid Stripe link so the company can re-subscribe. */
@@ -55,13 +55,13 @@ export async function founderResetBilling(formData: FormData): Promise<void> {
       commitment_until: null,
     })
     .eq("id", id);
-  revalidatePath(`/admin/billing/${id}`);
-  revalidatePath("/admin/billing");
+  revalidatePath(`/founder/billing/${id}`);
+  revalidatePath("/founder/billing");
 }
 
 /** Founder: push all unreported usage to Stripe now. */
 export async function founderRunUsageReport(): Promise<void> {
   await requirePlatformAdmin();
   await runUsageReport();
-  revalidatePath("/admin/billing");
+  revalidatePath("/founder/billing");
 }

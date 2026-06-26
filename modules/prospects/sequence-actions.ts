@@ -18,7 +18,7 @@ export async function createSequence(_prev: SeqState, formData: FormData): Promi
     created_by: user.id,
   });
   if (error) return { error: "Could not create the sequence." };
-  revalidatePath("/admin/sales/sequences");
+  revalidatePath("/founder/sales/sequences");
   return { ok: true };
 }
 
@@ -42,7 +42,7 @@ export async function addStep(_prev: SeqState, formData: FormData): Promise<SeqS
     high_risk: formData.get("high_risk") === "on",
   });
   if (error) return { error: "Could not add the step." };
-  revalidatePath("/admin/sales/sequences");
+  revalidatePath("/founder/sales/sequences");
   return { ok: true };
 }
 
@@ -52,7 +52,7 @@ export async function deleteStep(formData: FormData): Promise<void> {
   const stepId = formData.get("stepId")?.toString();
   if (!stepId) return;
   await supabase.from("prospect_sequence_steps").delete().eq("id", stepId);
-  revalidatePath("/admin/sales/sequences");
+  revalidatePath("/founder/sales/sequences");
 }
 
 /** Enrol a contact into a sequence (schedules the first step). */
@@ -92,7 +92,7 @@ export async function enrolContact(_prev: SeqState, formData: FormData): Promise
     next_run_at: new Date(Date.now() + delay * 86400e3).toISOString(),
   });
   if (error) return { error: "Could not enrol. Please try again." };
-  revalidatePath(`/admin/sales/${companyId}`);
+  revalidatePath(`/founder/sales/${companyId}`);
   return { ok: true };
 }
 
@@ -106,5 +106,5 @@ export async function stopEnrolment(formData: FormData): Promise<void> {
     .from("prospect_enrolments")
     .update({ status: "stopped", stopped_reason: "manual" })
     .eq("id", enrolId);
-  if (companyId) revalidatePath(`/admin/sales/${companyId}`);
+  if (companyId) revalidatePath(`/founder/sales/${companyId}`);
 }

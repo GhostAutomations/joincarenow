@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // Private app areas (auth-gated anyway) — keep them out of the index.
-      disallow: ["/api/", "/admin", "/portal", "/dashboard", "/pipeline", "/settings", "/billing"],
+      disallow: ["/api/", "/founder", "/admin", "/portal", "/dashboard", "/pipeline", "/settings", "/billing"],
     },
     sitemap: `${SITE}/sitemap.xml`,
     host: SITE,

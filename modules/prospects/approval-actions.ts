@@ -106,8 +106,8 @@ export async function approveDraft(formData: FormData): Promise<{ ok?: boolean; 
     }
   }
 
-  revalidatePath("/admin/sales/approvals");
-  revalidatePath(`/admin/sales/${draft.prospect_company_id}`);
+  revalidatePath("/founder/sales/approvals");
+  revalidatePath(`/founder/sales/${draft.prospect_company_id}`);
   if (!result.ok) return { error: result.error ?? "Could not send." };
   return { ok: true };
 }
@@ -118,5 +118,5 @@ export async function discardDraft(formData: FormData): Promise<void> {
   const draftId = formData.get("draftId")?.toString();
   if (!draftId) return;
   await supabase.from("prospect_activities").delete().eq("id", draftId).eq("needs_approval", true);
-  revalidatePath("/admin/sales/approvals");
+  revalidatePath("/founder/sales/approvals");
 }

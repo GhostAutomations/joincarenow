@@ -50,7 +50,7 @@ export async function quoteRequest(_prev: RequestState, formData: FormData): Pro
     .eq("id", id);
   if (error) return { error: "Could not save the quote." };
 
-  revalidatePath("/admin/requests");
+  revalidatePath("/founder/requests");
   return { ok: true };
 }
 

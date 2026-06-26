@@ -47,7 +47,7 @@ export async function createInvitation(
   if (error) return { error: error.message };
 
   revalidatePath("/settings");
-  revalidatePath("/admin");
+  revalidatePath("/founder");
   return {
     inviteLink: await acceptUrl(data.token),
     invitedEmail: parsed.data.email,
@@ -64,7 +64,7 @@ export async function revokeInvitation(formData: FormData) {
   await supabase.rpc("revoke_invitation", { p_id: id });
 
   revalidatePath("/settings");
-  revalidatePath("/admin");
+  revalidatePath("/founder");
 }
 
 // ---------- Accept invitation: existing signed-in user ----------

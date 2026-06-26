@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: { bodySizeLimit: "10mb" },
   },
+  // The founder console moved from /admin to /founder. Keep old bookmarks and
+  // any in-flight links working.
+  async redirects() {
+    return [
+      { source: "/admin", destination: "/founder", permanent: true },
+      { source: "/admin/:path*", destination: "/founder/:path*", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

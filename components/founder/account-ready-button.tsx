@@ -1,19 +1,23 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MailCheck, Send } from "lucide-react";
+import { MailCheck, Send, TriangleAlert } from "lucide-react";
 import { sendAccountReadyEmail, type SettingsState } from "@/modules/companies/actions";
 
 export function AccountReadyButton({
   companyId,
   sentAt,
+  setupPct = 100,
 }: {
   companyId: string;
   sentAt?: string | null;
+  /** Overall setup progress — used to warn before notifying if it's below 100%. */
+  setupPct?: number;
 }) {
   const router = useRouter();
   const [state, action] = useActionState<SettingsState, FormData>(sendAccountReadyEmail, undefined);
+  const [confirming, setConfirming] = useState(false);
   useEffect(() => {
     if (state?.ok) router.refresh();
   }, [state, router]);
@@ -22,6 +26,7 @@ export function AccountReadyButton({
   const when = sentAt
     ? new Date(sentAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
     : null;
+  const incomplete = setupPct < 100;
 
   return (
     <div className="rounded-2xl border border-white/40 bg-white/70 p-5 shadow-sm backdrop-blur">
@@ -45,13 +50,54 @@ export function AccountReadyButton({
         )}
       </div>
 
-      <form action={action} className="mt-4 flex items-center gap-3">
+      <form action={action} className="mt-4">
         <input type="hidden" name="companyId" value={companyId} />
-        <button className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-          <Send className="h-4 w-4" />
-          {sent ? "Resend account-ready email" : "Mark setup complete & email them"}
-        </button>
-        {state?.error && <span className="text-sm text-red-600">{state.error}</span>}
+
+        {confirming && !sent && incomplete && (
+          <div className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+            <p className="flex items-center gap-1.5 font-medium">
+              <TriangleAlert className="h-4 w-4" /> Setup is only at {setupPct}%
+            </p>
+            <p className="mt-1">
+              Some tasks haven&apos;t been finalised yet. Are you sure you want to mark setup complete
+              and email the customer? They&apos;ll get full access straight away.
+            </p>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          {!sent && incomplete && !confirming ? (
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              <Send className="h-4 w-4" />
+              Mark setup complete &amp; email them
+            </button>
+          ) : (
+            <>
+              <button className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
+                <Send className="h-4 w-4" />
+                {sent
+                  ? "Resend account-ready email"
+                  : confirming
+                    ? "Yes, notify the customer"
+                    : "Mark setup complete & email them"}
+              </button>
+              {confirming && !sent && (
+                <button
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              )}
+            </>
+          )}
+          {state?.error && <span className="text-sm text-red-600">{state.error}</span>}
+        </div>
       </form>
     </div>
   );

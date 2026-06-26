@@ -70,6 +70,10 @@ export default async function CompanySetupPage({
   };
   const seeded = (settings.starter_pack_version ?? 0) >= 1;
   const checked = settings.setup_checked ?? {};
+  // Setup completion for the notify warning — the nine setup tasks (NOT the
+  // notify action itself), so all-done = 100% = no warning.
+  const SETUP_KEYS = ["branding", "branches", "roles", "workflows", "careers", "numbers", "interview", "hours", "communication"];
+  const setupPct = Math.round((SETUP_KEYS.filter((k) => checked[k] === true).length / SETUP_KEYS.length) * 100);
 
   const FINALISE = "Finalise";
   const wizardTasks: WizardTask[] = [
@@ -128,7 +132,7 @@ export default async function CompanySetupPage({
     {
       key: "notify", label: "Notify the customer", isManager: false, done: Boolean(settings.ready_email_sent_at),
       description: "Send the account-ready email so they can log in with full access.",
-      content: <AccountReadyButton companyId={id} sentAt={settings.ready_email_sent_at ?? null} />,
+      content: <AccountReadyButton companyId={id} sentAt={settings.ready_email_sent_at ?? null} setupPct={setupPct} />,
     },
   ];
 

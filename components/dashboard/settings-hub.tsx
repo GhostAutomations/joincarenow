@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Building2,
   PanelLeft,
@@ -13,6 +13,7 @@ import {
   CalendarClock,
   Clock,
   Users,
+  ClipboardCheck,
   ChevronLeft,
   type LucideIcon,
 } from "lucide-react";
@@ -35,6 +36,7 @@ const ICONS: Record<string, LucideIcon> = {
   interview: CalendarClock,
   hours: Clock,
   team: Users,
+  workflows: ClipboardCheck,
 };
 
 const TILE_TINT: Record<string, string> = {
@@ -48,14 +50,19 @@ const TILE_TINT: Record<string, string> = {
   interview: "from-indigo-500 to-indigo-600",
   hours: "from-cyan-500 to-cyan-600",
   team: "from-blue-500 to-blue-600",
+  workflows: "from-emerald-400 to-emerald-600",
 };
 
 export function SettingsHub({ sections }: { sections: SettingsSection[] }) {
   const router = useRouter();
   const params = useSearchParams();
+  const pathname = usePathname();
   const active = params.get("s");
+  // Stay on the CURRENT page (company /settings OR the founder company setup
+  // page /founder/companies/[id]) — don't hardcode /settings, which bounced the
+  // founder out of Quick setup.
   const setActive = (key: string | null) =>
-    router.replace(key ? `/settings?s=${key}` : "/settings", { scroll: false });
+    router.replace(key ? `${pathname}?s=${key}` : pathname, { scroll: false });
   const current = sections.find((s) => s.key === active) ?? null;
 
   if (current) {

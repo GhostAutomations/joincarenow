@@ -3,130 +3,89 @@
 import { revalidatePath } from "next/cache";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { TaskDraft } from "@/modules/onboarding/actions";
 
-export type WfState = { error?: string; ok?: boolean } | undefined;
 export type ApplyState = { error?: string; ok?: boolean; applied?: string } | undefined;
 
 const STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
-const TYPES = ["form", "document", "acknowledge"];
 
-type StepInput = {
-  title: string;
-  taskType: string;
-  formId: string;
-  triggerStage: string;
-  required: boolean;
-  dueDays: string;
-  body: string;
-};
+/** Founder: save one or more store-workflow tasks (same builder as the company
+ *  workflow board, in store mode). Store rows have company_id NULL, is_store
+ *  true, are draft until published, and are role-agnostic (role bound on apply). */
+export async function addStoreWorkflowTasks(
+  drafts: TaskDraft[]
+): Promise<{ ok?: boolean; error?: string }> {
+  if (!Array.isArray(drafts) || drafts.length === 0) return { error: "Nothing to add" };
+  for (const d of drafts) {
+    if ((d.title ?? "").trim().length < 2) return { error: "Give the workflow a title" };
+    if (!["form", "document", "acknowledge"].includes(d.taskType)) return { error: "Pick a type for each task" };
+    if (!STAGES.includes(d.triggerStage)) return { error: "Choose when to send each task" };
+    if (d.taskType === "form" && (!d.formIds || d.formIds.length === 0)) {
+      return { error: "Choose at least one form for each form task" };
+    }
+  }
 
-function validateStep(s: StepInput): string | null {
-  if ((s.title ?? "").trim().length < 2) return "Give the step a title.";
-  if (!TYPES.includes(s.taskType)) return "Pick a step type.";
-  if (!STAGES.includes(s.triggerStage)) return "Choose when the step is sent.";
-  if (s.taskType === "form" && !s.formId) return "Choose a form for a form step.";
-  return null;
-}
-
-function stepRow(s: StepInput, base: Record<string, unknown>, position: number) {
-  const dueDays = s.dueDays === "" ? null : Math.max(0, parseInt(s.dueDays, 10) || 0);
-  return {
-    ...base,
-    company_id: null,
-    is_store: true,
-    store_published: false,
-    title: s.title.trim(),
-    task_type: s.taskType,
-    form_id: s.taskType === "form" ? s.formId : null,
-    body: (s.body ?? "").trim() || null,
-    required: s.required,
-    due_days: dueDays,
-    trigger_stage: s.triggerStage,
-    role_id: null, // role is bound when applied to a company
-    position,
-  };
-}
-
-function readStep(fd: FormData): StepInput {
-  return {
-    title: String(fd.get("title") ?? ""),
-    taskType: String(fd.get("taskType") ?? ""),
-    formId: String(fd.get("formId") ?? ""),
-    triggerStage: String(fd.get("triggerStage") ?? ""),
-    required: fd.get("required") === "on" || fd.get("required") === "true",
-    dueDays: String(fd.get("dueDays") ?? ""),
-    body: String(fd.get("body") ?? ""),
-  };
-}
-
-/** Founder: create a new store workflow with its first step. */
-export async function createStoreWorkflow(_prev: WfState, formData: FormData): Promise<WfState> {
   const { supabase } = await requirePlatformAdmin();
-  const name = String(formData.get("workflowName") ?? "").trim();
-  const category = String(formData.get("category") ?? "").trim() || null;
-  const description = String(formData.get("description") ?? "").trim() || null;
-  if (name.length < 2) return { error: "Give the workflow a name." };
 
-  const step = readStep(formData);
-  const stepErr = validateStep(step);
-  if (stepErr) return { error: stepErr };
+  const { data: last } = await supabase
+    .from("onboarding_templates")
+    .select("position")
+    .eq("is_store", true)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  let pos = ((last as { position: number } | null)?.position ?? -1) + 1;
+
+  // Resolve store form names (to title each form task).
+  const allFormIds = [...new Set(drafts.flatMap((d) => d.formIds ?? []))];
+  let names = new Map<string, string>();
+  if (allFormIds.length) {
+    const { data: fs } = await supabase
+      .from("forms")
+      .select("id, name")
+      .in("id", allFormIds)
+      .eq("is_store", true);
+    names = new Map((fs ?? []).map((f) => [f.id as string, f.name as string]));
+  }
 
   const workflowId = crypto.randomUUID();
-  const row = stepRow(
-    step,
-    {
+  const workflowName = (drafts[0]?.title ?? "Workflow").trim();
+
+  const rows: Record<string, unknown>[] = [];
+  for (const d of drafts) {
+    const dueDays = d.dueDays === "" ? null : Math.max(0, parseInt(d.dueDays, 10) || 0);
+    const body = (d.body ?? "").trim() || null;
+    const base = {
+      company_id: null,
+      is_store: true,
+      store_published: false,
+      body,
+      required: d.required,
+      due_days: dueDays,
+      trigger_stage: d.triggerStage,
+      role_id: null,
       workflow_id: workflowId,
-      workflow_name: name,
-      store_category: category,
-      store_description: description,
-    },
-    0
-  );
-  const { error } = await supabase.from("onboarding_templates").insert(row);
-  if (error) return { error: `Could not create: ${error.message}` };
+      workflow_name: workflowName,
+    };
+    if (d.taskType === "form") {
+      for (const fid of d.formIds) {
+        rows.push({ ...base, title: names.get(fid) ?? d.title.trim(), task_type: "form", form_id: fid, position: pos++ });
+      }
+    } else {
+      rows.push({ ...base, title: d.title.trim(), task_type: d.taskType, form_id: null, position: pos++ });
+    }
+  }
+
+  const { error } = await supabase.from("onboarding_templates").insert(rows);
+  if (error) return { error: `Could not save: ${error.message}` };
   revalidatePath("/founder/workflows");
   return { ok: true };
 }
 
-/** Founder: append a step to an existing store workflow. */
-export async function addStoreWorkflowStep(_prev: WfState, formData: FormData): Promise<WfState> {
-  const { supabase } = await requirePlatformAdmin();
-  const workflowId = String(formData.get("workflowId") ?? "");
-  if (!workflowId) return { error: "Missing workflow." };
-  const step = readStep(formData);
-  const stepErr = validateStep(step);
-  if (stepErr) return { error: stepErr };
-
-  // Carry the workflow's name/category/description + next position from a sibling row.
-  const { data: siblings } = await supabase
-    .from("onboarding_templates")
-    .select("workflow_name, store_category, store_description, position")
-    .eq("is_store", true)
-    .eq("workflow_id", workflowId)
-    .order("position", { ascending: false });
-  if (!siblings || siblings.length === 0) return { error: "Workflow not found." };
-  const head = siblings[0] as { workflow_name: string; store_category: string | null; store_description: string | null; position: number };
-
-  const row = stepRow(
-    step,
-    {
-      workflow_id: workflowId,
-      workflow_name: head.workflow_name,
-      store_category: head.store_category,
-      store_description: head.store_description,
-    },
-    (head.position ?? -1) + 1
-  );
-  const { error } = await supabase.from("onboarding_templates").insert(row);
-  if (error) return { error: `Could not add step: ${error.message}` };
-  revalidatePath("/founder/workflows");
-  return { ok: true };
-}
-
-/** Founder: delete one step. */
+/** Founder: delete one step (field name `id` to match the shared WorkflowCard). */
 export async function deleteStoreWorkflowStep(formData: FormData) {
   const { supabase } = await requirePlatformAdmin();
-  const id = String(formData.get("stepId") ?? "");
+  const id = String(formData.get("id") ?? "");
   if (id) {
     await supabase.from("onboarding_templates").delete().eq("id", id).eq("is_store", true);
     revalidatePath("/founder/workflows");
@@ -143,10 +102,25 @@ export async function deleteStoreWorkflow(formData: FormData) {
   }
 }
 
+/** Founder: publish / unpublish a workflow (controls visibility in company setup). */
+export async function setStoreWorkflowPublished(formData: FormData) {
+  const { supabase } = await requirePlatformAdmin();
+  const workflowId = String(formData.get("workflowId") ?? "");
+  const publish = String(formData.get("publish") ?? "") === "true";
+  if (workflowId) {
+    await supabase
+      .from("onboarding_templates")
+      .update({ store_published: publish })
+      .eq("workflow_id", workflowId)
+      .eq("is_store", true);
+    revalidatePath("/founder/workflows");
+  }
+}
+
 /** Founder: copy a published store workflow into a company, bound to a role.
  *  Deep-copies any store forms the steps use (decoupled, source_form_id set) and
  *  creates the company's own onboarding_templates. The company owns the copy.
- *  Idempotent: skips if the company already has this workflow for that role. */
+ *  Idempotent: skips if the company already has this workflow. */
 export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData): Promise<ApplyState> {
   await requirePlatformAdmin();
   const companyId = String(formData.get("companyId") ?? "");
@@ -156,7 +130,6 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
 
   const db = createAdminClient();
 
-  // 1. Load the store workflow steps.
   const { data: steps } = await db
     .from("onboarding_templates")
     .select("title, task_type, form_id, body, required, due_days, trigger_stage, position, workflow_name")
@@ -166,7 +139,6 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
   if (!steps || steps.length === 0) return { error: "Workflow not found." };
   const workflowName = String((steps[0] as { workflow_name: string }).workflow_name);
 
-  // 2. Idempotency — already applied for this role?
   const { data: existing } = await db
     .from("onboarding_templates")
     .select("id")
@@ -178,7 +150,7 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
     return { ok: true, applied: `"${workflowName}" is already on this company.` };
   }
 
-  // 3. Copy any referenced store forms into the company (reuse if already copied).
+  // Copy referenced store forms into the company (reuse if already copied).
   const storeFormIds = [...new Set(steps.map((s) => (s as { form_id: string | null }).form_id).filter(Boolean) as string[])];
   const formMap = new Map<string, string>();
   for (const storeFormId of storeFormIds) {
@@ -227,7 +199,6 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
     }
   }
 
-  // 4. Insert the company's own workflow rows.
   const newWorkflowId = crypto.randomUUID();
   const { data: last } = await db
     .from("onboarding_templates")
@@ -265,19 +236,4 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
 
   revalidatePath(`/founder/companies/${companyId}`);
   return { ok: true, applied: `Applied "${workflowName}".` };
-}
-
-/** Founder: publish / unpublish a workflow (controls visibility in company setup). */
-export async function setStoreWorkflowPublished(formData: FormData) {
-  const { supabase } = await requirePlatformAdmin();
-  const workflowId = String(formData.get("workflowId") ?? "");
-  const publish = String(formData.get("publish") ?? "") === "true";
-  if (workflowId) {
-    await supabase
-      .from("onboarding_templates")
-      .update({ store_published: publish })
-      .eq("workflow_id", workflowId)
-      .eq("is_store", true);
-    revalidatePath("/founder/workflows");
-  }
 }

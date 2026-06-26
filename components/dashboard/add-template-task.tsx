@@ -27,9 +27,16 @@ const blankBox = (): Box => ({
 export function AddTemplateTask({
   forms,
   roles,
+  saveAction = addTemplateTasks,
+  showRole = true,
 }: {
   forms: { id: string; name: string }[];
   roles: { id: string; name: string }[];
+  /** Server action that saves the drafts. Defaults to the company workflow
+   *  builder; the Founder workflow store passes its own store-saving action. */
+  saveAction?: (drafts: TaskDraft[]) => Promise<{ ok?: boolean; error?: string }>;
+  /** Founder store workflows are role-agnostic (role is bound on apply). */
+  showRole?: boolean;
 }) {
   const router = useRouter();
   // Workflow-level (shared across all tasks in this workflow).
@@ -82,7 +89,7 @@ export function AddTemplateTask({
       roleId,
     }));
     setSaving(true);
-    const res = await addTemplateTasks(drafts);
+    const res = await saveAction(drafts);
     setSaving(false);
     if (res?.error) {
       setError(res.error);
@@ -116,7 +123,7 @@ export function AddTemplateTask({
       )}
 
       {/* Workflow-level: title + role (once for the whole workflow). */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className={`grid grid-cols-1 gap-3 ${showRole ? "sm:grid-cols-2" : ""}`}>
         <label className="text-xs font-medium text-gray-600">
           Workflow title
           <input
@@ -126,15 +133,17 @@ export function AddTemplateTask({
             className={cls}
           />
         </label>
-        <label className="text-xs font-medium text-gray-600">
-          Role association
-          <select value={roleId} onChange={(e) => setRoleId(e.target.value)} className={cls}>
-            <option value="">All roles</option>
-            {roles.map((r) => (
-              <option key={r.id} value={r.id}>{r.name}</option>
-            ))}
-          </select>
-        </label>
+        {showRole && (
+          <label className="text-xs font-medium text-gray-600">
+            Role association
+            <select value={roleId} onChange={(e) => setRoleId(e.target.value)} className={cls}>
+              <option value="">All roles</option>
+              {roles.map((r) => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       {/* One box per task. */}

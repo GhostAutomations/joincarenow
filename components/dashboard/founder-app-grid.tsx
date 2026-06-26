@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Building2, Store, MessageSquareText, ListChecks, Users, ScrollText, Plug, TriangleAlert, MessageSquarePlus, Lightbulb, BarChart3, CreditCard, Target, Workflow } from "lucide-react";
+import { Building2, Store, MessageSquareText, ListChecks, Users, ScrollText, Plug, TriangleAlert, MessageSquarePlus, Lightbulb, BarChart3, CreditCard, Target, ClipboardCheck } from "lucide-react";
 
 const APPS = [
   { href: "/founder/sales", label: "Sales", icon: Target, grad: "from-rose-500 to-pink-600" },
@@ -15,7 +15,7 @@ const APPS = [
   { href: "/founder/integrations", label: "Integrations", icon: Plug, grad: "from-emerald-400 to-emerald-600" },
   { href: "/founder/errors", label: "Errors", icon: TriangleAlert, grad: "from-red-400 to-red-600" },
   { href: "/founder/forms", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
-  { href: "/founder/workflows", label: "Workflows", icon: Workflow, grad: "from-indigo-400 to-indigo-600" },
+  { href: "/founder/workflows", label: "Workflows", icon: ClipboardCheck, grad: "from-emerald-400 to-emerald-600" },
   { href: "/founder/questions", label: "Question Bank", icon: ListChecks, grad: "from-amber-400 to-amber-500" },
   { href: "/founder/sms", label: "SMS Usage", icon: MessageSquareText, grad: "from-pink-400 to-pink-600" },
 ] as const;

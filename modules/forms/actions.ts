@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireCompany, requireUser, requirePlatformAdmin } from "@/modules/auth/queries";
 import { extractFormFields } from "@/lib/ai/extract-form";
+import { generateFormFields } from "@/lib/ai/generate-form";
 import { recordUsage } from "@/lib/billing/usage";
 import { TIERS, tierRank } from "@/modules/forms/tiers";
 
@@ -517,6 +518,62 @@ export async function importFormFromPdf(
 
   const { error } = await supabase.from("form_fields").insert(rows);
   if (error) return { error: "Could not save the imported fields." };
+
+  revalidatePath(`/forms/${formId}`);
+  return { added: fields.length };
+}
+
+/** Generate form questions from a plain-English brief with AI and append them
+ *  to the form (for the builder to review/edit). Mirrors importFormFromPdf. */
+export async function generateFormFromBrief(
+  _prev: ImportState,
+  formData: FormData
+): Promise<ImportState> {
+  const formId = formData.get("formId");
+  const brief = (formData.get("brief")?.toString() ?? "").trim();
+  if (typeof formId !== "string") return { error: "Missing form" };
+  if (brief.length < 3) return { error: "Describe the form you want first." };
+
+  const { supabase } = await requireUser();
+  const { data: form } = await supabase
+    .from("forms")
+    .select("id, company_id, name")
+    .eq("id", formId)
+    .single();
+  if (!form) return { error: "Form not found" };
+
+  let fields;
+  try {
+    fields = await generateFormFields(brief, form.name as string | undefined);
+    await recordUsage(form.company_id as string | null, "ai");
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Could not generate the form." };
+  }
+  if (fields.length === 0) {
+    return { error: "The AI didn't return any questions. Try rephrasing." };
+  }
+
+  const { data: last } = await supabase
+    .from("form_fields")
+    .select("position")
+    .eq("form_id", formId)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  let pos = (last?.position ?? -1) + 1;
+
+  const rows = fields.map((f) => ({
+    form_id: formId,
+    label: f.label,
+    field_type: f.field_type,
+    required: f.required,
+    options: f.options,
+    help_text: f.help_text,
+    position: pos++,
+  }));
+
+  const { error } = await supabase.from("form_fields").insert(rows);
+  if (error) return { error: "Could not save the generated questions." };
 
   revalidatePath(`/forms/${formId}`);
   return { added: fields.length };

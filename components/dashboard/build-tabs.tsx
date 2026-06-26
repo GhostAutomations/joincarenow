@@ -18,8 +18,8 @@ export function BuildTabs({
       <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm">
         <h2 className="text-base font-medium text-gray-900">How do you want to build this form?</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Start from scratch with the drag-and-drop builder, or import questions
-          from an existing PDF form.
+          Build it by hand with the drag-and-drop builder, generate the questions
+          with AI, or import them from an existing PDF.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <button
@@ -27,14 +27,14 @@ export function BuildTabs({
             onClick={() => setMode("builder")}
             className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
           >
-            Form Builder
+            Build by hand
           </button>
           <button
             type="button"
             onClick={() => setMode("import")}
             className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
           >
-            Import from PDF
+            Generate with AI / import
           </button>
         </div>
       </div>

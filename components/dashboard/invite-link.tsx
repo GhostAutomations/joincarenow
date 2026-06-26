@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 
 /** Shows a created invitation link with a copy button. Shared by the founder
- *  console and Settings. Once email sending is connected, the link is also
- *  emailed automatically. */
+ *  console and Settings. A welcome email is sent automatically on company
+ *  creation; this link is a manual fallback (and the primary route for team
+ *  invites from Settings). */
 export function InviteLink({ link, email }: { link: string; email: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -29,7 +30,8 @@ export function InviteLink({ link, email }: { link: string; email: string }) {
         Invitation created for {email}
       </p>
       <p className="mt-1 text-xs text-green-700">
-        Send them this link to set up their account (it expires in 14 days):
+        Manual fallback link (expires in 14 days) — they normally get their login link
+        in the &ldquo;account ready&rdquo; email you fire once setup is complete:
       </p>
       <div className="mt-2 flex gap-2">
         <input
@@ -46,9 +48,6 @@ export function InviteLink({ link, email }: { link: string; email: string }) {
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <p className="mt-2 text-xs text-green-700">
-        Once email sending is connected, this link will be emailed automatically.
-      </p>
     </div>
   );
 }

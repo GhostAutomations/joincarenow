@@ -14,6 +14,7 @@ import { InterviewAddressForm } from "@/components/dashboard/interview-address-f
 import { BrandingForm } from "@/components/dashboard/branding-form";
 import { StarterPackPanel } from "@/components/founder/starter-pack-panel";
 import { AccountReadyButton } from "@/components/founder/account-ready-button";
+import { FounderSetupChecklist } from "@/components/founder/setup-checklist";
 import { WorkflowApplyPanel } from "@/components/founder/workflow-apply-panel";
 import type { OpeningHours } from "@/lib/opening-hours";
 
@@ -68,6 +69,18 @@ export default async function CompanySetupPage({
     ready_email_sent_at?: string;
   };
   const seeded = (settings.starter_pack_version ?? 0) >= 1;
+
+  // Founder setup progress — each task links to its section (?s=<key>).
+  const base = `/founder/companies/${id}`;
+  const setupTasks = [
+    { label: "Add branding (logo & colours)", hint: "Upload their logo and set brand colours.", href: `${base}?s=branding`, done: Boolean(settings.brand?.logo_url) },
+    { label: "Set up branches", hint: "Add their branches / locations.", href: `${base}?s=branches`, done: (branches ?? []).length > 0 },
+    { label: "Review roles", hint: "Default care roles are seeded — adjust if needed.", href: `${base}?s=roles`, done: (roles ?? []).length > 0 },
+    { label: "Apply a workflow", hint: "Pick an onboarding workflow and assign it to a role.", href: `${base}?s=workflows`, done: appliedNames.length > 0 },
+    { label: "Set the careers page", hint: "Intro and benefits shown to candidates.", href: `${base}?s=careers`, done: Boolean(settings.careers?.intro) },
+    { label: "Set opening hours", hint: "Constrains interview scheduling.", href: `${base}?s=hours`, done: Boolean(settings.opening_hours && Object.keys(settings.opening_hours).length > 0) },
+    { label: "Notify the customer", hint: "Send the account-ready email once you're done.", href: `${base}`, done: Boolean(settings.ready_email_sent_at) },
+  ];
 
   const sections: SettingsSection[] = [
     {
@@ -157,6 +170,7 @@ export default async function CompanySetupPage({
       </p>
       <div className="mt-6 space-y-4">
         <StarterPackPanel companyId={id} seeded={seeded} seededAt={settings.starter_seeded_at ?? null} />
+        <FounderSetupChecklist tasks={setupTasks} />
         <AccountReadyButton companyId={id} sentAt={settings.ready_email_sent_at ?? null} />
       </div>
       <div className="mt-6">

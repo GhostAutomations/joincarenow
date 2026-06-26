@@ -6,11 +6,11 @@ import { CheckCircle2, Sparkles } from "lucide-react";
 import { applyStarterPack, type SetupState } from "@/modules/setup/actions";
 
 const INCLUDES = [
+  "Default care roles (Carer, Senior, Supervisor, Manager…)",
   "Care Worker Application form (ready to use)",
   "Emergency contact & availability onboarding forms",
   "10-step onboarding workflow (RTW, DBS, references, policies, contract…)",
   "Branded email + SMS templates for every stage",
-  "A sample Care Assistant job (draft, ready to publish)",
   "Communication reminders + careers-page defaults switched on",
 ];
 

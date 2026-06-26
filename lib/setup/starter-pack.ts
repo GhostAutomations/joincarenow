@@ -334,40 +334,19 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
   },
 ];
 
-// ---- Sample job --------------------------------------------
-export const STARTER_JOB = {
-  title: "Care Assistant",
-  slug: "care-assistant",
-  applicationFormKey: "care_application",
-  employment_type: "Full time",
-  location: "[Add your town / branch]",
-  salary: "Competitive — please review and set your rate",
-  vacancies: 1,
-  description: [
-    "**This is a sample job — review, edit and publish it when you're ready.**",
-    "",
-    "We're looking for a kind, reliable Care Assistant to join our team and make a real difference to the people we support.",
-    "",
-    "**What you'll do**",
-    "- Support people with daily living — personal care, meals, medication and mobility",
-    "- Promote independence, dignity and choice",
-    "- Keep accurate records and follow each person's care plan",
-    "- Work as part of a friendly, supportive team",
-    "",
-    "**What we're looking for**",
-    "- A caring, patient and trustworthy attitude (experience helpful but not essential — full training given)",
-    "- The right to work in the UK",
-    "- Willingness to complete a DBS check and provide references",
-    "- Good communication and a flexible approach to shifts",
-    "",
-    "**What we offer**",
-    "- Full induction and ongoing training",
-    "- Supportive management and clear progression",
-    "- Flexible shifts to suit you",
-    "",
-    "_Edit this description, set your salary and location, then publish to start receiving applications._",
-  ].join("\n"),
-};
+// ---- Default roles -----------------------------------------
+// Seeded into the company's `roles` so workflows have something to target out of
+// the box. The founder can edit/add more (incl. custom) in Settings → Roles.
+export const DEFAULT_ROLES: string[] = [
+  "Carer (Walker)",
+  "Carer (Driver)",
+  "Senior Carer",
+  "Supervisor",
+  "Planner",
+  "Branch Manager",
+  "Registered Manager",
+  "Registered Individual",
+];
 
 // ---- Defaults applied to companies.settings ----------------
 // Only set when the company hasn't already configured them (don't clobber

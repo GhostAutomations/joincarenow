@@ -16,7 +16,7 @@ import {
   STARTER_FORMS,
   STARTER_ONBOARDING,
   STARTER_TEMPLATES,
-  STARTER_JOB,
+  DEFAULT_ROLES,
   STARTER_CAREERS,
   STARTER_REMINDERS,
   STARTER_BRAND_PRIMARY,
@@ -31,7 +31,7 @@ export type SeedResult = {
     fields: number;
     onboardingTasks: number;
     templates: number;
-    job: boolean;
+    roles: number;
   };
 };
 
@@ -68,7 +68,16 @@ export async function seedCompanyStarter(
     return { ok: true, alreadySeeded: true };
   }
 
-  const created = { forms: 0, fields: 0, onboardingTasks: 0, templates: 0, job: false };
+  const created = { forms: 0, fields: 0, onboardingTasks: 0, templates: 0, roles: 0 };
+
+  // ---- 0. Default roles -----------------------------------
+  // Idempotent via the unique (company_id, name) constraint — ignore conflicts.
+  const roleRows = DEFAULT_ROLES.map((name) => ({ company_id: companyId, name }));
+  const { error: rolesErr } = await db
+    .from("roles")
+    .upsert(roleRows, { onConflict: "company_id,name", ignoreDuplicates: true });
+  if (rolesErr) return { ok: false, error: `Roles: ${rolesErr.message}` };
+  created.roles = roleRows.length;
 
   // ---- 1. Forms + fields ----------------------------------
   // formKey -> new form id, so onboarding tasks + the sample job can wire up.
@@ -162,32 +171,7 @@ export async function seedCompanyStarter(
     created.templates = tplRows.length;
   }
 
-  // ---- 4. Sample job (draft) ------------------------------
-  const { data: existingJob } = await db
-    .from("jobs")
-    .select("id")
-    .eq("company_id", companyId)
-    .eq("slug", STARTER_JOB.slug)
-    .maybeSingle();
-  if (!existingJob) {
-    const { error: jobErr } = await db.from("jobs").insert({
-      company_id: companyId,
-      title: STARTER_JOB.title,
-      slug: STARTER_JOB.slug,
-      description: STARTER_JOB.description,
-      employment_type: STARTER_JOB.employment_type,
-      location: STARTER_JOB.location,
-      salary: STARTER_JOB.salary,
-      vacancies: STARTER_JOB.vacancies,
-      status: "draft",
-      application_form_id: formIdByKey.get(STARTER_JOB.applicationFormKey) ?? null,
-      created_by: null,
-    });
-    if (jobErr) return { ok: false, error: `Sample job: ${jobErr.message}` };
-    created.job = true;
-  }
-
-  // ---- 5. Communication + careers + brand defaults --------
+  // ---- 4. Communication + careers + brand defaults --------
   const nextSettings: CompanySettings = { ...settings };
   // Careers — only if not already written.
   if (!nextSettings.careers?.intro && !(nextSettings.careers?.benefits?.length)) {

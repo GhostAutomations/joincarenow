@@ -18,6 +18,7 @@ export type QuestionBankItem = {
   category: string;
 };
 import { FieldForm, type FieldDefaults } from "@/components/dashboard/field-form";
+import { FieldLinkControls } from "@/components/dashboard/field-link-controls";
 import { FormPreview } from "@/components/dashboard/form-preview";
 import { type FormField } from "@/components/careers/apply-form";
 
@@ -28,7 +29,7 @@ export type BuilderField = {
   required: boolean;
   options: string[];
   help_text: string | null;
-  config: { text?: string; size?: string; color?: string } | null;
+  config: { text?: string; size?: string; color?: string; link?: boolean } | null;
   parent_field_id: string | null;
   parent_value: string | null;
 };
@@ -484,6 +485,14 @@ export function MondayFormBuilder({
                       onAdd={(value, t) => addFollowUp(f.id, value, t)}
                     />
                   )}
+                  <FieldLinkControls
+                    field={f}
+                    allFields={ordered}
+                    formId={form.id}
+                    onPatch={(patch) =>
+                      setFlds((prev) => prev.map((x) => (x.id === f.id ? { ...x, ...patch } : x)))
+                    }
+                  />
                   <div className="mt-3 flex border-t border-gray-100 pt-3">
                     <button
                       type="button"

@@ -29,6 +29,10 @@ export type ExtractedField = {
   required: boolean;
   options: string[];
   help_text: string | null;
+  // Conditional follow-up: this field only shows when the field at parent_index
+  // (0-based, in this same array) is answered parent_value.
+  parent_index?: number | null;
+  parent_value?: string | null;
 };
 
 const PROMPT = `You are importing a printed/PDF job application form into a digital form builder.

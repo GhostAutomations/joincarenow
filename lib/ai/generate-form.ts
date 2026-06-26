@@ -28,7 +28,7 @@ const PROMPT = `You are designing a digital form for a UK care provider, inside 
 Based on the user's description, generate the list of questions the form should ask.
 
 Return ONLY a JSON array (no prose, no markdown). Each item:
-{ "label": string, "field_type": string, "required": boolean, "options": string[], "help_text": string | null }
+{ "label": string, "field_type": string, "required": boolean, "options": string[], "help_text": string | null, "parent_index": number | null, "parent_value": string | null }
 
 Rules:
 - field_type MUST be exactly one of: short_text, long_text, number, date, date_range, month, time, dropdown, radio, checkboxes, yes_no, rating, country, link, email, phone, address, file, signature.
@@ -39,7 +39,8 @@ Rules:
 - "options" only for dropdown/radio/checkboxes (provide sensible options); otherwise [].
 - Mark genuinely essential questions as required: true.
 - Use clear, plain-English UK labels. Add short help_text only where it genuinely helps, else null.
-- Produce a sensible, complete set (roughly 5–15 questions) for the described form. Don't pad.
+- CONDITIONAL FOLLOW-UPS: when a question should only appear based on a previous answer, set "parent_index" to the 0-based index (in this array) of that earlier question, and "parent_value" to the answer that reveals it. The parent question MUST be a yes_no, radio, checkboxes or dropdown earlier in the array. Example: a yes_no "Do you have a criminal conviction?" at index 3, followed by a long_text "Please give details" with parent_index 3 and parent_value "Yes". Use this wherever follow-ups naturally apply (a "Yes" that needs detail, "Other" that needs specifying, etc.). For top-level questions set both to null.
+- Produce a sensible, complete set (roughly 5–15 questions, plus any follow-ups) for the described form. Don't pad.
 - DO NOT include basics collected elsewhere: first name, last name, email, phone, postcode, CV upload, or right-to-work confirmation.
 - UK English and UK care-sector terminology.`;
 
@@ -100,12 +101,15 @@ export async function generateFormFields(brief: string, formName?: string): Prom
     if (!label) continue;
     const ft = (typeof o.field_type === "string" ? o.field_type : "short_text") as FieldType;
     const options = Array.isArray(o.options) ? o.options.filter((x): x is string => typeof x === "string") : [];
+    const parentIndex = typeof o.parent_index === "number" && Number.isInteger(o.parent_index) ? o.parent_index : null;
     out.push({
       label: label.slice(0, 200),
       field_type: FIELD_TYPES.includes(ft) ? ft : "short_text",
       required: o.required === true,
       options,
       help_text: typeof o.help_text === "string" && o.help_text.trim() ? o.help_text.trim().slice(0, 300) : null,
+      parent_index: parentIndex,
+      parent_value: parentIndex !== null && typeof o.parent_value === "string" ? o.parent_value.slice(0, 200) : null,
     });
   }
   return out;

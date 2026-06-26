@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireCompany, requireUser, requirePlatformAdmin } from "@/modules/auth/queries";
-import { extractFormFields } from "@/lib/ai/extract-form";
+import { extractFormFields, type ExtractedField } from "@/lib/ai/extract-form";
 import { generateFormFields } from "@/lib/ai/generate-form";
 import { recordUsage } from "@/lib/billing/usage";
 import { TIERS, tierRank } from "@/modules/forms/tiers";
@@ -287,6 +287,41 @@ export async function updateField(
   return { ok: true };
 }
 
+/** Mark a choice/yes-no field as a "Link" question — i.e. other questions may
+ *  follow on from its answer (it appears in the "Link to" dropdown). */
+export async function setFieldLinkEnabled(formData: FormData): Promise<FormState> {
+  const id = formData.get("id")?.toString();
+  const formId = formData.get("formId")?.toString();
+  const enabled = formData.get("enabled") === "true";
+  if (!id || !formId) return { error: "Missing field" };
+  const { supabase } = await requireUser();
+  const { data: f } = await supabase.from("form_fields").select("config").eq("id", id).single();
+  const config = { ...((f?.config as Record<string, unknown>) ?? {}), link: enabled };
+  const { error } = await supabase.from("form_fields").update({ config }).eq("id", id);
+  if (error) return { error: "Could not update." };
+  revalidatePath(`/forms/${formId}`);
+  return { ok: true };
+}
+
+/** Link a field to a "Link" question (or clear the link). The field then only
+ *  shows when that question's answer matches parentValue. */
+export async function setFieldParent(formData: FormData): Promise<FormState> {
+  const id = formData.get("id")?.toString();
+  const formId = formData.get("formId")?.toString();
+  if (!id || !formId) return { error: "Missing field" };
+  const parentFieldId = formData.get("parentFieldId")?.toString() || null;
+  const parentValue = parentFieldId ? formData.get("parentValue")?.toString() || null : null;
+  if (parentFieldId === id) return { error: "A question can't link to itself." };
+  const { supabase } = await requireUser();
+  const { error } = await supabase
+    .from("form_fields")
+    .update({ parent_field_id: parentFieldId, parent_value: parentValue })
+    .eq("id", id);
+  if (error) return { error: "Could not update the link." };
+  revalidatePath(`/forms/${formId}`);
+  return { ok: true };
+}
+
 /** Default values for a freshly-inserted field of a given type. */
 function defaultField(ft: FieldType): FieldData {
   if (ft === "body_text") {
@@ -510,23 +545,64 @@ export async function importFormFromPdf(
     .order("position", { ascending: false })
     .limit(1)
     .maybeSingle();
-  let pos = (last?.position ?? -1) + 1;
+  const startPos = (last?.position ?? -1) + 1;
 
-  const rows = fields.map((f) => ({
+  const ins = await insertGeneratedFields(supabase, formId, fields, startPos);
+  if (ins.error) return { error: ins.error };
+
+  revalidatePath(`/forms/${formId}`);
+  return { added: fields.length };
+}
+
+/** Insert AI-extracted/generated fields, then wire any conditional follow-ups
+ *  (parent_index → parent_field_id + parent_value) and mark parents as
+ *  link-enabled (config.link). Returns an error string on failure. */
+async function insertGeneratedFields(
+  supabase: Awaited<ReturnType<typeof requireUser>>["supabase"],
+  formId: string,
+  fields: ExtractedField[],
+  startPos: number
+): Promise<{ error?: string }> {
+  const rows = fields.map((f, i) => ({
     form_id: formId,
     label: f.label,
     field_type: f.field_type,
     required: f.required,
     options: f.options,
     help_text: f.help_text,
-    position: pos++,
+    position: startPos + i,
   }));
-
   const { error } = await supabase.from("form_fields").insert(rows);
-  if (error) return { error: "Could not save the imported fields." };
+  if (error) return { error: "Could not save the questions." };
 
-  revalidatePath(`/forms/${formId}`);
-  return { added: fields.length };
+  // Map position → real id (reliable across the batch we just inserted).
+  const { data: placed } = await supabase
+    .from("form_fields")
+    .select("id, position")
+    .eq("form_id", formId)
+    .gte("position", startPos)
+    .lte("position", startPos + fields.length - 1)
+    .order("position");
+  const posToId = new Map<number, string>((placed ?? []).map((r) => [r.position as number, r.id as string]));
+
+  const updates: PromiseLike<unknown>[] = [];
+  const linkParents = new Set<string>();
+  fields.forEach((f, i) => {
+    const pIdx = typeof f.parent_index === "number" ? f.parent_index : null;
+    if (pIdx === null || pIdx < 0 || pIdx >= fields.length || pIdx === i) return;
+    const childId = posToId.get(startPos + i);
+    const parentId = posToId.get(startPos + pIdx);
+    if (!childId || !parentId) return;
+    updates.push(
+      supabase.from("form_fields").update({ parent_field_id: parentId, parent_value: f.parent_value ?? null }).eq("id", childId)
+    );
+    linkParents.add(parentId);
+  });
+  for (const pid of linkParents) {
+    updates.push(supabase.from("form_fields").update({ config: { link: true } }).eq("id", pid));
+  }
+  await Promise.all(updates);
+  return {};
 }
 
 /** Generate form questions from a plain-English brief with AI and append them
@@ -566,20 +642,10 @@ export async function generateFormFromBrief(
     .order("position", { ascending: false })
     .limit(1)
     .maybeSingle();
-  let pos = (last?.position ?? -1) + 1;
+  const startPos = (last?.position ?? -1) + 1;
 
-  const rows = fields.map((f) => ({
-    form_id: formId,
-    label: f.label,
-    field_type: f.field_type,
-    required: f.required,
-    options: f.options,
-    help_text: f.help_text,
-    position: pos++,
-  }));
-
-  const { error } = await supabase.from("form_fields").insert(rows);
-  if (error) return { error: "Could not save the generated questions." };
+  const r = await insertGeneratedFields(supabase, formId, fields, startPos);
+  if (r.error) return { error: r.error };
 
   revalidatePath(`/forms/${formId}`);
   return { added: fields.length };
@@ -615,17 +681,8 @@ export async function regenerateFormFromBrief(
 
   // Replace the existing questions entirely.
   await supabase.from("form_fields").delete().eq("form_id", formId);
-  const rows = fields.map((f, i) => ({
-    form_id: formId,
-    label: f.label,
-    field_type: f.field_type,
-    required: f.required,
-    options: f.options,
-    help_text: f.help_text,
-    position: i,
-  }));
-  const { error } = await supabase.from("form_fields").insert(rows);
-  if (error) return { error: "Could not save the regenerated questions." };
+  const r = await insertGeneratedFields(supabase, formId, fields, 0);
+  if (r.error) return { error: r.error };
 
   revalidatePath(`/forms/${formId}`);
   return { added: fields.length };

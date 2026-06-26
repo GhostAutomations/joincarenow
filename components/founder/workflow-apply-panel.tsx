@@ -51,26 +51,26 @@ function WorkflowRow({
       </div>
 
       {!done && (
-        <div className="mt-3 flex flex-wrap items-end gap-3">
+        <div className="mt-3">
           <input type="hidden" name="companyId" value={companyId} />
           <input type="hidden" name="workflowId" value={wf.id} />
-          <div>
-            <label className="block text-xs font-medium text-gray-600">Apply to role</label>
-            <select
-              name="roleId"
-              defaultValue=""
-              className="mt-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900"
-            >
-              <option value="">Everyone (no specific role)</option>
-              {roles.map((r) => (
-                <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
+          <label className="block text-xs font-medium text-gray-600">Apply to role(s)</label>
+          <p className="text-[11px] text-gray-400">Tick one or more. Leave all unticked to apply to everyone.</p>
+          <div className="mt-1.5 max-h-44 space-y-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2">
+            {roles.map((r) => (
+              <label key={r.id} className="flex items-center gap-2 rounded px-1 py-1 text-sm text-gray-700 hover:bg-gray-50">
+                <input type="checkbox" name="roleId" value={r.id} className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+                {r.name}
+              </label>
+            ))}
+            {roles.length === 0 && <p className="px-1 text-xs text-gray-400">No roles yet — add roles first.</p>}
           </div>
-          <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">
-            Apply workflow
-          </button>
-          {state?.error && <span className="text-sm text-red-600">{state.error}</span>}
+          <div className="mt-3 flex items-center gap-3">
+            <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">
+              Apply workflow
+            </button>
+            {state?.error && <span className="text-sm text-red-600">{state.error}</span>}
+          </div>
         </div>
       )}
     </form>

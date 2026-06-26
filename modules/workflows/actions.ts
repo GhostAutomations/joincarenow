@@ -125,7 +125,9 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
   await requirePlatformAdmin();
   const companyId = String(formData.get("companyId") ?? "");
   const workflowId = String(formData.get("workflowId") ?? "");
-  const roleId = String(formData.get("roleId") ?? "") || null;
+  // Multi-select: one or more roles. None ticked => apply to everyone (null).
+  const roleIds = formData.getAll("roleId").map(String).filter(Boolean);
+  const targetRoles: (string | null)[] = roleIds.length > 0 ? roleIds : [null];
   if (!companyId || !workflowId) return { error: "Missing company or workflow." };
 
   const db = createAdminClient();
@@ -138,17 +140,6 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
     .order("position", { ascending: true });
   if (!steps || steps.length === 0) return { error: "Workflow not found." };
   const workflowName = String((steps[0] as { workflow_name: string }).workflow_name);
-
-  const { data: existing } = await db
-    .from("onboarding_templates")
-    .select("id")
-    .eq("company_id", companyId)
-    .eq("is_store", false)
-    .eq("workflow_name", workflowName)
-    .limit(1);
-  if (existing && existing.length > 0) {
-    return { ok: true, applied: `"${workflowName}" is already on this company.` };
-  }
 
   // Copy referenced store forms into the company (reuse if already copied).
   const storeFormIds = [...new Set(steps.map((s) => (s as { form_id: string | null }).form_id).filter(Boolean) as string[])];
@@ -199,7 +190,6 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
     }
   }
 
-  const newWorkflowId = crypto.randomUUID();
   const { data: last } = await db
     .from("onboarding_templates")
     .select("position")
@@ -210,30 +200,56 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
     .maybeSingle();
   let pos = ((last as { position: number } | null)?.position ?? -1) + 1;
 
-  const rows = steps.map((s) => {
-    const step = s as {
-      title: string; task_type: string; form_id: string | null; body: string | null;
-      required: boolean; due_days: number | null; trigger_stage: string | null;
-    };
-    return {
-      company_id: companyId,
-      is_store: false,
-      title: step.title,
-      task_type: step.task_type,
-      form_id: step.form_id ? formMap.get(step.form_id) ?? null : null,
-      body: step.body,
-      required: step.required,
-      due_days: step.due_days,
-      trigger_stage: step.trigger_stage,
-      role_id: roleId,
-      workflow_id: newWorkflowId,
-      workflow_name: workflowName,
-      position: pos++,
-    };
-  });
-  const { error: insErr } = await db.from("onboarding_templates").insert(rows);
-  if (insErr) return { error: `Could not apply: ${insErr.message}` };
+  let appliedCount = 0;
+  let skipped = 0;
+  for (const roleId of targetRoles) {
+    // Per-role idempotency — already on this company for this role?
+    let q = db
+      .from("onboarding_templates")
+      .select("id")
+      .eq("company_id", companyId)
+      .eq("is_store", false)
+      .eq("workflow_name", workflowName);
+    q = roleId ? q.eq("role_id", roleId) : q.is("role_id", null);
+    const { data: existing } = await q.limit(1);
+    if (existing && existing.length > 0) {
+      skipped++;
+      continue;
+    }
+
+    const newWorkflowId = crypto.randomUUID();
+    const rows = steps.map((s) => {
+      const step = s as {
+        title: string; task_type: string; form_id: string | null; body: string | null;
+        required: boolean; due_days: number | null; trigger_stage: string | null;
+      };
+      return {
+        company_id: companyId,
+        is_store: false,
+        title: step.title,
+        task_type: step.task_type,
+        form_id: step.form_id ? formMap.get(step.form_id) ?? null : null,
+        body: step.body,
+        required: step.required,
+        due_days: step.due_days,
+        trigger_stage: step.trigger_stage,
+        role_id: roleId,
+        workflow_id: newWorkflowId,
+        workflow_name: workflowName,
+        position: pos++,
+      };
+    });
+    const { error: insErr } = await db.from("onboarding_templates").insert(rows);
+    if (insErr) return { error: `Could not apply: ${insErr.message}` };
+    appliedCount++;
+  }
 
   revalidatePath(`/founder/companies/${companyId}`);
-  return { ok: true, applied: `Applied "${workflowName}".` };
+  if (appliedCount === 0) {
+    return { ok: true, applied: `"${workflowName}" is already applied to those role(s).` };
+  }
+  return {
+    ok: true,
+    applied: `Applied "${workflowName}" to ${appliedCount} role${appliedCount === 1 ? "" : "s"}${skipped ? ` (${skipped} already applied)` : ""}.`,
+  };
 }

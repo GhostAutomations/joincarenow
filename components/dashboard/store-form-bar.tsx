@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, type SyntheticEvent } from "react";
+import { useActionState, useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { useFormStatus } from "react-dom";
 import { Globe, EyeOff, Sparkles, Save, Check } from "lucide-react";
 import {
@@ -38,19 +38,27 @@ export function StoreFormBar({
   const [saveState, saveAction] = useActionState<DetailsState, FormData>(saveStoreSettings, undefined);
   const [pubState, pubAction] = useActionState<DetailsState, FormData>(setStorePublished, undefined);
   const [regenState, regenAction] = useActionState<ImportState, FormData>(regenerateFormFromBrief, undefined);
-  const [dirty, setDirty] = useState(false);
+  // The button shows green "Saved" only after an explicit Save click; any edit
+  // flips it back to white "Save". (Auto-save on blur still persists silently so
+  // nothing is lost on the AI reload — it just doesn't turn the button green.)
+  const [manualSaved, setManualSaved] = useState(false);
+  const clickedSave = useRef(false);
   const [showRegen, setShowRegen] = useState(false);
   const [brief, setBrief] = useState("");
 
-  // Reset to a fresh "Save" once a save succeeds; mark dirty again on any edit.
-  useEffect(() => { if (saveState?.ok) setDirty(false); }, [saveState]);
+  useEffect(() => {
+    if (saveState?.ok && clickedSave.current) {
+      setManualSaved(true);
+      clickedSave.current = false;
+    }
+  }, [saveState]);
   useEffect(() => {
     if (regenState?.added) window.location.assign(`${window.location.pathname}?view=builder`);
   }, [regenState]);
 
   const autosave = (e: SyntheticEvent<HTMLInputElement | HTMLSelectElement>) =>
     e.currentTarget.form?.requestSubmit();
-  const saved = !!saveState?.ok && !dirty;
+  const saved = manualSaved;
 
   return (
     <div className="space-y-3">
@@ -58,7 +66,7 @@ export function StoreFormBar({
       <form
         id="store-settings-form"
         action={saveAction}
-        onChange={() => setDirty(true)}
+        onChange={() => setManualSaved(false)}
         className="rounded-2xl border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-md"
       >
         <input type="hidden" name="id" value={formId} />
@@ -104,6 +112,7 @@ export function StoreFormBar({
           <div className="flex flex-wrap items-center gap-2">
             <button
               form="store-settings-form"
+              onClick={() => { clickedSave.current = true; }}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium ${
                 saved
                   ? "bg-green-600 text-white hover:bg-green-700"

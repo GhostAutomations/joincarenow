@@ -38,7 +38,7 @@ export default async function FormBuildPage({
     .order("position", { ascending: true });
   const fields = (fieldsData ?? []) as BuilderField[];
 
-  const [{ data: branchRows }, { data: roleRows }, { data: bank }] = await Promise.all([
+  const [{ data: branchRows }, { data: roleRows }, { data: bank }, { data: company }] = await Promise.all([
     supabase.from("branches").select("name").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("name").eq("company_id", current.company_id).order("name"),
     supabase
@@ -46,11 +46,17 @@ export default async function FormBuildPage({
       .select("id, label, field_type, options, help_text, category")
       .order("category")
       .order("position"),
+    supabase.from("companies").select("settings").eq("id", current.company_id).single(),
   ]);
   const managed = {
     branch: (branchRows ?? []).map((b) => b.name as string),
     role: (roleRows ?? []).map((r) => r.name as string),
   };
+  // The form's logo defaults to the company's profile logo (no per-form upload),
+  // falling back to the Join Care Now logo if they haven't set one.
+  const companyLogo =
+    (company?.settings as { brand?: { logo_url?: string | null } } | null)?.brand?.logo_url || null;
+  const defaultLogo = companyLogo || "/brand/jcn-logo-full-transparent.png";
 
   const builder = (
     <MondayFormBuilder
@@ -63,6 +69,8 @@ export default async function FormBuildPage({
       fields={fields}
       managed={managed}
       questionBank={(bank ?? []) as never}
+      defaultLogo={defaultLogo}
+      defaultLogoLabel={companyLogo ? "your company logo" : "the Join Care Now logo"}
     />
   );
 

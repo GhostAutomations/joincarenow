@@ -612,15 +612,19 @@ export async function saveStoreSettings(
   const categoryRaw = formData.get("category")?.toString() ?? "";
   const tierRaw = formData.get("storeTier")?.toString() ?? "free";
   if (typeof id !== "string") return { error: "Missing form" };
-  if (name.length < 2) return { error: "Give the form a name." };
-  if (!CATEGORIES.includes(categoryRaw)) return { error: "Please choose a category." };
-  const category = categoryRaw;
-  const store_tier = TIERS.includes(tierRaw) ? tierRaw : "free";
+
+  // Lenient draft save (auto-saved as you type). A full name + category are only
+  // *required to publish* (see setStorePublished), not to save a draft.
+  const update: Record<string, unknown> = {
+    store_tier: TIERS.includes(tierRaw) ? tierRaw : "free",
+    category: CATEGORIES.includes(categoryRaw) ? categoryRaw : null,
+  };
+  if (name.length >= 2) update.name = name;
 
   const { supabase } = await requirePlatformAdmin();
   const { error } = await supabase
     .from("forms")
-    .update({ name, category, store_tier })
+    .update(update)
     .eq("id", id)
     .eq("is_store", true);
   if (error) return { error: "Could not save. Please try again." };

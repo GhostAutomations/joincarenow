@@ -116,11 +116,18 @@ export function MondayFormBuilder({
   fields,
   managed,
   questionBank = [],
+  defaultLogo = null,
+  defaultLogoLabel = "the Join Care Now logo",
 }: {
   form: FormMeta;
   fields: BuilderField[];
   managed?: { branch: string[]; role: string[] };
   questionBank?: QuestionBankItem[];
+  /** Shown when the form has no logo of its own. Store templates default to the
+   *  JCN logo; company forms default to the company's profile logo. Not saved —
+   *  so an acquired form follows the new company's logo automatically. */
+  defaultLogo?: string | null;
+  defaultLogoLabel?: string;
 }) {
   const [name, setName] = useState(form.name === "Untitled form" ? "" : form.name);
   const [desc, setDesc] = useState(form.description);
@@ -354,6 +361,15 @@ export function MondayFormBuilder({
                 <X className="h-3.5 w-3.5" /> Remove
               </button>
             </div>
+          ) : defaultLogo ? (
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={defaultLogo} alt="Logo" className="h-12 w-auto rounded" />
+              <label className="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-400 hover:text-brand-700">
+                <ImagePlus className="h-3.5 w-3.5" /> Using {defaultLogoLabel} · upload to override
+                <input type="file" accept="image/*" onChange={onLogo} className="hidden" />
+              </label>
+            </div>
           ) : (
             <label className="inline-flex cursor-pointer items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700">
               <ImagePlus className="h-4 w-4" /> Add logo
@@ -530,7 +546,7 @@ export function MondayFormBuilder({
     </div>
     {showPreview && (
       <FormPreview
-        form={{ name, description: desc, style: { title: { color: tColor, size: tSize, align: tAlign }, description: { color: dColor, size: dSize, align: dAlign }, logo_url: logoUrl } }}
+        form={{ name, description: desc, style: { title: { color: tColor, size: tSize, align: tAlign }, description: { color: dColor, size: dSize, align: dAlign }, logo_url: logoUrl || defaultLogo || "" } }}
         fields={previewFields}
         onClose={() => setShowPreview(false)}
         managed={managed}

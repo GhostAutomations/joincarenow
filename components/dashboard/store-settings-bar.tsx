@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, type SyntheticEvent } from "react";
 import { saveStoreSettings, type DetailsState } from "@/modules/forms/actions";
 import { TIERS, TIER_LABEL } from "@/modules/forms/tiers";
 
@@ -27,6 +27,11 @@ export function StoreSettingsBar({
 }) {
   const [state, action] = useActionState<DetailsState, FormData>(saveStoreSettings, undefined);
 
+  // Auto-save on blur so the name/category persist (e.g. before generating with
+  // AI, which reloads the page). A full name + category are required to publish.
+  const autosave = (e: SyntheticEvent<HTMLInputElement | HTMLSelectElement>) =>
+    e.currentTarget.form?.requestSubmit();
+
   return (
     <form action={action} className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-4">
       <input type="hidden" name="id" value={formId} />
@@ -35,15 +40,15 @@ export function StoreSettingsBar({
           Form name
           <input
             name="name"
-            required
-            defaultValue={name}
+            defaultValue={name === "Untitled form" ? "" : name}
             placeholder="e.g. P46 starter form"
+            onBlur={autosave}
             className={cls}
           />
         </label>
         <label className="text-sm font-medium text-gray-700">
           Category
-          <select name="category" required defaultValue={category || ""} className={cls}>
+          <select name="category" defaultValue={category || ""} onBlur={autosave} onChange={autosave} className={cls}>
             <option value="" disabled>Select a category…</option>
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
@@ -52,7 +57,7 @@ export function StoreSettingsBar({
         </label>
         <label className="text-sm font-medium text-gray-700">
           Required plan
-          <select name="storeTier" defaultValue={storeTier} className={cls}>
+          <select name="storeTier" defaultValue={storeTier} onChange={autosave} className={cls}>
             {TIERS.map((t) => (
               <option key={t} value={t}>{TIER_LABEL[t]}</option>
             ))}

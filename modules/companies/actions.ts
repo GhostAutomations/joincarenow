@@ -141,8 +141,7 @@ export async function createCompany(
     if (pub?.publicUrl) brand.logo_url = pub.publicUrl;
   }
 
-  // Persist branding, the sold plan/offer, the admin's details, and comp the
-  // subscription up-front for Diamond (so the pay gate is skipped).
+  // Persist branding, the sold plan/offer and the admin's details.
   {
     const { data: companyRow } = await supabase
       .from("companies").select("settings").eq("id", companyId).single();
@@ -159,12 +158,14 @@ export async function createCompany(
       },
     };
     if (Object.keys(brand).length > 0) settings.brand = brand;
+    // NB: do NOT comp Diamond here. Diamond's free subscription is handled by a
+    // metered-only checkout (no base/setup fee) that still captures a card so
+    // SMS + AI usage can be billed. Comping would skip that checkout entirely.
     const update: Record<string, unknown> = {
       settings,
       agreed_plan: parsed.data.plan,
       agreed_offer: agreedOffer || null,
     };
-    if (parsed.data.plan === "diamond") update.billing_comped = true;
     await supabase.from("companies").update(update).eq("id", companyId);
   }
 

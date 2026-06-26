@@ -41,6 +41,10 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // In-person interviews require the applicant to bring proof of Right to Work
+  // and to tick that they understand before confirming.
+  const needsRtw = interview.mode === "in_person";
+  const [rtwAck, setRtwAck] = useState(false);
 
   const constrained = hasOpeningHours(interview.opening_hours);
   const slots = reqDate ? slotsForDate(interview.opening_hours, reqDate) : [];
@@ -85,6 +89,12 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
           {interview.location && (
             <p className="mt-1 text-sm text-gray-700">{interview.location}</p>
           )}
+          {needsRtw && (
+            <p className="mt-2 text-sm font-medium text-amber-700">
+              Please bring proof of your Right to Work in the UK (for example your passport, or your
+              Home Office share code) to your interview.
+            </p>
+          )}
         </div>
 
         {alreadyResponded ? (
@@ -94,10 +104,21 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
         ) : view === "buttons" ? (
           <>
             {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-            <div className="mt-5 space-y-2">
+            {needsRtw && (
+              <label className="mt-4 flex items-start gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={rtwAck}
+                  onChange={(e) => setRtwAck(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600"
+                />
+                <span>I understand I must bring proof of my Right to Work in the UK to the interview.</span>
+              </label>
+            )}
+            <div className="mt-4 space-y-2">
               <button
                 onClick={() => respond("confirmed")}
-                disabled={busy}
+                disabled={busy || (needsRtw && !rtwAck)}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-60"
               >
                 <Check className="h-4 w-4" /> Confirm this time

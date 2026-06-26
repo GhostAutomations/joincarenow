@@ -34,6 +34,8 @@ function modeLabel(m: string | null) {
 
 export function InterviewInvite({ interview }: { interview: PortalInterview }) {
   const [mode, setMode] = useState<"none" | "reschedule" | "cancel">("none");
+  const [rtwAck, setRtwAck] = useState(false);
+  const needsRtw = interview.mode === "in_person";
   const when = formatLondon(interview.scheduled_at);
 
   const calEvent: CalEvent = {
@@ -74,6 +76,12 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
         {interview.location ? ` · ${interview.location}` : ""}
       </p>
 
+      {needsRtw && (
+        <p className="mt-2 text-xs font-medium text-amber-700">
+          Please bring proof of your Right to Work in the UK (e.g. passport or Home Office share code) to your interview.
+        </p>
+      )}
+
       <p className="mt-2 text-xs text-gray-600">{STATUS_TEXT[interview.status]}</p>
 
       {(interview.status === "proposed" || interview.status === "confirmed") && (
@@ -105,12 +113,27 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
       )}
 
       {(interview.status === "proposed" || interview.status === "confirmed") && mode === "none" && (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 space-y-2">
+          {needsRtw && interview.status === "proposed" && (
+            <label className="flex items-start gap-2 text-xs text-gray-700">
+              <input
+                type="checkbox"
+                checked={rtwAck}
+                onChange={(e) => setRtwAck(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600"
+              />
+              <span>I understand I must bring proof of my Right to Work in the UK to the interview.</span>
+            </label>
+          )}
+          <div className="flex flex-wrap gap-2">
           {interview.status === "proposed" && (
             <form action={respondToInterview}>
               <input type="hidden" name="interviewId" value={interview.interview_id} />
               <input type="hidden" name="response" value="confirmed" />
-              <button className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700">
+              <button
+                disabled={needsRtw && !rtwAck}
+                className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
                 Confirm
               </button>
             </form>
@@ -127,6 +150,7 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
           >
             {interview.status === "confirmed" ? "Cancel interview" : "No longer interested"}
           </button>
+          </div>
         </div>
       )}
 

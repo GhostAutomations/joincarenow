@@ -131,6 +131,12 @@ async function sendInterviewInvite(
     const applicantName = [ap?.first_name, ap?.last_name].filter(Boolean).join(" ") || "the candidate";
     const modeText = iv.mode === "phone" ? "by phone" : iv.mode === "video" ? "by video call" : "in person";
     const whereLine = iv.location ? `\nWhere: ${iv.location}` : "";
+    // In-person interviews: the applicant must bring proof of Right to Work.
+    const rtwLine =
+      iv.mode === "in_person"
+        ? "\n\nImportant: please bring proof of your Right to Work in the UK (for example your passport, or your Home Office share code) to your interview."
+        : "";
+    const rtwSms = iv.mode === "in_person" ? " Please bring proof of your Right to Work (e.g. passport)." : "";
 
     // Calendar event (used for the applicant's invite + the interviewer's email).
     const startIso = new Date(iv.scheduled_at).toISOString();
@@ -150,15 +156,15 @@ async function sendInterviewInvite(
     const emailBody =
       variant === "confirmed"
         ? `Hi ${first},\n\nGood news — your interview with ${company} is confirmed.\n\n` +
-          `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n\n` +
+          `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}${rtwLine}\n\n` +
           `If you need to change anything, use the button below.\n\nSee you then,\n${company}`
         : `Hi ${first},\n\n${company} would like to invite you to an interview.\n\n` +
-          `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}\n\n` +
+          `When: ${when} (${iv.duration_minutes} minutes, ${modeText})${whereLine}${rtwLine}\n\n` +
           `Use the buttons below to confirm, ask to change the time, or decline.\n\nThank you,\n${company}`;
     const smsBody =
       variant === "confirmed"
-        ? `Hi ${first}, your interview with ${company} is confirmed for ${when} (${modeText}). Need to change it? ${link}`
-        : `Hi ${first}, ${company} would like to interview you on ${when} (${modeText}). Confirm/change/decline: ${link}`;
+        ? `Hi ${first}, your interview with ${company} is confirmed for ${when} (${modeText}).${rtwSms} Need to change it? ${link}`
+        : `Hi ${first}, ${company} would like to interview you on ${when} (${modeText}).${rtwSms} Confirm/change/decline: ${link}`;
 
     async function log(ch: "email" | "sms", to: string, subject: string | null, body: string, status: string, providerId?: string, err?: string) {
       await supabase.from("messages").insert({

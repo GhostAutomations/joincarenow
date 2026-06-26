@@ -40,7 +40,7 @@ export default async function FormBuildPage({
 
   const [{ data: branchRows }, { data: roleRows }, { data: bank }, { data: company }] = await Promise.all([
     supabase.from("branches").select("name").eq("company_id", current.company_id).order("name"),
-    supabase.from("roles").select("name").eq("company_id", current.company_id).order("name"),
+    supabase.from("roles").select("name").eq("company_id", current.company_id).order("position").order("name"),
     supabase
       .from("question_templates")
       .select("id, label, field_type, options, help_text, category")

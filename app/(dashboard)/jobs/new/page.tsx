@@ -10,7 +10,7 @@ export default async function NewJobPage() {
   const [{ data: forms }, { data: branches }, { data: roles }, { data: contracts }, { data: policies }, { data: staff }] = await Promise.all([
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("branches").select("id, name").eq("company_id", current.company_id).order("name"),
-    supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("position").order("name"),
     supabase.from("contract_templates").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("policy_documents").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("company_users").select("user_id, profiles(full_name, email)").eq("company_id", current.company_id),

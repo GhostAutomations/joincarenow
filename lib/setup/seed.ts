@@ -72,7 +72,8 @@ export async function seedCompanyStarter(
 
   // ---- 0. Default roles -----------------------------------
   // Idempotent via the unique (company_id, name) constraint — ignore conflicts.
-  const roleRows = DEFAULT_ROLES.map((name) => ({ company_id: companyId, name }));
+  // position keeps them in the intended order (not alphabetical).
+  const roleRows = DEFAULT_ROLES.map((name, i) => ({ company_id: companyId, name, position: i }));
   const { error: rolesErr } = await db
     .from("roles")
     .upsert(roleRows, { onConflict: "company_id,name", ignoreDuplicates: true });

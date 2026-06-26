@@ -29,7 +29,7 @@ export default async function CompanySetupPage({
   const [{ data: company }, { data: branches }, { data: roles }, { data: storeWfRows }, { data: appliedRows }] = await Promise.all([
     db.from("companies").select("id, name, slug, settings").eq("id", id).single(),
     db.from("branches").select("id, name").eq("company_id", id).order("name"),
-    db.from("roles").select("id, name").eq("company_id", id).order("name"),
+    db.from("roles").select("id, name").eq("company_id", id).order("position").order("name"),
     db
       .from("onboarding_templates")
       .select("workflow_id, workflow_name, store_category, store_description, position")

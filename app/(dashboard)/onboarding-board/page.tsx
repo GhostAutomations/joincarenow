@@ -30,7 +30,7 @@ export default async function OnboardingBoardPage() {
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
-    supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("position").order("name"),
   ]);
 
   const roleName = new Map((roles ?? []).map((r) => [r.id as string, r.name as string]));

@@ -31,7 +31,7 @@ export default async function SettingsPage() {
 
   const [{ data: branches }, { data: roles }, { data: contractDocs }, { data: policyDocs }] = await Promise.all([
     supabase.from("branches").select("id, name").eq("company_id", current.company_id).order("name"),
-    supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("position").order("name"),
     isAdmin
       ? supabase.from("contract_templates").select("id, name, body, version").eq("company_id", current.company_id).order("name")
       : Promise.resolve({ data: [] }),

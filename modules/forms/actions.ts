@@ -585,6 +585,52 @@ export async function generateFormFromBrief(
   return { added: fields.length };
 }
 
+/** Regenerate a form with AI — the AI can't edit existing questions, so this
+ *  REPLACES them all with a fresh generated set. */
+export async function regenerateFormFromBrief(
+  _prev: ImportState,
+  formData: FormData
+): Promise<ImportState> {
+  const formId = formData.get("formId");
+  const brief = (formData.get("brief")?.toString() ?? "").trim();
+  if (typeof formId !== "string") return { error: "Missing form" };
+  if (brief.length < 3) return { error: "Describe the form you want first." };
+
+  const { supabase } = await requireUser();
+  const { data: form } = await supabase
+    .from("forms")
+    .select("id, company_id, name")
+    .eq("id", formId)
+    .single();
+  if (!form) return { error: "Form not found" };
+
+  let fields;
+  try {
+    fields = await generateFormFields(brief, form.name as string | undefined);
+    await recordUsage(form.company_id as string | null, "ai");
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Could not generate the form." };
+  }
+  if (fields.length === 0) return { error: "The AI didn't return any questions. Try rephrasing." };
+
+  // Replace the existing questions entirely.
+  await supabase.from("form_fields").delete().eq("form_id", formId);
+  const rows = fields.map((f, i) => ({
+    form_id: formId,
+    label: f.label,
+    field_type: f.field_type,
+    required: f.required,
+    options: f.options,
+    help_text: f.help_text,
+    position: i,
+  }));
+  const { error } = await supabase.from("form_fields").insert(rows);
+  if (error) return { error: "Could not save the regenerated questions." };
+
+  revalidatePath(`/forms/${formId}`);
+  return { added: fields.length };
+}
+
 // ============================================================
 // FORM STORE (founder templates + admin acquire + company tiers)
 // ============================================================

@@ -33,9 +33,9 @@ export function StoreSettingsBar({
     e.currentTarget.form?.requestSubmit();
 
   return (
-    <form action={action} className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-4">
+    <form id="store-settings-form" action={action} className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-4">
       <input type="hidden" name="id" value={formId} />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.4fr_1fr_1fr_auto] sm:items-end">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.4fr_1fr_1fr] sm:items-end">
         <label className="text-sm font-medium text-gray-700">
           Form name
           <input
@@ -63,13 +63,10 @@ export function StoreSettingsBar({
             ))}
           </select>
         </label>
-        <div className="flex items-center gap-2">
-          <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-            Save
-          </button>
-          {state?.ok && <span className="text-sm text-green-700">Saved.</span>}
-          {state?.error && <span className="text-sm text-red-600">{state.error}</span>}
-        </div>
+      </div>
+      <div className="mt-1 h-4 text-xs">
+        {state?.ok && <span className="text-green-700">Saved.</span>}
+        {state?.error && <span className="text-red-600">{state.error}</span>}
       </div>
     </form>
   );

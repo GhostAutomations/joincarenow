@@ -13,6 +13,7 @@ import { CareersContentForm } from "@/components/dashboard/careers-content-form"
 import { InterviewAddressForm } from "@/components/dashboard/interview-address-form";
 import { BrandingForm } from "@/components/dashboard/branding-form";
 import { StarterPackPanel } from "@/components/founder/starter-pack-panel";
+import { WorkflowApplyPanel } from "@/components/founder/workflow-apply-panel";
 import type { OpeningHours } from "@/lib/opening-hours";
 
 export default async function CompanySetupPage({
@@ -24,12 +25,34 @@ export default async function CompanySetupPage({
   await requirePlatformAdmin();
   const db = createAdminClient();
 
-  const [{ data: company }, { data: branches }, { data: roles }] = await Promise.all([
+  const [{ data: company }, { data: branches }, { data: roles }, { data: storeWfRows }, { data: appliedRows }] = await Promise.all([
     db.from("companies").select("id, name, slug, settings").eq("id", id).single(),
     db.from("branches").select("id, name").eq("company_id", id).order("name"),
     db.from("roles").select("id, name").eq("company_id", id).order("name"),
+    db
+      .from("onboarding_templates")
+      .select("workflow_id, workflow_name, store_category, store_description, position")
+      .eq("is_store", true)
+      .eq("store_published", true)
+      .order("workflow_id", { ascending: true })
+      .order("position", { ascending: true }),
+    db
+      .from("onboarding_templates")
+      .select("workflow_name")
+      .eq("company_id", id)
+      .eq("is_store", false),
   ]);
   if (!company) notFound();
+
+  // Group published store workflows for the apply panel.
+  const wfMap = new Map<string, { id: string; name: string; category: string | null; description: string | null; stepCount: number }>();
+  for (const r of (storeWfRows ?? []) as { workflow_id: string; workflow_name: string; store_category: string | null; store_description: string | null }[]) {
+    const e = wfMap.get(r.workflow_id) ?? { id: r.workflow_id, name: r.workflow_name, category: r.store_category, description: r.store_description, stepCount: 0 };
+    e.stepCount++;
+    wfMap.set(r.workflow_id, e);
+  }
+  const storeWorkflows = [...wfMap.values()];
+  const appliedNames = [...new Set((appliedRows ?? []).map((r) => String((r as { workflow_name: string }).workflow_name)).filter(Boolean))];
 
   const settings = (company.settings ?? {}) as {
     interview_address?: string;
@@ -62,6 +85,19 @@ export default async function CompanySetupPage({
       label: "Roles",
       description: "Define roles once (e.g. Walker, Driver); they follow each hire onto their record.",
       content: <RolesManager roles={roles ?? []} companyId={id} />,
+    },
+    {
+      key: "workflows",
+      label: "Workflows",
+      description: "Apply your ready-made onboarding workflows. Each copies into this company and they own their copy — your master is untouched.",
+      content: (
+        <WorkflowApplyPanel
+          companyId={id}
+          workflows={storeWorkflows}
+          roles={(roles ?? []).map((r) => ({ id: String(r.id), name: String(r.name) }))}
+          appliedNames={appliedNames}
+        />
+      ),
     },
     {
       key: "careers",

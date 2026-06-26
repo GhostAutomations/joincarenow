@@ -6,9 +6,11 @@ import { setInterviewAddress, type SettingsState } from "@/modules/companies/act
 export function InterviewAddressForm({
   companyId,
   defaultValue,
+  submitLabel = "Save address",
 }: {
   companyId: string;
   defaultValue: string;
+  submitLabel?: string;
 }) {
   const [state, action] = useActionState<SettingsState, FormData>(
     setInterviewAddress,
@@ -27,7 +29,7 @@ export function InterviewAddressForm({
       />
       <div className="flex items-center gap-3">
         <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-          Save address
+          {submitLabel}
         </button>
         {state?.ok && <span className="text-sm text-green-700">Saved.</span>}
         {state?.error && <span className="text-sm text-red-600">{state.error}</span>}

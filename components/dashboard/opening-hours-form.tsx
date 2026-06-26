@@ -7,9 +7,11 @@ import { DAYS, type OpeningHours } from "@/lib/opening-hours";
 export function OpeningHoursForm({
   companyId,
   hours,
+  submitLabel = "Save opening hours",
 }: {
   companyId: string;
   hours: OpeningHours;
+  submitLabel?: string;
 }) {
   const [state, action] = useActionState<SettingsState, FormData>(setOpeningHours, undefined);
 
@@ -68,7 +70,7 @@ export function OpeningHoursForm({
 
       <div className="flex items-center gap-3 pt-2">
         <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-          Save opening hours
+          {submitLabel}
         </button>
         {state?.ok && <span className="text-sm text-green-700">Saved.</span>}
         {state?.error && <span className="text-sm text-red-600">{state.error}</span>}

@@ -7,7 +7,7 @@ import { setBranding, type SettingsState } from "@/modules/companies/actions";
 
 type Brand = { primary?: string; secondary?: string; accent?: string; logo_url?: string | null };
 
-export function BrandingForm({ companyId, brand }: { companyId: string; brand: Brand }) {
+export function BrandingForm({ companyId, brand, submitLabel = "Save branding" }: { companyId: string; brand: Brand; submitLabel?: string }) {
   const router = useRouter();
   const [state, action] = useActionState<SettingsState, FormData>(setBranding, undefined);
 
@@ -52,7 +52,7 @@ export function BrandingForm({ companyId, brand }: { companyId: string; brand: B
 
       <div className="flex items-center gap-3">
         <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-          Save branding
+          {submitLabel}
         </button>
         {state?.ok && <span className="text-sm text-green-700">Saved.</span>}
         {state?.error && <span className="text-sm text-red-600">{state.error}</span>}

@@ -18,6 +18,14 @@ async function acceptUrl(token: string): Promise<string> {
   return `${proto}://${host}/accept-invite?token=${token}`;
 }
 
+/** Merge a founder-setup "checked" flag into settings on save. During founder
+ *  setup the customer is gated out, so only the founder triggers these — this is
+ *  what ticks each task off in the founder setup wizard (starts at 0%). */
+function withChecked(prevSettings: unknown, key: string): Record<string, boolean> {
+  const prev = ((prevSettings as { setup_checked?: Record<string, boolean> } | null)?.setup_checked) ?? {};
+  return { ...prev, [key]: true };
+}
+
 const HEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const optionalHex = z
   .string()
@@ -309,6 +317,7 @@ export async function setInterviewAddress(
   const settings = {
     ...((company?.settings as Record<string, unknown>) ?? {}),
     interview_address: address,
+    setup_checked: withChecked(company?.settings, "interview"),
   };
 
   const { error } = await supabase
@@ -342,6 +351,7 @@ export async function setCareersContent(
   const settings = {
     ...((company?.settings as Record<string, unknown>) ?? {}),
     careers: { intro, benefits },
+    setup_checked: withChecked(company?.settings, "careers"),
   };
   const { error } = await supabase.from("companies").update({ settings }).eq("id", companyId);
   if (error) return { error: "Could not save. Please try again." };
@@ -401,6 +411,7 @@ export async function setOpeningHours(
   const settings = {
     ...((company?.settings as Record<string, unknown>) ?? {}),
     opening_hours: hours,
+    setup_checked: withChecked(company?.settings, "hours"),
   };
 
   const { error } = await supabase.from("companies").update({ settings }).eq("id", companyId);
@@ -456,6 +467,7 @@ export async function setReminderSettings(
   const settings = {
     ...((company?.settings as Record<string, unknown>) ?? {}),
     reminders,
+    setup_checked: withChecked(company?.settings, "communication"),
   };
 
   const { error } = await supabase.from("companies").update({ settings }).eq("id", companyId);
@@ -487,6 +499,7 @@ export async function setEmployeeNumberSettings(
     ...((company?.settings as Record<string, unknown>) ?? {}),
     employee_number_mode: mode,
     employee_number_prefix: prefix,
+    setup_checked: withChecked(company?.settings, "numbers"),
   };
 
   const { error } = await supabase
@@ -543,6 +556,7 @@ export async function setBranding(
   const settings = {
     ...((companyRow?.settings as Record<string, unknown>) ?? {}),
     brand,
+    setup_checked: withChecked(companyRow?.settings, "branding"),
   };
   const { error } = await db.from("companies").update({ settings }).eq("id", companyId);
   if (error) return { error: "Could not save branding. Please try again." };

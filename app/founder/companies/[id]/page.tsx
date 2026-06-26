@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { SettingsHub, type SettingsSection } from "@/components/dashboard/settings-hub";
 import { BranchesManager } from "@/components/dashboard/branches-manager";
 import { RolesManager } from "@/components/dashboard/roles-manager";
 import { EmployeeNumberSettings } from "@/components/dashboard/employee-number-settings";
@@ -14,7 +13,7 @@ import { InterviewAddressForm } from "@/components/dashboard/interview-address-f
 import { BrandingForm } from "@/components/dashboard/branding-form";
 import { StarterPackPanel } from "@/components/founder/starter-pack-panel";
 import { AccountReadyButton } from "@/components/founder/account-ready-button";
-import { FounderSetupChecklist } from "@/components/founder/setup-checklist";
+import { FounderSetupWizard, type WizardTask } from "@/components/founder/setup-wizard";
 import { WorkflowApplyPanel } from "@/components/founder/workflow-apply-panel";
 import type { OpeningHours } from "@/lib/opening-hours";
 
@@ -67,44 +66,31 @@ export default async function CompanySetupPage({
     starter_pack_version?: number;
     starter_seeded_at?: string;
     ready_email_sent_at?: string;
+    setup_checked?: Record<string, boolean>;
   };
   const seeded = (settings.starter_pack_version ?? 0) >= 1;
+  const checked = settings.setup_checked ?? {};
 
-  // Founder setup progress — each task links to its section (?s=<key>).
-  const base = `/founder/companies/${id}`;
-  const setupTasks = [
-    { label: "Add branding (logo & colours)", hint: "Upload their logo and set brand colours.", href: `${base}?s=branding`, done: Boolean(settings.brand?.logo_url) },
-    { label: "Set up branches", hint: "Add their branches / locations.", href: `${base}?s=branches`, done: (branches ?? []).length > 0 },
-    { label: "Review roles", hint: "Default care roles are seeded — adjust if needed.", href: `${base}?s=roles`, done: (roles ?? []).length > 0 },
-    { label: "Apply a workflow", hint: "Pick an onboarding workflow and assign it to a role.", href: `${base}?s=workflows`, done: appliedNames.length > 0 },
-    { label: "Set the careers page", hint: "Intro and benefits shown to candidates.", href: `${base}?s=careers`, done: Boolean(settings.careers?.intro) },
-    { label: "Set opening hours", hint: "Constrains interview scheduling.", href: `${base}?s=hours`, done: Boolean(settings.opening_hours && Object.keys(settings.opening_hours).length > 0) },
-    { label: "Notify the customer", hint: "Send the account-ready email once you're done.", href: `${base}`, done: Boolean(settings.ready_email_sent_at) },
-  ];
-
-  const sections: SettingsSection[] = [
+  const FINALISE = "Finalise";
+  const wizardTasks: WizardTask[] = [
     {
-      key: "branding",
-      label: "Branding",
+      key: "branding", label: "Branding", isManager: false, done: checked.branding === true,
       description: "Logo and brand colours used across their dashboard and careers page.",
-      content: <BrandingForm companyId={id} brand={settings.brand ?? {}} />,
+      content: <BrandingForm companyId={id} brand={settings.brand ?? {}} submitLabel={FINALISE} />,
     },
     {
-      key: "branches",
-      label: "Branches",
-      description: "Set up branches once; they become selectable on jobs and follow each hire.",
+      key: "branches", label: "Branches", isManager: true, done: checked.branches === true,
+      description: "Set up branches; they become selectable on jobs and follow each hire.",
       content: <BranchesManager branches={branches ?? []} companyId={id} />,
     },
     {
-      key: "roles",
-      label: "Roles",
-      description: "Define roles once (e.g. Walker, Driver); they follow each hire onto their record.",
+      key: "roles", label: "Roles", isManager: true, done: checked.roles === true,
+      description: "Define roles (e.g. Walker, Driver); they follow each hire onto their record.",
       content: <RolesManager roles={roles ?? []} companyId={id} />,
     },
     {
-      key: "workflows",
-      label: "Workflows",
-      description: "Apply your ready-made onboarding workflows. Each copies into this company and they own their copy — your master is untouched.",
+      key: "workflows", label: "Workflows", isManager: true, done: checked.workflows === true,
+      description: "Apply your ready-made onboarding workflows. Each copies in; the company owns their copy.",
       content: (
         <WorkflowApplyPanel
           companyId={id}
@@ -115,46 +101,34 @@ export default async function CompanySetupPage({
       ),
     },
     {
-      key: "careers",
-      label: "Careers page",
+      key: "careers", label: "Careers page", isManager: false, done: checked.careers === true,
       description: "Intro and benefits shown to candidates on the public careers page.",
-      content: (
-        <CareersContentForm
-          companyId={id}
-          intro={settings.careers?.intro ?? ""}
-          benefits={settings.careers?.benefits ?? []}
-        />
-      ),
+      content: <CareersContentForm companyId={id} intro={settings.careers?.intro ?? ""} benefits={settings.careers?.benefits ?? []} submitLabel={FINALISE} />,
     },
     {
-      key: "numbers",
-      label: "Employee numbers",
+      key: "numbers", label: "Employee numbers", isManager: false, done: checked.numbers === true,
       description: "Choose how each new hire's Employee ID is set.",
-      content: (
-        <EmployeeNumberSettings
-          companyId={id}
-          mode={settings.employee_number_mode === "manual" ? "manual" : "auto"}
-          prefix={settings.employee_number_prefix ?? "EMP-"}
-        />
-      ),
+      content: <EmployeeNumberSettings companyId={id} mode={settings.employee_number_mode === "manual" ? "manual" : "auto"} prefix={settings.employee_number_prefix ?? "EMP-"} submitLabel={FINALISE} />,
     },
     {
-      key: "interview",
-      label: "Interview address",
+      key: "interview", label: "Interview address", isManager: false, done: checked.interview === true,
       description: "Default address for in-person interviews.",
-      content: <InterviewAddressForm companyId={id} defaultValue={settings.interview_address ?? ""} />,
+      content: <InterviewAddressForm companyId={id} defaultValue={settings.interview_address ?? ""} submitLabel={FINALISE} />,
     },
     {
-      key: "hours",
-      label: "Opening hours",
+      key: "hours", label: "Opening hours", isManager: false, done: checked.hours === true,
       description: "Days and hours the office is open; constrains interview scheduling.",
-      content: <OpeningHoursForm companyId={id} hours={settings.opening_hours ?? {}} />,
+      content: <OpeningHoursForm companyId={id} hours={settings.opening_hours ?? {}} submitLabel={FINALISE} />,
     },
     {
-      key: "communication",
-      label: "Communication",
+      key: "communication", label: "Communication", isManager: false, done: checked.communication === true,
       description: "Automated reminders to applicants and new starters — on/off and channel.",
-      content: <ReminderSettingsForm companyId={id} prefs={settings.reminders ?? {}} />,
+      content: <ReminderSettingsForm companyId={id} prefs={settings.reminders ?? {}} submitLabel={FINALISE} />,
+    },
+    {
+      key: "notify", label: "Notify the customer", isManager: false, done: Boolean(settings.ready_email_sent_at),
+      description: "Send the account-ready email so they can log in with full access.",
+      content: <AccountReadyButton companyId={id} sentAt={settings.ready_email_sent_at ?? null} />,
     },
   ];
 
@@ -170,11 +144,7 @@ export default async function CompanySetupPage({
       </p>
       <div className="mt-6 space-y-4">
         <StarterPackPanel companyId={id} seeded={seeded} seededAt={settings.starter_seeded_at ?? null} />
-        <FounderSetupChecklist tasks={setupTasks} />
-        <AccountReadyButton companyId={id} sentAt={settings.ready_email_sent_at ?? null} />
-      </div>
-      <div className="mt-6">
-        <SettingsHub sections={sections} />
+        <FounderSetupWizard companyId={id} tasks={wizardTasks} />
       </div>
     </div>
   );

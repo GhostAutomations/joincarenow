@@ -50,9 +50,11 @@ const ROWS: { key: string; label: string; blurb: string; inputs: TimingInput[] }
 export function ReminderSettingsForm({
   companyId,
   prefs,
+  submitLabel = "Save",
 }: {
   companyId: string;
   prefs: ReminderPrefs;
+  submitLabel?: string;
 }) {
   const [state, action] = useActionState<SettingsState, FormData>(setReminderSettings, undefined);
 
@@ -125,7 +127,7 @@ export function ReminderSettingsForm({
 
       <div className="flex items-center gap-3">
         <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-          Save
+          {submitLabel}
         </button>
         {state?.ok && <span className="text-sm text-green-700">Saved.</span>}
         {state?.error && <span className="text-sm text-red-600">{state.error}</span>}

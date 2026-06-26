@@ -50,8 +50,8 @@ export function JobForm({
   defaults?: JobDefaults;
   submitLabel: string;
   forms?: { id: string; name: string }[];
-  branches?: { id: string; name: string }[];
-  roles?: { id: string; name: string }[];
+  branches?: { id: string; name: string; kind?: string }[];
+  roles?: { id: string; name: string; team?: string }[];
   contracts?: { id: string; name: string }[];
   policies?: { id: string; name: string }[];
   owners?: { user_id: string; name: string }[];
@@ -64,6 +64,15 @@ export function JobForm({
   // Controlled so the chosen value stays put after save (an uncontrolled select
   // visually snaps back to "No contract" on the post-save re-render).
   const [contractId, setContractId] = useState(defaults?.contract_template_id ?? "");
+
+  // Recruiting target: a branch (location) or the Office Team (a branch with
+  // kind='office'). The chosen target's team filters which roles are offered.
+  const locationBranches = branches.filter((b) => (b.kind ?? "branch") !== "office");
+  const officeBranches = branches.filter((b) => b.kind === "office");
+  const [branchId, setBranchId] = useState(defaults?.branch_id ?? "");
+  const selectedBranch = branches.find((b) => b.id === branchId);
+  const targetTeam = selectedBranch?.kind === "office" ? "office" : "care";
+  const visibleRoles = roles.filter((r) => (r.team ?? "care") === targetTeam);
 
   // Role drives the default workflow; the workflow can then be changed.
   const [roleId, setRoleId] = useState(defaults?.role_id ?? "");
@@ -139,25 +148,47 @@ export function JobForm({
         </div>
         <div>
           <label htmlFor="branch_id" className="block text-sm font-medium text-gray-700">
-            Branch
+            Recruiting for
           </label>
           <select
             id="branch_id"
             name="branch_id"
-            defaultValue={defaults?.branch_id ?? ""}
+            value={branchId}
+            onChange={(e) => {
+              const newId = e.target.value;
+              setBranchId(newId);
+              setDirty(true);
+              // If the current role doesn't belong to the new target's team, clear it.
+              const newBranch = branches.find((b) => b.id === newId);
+              const newTeam = newBranch?.kind === "office" ? "office" : "care";
+              const current = roles.find((r) => r.id === roleId);
+              if (current && (current.team ?? "care") !== newTeam) {
+                setRoleId("");
+                if (!wfTouched) setWorkflowRoleId("");
+              }
+            }}
             className={inputClass}
           >
-            <option value="">Select a branch…</option>
-            {branches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
+            <option value="">Select where you&apos;re recruiting…</option>
+            {locationBranches.length > 0 && (
+              <optgroup label="Branches">
+                {locationBranches.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </optgroup>
+            )}
+            {officeBranches.length > 0 && (
+              <optgroup label="Office">
+                {officeBranches.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </optgroup>
+            )}
           </select>
           <p className="mt-1 text-xs text-gray-500">
             {branches.length === 0
               ? "Add branches in Settings first."
-              : "Shown as the job location and used to group employees once hired."}
+              : "Choose a care branch or your Office Team. The role list adapts to your choice."}
           </p>
         </div>
         <div>
@@ -174,8 +205,8 @@ export function JobForm({
             }}
             className={inputClass}
           >
-            <option value="">Select a role…</option>
-            {roles.map((r) => (
+            <option value="">{targetTeam === "office" ? "Select an office role…" : "Select a role…"}</option>
+            {visibleRoles.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name}
               </option>
@@ -202,7 +233,7 @@ export function JobForm({
             className={inputClass}
           >
             <option value="">Match role</option>
-            {roles.map((r) => (
+            {visibleRoles.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name}
               </option>

@@ -72,13 +72,19 @@ export async function seedCompanyStarter(
 
   // ---- 0. Default roles -----------------------------------
   // Idempotent via the unique (company_id, name) constraint — ignore conflicts.
-  // position keeps them in the intended order (not alphabetical).
-  const roleRows = DEFAULT_ROLES.map((name, i) => ({ company_id: companyId, name, position: i }));
+  // position keeps them in the intended order; team splits care vs office.
+  const roleRows = DEFAULT_ROLES.map((r, i) => ({ company_id: companyId, name: r.name, team: r.team, position: i }));
   const { error: rolesErr } = await db
     .from("roles")
     .upsert(roleRows, { onConflict: "company_id,name", ignoreDuplicates: true });
   if (rolesErr) return { ok: false, error: `Roles: ${rolesErr.message}` };
   created.roles = roleRows.length;
+
+  // ---- 0b. Office Team recruitment target (a branch, kind=office) ----------
+  const { error: officeErr } = await db
+    .from("branches")
+    .upsert({ company_id: companyId, name: "Office Team", kind: "office" }, { onConflict: "company_id,name", ignoreDuplicates: true });
+  if (officeErr) return { ok: false, error: `Office Team: ${officeErr.message}` };
 
   // ---- 1. Forms + fields ----------------------------------
   // formKey -> new form id, so onboarding tasks + the sample job can wire up.

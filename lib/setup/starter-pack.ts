@@ -337,15 +337,17 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
 // ---- Default roles -----------------------------------------
 // Seeded into the company's `roles` so workflows have something to target out of
 // the box. The founder can edit/add more (incl. custom) in Settings → Roles.
-export const DEFAULT_ROLES: string[] = [
-  "Carer (Walker)",
-  "Carer (Driver)",
-  "Senior Carer",
-  "Supervisor",
-  "Planner",
-  "Branch Manager",
-  "Registered Manager",
-  "Registered Individual",
+// team: 'care' = branch/care-delivery roles · 'office' = head-office team.
+export type StarterRole = { name: string; team: "care" | "office" };
+export const DEFAULT_ROLES: StarterRole[] = [
+  { name: "Carer (Walker)", team: "care" },
+  { name: "Carer (Driver)", team: "care" },
+  { name: "Senior Carer", team: "care" },
+  { name: "Supervisor", team: "office" },
+  { name: "Planner", team: "office" },
+  { name: "Branch Manager", team: "office" },
+  { name: "Registered Manager", team: "office" },
+  { name: "Registered Individual", team: "office" },
 ];
 
 // ---- Defaults applied to companies.settings ----------------

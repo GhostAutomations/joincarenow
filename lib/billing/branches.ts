@@ -9,10 +9,13 @@ import { syncBranchQuantity } from "@/lib/billing/stripe";
 export async function syncExtraBranches(companyId: string): Promise<void> {
   try {
     const db = createAdminClient();
+    // Only real location branches are billable — the Office Team (kind='office')
+    // is structural and free, so it never counts toward the extra-branch charge.
     const { count } = await db
       .from("branches")
       .select("id", { count: "exact", head: true })
-      .eq("company_id", companyId);
+      .eq("company_id", companyId)
+      .eq("kind", "branch");
     const extra = Math.max(0, (count ?? 0) - 1);
 
     const { data: company } = await db

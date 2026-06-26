@@ -12,12 +12,14 @@ export function BranchesManager({
   branches,
   companyId,
 }: {
-  branches: { id: string; name: string }[];
+  branches: { id: string; name: string; kind?: string }[];
   companyId?: string;
 }) {
   const [state, action] = useActionState<BranchState, FormData>(createBranch, undefined);
   const ref = useRef<HTMLFormElement>(null);
   const router = useRouter();
+  // Location branches only — the Office Team target is managed separately.
+  const locations = branches.filter((b) => (b.kind ?? "branch") !== "office");
 
   useEffect(() => {
     if (state?.ok) {
@@ -28,9 +30,9 @@ export function BranchesManager({
 
   return (
     <div>
-      {branches.length > 0 ? (
+      {locations.length > 0 ? (
         <ul className="mb-3 space-y-1">
-          {branches.map((b) => (
+          {locations.map((b) => (
             <li key={b.id} className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white/80 px-2.5 py-2">
               <span className="flex min-w-0 items-center gap-2">
                 <Building2 className="h-4 w-4 shrink-0 text-gray-400" />

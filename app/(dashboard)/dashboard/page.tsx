@@ -45,7 +45,7 @@ export default async function DashboardPage() {
     // would tick before they'd done anything). Forms/onboarding/templates come
     // pre-loaded and are theirs to tweak; we don't fake-complete them here.
     const [branchCount, pubJobs, teamCount] = await Promise.all([
-      supabase.from("branches").select("id", { count: "exact", head: true }).eq("company_id", cid),
+      supabase.from("branches").select("id", { count: "exact", head: true }).eq("company_id", cid).eq("kind", "branch"),
       supabase.from("jobs").select("id", { count: "exact", head: true }).eq("company_id", cid).eq("status", "published"),
       supabase.from("company_users").select("id", { count: "exact", head: true }).eq("company_id", cid),
     ]);

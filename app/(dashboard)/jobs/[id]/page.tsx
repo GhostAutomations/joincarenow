@@ -38,13 +38,15 @@ export default async function EditJobPage({
       .order("name"),
     supabase
       .from("branches")
-      .select("id, name")
+      .select("id, name, kind")
       .eq("company_id", current.company_id)
       .order("name"),
     supabase
       .from("roles")
-      .select("id, name")
+      .select("id, name, team")
       .eq("company_id", current.company_id)
+      .order("team")
+      .order("position")
       .order("name"),
     supabase
       .from("contract_templates")

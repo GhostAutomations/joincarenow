@@ -62,6 +62,7 @@ export default async function BillingPage() {
     .from("branches")
     .select("id, name")
     .eq("company_id", current.company_id)
+    .eq("kind", "branch") // exclude the free Office Team target
     .order("created_at", { ascending: true });
 
   const customerId = company?.stripe_customer_id as string | null;

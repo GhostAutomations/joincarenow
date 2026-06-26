@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Sparkles, FileUp } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { deleteStoreForm } from "@/modules/forms/actions";
 import { MondayFormBuilder, type BuilderField } from "@/components/dashboard/monday-form-builder";
@@ -8,6 +8,7 @@ import { StoreSettingsBar } from "@/components/dashboard/store-settings-bar";
 import { DeleteFormButton } from "@/components/dashboard/delete-form-button";
 import { BuildTabs } from "@/components/dashboard/build-tabs";
 import { PdfImport } from "@/components/dashboard/pdf-import";
+import { FormAiGenerate } from "@/components/dashboard/form-ai-generate";
 
 // PDF import calls Claude, which can take longer than the default function limit.
 export const maxDuration = 60;
@@ -55,14 +56,32 @@ export default async function FounderFormBuildPage({
   );
 
   const importer = (
-    <div className="mx-auto max-w-2xl rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm">
-      <h2 className="text-base font-medium text-gray-900">Import questions from a PDF</h2>
-      <p className="mt-1 text-sm text-gray-500">
-        Upload an existing form (PDF) and we&apos;ll read it and add the
-        questions for you to review and edit.
-      </p>
-      <div className="mt-3">
-        <PdfImport formId={form.id} />
+    <div className="mx-auto max-w-2xl space-y-4">
+      <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm">
+        <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+          <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-50 text-brand-600">
+            <Sparkles className="h-4 w-4" aria-hidden />
+          </span>
+          Generate with AI
+        </h2>
+        <div className="mt-3">
+          <FormAiGenerate formId={form.id} />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm">
+        <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+          <span className="grid h-7 w-7 place-items-center rounded-lg bg-gray-100 text-gray-600">
+            <FileUp className="h-4 w-4" aria-hidden />
+          </span>
+          Import from a PDF
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Upload an existing form (PDF) and we&apos;ll read it and add the questions for you to review and edit.
+        </p>
+        <div className="mt-3">
+          <PdfImport formId={form.id} />
+        </div>
       </div>
     </div>
   );

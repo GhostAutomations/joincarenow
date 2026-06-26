@@ -56,7 +56,7 @@ export default async function FormBuildPage({
   // falling back to the Join Care Now logo if they haven't set one.
   const companyLogo =
     (company?.settings as { brand?: { logo_url?: string | null } } | null)?.brand?.logo_url || null;
-  const defaultLogo = companyLogo || "/brand/jcn-logo-full-transparent.png";
+  const defaultLogo = companyLogo || "/brand/jcn-mark-transparent.png";
 
   const builder = (
     <MondayFormBuilder

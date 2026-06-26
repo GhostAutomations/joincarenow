@@ -57,7 +57,7 @@ export default async function FounderFormBuildPage({
       }}
       fields={fields}
       questionBank={(bank ?? []) as never}
-      defaultLogo="/brand/jcn-logo-full-transparent.png"
+      defaultLogo="/brand/jcn-mark-transparent.png"
       defaultLogoLabel="the Join Care Now logo"
     />
   );

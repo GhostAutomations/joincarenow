@@ -3,6 +3,7 @@ import { requireCompany } from "@/modules/auth/queries";
 import { londonToUtcIso } from "@/lib/time";
 import { AppGrid } from "@/components/dashboard/app-grid";
 import { SignoffLive } from "@/components/dashboard/signoff-live";
+import { GettingStartedChecklist, type ChecklistItem } from "@/components/dashboard/getting-started-checklist";
 import { feedbackOpen } from "@/lib/feedback";
 
 export default async function DashboardPage() {
@@ -32,9 +33,31 @@ export default async function DashboardPage() {
   };
 
   const { data: companyRow } = await supabase
-    .from("companies").select("created_at").eq("id", cid).single();
+    .from("companies").select("created_at, settings").eq("id", cid).single();
   const fbOpen = feedbackOpen(companyRow?.created_at as string | undefined);
   const isAdmin = current.role === "admin";
+
+  // Admin-only "getting started" checklist — reflects the pre-loaded starter
+  // pack and what's left to make the account their own. Hidden once complete.
+  let checklist: ChecklistItem[] = [];
+  if (isAdmin) {
+    const [formsCount, onbCount, tplCount, pubJobs, teamCount] = await Promise.all([
+      supabase.from("forms").select("id", { count: "exact", head: true }).eq("company_id", cid).eq("is_store", false),
+      supabase.from("onboarding_templates").select("id", { count: "exact", head: true }).eq("company_id", cid),
+      supabase.from("message_templates").select("id", { count: "exact", head: true }).eq("company_id", cid),
+      supabase.from("jobs").select("id", { count: "exact", head: true }).eq("company_id", cid).eq("status", "published"),
+      supabase.from("company_users").select("id", { count: "exact", head: true }).eq("company_id", cid),
+    ]);
+    const brand = (companyRow?.settings as { brand?: { logo_url?: string | null } } | null)?.brand;
+    checklist = [
+      { label: "Add your logo and brand colours", hint: "Make the platform and emails look like yours.", href: "/settings", done: Boolean(brand?.logo_url) },
+      { label: "Review your application form", hint: "A Care Worker Application is ready — tailor it to your roles.", href: "/forms", done: count(formsCount) > 0 },
+      { label: "Review your onboarding workflow", hint: "10 steps are set up — adjust them to your process.", href: "/onboarding-board", done: count(onbCount) > 0 },
+      { label: "Review your message templates", hint: "Branded email + SMS for every stage are ready to use.", href: "/templates", done: count(tplCount) > 0 },
+      { label: "Publish your first job", hint: "A sample Care Assistant job is waiting in drafts.", href: "/jobs", done: count(pubJobs) > 0 },
+      { label: "Invite your team", hint: "Add managers and recruiters to your company.", href: "/settings", done: count(teamCount) > 1 },
+    ];
+  }
 
   const first = profile?.full_name?.split(" ")[0] ?? "there";
   const hour = Number(new Date().toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/London" }));
@@ -74,6 +97,9 @@ export default async function DashboardPage() {
             </Link>
           ))}
         </div>
+
+        {/* getting-started checklist (admins, until complete) */}
+        {isAdmin && <GettingStartedChecklist items={checklist} />}
 
         {/* app grid */}
         <p className="mt-8 text-sm font-medium text-white/70">Your workspace</p>

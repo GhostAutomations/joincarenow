@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendBrandedEmail } from "@/lib/comms/branded";
+import { seedCompanyStarter } from "@/lib/setup/seed";
 
 const BASE_URL = "https://www.joincarenow.com";
 
@@ -63,6 +64,15 @@ export async function provisionCompanyFromProspect(
     }).eq("id", companyId);
   } catch {
     /* columns missing or update failed — provisioning + invite continue */
+  }
+
+  // Seed the full starter pack (forms, onboarding workflow, message templates,
+  // sample job + comms defaults) so the company is turnkey on day one. Uses the
+  // service-role admin client internally; best-effort — never block the invite.
+  try {
+    await seedCompanyStarter(companyId);
+  } catch {
+    /* seeding is best-effort; the founder can re-apply from /admin if it fails */
   }
 
   let note = "no admin email on file — invite manually";

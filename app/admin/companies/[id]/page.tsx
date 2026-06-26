@@ -12,6 +12,7 @@ import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard
 import { CareersContentForm } from "@/components/dashboard/careers-content-form";
 import { InterviewAddressForm } from "@/components/dashboard/interview-address-form";
 import { BrandingForm } from "@/components/dashboard/branding-form";
+import { StarterPackPanel } from "@/components/admin/starter-pack-panel";
 import type { OpeningHours } from "@/lib/opening-hours";
 
 export default async function CompanySetupPage({
@@ -38,7 +39,10 @@ export default async function CompanySetupPage({
     careers?: { intro?: string; benefits?: string[] };
     reminders?: ReminderPrefs;
     brand?: { primary?: string; secondary?: string; accent?: string; logo_url?: string | null };
+    starter_pack_version?: number;
+    starter_seeded_at?: string;
   };
+  const seeded = (settings.starter_pack_version ?? 0) >= 1;
 
   const sections: SettingsSection[] = [
     {
@@ -113,6 +117,9 @@ export default async function CompanySetupPage({
         Pre-configure this company so their team can start straight away. Contracts, policies and
         application forms are still built inside the company&apos;s own Settings.
       </p>
+      <div className="mt-6">
+        <StarterPackPanel companyId={id} seeded={seeded} seededAt={settings.starter_seeded_at ?? null} />
+      </div>
       <div className="mt-6">
         <SettingsHub sections={sections} />
       </div>

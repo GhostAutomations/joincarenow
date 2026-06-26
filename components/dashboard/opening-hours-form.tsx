@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { setOpeningHours, type SettingsState } from "@/modules/companies/actions";
 import { DAYS, type OpeningHours } from "@/lib/opening-hours";
 
@@ -14,6 +15,10 @@ export function OpeningHoursForm({
   submitLabel?: string;
 }) {
   const [state, action] = useActionState<SettingsState, FormData>(setOpeningHours, undefined);
+  const router = useRouter();
+  useEffect(() => {
+    if (state?.ok) router.refresh();
+  }, [state, router]);
 
   // Local state per day so toggling open/closed shows/hides the time inputs.
   const [days, setDays] = useState(() =>

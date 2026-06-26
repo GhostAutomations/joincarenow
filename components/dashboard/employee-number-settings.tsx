@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { setEmployeeNumberSettings, type SettingsState } from "@/modules/companies/actions";
 
 export function EmployeeNumberSettings({
@@ -18,6 +19,10 @@ export function EmployeeNumberSettings({
     setEmployeeNumberSettings,
     undefined
   );
+  const router = useRouter();
+  useEffect(() => {
+    if (state?.ok) router.refresh();
+  }, [state, router]);
   const [manual, setManual] = useState(initialMode === "manual");
 
   return (

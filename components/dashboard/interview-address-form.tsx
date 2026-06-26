@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { setInterviewAddress, type SettingsState } from "@/modules/companies/actions";
 
 export function InterviewAddressForm({
@@ -16,6 +17,10 @@ export function InterviewAddressForm({
     setInterviewAddress,
     undefined
   );
+  const router = useRouter();
+  useEffect(() => {
+    if (state?.ok) router.refresh();
+  }, [state, router]);
 
   return (
     <form action={action} className="mt-4 space-y-3">

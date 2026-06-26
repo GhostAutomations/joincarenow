@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Circle, X, ChevronRight } from "lucide-react";
 import { finaliseSetupTask } from "@/modules/setup/actions";
@@ -26,11 +26,25 @@ export function FounderSetupWizard({
   const router = useRouter();
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Whether the open task was ALREADY done when opened — so reopening a finished
+  // task to edit doesn't instantly snap shut.
+  const wasDoneRef = useRef(false);
 
   const done = tasks.filter((t) => t.done).length;
   const total = tasks.length;
   const pct = total ? Math.round((done / total) * 100) : 0;
   const active = tasks.find((t) => t.key === openKey) ?? null;
+
+  // Auto-close the popup the moment a task is finalised (its `done` flips true
+  // after the save + refresh). Skips tasks that were already done when opened.
+  useEffect(() => {
+    if (openKey && active?.done && !wasDoneRef.current) setOpenKey(null);
+  }, [openKey, active?.done]);
+
+  function openTask(t: WizardTask) {
+    wasDoneRef.current = t.done;
+    setOpenKey(t.key);
+  }
 
   function closeModal() {
     setOpenKey(null);
@@ -65,7 +79,7 @@ export function FounderSetupWizard({
         {tasks.map((t) => (
           <li key={t.key}>
             <button
-              onClick={() => setOpenKey(t.key)}
+              onClick={() => openTask(t)}
               className="flex w-full items-center gap-3 px-1 py-3 text-left transition hover:bg-white/60"
             >
               {t.done ? (

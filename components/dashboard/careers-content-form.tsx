@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { setCareersContent, type SettingsState } from "@/modules/companies/actions";
 
 const cls =
@@ -21,6 +22,10 @@ export function CareersContentForm({
     setCareersContent,
     undefined
   );
+  const router = useRouter();
+  useEffect(() => {
+    if (state?.ok) router.refresh();
+  }, [state, router]);
 
   return (
     <form action={action} className="mt-4 space-y-4">

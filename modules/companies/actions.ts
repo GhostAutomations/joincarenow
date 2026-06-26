@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { settingsContext, requireUser } from "@/modules/auth/queries";
 import { slugify } from "@/lib/utils";
+import { seedCompanyStarter } from "@/lib/setup/seed";
 
 /** Build an absolute accept-invite URL from the incoming request host. */
 async function acceptUrl(token: string): Promise<string> {
@@ -115,6 +116,15 @@ export async function createCompany(
       brand,
     };
     await supabase.from("companies").update({ settings }).eq("id", companyId);
+  }
+
+  // 1c. Seed the full starter pack so the company is turnkey on day one
+  //     (same content as the prospect-Won path). Best-effort — never block the
+  //     invite; the founder can re-apply from the company's setup page.
+  try {
+    await seedCompanyStarter(companyId);
+  } catch {
+    /* seeding is best-effort */
   }
 
   // 2. Invite the first admin for that company.

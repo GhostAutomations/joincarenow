@@ -130,7 +130,7 @@ export function LogoCropper({
           <ImageUp className="h-4 w-4" /> {currentLogoUrl ? "Replace logo" : "Choose logo"}
           <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="hidden" onChange={onPick} />
         </label>
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-gray-600">
           PNG or SVG on a transparent background, under 2MB. You can crop out deadspace after choosing.
         </p>
       </div>
@@ -183,7 +183,7 @@ export function LogoCropper({
       </div>
 
       <div className="mt-2 flex items-center gap-2" style={{ width: FRAME_W }}>
-        <ZoomIn className="h-4 w-4 text-gray-400" />
+        <ZoomIn className="h-4 w-4 text-gray-600" />
         <input
           type="range"
           min={1}
@@ -193,11 +193,11 @@ export function LogoCropper({
           onChange={(e) => changeZoom(parseFloat(e.target.value))}
           className="flex-1"
         />
-        <button type="button" onClick={remove} className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label="Remove logo">
+        <button type="button" onClick={remove} className="rounded p-1 text-gray-600 hover:bg-red-50 hover:text-red-600" aria-label="Remove logo">
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
-      <p className="mt-1 text-xs text-gray-400">Drag to position, slide to zoom — crop out any deadspace. Saved when you finalise.</p>
+      <p className="mt-1 text-xs text-gray-600">Drag to position, slide to zoom — crop out any deadspace. Saved when you finalise.</p>
     </div>
   );
 }

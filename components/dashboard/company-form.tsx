@@ -42,7 +42,7 @@ export function CompanyForm() {
         {/* Administrator */}
         <div className={sectionClass}>
           <p className="text-sm font-medium text-gray-900">Administrator</p>
-          <p className="mt-0.5 text-xs text-gray-500">
+          <p className="mt-0.5 text-xs text-gray-600">
             The person who runs this company&apos;s account. They&apos;ll be invited as admin.
           </p>
           <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -56,7 +56,7 @@ export function CompanyForm() {
         {/* Plan & billing */}
         <div className={sectionClass}>
           <p className="text-sm font-medium text-gray-900">Plan &amp; billing</p>
-          <p className="mt-0.5 text-xs text-gray-500">
+          <p className="mt-0.5 text-xs text-gray-600">
             Choose what they were sold. They&apos;ll set up the subscription themselves from the
             welcome email; this sets what they&apos;re charged.
           </p>
@@ -95,7 +95,7 @@ export function CompanyForm() {
         {/* Branding */}
         <div className={sectionClass}>
           <p className="text-sm font-medium text-gray-900">Branding</p>
-          <p className="mt-0.5 text-xs text-gray-500">
+          <p className="mt-0.5 text-xs text-gray-600">
             Choose up to three brand colours and a logo. These theme the whole platform for this
             company — leave them as the defaults to keep the standard Join Care Now look.
           </p>
@@ -111,7 +111,7 @@ export function CompanyForm() {
                     defaultValue={c.def}
                     className="h-9 w-12 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-white p-0.5"
                   />
-                  <span className="text-[11px] font-normal text-gray-400">{c.hint}</span>
+                  <span className="text-[11px] font-normal text-gray-600">{c.hint}</span>
                 </span>
               </label>
             ))}
@@ -124,7 +124,7 @@ export function CompanyForm() {
           </div>
         </div>
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-600">
           Creating the company sends this person a welcome email automatically.
           They get their login link in the &ldquo;account ready&rdquo; email you fire from
           the company&apos;s setup page once you&apos;ve finished setting them up. The link

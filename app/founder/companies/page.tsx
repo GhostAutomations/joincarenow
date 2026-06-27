@@ -39,7 +39,7 @@ function billingStatus(c: {
     case "canceled":
       return { label: "Cancelled", cls: "bg-gray-200 text-gray-600", plan };
     default:
-      return { label: "Not subscribed", cls: "bg-gray-100 text-gray-500", plan };
+      return { label: "Not subscribed", cls: "bg-gray-100 text-gray-600", plan };
   }
 }
 
@@ -110,7 +110,7 @@ export default async function CompaniesPage() {
         </h2>
 
         {(companies ?? []).length === 0 && (
-          <div className="mt-3 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-500 shadow-sm">
+          <div className="mt-3 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-600 shadow-sm">
             No companies yet. Create your first one above.
           </div>
         )}
@@ -129,7 +129,7 @@ export default async function CompaniesPage() {
                     <h3 className="text-base font-semibold text-gray-900">
                       {c.name}
                     </h3>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-600">
                       joincarenow.com/careers/{c.slug}
                     </p>
                   </div>
@@ -159,7 +159,7 @@ export default async function CompaniesPage() {
                     {companyAdmins.map((a, idx) => (
                       <li key={idx} className="text-sm text-gray-700">
                         {a.profiles?.full_name || a.profiles?.email}{" "}
-                        <span className="text-gray-400">
+                        <span className="text-gray-600">
                           ({a.profiles?.email})
                         </span>
                       </li>
@@ -175,7 +175,7 @@ export default async function CompaniesPage() {
                       <div className="flex items-center gap-2">
                         <span className="w-20 shrink-0 text-sm text-gray-600">Subscription</span>
                         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${b.cls}`}>{b.label}</span>
-                        {b.plan && <span className="text-xs text-gray-500">· {b.plan}</span>}
+                        {b.plan && <span className="text-xs text-gray-600">· {b.plan}</span>}
                         <a href={`/founder/billing/${c.id}`} className="ml-auto text-xs font-medium text-brand-600 hover:underline">
                           Billing details →
                         </a>
@@ -185,7 +185,7 @@ export default async function CompaniesPage() {
                         {offer ? (
                           <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">{offer}</span>
                         ) : (
-                          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-400">No offer</span>
+                          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">No offer</span>
                         )}
                       </div>
                       {(() => {
@@ -198,13 +198,13 @@ export default async function CompaniesPage() {
                                 <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
                                   Signed {new Date(ag.agreed_at).toLocaleDateString("en-GB")}
                                 </span>
-                                <span className="text-xs text-gray-500">by {ag.signer_name}</span>
+                                <span className="text-xs text-gray-600">by {ag.signer_name}</span>
                                 <a href={`/api/agreement/pdf?company=${c.id}`} className="ml-auto text-xs font-medium text-brand-600 hover:underline">
                                   Download PDF
                                 </a>
                               </>
                             ) : (
-                              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-400">Not signed</span>
+                              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">Not signed</span>
                             )}
                           </div>
                         );

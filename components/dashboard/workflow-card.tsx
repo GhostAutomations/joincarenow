@@ -24,7 +24,7 @@ export function WorkflowCard({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-lg border border-white/50 bg-white/70 backdrop-blur-sm shadow-sm">
+    <div className="rounded-lg border border-white/50 bg-white/50 backdrop-blur-sm shadow-sm">
       <div className="flex items-center justify-between gap-3 px-3 py-2.5">
         <button
           onClick={() => setOpen((o) => !o)}

@@ -60,7 +60,7 @@ export default async function FounderWorkflowsPage() {
         {workflows.length > 0 && (
           <div className="mt-4 space-y-3">
             {workflows.map((wf) => (
-              <div key={wf.id} className="rounded-xl border border-gray-200 bg-white/60 p-3">
+              <div key={wf.id} className="rounded-xl border border-white/40 p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${wf.published ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"}`}>
                     {wf.published ? "Live" : "Draft"}

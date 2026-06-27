@@ -77,7 +77,19 @@ export function FormPreview({
   const ds = form.style.description;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-black/40 p-4">
+    <div
+      className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-black/40 p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      {/* Always-visible close button, fixed to the screen's top-right corner. */}
+      <button
+        onClick={onClose}
+        aria-label="Close preview"
+        className="fixed right-4 top-4 z-[60] inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-900/80 text-white shadow-lg backdrop-blur transition hover:bg-gray-900"
+      >
+        <X className="h-5 w-5" />
+      </button>
+
       <div className="my-8 h-max w-full max-w-2xl rounded-xl bg-white p-6 sm:p-8">
         <div className="mb-4 flex items-center justify-between">
           <span className="text-xs font-medium uppercase tracking-wide text-gray-400">
@@ -85,7 +97,7 @@ export function FormPreview({
           </span>
           <button
             onClick={onClose}
-            className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
             aria-label="Close preview"
           >
             <X className="h-5 w-5" />

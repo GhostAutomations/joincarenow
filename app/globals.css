@@ -57,17 +57,23 @@ body {
      bg utility               -> frosted + dark text
    (Controls that already set their own bg, e.g. bg-white/70, are left alone.)
    ---------------------------------------------------------------- */
-.jcn-app :where(.bg-white) {
-  background-color: rgb(255 255 255 / 0.72) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+/* One canonical frosted-glass look used for EVERY white/translucent surface, so
+   there's never a mix of glass/grey/white. Lower opacity + a real blur +
+   saturate (keeps the gradient vivid instead of going grey) + a white rim. */
+.jcn-app :where(.bg-white, [class*="bg-white/"]) {
+  background-color: rgb(255 255 255 / 0.55) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  border-color: rgb(255 255 255 / 0.55) !important;
 }
+/* Native controls that render white with no bg utility (selects, text inputs,
+   textareas) — same glass, dark readable text. */
 .jcn-app
   :where(select, textarea,
     input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"])):not([class*="bg-"]) {
-  background-color: rgb(255 255 255 / 0.72);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background-color: rgb(255 255 255 / 0.6);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
   color: #111827; /* gray-900 — readable */
 }
 

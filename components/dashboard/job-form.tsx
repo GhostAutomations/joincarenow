@@ -41,6 +41,7 @@ export function JobForm({
   forms = [],
   branches = [],
   roles = [],
+  workflows = [],
   owners = [],
 }: {
   action: Action;
@@ -49,6 +50,8 @@ export function JobForm({
   forms?: { id: string; name: string }[];
   branches?: { id: string; name: string; kind?: string }[];
   roles?: { id: string; name: string; team?: string }[];
+  /** Workflows actually applied to this company, bound to a role. */
+  workflows?: { role_id: string; workflow_name: string }[];
   owners?: { user_id: string; name: string }[];
 }) {
   const [state, formAction] = useActionState<JobState, FormData>(action, undefined);
@@ -65,12 +68,16 @@ export function JobForm({
   const targetTeam = selectedBranch?.kind === "office" ? "office" : "care";
   const visibleRoles = roles.filter((r) => (r.team ?? "care") === targetTeam);
 
-  // Role drives the default workflow; the workflow can then be changed.
   const [roleId, setRoleId] = useState(defaults?.role_id ?? "");
-  const [workflowRoleId, setWorkflowRoleId] = useState(
-    defaults?.workflow_role_id ?? defaults?.role_id ?? ""
+
+  // Workflows applied to this company are role-bound, so the picker shows REAL
+  // workflow names (not every role). Only show workflows for the chosen target's
+  // team. "" = "Match role" — uses whatever workflow is assigned to the Role above.
+  const roleById = new Map(roles.map((r) => [r.id, r]));
+  const visibleWorkflows = workflows.filter(
+    (w) => (roleById.get(w.role_id)?.team ?? "care") === targetTeam
   );
-  const [wfTouched, setWfTouched] = useState(false);
+  const [workflowRoleId, setWorkflowRoleId] = useState(defaults?.workflow_role_id ?? "");
 
   return (
     <form
@@ -153,10 +160,10 @@ export function JobForm({
               const newBranch = branches.find((b) => b.id === newId);
               const newTeam = newBranch?.kind === "office" ? "office" : "care";
               const current = roles.find((r) => r.id === roleId);
-              if (current && (current.team ?? "care") !== newTeam) {
-                setRoleId("");
-                if (!wfTouched) setWorkflowRoleId("");
-              }
+              if (current && (current.team ?? "care") !== newTeam) setRoleId("");
+              // Workflow is role-bound; clear it if its role isn't in the new team.
+              const wfRole = roles.find((r) => r.id === workflowRoleId);
+              if (wfRole && (wfRole.team ?? "care") !== newTeam) setWorkflowRoleId("");
             }}
             className={inputClass}
           >
@@ -190,10 +197,7 @@ export function JobForm({
             id="role_id"
             name="role_id"
             value={roleId}
-            onChange={(e) => {
-              setRoleId(e.target.value);
-              if (!wfTouched) setWorkflowRoleId(e.target.value);
-            }}
+            onChange={(e) => setRoleId(e.target.value)}
             className={inputClass}
           >
             <option value="">{targetTeam === "office" ? "Select an office role…" : "Select a role…"}</option>
@@ -217,21 +221,20 @@ export function JobForm({
             id="workflow_role_id"
             name="workflow_role_id"
             value={workflowRoleId}
-            onChange={(e) => {
-              setWfTouched(true);
-              setWorkflowRoleId(e.target.value);
-            }}
+            onChange={(e) => setWorkflowRoleId(e.target.value)}
             className={inputClass}
           >
-            <option value="">Match role</option>
-            {visibleRoles.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
+            <option value="">Match role (use the Role&apos;s workflow)</option>
+            {visibleWorkflows.map((w) => (
+              <option key={w.role_id} value={w.role_id}>
+                {w.workflow_name} · {roleById.get(w.role_id)?.name ?? "role"}
               </option>
             ))}
           </select>
           <p className="mt-1 text-xs text-gray-500">
-            Which role&apos;s workflow tasks apply to applicants. Defaults to the role above — change if needed.
+            {workflows.length === 0
+              ? "No workflows applied yet. Apply one to a role first, then pick it here. “Match role” uses the Role’s workflow."
+              : "The onboarding workflow applicants get. “Match role” uses whatever workflow is assigned to the Role above."}
           </p>
         </div>
         <div>

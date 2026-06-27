@@ -22,7 +22,7 @@ export default async function EditJobPage({
   const { id } = await params;
   const { supabase, current } = await requireCompany();
 
-  const [{ data: job }, { data: forms }, { data: branches }, { data: roles }, { data: company }, { data: staff }] = await Promise.all([
+  const [{ data: job }, { data: forms }, { data: branches }, { data: roles }, { data: company }, { data: staff }, { data: wfRows }] = await Promise.all([
     supabase
       .from("jobs")
       .select(
@@ -58,9 +58,20 @@ export default async function EditJobPage({
       .from("company_users")
       .select("user_id, profiles(full_name, email)")
       .eq("company_id", current.company_id),
+    supabase
+      .from("onboarding_templates")
+      .select("role_id, workflow_name")
+      .eq("company_id", current.company_id)
+      .eq("is_store", false)
+      .not("role_id", "is", null),
   ]);
 
   if (!job) notFound();
+
+  const wfSeen = new Set<string>();
+  const workflows = ((wfRows ?? []) as { role_id: string | null; workflow_name: string | null }[])
+    .filter((r) => r.role_id && !wfSeen.has(r.role_id) && wfSeen.add(r.role_id))
+    .map((r) => ({ role_id: r.role_id as string, workflow_name: r.workflow_name ?? "Workflow" }));
 
   const owners = (staff ?? []).map((m) => {
     const p = m.profiles as unknown as { full_name: string | null; email: string | null } | null;
@@ -176,6 +187,7 @@ export default async function EditJobPage({
           forms={forms ?? []}
           branches={branches ?? []}
           roles={roles ?? []}
+          workflows={workflows}
           owners={owners}
           defaults={{
             id: job.id,

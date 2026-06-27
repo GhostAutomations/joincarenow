@@ -70,7 +70,6 @@ export default async function FormBuildPage({
       managed={managed}
       questionBank={(bank ?? []) as never}
       defaultLogo={defaultLogo}
-      defaultLogoLabel={companyLogo ? "your company logo" : "the Join Care Now logo"}
     />
   );
 

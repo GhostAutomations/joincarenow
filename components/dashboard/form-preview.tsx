@@ -11,8 +11,12 @@ type FormMeta = {
     title?: { color?: string; size?: string; align?: string };
     description?: { color?: string; size?: string; align?: string };
     logo_url?: string;
+    logo_align?: string;
   };
 };
+
+const justifyCls = (a?: string) =>
+  a === "center" ? "justify-center" : a === "right" ? "justify-end" : "justify-start";
 
 const SIZE_CLASS: Record<string, string> = {
   sm: "text-sm", base: "text-base", lg: "text-lg", xl: "text-xl", "2xl": "text-2xl", "3xl": "text-3xl",
@@ -89,8 +93,10 @@ export function FormPreview({
         </div>
 
         {form.style.logo_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={form.style.logo_url} alt="Logo" className="mb-3 h-12 w-auto" />
+          <div className={`mb-3 flex ${justifyCls(form.style.logo_align)}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={form.style.logo_url} alt="Logo" className="h-12 w-auto" />
+          </div>
         )}
         <h2
           className={`font-bold ${SIZE_CLASS[ts?.size ?? "2xl"]} ${alignCls(ts?.align)}`}

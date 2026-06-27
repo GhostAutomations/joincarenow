@@ -72,6 +72,7 @@ type FormMeta = {
     title?: { color?: string; size?: string; align?: string };
     description?: { color?: string; size?: string; align?: string };
     logo_url?: string;
+    logo_align?: string;
   };
 };
 
@@ -118,17 +119,14 @@ export function JcnFormBuilder({
   managed,
   questionBank = [],
   defaultLogo = null,
-  defaultLogoLabel = "the Join Care Now logo",
 }: {
   form: FormMeta;
   fields: BuilderField[];
   managed?: { branch: string[]; role: string[] };
   questionBank?: QuestionBankItem[];
-  /** Shown when the form has no logo of its own. Store templates default to the
-   *  JCN logo; company forms default to the company's profile logo. Not saved —
-   *  so an acquired form follows the new company's logo automatically. */
+  /** The logo shown on the form — the company's profile logo (or the JCN logo
+   *  for store templates). Not per-form; follows the company's branding. */
   defaultLogo?: string | null;
-  defaultLogoLabel?: string;
 }) {
   const [name, setName] = useState(form.name === "Untitled form" ? "" : form.name);
   const [desc, setDesc] = useState(form.description);
@@ -138,6 +136,7 @@ export function JcnFormBuilder({
   const [dColor, setDColor] = useState(form.style.description?.color ?? "#6b7280");
   const [dSize, setDSize] = useState(form.style.description?.size ?? "sm");
   const [dAlign, setDAlign] = useState(form.style.description?.align ?? "left");
+  const [logoAlign, setLogoAlign] = useState(form.style.logo_align ?? "left");
 
   const [selected, setSelected] = useState<string | null>(null);
   const [openPlus, setOpenPlus] = useState<string | null>(null);
@@ -169,12 +168,13 @@ export function JcnFormBuilder({
           description: { color: dColor, size: dSize, align: dAlign },
           // Forms always use the company logo (or JCN's) — no per-form upload.
           logo_url: defaultLogo ?? "",
+          logo_align: logoAlign,
         },
       });
     }, 700);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [name, desc, tColor, tSize, tAlign, dColor, dSize, dAlign]);
+  }, [name, desc, tColor, tSize, tAlign, dColor, dSize, dAlign, logoAlign]);
 
   const byId = new Map(flds.map((f) => [f.id, f]));
   const ordered = order.map((id) => byId.get(id)).filter(Boolean) as BuilderField[];
@@ -350,29 +350,45 @@ export function JcnFormBuilder({
 
       {/* MIDDLE: canvas */}
       <div className="w-full max-w-2xl rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-6 sm:p-8">
-        {/* logo — always the company logo (or JCN's); no per-form upload */}
+        {/* logo — always the company logo (or JCN's); no per-form upload. Click to align. */}
         {defaultLogo && (
-          <div className="mb-3 flex items-center gap-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={defaultLogo} alt="Logo" className="h-12 w-auto rounded" />
-            <span className="text-xs text-gray-500">Using {defaultLogoLabel}</span>
+          <div className="mb-3">
+            <div
+              onClick={() => setSelected("logo")}
+              className={`flex cursor-pointer ${logoAlign === "center" ? "justify-center" : logoAlign === "right" ? "justify-end" : "justify-start"}`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={defaultLogo} alt="Logo" className="h-12 w-auto rounded" />
+            </div>
+            {selected === "logo" && (
+              <div className="mt-1 flex items-center gap-2 rounded-md bg-gray-50 p-1.5">
+                <span className="text-xs text-gray-500">Logo</span>
+                <div className="flex overflow-hidden rounded border border-gray-300">
+                  {([["left", AlignLeft], ["center", AlignCenter], ["right", AlignRight]] as const).map(([a, Icon]) => (
+                    <button key={a} onClick={() => setLogoAlign(a)} className={`p-1.5 ${logoAlign === a ? "bg-brand-100 text-brand-700" : "bg-white text-gray-500 hover:bg-gray-100"}`} aria-label={`Align logo ${a}`}>
+                      <Icon className="h-3.5 w-3.5" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* title */}
+        {/* title — bordered so it's clearly editable */}
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           onFocus={() => setSelected("title")}
           placeholder="Form title"
           style={{ color: tColor }}
-          className={`block w-full border-0 px-0 font-bold placeholder-gray-300 focus:outline-none focus:ring-0 ${SIZE_CLASS[tSize]} ${alignCls(tAlign)}`}
+          className={`block w-full rounded-lg border border-dashed border-gray-300 bg-white/50 px-3 py-2 font-bold placeholder-gray-400 hover:border-brand-300 focus:border-brand-500 focus:outline-none focus:ring-0 ${SIZE_CLASS[tSize]} ${alignCls(tAlign)}`}
         />
         {selected === "title" && (
           <Toolbar sizes={TITLE_SIZES} size={tSize} setSize={setTSize} color={tColor} setColor={setTColor} align={tAlign} setAlign={setTAlign} />
         )}
 
-        {/* description */}
+        {/* description — bordered so it's clearly editable */}
         <textarea
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
@@ -380,7 +396,7 @@ export function JcnFormBuilder({
           rows={2}
           placeholder="Add a description"
           style={{ color: dColor }}
-          className={`mt-2 block w-full resize-none border-0 px-0 placeholder-gray-300 focus:outline-none focus:ring-0 ${SIZE_CLASS[dSize]} ${alignCls(dAlign)}`}
+          className={`mt-2 block w-full resize-none rounded-lg border border-dashed border-gray-300 bg-white/50 px-3 py-2 placeholder-gray-400 hover:border-brand-300 focus:border-brand-500 focus:outline-none focus:ring-0 ${SIZE_CLASS[dSize]} ${alignCls(dAlign)}`}
         />
         {selected === "description" && (
           <Toolbar sizes={DESC_SIZES} size={dSize} setSize={setDSize} color={dColor} setColor={setDColor} align={dAlign} setAlign={setDAlign} />
@@ -537,7 +553,7 @@ export function JcnFormBuilder({
     </div>
     {showPreview && (
       <FormPreview
-        form={{ name, description: desc, style: { title: { color: tColor, size: tSize, align: tAlign }, description: { color: dColor, size: dSize, align: dAlign }, logo_url: defaultLogo || "" } }}
+        form={{ name, description: desc, style: { title: { color: tColor, size: tSize, align: tAlign }, description: { color: dColor, size: dSize, align: dAlign }, logo_url: defaultLogo || "", logo_align: logoAlign } }}
         fields={previewFields}
         onClose={() => setShowPreview(false)}
         managed={managed}

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
-import { createBlankForm } from "@/modules/forms/actions";
+import { createBlankForm, deleteForm } from "@/modules/forms/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
 import { categoryLabel, sortCategories } from "@/lib/form-categories";
 import { StoreBadge } from "@/components/dashboard/store-badge";
+import { DeleteFormButton } from "@/components/dashboard/delete-form-button";
 
 type FormRow = {
   id: string;
@@ -72,10 +73,10 @@ export default async function FormsPage() {
                   {list.map((f) => {
                     const count = f.form_fields?.[0]?.count ?? 0;
                     return (
-                      <li key={f.id}>
+                      <li key={f.id} className="flex items-center gap-2">
                         <Link
                           href={`/forms/${f.id}`}
-                          className="flex items-center justify-between gap-3 rounded-xl border border-white/40 bg-white/70 backdrop-blur-md p-3.5 hover:border-brand-300"
+                          className="flex flex-1 items-center justify-between gap-3 rounded-xl border border-white/40 bg-white/70 backdrop-blur-md p-3.5 hover:border-brand-300"
                         >
                           <span className="flex items-center gap-2">
                             <span className="font-medium text-gray-900">{f.name}</span>
@@ -85,6 +86,13 @@ export default async function FormsPage() {
                             {count} field{count === 1 ? "" : "s"}
                           </span>
                         </Link>
+                        <DeleteFormButton
+                          action={deleteForm}
+                          formId={f.id}
+                          fieldCount={count}
+                          label="Delete"
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-white/40 bg-white/70 px-3.5 py-3.5 text-sm text-gray-600 backdrop-blur-md hover:border-red-300 hover:text-red-600"
+                        />
                       </li>
                     );
                   })}

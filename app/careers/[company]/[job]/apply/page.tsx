@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ApplyForm, type FormField } from "@/components/careers/apply-form";
+import { FormHeader, type FormHeaderStyle } from "@/components/careers/form-header";
 import { BrandStyle } from "@/components/dashboard/brand-style";
 
 type PublicJob = {
@@ -17,6 +18,7 @@ type PublicProfile = {
   brand_primary: string | null;
   brand_secondary: string | null;
   brand_accent: string | null;
+  logo_url: string | null;
 };
 
 export default async function ApplyPage({
@@ -56,6 +58,11 @@ export default async function ApplyPage({
   });
   const formFields = (fieldsData ?? []) as FormField[];
 
+  // The form's styled header (logo + title + description, with alignment).
+  const { data: formMeta } = await supabase
+    .rpc("get_application_form_meta", { p_job_id: jobData.job_id })
+    .maybeSingle<{ name: string; description: string | null; style: FormHeaderStyle | null }>();
+
   const [{ data: profile }, { data: opts }] = await Promise.all([
     supabase.rpc("get_company_public_profile", { p_slug: company }).maybeSingle<PublicProfile>(),
     supabase
@@ -90,14 +97,20 @@ export default async function ApplyPage({
       </div>
       <div className="mx-auto max-w-2xl px-6 py-8">
 
-        <h1 className="mt-4 text-2xl font-bold tracking-tight text-gray-900">
-          Apply: {jobData.title}
-        </h1>
-        <p className="mt-1 text-sm text-gray-600">
-          at {jobData.company_name}. Signed in as {user.email}.
-        </p>
-
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
+          {formMeta ? (
+            <FormHeader
+              name={formMeta.name}
+              description={formMeta.description}
+              style={formMeta.style}
+              fallbackLogo={profile?.logo_url ?? null}
+            />
+          ) : (
+            <h1 className="mb-4 text-2xl font-bold tracking-tight text-gray-900">Apply: {jobData.title}</h1>
+          )}
+          <p className="mb-6 text-sm text-gray-600">
+            Applying for <span className="font-medium">{jobData.title}</span> at {jobData.company_name}. Signed in as {user.email}.
+          </p>
           <ApplyForm
             jobId={jobData.job_id}
             formFields={formFields}

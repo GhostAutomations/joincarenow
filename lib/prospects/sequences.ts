@@ -46,13 +46,24 @@ export async function sendToProspectContact(
   const subject = renderMergeFields(opts.subject || "A message from Join Care Now", values);
   let body = renderMergeFields(opts.body, values);
 
+  // Inbound enquiries (someone who emailed sales@joincarenow.com) get replied to
+  // FROM that same public address — consistent + better deliverability. Cold
+  // outreach stays on the reputation-isolated outbound domain.
+  const { data: pcSrc } = await db.from("prospect_companies").select("source").eq("id", companyId).single();
+  const isInbound = String((pcSrc as { source?: string } | null)?.source ?? "").toLowerCase().startsWith("inbound");
+
   let result: { ok: boolean; id?: string; error?: string };
   if (channel === "email") {
-    const from = process.env.RESEND_PROSPECT_FROM;
-    if (!from) return { ok: false, error: "RESEND_PROSPECT_FROM not set" };
+    const from = isInbound
+      ? (process.env.RESEND_SALES_FROM || "Join Care Now <sales@joincarenow.com>")
+      : process.env.RESEND_PROSPECT_FROM;
+    if (!from) return { ok: false, error: "sending from-address not set" };
+    const replyTo = isInbound
+      ? (process.env.RESEND_SALES_REPLY_TO || "sales@joincarenow.com")
+      : process.env.RESEND_PROSPECT_REPLY_TO;
     const built = buildProspectEmail(body, `${BASE_URL}/unsubscribe/${contact.unsub_token}`);
     body = built.text;
-    result = await sendEmail({ to, subject, text: built.text, html: built.html, from, replyTo: process.env.RESEND_PROSPECT_REPLY_TO });
+    result = await sendEmail({ to, subject, text: built.text, html: built.html, from, replyTo });
   } else {
     body += "\n\nReply STOP to opt out.";
     result = await sendSms({ to, body });

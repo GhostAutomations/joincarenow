@@ -6,7 +6,7 @@ import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { addTemplateTasks, type TaskDraft } from "@/modules/onboarding/actions";
 
 const cls =
-  "mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-md border border-white/60 bg-white/70 backdrop-blur-sm shadow-sm px-2 py-1.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-brand-500 focus:bg-white/90 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 type Box = {
   taskType: string;
@@ -108,7 +108,7 @@ export function AddTemplateTask({
         <button
           type="button"
           onClick={reset}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-green-300 bg-white px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-green-300 bg-white/80 backdrop-blur-sm px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100"
         >
           <Plus className="h-4 w-4" /> Create another workflow
         </button>
@@ -148,7 +148,7 @@ export function AddTemplateTask({
 
       {/* One box per task. */}
       {boxes.map((b, i) => (
-        <div key={i} className="relative space-y-3 rounded-lg border border-gray-200 bg-white p-3">
+        <div key={i} className="relative space-y-3 rounded-lg border border-white/50 bg-white/50 backdrop-blur-sm p-3">
           {boxes.length > 1 && (
             <button
               type="button"
@@ -198,7 +198,7 @@ export function AddTemplateTask({
                   No forms yet — create one in Forms first.
                 </p>
               ) : (
-                <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-gray-300 bg-white p-2">
+                <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 backdrop-blur-sm p-2">
                   {forms.map((f) => (
                     <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
                       <input
@@ -249,7 +249,7 @@ export function AddTemplateTask({
           type="button"
           onClick={() => setBoxes((bs) => [...bs, blankBox()])}
           aria-label="Add another task"
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:border-brand-400 hover:text-brand-600"
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/70 backdrop-blur-sm text-gray-600 hover:border-brand-400 hover:text-brand-600"
         >
           <Plus className="h-4 w-4" />
         </button>

@@ -117,6 +117,38 @@ export async function setStoreWorkflowPublished(formData: FormData) {
   }
 }
 
+/** Founder: archive a whole store workflow into a folder. Archived workflows
+ *  drop out of the active list AND the company-setup apply picker, so the
+ *  founder doesn't pick the wrong one. Decoupled from companies (their copies
+ *  are independent), so this never changes a company's workflow. */
+export async function archiveStoreWorkflow(formData: FormData) {
+  const { supabase } = await requirePlatformAdmin();
+  const workflowId = String(formData.get("workflowId") ?? "");
+  const folder = String(formData.get("folder") ?? "").trim().slice(0, 80);
+  if (!workflowId || folder.length < 1) return;
+
+  await supabase
+    .from("onboarding_templates")
+    .update({ store_archived: true, store_folder: folder })
+    .eq("workflow_id", workflowId)
+    .eq("is_store", true);
+  revalidatePath("/founder/workflows");
+}
+
+/** Founder: restore an archived store workflow back to the active list. */
+export async function unarchiveStoreWorkflow(formData: FormData) {
+  const { supabase } = await requirePlatformAdmin();
+  const workflowId = String(formData.get("workflowId") ?? "");
+  if (workflowId) {
+    await supabase
+      .from("onboarding_templates")
+      .update({ store_archived: false, store_folder: null })
+      .eq("workflow_id", workflowId)
+      .eq("is_store", true);
+    revalidatePath("/founder/workflows");
+  }
+}
+
 /** Founder: copy a published store workflow into a company, bound to a role.
  *  Deep-copies any store forms the steps use (decoupled, source_form_id set) and
  *  creates the company's own onboarding_templates. The company owns the copy.

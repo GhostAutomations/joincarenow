@@ -1,12 +1,15 @@
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, RotateCcw } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { AddTemplateTask } from "@/components/dashboard/add-template-task";
 import { WorkflowCard } from "@/components/dashboard/workflow-card";
+import { ArchiveWorkflowButton } from "@/components/founder/archive-workflow-button";
+import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
 import {
   addStoreWorkflowTasks,
   deleteStoreWorkflow,
   deleteStoreWorkflowStep,
   setStoreWorkflowPublished,
+  unarchiveStoreWorkflow,
 } from "@/modules/workflows/actions";
 
 const TYPE_LABEL: Record<string, string> = { form: "Form", document: "Document upload", acknowledge: "Read & confirm" };
@@ -24,7 +27,7 @@ export default async function FounderWorkflowsPage() {
   const [{ data: rows }, { data: forms }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, form_id, trigger_stage, required, due_days, position, workflow_id, workflow_name, store_published")
+      .select("id, title, task_type, form_id, trigger_stage, required, due_days, position, workflow_id, workflow_name, store_published, store_archived, store_folder")
       .eq("is_store", true)
       .order("workflow_id", { ascending: true })
       .order("position", { ascending: true }),
@@ -34,15 +37,29 @@ export default async function FounderWorkflowsPage() {
   type Row = {
     id: string; title: string; task_type: string; trigger_stage: string | null;
     required: boolean; due_days: number | null; workflow_id: string; workflow_name: string;
-    store_published: boolean;
+    store_published: boolean; store_archived: boolean; store_folder: string | null;
   };
-  const map = new Map<string, { id: string; name: string; published: boolean; items: Row[] }>();
+  type Wf = { id: string; name: string; published: boolean; archived: boolean; folder: string | null; items: Row[] };
+  const map = new Map<string, Wf>();
   for (const r of (rows ?? []) as Row[]) {
-    const wf = map.get(r.workflow_id) ?? { id: r.workflow_id, name: r.workflow_name, published: r.store_published, items: [] };
+    const wf = map.get(r.workflow_id) ?? {
+      id: r.workflow_id, name: r.workflow_name, published: r.store_published,
+      archived: r.store_archived, folder: r.store_folder, items: [],
+    };
     wf.items.push(r);
     map.set(r.workflow_id, wf);
   }
-  const workflows = [...map.values()];
+  const allWorkflows = [...map.values()];
+  const workflows = allWorkflows.filter((w) => !w.archived);
+  const archived = allWorkflows.filter((w) => w.archived);
+
+  // Existing folder names (for the archive dialog) + archived grouped by folder.
+  const folders = [...new Set(archived.map((w) => w.folder || "Unfiled"))].sort((a, b) => a.localeCompare(b));
+  const archivedByFolder = new Map<string, Wf[]>();
+  for (const w of archived) {
+    const key = w.folder || "Unfiled";
+    archivedByFolder.set(key, [...(archivedByFolder.get(key) ?? []), w]);
+  }
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -65,13 +82,16 @@ export default async function FounderWorkflowsPage() {
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${wf.published ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"}`}>
                     {wf.published ? "Live" : "Draft"}
                   </span>
-                  <form action={setStoreWorkflowPublished}>
-                    <input type="hidden" name="workflowId" value={wf.id} />
-                    <input type="hidden" name="publish" value={(!wf.published).toString()} />
-                    <button className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
-                      {wf.published ? <><EyeOff className="h-4 w-4" /> Unpublish</> : <><Eye className="h-4 w-4" /> Publish</>}
-                    </button>
-                  </form>
+                  <div className="flex items-center gap-2">
+                    <ArchiveWorkflowButton workflowId={wf.id} folders={folders} />
+                    <form action={setStoreWorkflowPublished}>
+                      <input type="hidden" name="workflowId" value={wf.id} />
+                      <input type="hidden" name="publish" value={(!wf.published).toString()} />
+                      <button className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white/70 px-3 py-1.5 text-sm text-gray-700 hover:bg-white">
+                        {wf.published ? <><EyeOff className="h-4 w-4" /> Unpublish</> : <><Eye className="h-4 w-4" /> Publish</>}
+                      </button>
+                    </form>
+                  </div>
                 </div>
                 <WorkflowCard
                   name={wf.name}
@@ -104,6 +124,52 @@ export default async function FounderWorkflowsPage() {
           />
         </div>
       </section>
+
+      {archived.length > 0 && (
+        <section className="mt-6 rounded-2xl border border-white/40 bg-white/70 p-6 shadow-sm backdrop-blur-md">
+          <h2 className="text-base font-medium text-gray-900">Archived</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Organised in folders, hidden from company setup. Restore one to make it available again.
+          </p>
+
+          <div className="mt-4 space-y-3">
+            {[...archivedByFolder.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([folder, list]) => (
+              <CollapsibleSection key={folder} title={folder} count={list.length}>
+                <div className="space-y-3">
+                  {list.map((wf) => (
+                    <div key={wf.id} className="rounded-xl border border-white/40 p-3">
+                      <div className="mb-2 flex items-center justify-end">
+                        <form action={unarchiveStoreWorkflow}>
+                          <input type="hidden" name="workflowId" value={wf.id} />
+                          <button className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white/70 px-3 py-1.5 text-sm text-gray-700 hover:bg-white">
+                            <RotateCcw className="h-4 w-4" /> Restore
+                          </button>
+                        </form>
+                      </div>
+                      <WorkflowCard
+                        name={wf.name}
+                        subtitle={`${wf.items.length} task${wf.items.length === 1 ? "" : "s"}`}
+                        workflowId={wf.id}
+                        items={wf.items.map((t) => ({
+                          id: t.id,
+                          title: t.title,
+                          meta:
+                            (TYPE_LABEL[t.task_type] ?? t.task_type) +
+                            (t.trigger_stage ? ` · ${TRIGGER_LABEL[t.trigger_stage] ?? t.trigger_stage}` : "") +
+                            (t.due_days != null ? ` · due within ${t.due_days} day${t.due_days === 1 ? "" : "s"}` : "") +
+                            (!t.required ? " · optional" : ""),
+                        }))}
+                        deleteWorkflow={deleteStoreWorkflow}
+                        deleteTask={deleteStoreWorkflowStep}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleSection>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

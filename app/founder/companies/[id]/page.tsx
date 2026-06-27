@@ -35,6 +35,7 @@ export default async function CompanySetupPage({
       .select("workflow_id, workflow_name, store_category, store_description, position")
       .eq("is_store", true)
       .eq("store_published", true)
+      .eq("store_archived", false)
       .order("workflow_id", { ascending: true })
       .order("position", { ascending: true }),
     db

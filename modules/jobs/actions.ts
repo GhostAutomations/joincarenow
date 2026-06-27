@@ -121,14 +121,20 @@ export async function updateJob(
 
   const { supabase, current } = await requireCompany();
 
-  // Capture the previous owner so we can audit a transfer.
+  // Capture the previous owner (audit transfers) and contract (so a form that no
+  // longer manages contracts/policies doesn't wipe what's already set).
   const { data: before } = await supabase
     .from("jobs")
-    .select("owner_id")
+    .select("owner_id, contract_template_id")
     .eq("id", id)
     .eq("company_id", current.company_id)
     .maybeSingle();
   const newOwner = parsed.data.owner_id || (before?.owner_id as string | null) || null;
+  // Contracts and policies now live on the workflow, so the job builder no longer
+  // submits them. When the field is absent, keep the existing value.
+  const newContract = formData.has("contract_template_id")
+    ? parsed.data.contract_template_id || null
+    : ((before?.contract_template_id as string | null) ?? null);
 
   const { error } = await supabase
     .from("jobs")
@@ -143,7 +149,7 @@ export async function updateJob(
       vacancies: parsed.data.vacancies,
       closing_date: parsed.data.closing_date || null,
       application_form_id: parsed.data.application_form_id || null,
-      contract_template_id: parsed.data.contract_template_id || null,
+      contract_template_id: newContract,
       owner_id: newOwner,
     })
     .eq("id", id)
@@ -163,7 +169,11 @@ export async function updateJob(
     });
   }
 
-  await syncJobPolicies(supabase, id, formData.getAll("policy_ids").map(String));
+  // Only touch policies if the form actually manages them (it no longer does);
+  // otherwise leave the existing acknowledgements untouched.
+  if (formData.has("policy_ids")) {
+    await syncJobPolicies(supabase, id, formData.getAll("policy_ids").map(String));
+  }
 
   revalidatePath("/jobs");
   revalidatePath(`/jobs/${id}`);

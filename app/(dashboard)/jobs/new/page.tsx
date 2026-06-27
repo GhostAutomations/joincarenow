@@ -7,12 +7,10 @@ import { JobForm } from "@/components/dashboard/job-form";
 export default async function NewJobPage() {
   // Guard: only company members reach this.
   const { supabase, current } = await requireCompany();
-  const [{ data: forms }, { data: branches }, { data: roles }, { data: contracts }, { data: policies }, { data: staff }] = await Promise.all([
+  const [{ data: forms }, { data: branches }, { data: roles }, { data: staff }] = await Promise.all([
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).eq("category", "application").order("name"),
     supabase.from("branches").select("id, name, kind").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("id, name, team").eq("company_id", current.company_id).order("team").order("position").order("name"),
-    supabase.from("contract_templates").select("id, name").eq("company_id", current.company_id).order("name"),
-    supabase.from("policy_documents").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("company_users").select("user_id, profiles(full_name, email)").eq("company_id", current.company_id),
   ]);
   const owners = (staff ?? []).map((m) => {
@@ -37,7 +35,7 @@ export default async function NewJobPage() {
       </p>
 
       <div className="mt-6 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-6">
-        <JobForm action={createJob} submitLabel="Save draft" forms={forms ?? []} branches={branches ?? []} roles={roles ?? []} contracts={contracts ?? []} policies={policies ?? []} owners={owners} />
+        <JobForm action={createJob} submitLabel="Save draft" forms={forms ?? []} branches={branches ?? []} roles={roles ?? []} owners={owners} />
       </div>
     </div>
   );

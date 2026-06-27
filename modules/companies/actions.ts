@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { settingsContext, requireUser, requirePlatformAdmin } from "@/modules/auth/queries";
+import { settingsContext, requireUser, requirePlatformAdmin, requireCompany } from "@/modules/auth/queries";
 import { slugify } from "@/lib/utils";
 import { seedCompanyStarter } from "@/lib/setup/seed";
 import { sendBrandedEmail } from "@/lib/comms/branded";
@@ -293,6 +293,17 @@ export async function sendAccountReadyEmail(
   await db.from("companies").update({ settings }).eq("id", companyId);
   revalidatePath(`/founder/companies/${companyId}`);
   return { ok: true };
+}
+
+/** Admin: permanently dismiss the dashboard getting-started checklist once all
+ *  its tasks are done. Sets settings.onboarding_done so it never shows again. */
+export async function dismissOnboardingChecklist(): Promise<void> {
+  const { supabase, current } = await requireCompany();
+  if (current.role !== "admin") return;
+  const { data } = await supabase.from("companies").select("settings").eq("id", current.company_id).single();
+  const settings = { ...((data?.settings as Record<string, unknown>) ?? {}), onboarding_done: true };
+  await supabase.from("companies").update({ settings }).eq("id", current.company_id);
+  revalidatePath("/dashboard");
 }
 
 // ---------- Company profile: interview address ----------

@@ -36,6 +36,7 @@ export default async function DashboardPage() {
     .from("companies").select("created_at, settings").eq("id", cid).single();
   const fbOpen = feedbackOpen(companyRow?.created_at as string | undefined);
   const isAdmin = current.role === "admin";
+  const onboardingDismissed = (companyRow?.settings as { onboarding_done?: boolean } | null)?.onboarding_done === true;
 
   // Admin-only "getting started" checklist — reflects the pre-loaded starter
   // pack and what's left to make the account their own. Hidden once complete.
@@ -98,7 +99,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* getting-started checklist (admins, until complete) */}
-        {isAdmin && <GettingStartedChecklist items={checklist} />}
+        {isAdmin && <GettingStartedChecklist items={checklist} dismissed={onboardingDismissed} />}
 
         {/* app grid */}
         <p className="mt-8 text-sm font-medium text-white/70">Your workspace</p>

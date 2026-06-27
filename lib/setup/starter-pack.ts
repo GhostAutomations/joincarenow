@@ -37,7 +37,7 @@ export const STARTER_FORMS: StarterForm[] = [
     key: "care_application",
     name: "Care Worker Application",
     purpose: "application",
-    category: "recruitment",
+    category: "application",
     description: "",
     fields: [
       { label: "First name", field_type: "short_text", required: true },

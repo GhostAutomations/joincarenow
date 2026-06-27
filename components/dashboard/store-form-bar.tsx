@@ -13,6 +13,7 @@ import {
 import { TIERS, TIER_LABEL } from "@/modules/forms/tiers";
 
 const CATEGORIES: { value: string; label: string }[] = [
+  { value: "application", label: "Application forms" },
   { value: "recruitment", label: "Recruitment" },
   { value: "onboarding", label: "Onboarding" },
   { value: "referencing", label: "Referencing" },

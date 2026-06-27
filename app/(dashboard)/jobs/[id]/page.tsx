@@ -35,6 +35,7 @@ export default async function EditJobPage({
       .from("forms")
       .select("id, name")
       .eq("company_id", current.company_id)
+      .eq("category", "application")
       .order("name"),
     supabase
       .from("branches")

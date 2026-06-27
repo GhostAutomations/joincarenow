@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { openBuilder, type DetailsState } from "@/modules/forms/actions";
 
 const CATEGORIES: { value: string; label: string }[] = [
+  { value: "application", label: "Application forms" },
   { value: "recruitment", label: "Recruitment" },
   { value: "onboarding", label: "Onboarding" },
   { value: "referencing", label: "Referencing" },

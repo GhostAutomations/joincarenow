@@ -8,7 +8,7 @@ export default async function NewJobPage() {
   // Guard: only company members reach this.
   const { supabase, current } = await requireCompany();
   const [{ data: forms }, { data: branches }, { data: roles }, { data: contracts }, { data: policies }, { data: staff }] = await Promise.all([
-    supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("forms").select("id, name").eq("company_id", current.company_id).eq("category", "application").order("name"),
     supabase.from("branches").select("id, name, kind").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("id, name, team").eq("company_id", current.company_id).order("team").order("position").order("name"),
     supabase.from("contract_templates").select("id, name").eq("company_id", current.company_id).order("name"),

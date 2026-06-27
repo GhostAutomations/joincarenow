@@ -115,7 +115,7 @@ export function JobForm({
             defaultValue={defaults?.owner_id ?? ""}
             className={inputClass}
           >
-            {!defaults?.owner_id && <option value="">Me</option>}
+            {!defaults?.owner_id && <option value="">Select role owner</option>}
             {owners.map((o) => (
               <option key={o.user_id} value={o.user_id}>
                 {o.name}
@@ -320,7 +320,9 @@ export function JobForm({
           ))}
         </select>
         <p className="mt-1 text-xs text-gray-500">
-          Optional. Adds your custom questions on top of the built-in basics.
+          {forms.length === 0
+            ? "Optional. Only forms in the “Application forms” category appear here — set a form’s category to “Application forms” to use it. Otherwise applicants fill the built-in basics."
+            : "Optional. Adds your custom questions on top of the built-in basics. Only forms in the “Application forms” category are listed."}
         </p>
       </div>
 

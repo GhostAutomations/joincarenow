@@ -2,6 +2,7 @@
 // call them during render. The collapsible UI lives in a separate client file.
 
 const CATEGORY_LABEL: Record<string, string> = {
+  application: "Application forms",
   recruitment: "Recruitment",
   hr: "HR",
   onboarding: "Onboarding",
@@ -10,7 +11,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 /** The canonical category order; unknown categories are appended. */
-export const CATEGORY_ORDER = ["recruitment", "onboarding", "referencing", "hr", "other"];
+export const CATEGORY_ORDER = ["application", "recruitment", "onboarding", "referencing", "hr", "other"];
 
 export function categoryLabel(key: string): string {
   return CATEGORY_LABEL[key] ?? key.charAt(0).toUpperCase() + key.slice(1);

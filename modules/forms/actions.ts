@@ -130,7 +130,7 @@ export async function createBlankForm() {
   redirect(`/forms/${data.id}`);
 }
 
-const CATEGORIES = ["recruitment", "hr", "onboarding", "referencing", "other"];
+const CATEGORIES = ["application", "recruitment", "hr", "onboarding", "referencing", "other"];
 
 export type DetailsState = { error?: string; ok?: boolean } | undefined;
 

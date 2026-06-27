@@ -46,6 +46,11 @@ export function StoreFormBar({
   const clickedSave = useRef(false);
   const [showRegen, setShowRegen] = useState(false);
   const [brief, setBrief] = useState("");
+  // Controlled so React 19's post-action form reset doesn't snap these back to
+  // their defaults (that was making the category jump back to "Recruitment").
+  const [nameV, setNameV] = useState(name === "Untitled form" ? "" : name);
+  const [categoryV, setCategoryV] = useState(category || "");
+  const [tierV, setTierV] = useState(storeTier);
 
   useEffect(() => {
     if (saveState?.ok && clickedSave.current) {
@@ -80,18 +85,28 @@ export function StoreFormBar({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.4fr_1fr_1fr]">
           <label className="text-sm font-medium text-gray-700">
             Form name
-            <input name="name" defaultValue={name === "Untitled form" ? "" : name} placeholder="e.g. P46 starter form" onBlur={autosave} className={cls} />
+            <input name="name" value={nameV} onChange={(e) => setNameV(e.target.value)} placeholder="e.g. P46 starter form" onBlur={autosave} className={cls} />
           </label>
           <label className="text-sm font-medium text-gray-700">
             Category
-            <select name="category" defaultValue={category || ""} onBlur={autosave} onChange={autosave} className={cls}>
+            <select
+              name="category"
+              value={categoryV}
+              onChange={(e) => { setCategoryV(e.target.value); e.currentTarget.form?.requestSubmit(); }}
+              className={cls}
+            >
               <option value="" disabled>Select a category…</option>
               {CATEGORIES.map((c) => (<option key={c.value} value={c.value}>{c.label}</option>))}
             </select>
           </label>
           <label className="text-sm font-medium text-gray-700">
             Required plan
-            <select name="storeTier" defaultValue={storeTier} onChange={autosave} className={cls}>
+            <select
+              name="storeTier"
+              value={tierV}
+              onChange={(e) => { setTierV(e.target.value); e.currentTarget.form?.requestSubmit(); }}
+              className={cls}
+            >
               {TIERS.map((t) => (<option key={t} value={t}>{TIER_LABEL[t]}</option>))}
             </select>
           </label>

@@ -16,7 +16,9 @@ export type TaskDraft = {
   required: boolean;
   body: string;
   triggerStage: string;
-  roleId: string;
+  /** Workflow-level role association. Company: role UUIDs. Founder store:
+   *  standard role names. Empty = applies to all roles. */
+  roleValues: string[];
 };
 
 /** Add one or more workflow tasks at once. Each form task expands to one task
@@ -64,12 +66,14 @@ export async function addTemplateTasks(
   // One workflow id/name shared by every task created in this submission.
   const workflowId = crypto.randomUUID();
   const workflowName = (drafts[0]?.title ?? "Workflow").trim();
+  // Workflow-level role association (company role UUIDs). Empty = all roles.
+  const roleIds = [...new Set((drafts[0]?.roleValues ?? []).filter(Boolean))];
+  const role_ids = roleIds.length ? roleIds : null;
 
   const rows: Record<string, unknown>[] = [];
   for (const d of drafts) {
     const dueDays = d.dueDays === "" ? null : Math.max(0, parseInt(d.dueDays, 10) || 0);
     const body = (d.body ?? "").trim() || null;
-    const roleId = d.roleId || null;
     if (d.taskType === "form") {
       for (const fid of d.formIds) {
         rows.push({
@@ -81,7 +85,8 @@ export async function addTemplateTasks(
           required: d.required,
           due_days: dueDays,
           trigger_stage: d.triggerStage,
-          role_id: roleId,
+          role_id: null,
+          role_ids,
           workflow_id: workflowId,
           workflow_name: workflowName,
           position: pos++,
@@ -97,7 +102,8 @@ export async function addTemplateTasks(
         required: d.required,
         due_days: dueDays,
         trigger_stage: d.triggerStage,
-        role_id: roleId,
+        role_id: null,
+        role_ids,
         workflow_id: workflowId,
         workflow_name: workflowName,
         position: pos++,
@@ -303,25 +309,25 @@ export async function renameWorkflow(workflowId: string, name: string): Promise<
   return { ok: true };
 }
 
-/** Reassign which role a workflow applies to (company-scoped). null = all roles. */
-export async function setWorkflowRole(workflowId: string, roleId: string | null): Promise<{ ok?: boolean; error?: string }> {
+/** Reassign which roles a workflow applies to (company-scoped). Empty = all. */
+export async function setWorkflowRoles(workflowId: string, roleIds: string[]): Promise<{ ok?: boolean; error?: string }> {
   const { supabase, current } = await requireCompany();
   if (!workflowId) return { error: "Missing workflow" };
-  if (roleId) {
-    const { data: r } = await supabase
+  const clean = [...new Set((roleIds ?? []).filter(Boolean))];
+  if (clean.length) {
+    const { data: valid } = await supabase
       .from("roles")
       .select("id")
-      .eq("id", roleId)
       .eq("company_id", current.company_id)
-      .maybeSingle();
-    if (!r) return { error: "Role not found" };
+      .in("id", clean);
+    if ((valid?.length ?? 0) !== clean.length) return { error: "One or more roles not found" };
   }
   const { error } = await supabase
     .from("onboarding_templates")
-    .update({ role_id: roleId })
+    .update({ role_ids: clean.length ? clean : null, role_id: null })
     .eq("workflow_id", workflowId)
     .eq("company_id", current.company_id);
-  if (error) return { error: "Could not update the role." };
+  if (error) return { error: "Could not update the roles." };
   revalidatePath("/onboarding-board");
   return { ok: true };
 }

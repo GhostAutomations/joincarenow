@@ -6,7 +6,7 @@ import {
   updateTemplateTask,
   renameWorkflow,
   reorderTemplateTasks,
-  setWorkflowRole,
+  setWorkflowRoles,
 } from "@/modules/onboarding/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AddTemplateTask } from "@/components/dashboard/add-template-task";
@@ -21,7 +21,7 @@ export default async function OnboardingBoardPage() {
   const [{ data: templates }, { data: forms }, { data: roles }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, workflow_id, workflow_name, position")
+      .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, role_ids, workflow_id, workflow_name, position")
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
@@ -41,6 +41,7 @@ export default async function OnboardingBoardPage() {
     body: string | null;
     form_id: string | null;
     role_id: string | null;
+    role_ids: string[] | null;
     workflow_id: string | null;
     workflow_name: string | null;
     position: number;
@@ -51,22 +52,27 @@ export default async function OnboardingBoardPage() {
   }));
   const wfMap = new Map<
     string,
-    { id: string | null; name: string; role_id: string | null; items: Tpl[] }
+    { id: string | null; name: string; roleIds: string[]; items: Tpl[] }
   >();
   for (const t of (templates ?? []) as unknown as Tpl[]) {
     const wid = t.workflow_id ?? null;
     const key = wid ?? `solo-${t.id}`;
+    // role_ids is the new set; fall back to legacy single role_id.
+    const roleIds = (t.role_ids && t.role_ids.length ? t.role_ids : (t.role_id ? [t.role_id] : []));
     const g =
       wfMap.get(key) ?? {
         id: wid,
         name: t.workflow_name ?? t.title,
-        role_id: t.role_id ?? null,
+        roleIds,
         items: [],
       };
     g.items.push(t);
     wfMap.set(key, g);
   }
   const workflows = [...wfMap.values()];
+  const roleOptions = (roles ?? []).map((r) => ({ value: String(r.id), label: String(r.name) }));
+  const rolesLabel = (ids: string[]) =>
+    ids.map((id) => roleName.get(id) ?? "role").join(", ");
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -88,7 +94,7 @@ export default async function OnboardingBoardPage() {
                 <WorkflowCard
                   key={gi}
                   name={wf.name}
-                  subtitle={`${wf.role_id ? `${roleName.get(wf.role_id) ?? "role"} · ` : ""}${wf.items.length} task${wf.items.length === 1 ? "" : "s"}`}
+                  subtitle={`${wf.roleIds.length ? `${rolesLabel(wf.roleIds)} · ` : ""}${wf.items.length} task${wf.items.length === 1 ? "" : "s"}`}
                   workflowId={wf.id}
                   items={toTasks(wf.items)}
                   forms={(forms ?? []) as { id: string; name: string }[]}
@@ -97,16 +103,18 @@ export default async function OnboardingBoardPage() {
                   updateTask={updateTemplateTask}
                   renameWorkflow={renameWorkflow}
                   reorderTasks={reorderTemplateTasks}
-                  roleOptions={(roles ?? []).map((r) => ({ id: String(r.id), name: String(r.name) }))}
-                  currentRoleId={wf.role_id}
-                  setWorkflowRole={setWorkflowRole}
+                  roleControl={wf.id ? {
+                    options: roleOptions,
+                    selected: wf.roleIds,
+                    save: (vals) => setWorkflowRoles(wf.id as string, vals),
+                  } : undefined}
                 />
               ))}
             </div>
           )}
 
           <div className="mt-4 rounded-lg border border-dashed border-gray-300 p-4">
-            <AddTemplateTask forms={forms ?? []} roles={roles ?? []} />
+            <AddTemplateTask forms={forms ?? []} roleOptions={roleOptions} />
           </div>
         </section>
       )}

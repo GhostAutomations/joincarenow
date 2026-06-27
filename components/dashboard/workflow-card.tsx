@@ -66,9 +66,7 @@ export function WorkflowCard({
   updateTask,
   renameWorkflow,
   reorderTasks,
-  roleOptions,
-  currentRoleId,
-  setWorkflowRole,
+  roleControl,
 }: {
   name: string;
   subtitle: string;
@@ -80,10 +78,13 @@ export function WorkflowCard({
   updateTask: (input: EditInput) => Promise<{ ok?: boolean; error?: string }>;
   renameWorkflow: (workflowId: string, name: string) => Promise<{ ok?: boolean; error?: string }>;
   reorderTasks: (ids: string[]) => Promise<{ ok?: boolean }>;
-  /** Company only: lets you reassign which role the workflow applies to. */
-  roleOptions?: { id: string; name: string }[];
-  currentRoleId?: string | null;
-  setWorkflowRole?: (workflowId: string, roleId: string | null) => Promise<{ ok?: boolean; error?: string }>;
+  /** Multi-select role association. Company: role UUIDs. Founder: standard names. */
+  roleControl?: {
+    options: { value: string; label: string }[];
+    selected: string[];
+    save: (values: string[]) => Promise<{ ok?: boolean; error?: string }>;
+    label?: string;
+  };
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -92,6 +93,22 @@ export function WorkflowCard({
   const [edit, setEdit] = useState<EditInput | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [roleSel, setRoleSel] = useState<string[]>(roleControl?.selected ?? []);
+  const [roleDirty, setRoleDirty] = useState(false);
+
+  function toggleRole(value: string) {
+    setRoleDirty(true);
+    setRoleSel((rs) => (rs.includes(value) ? rs.filter((v) => v !== value) : [...rs, value]));
+  }
+  async function saveRoles() {
+    if (!roleControl) return;
+    setBusy(true); setErr(null);
+    const res = await roleControl.save(roleSel);
+    setBusy(false);
+    if (res?.error) { setErr(res.error); return; }
+    setRoleDirty(false);
+    router.refresh();
+  }
 
   async function move(index: number, dir: -1 | 1) {
     const j = index + dir;
@@ -135,15 +152,6 @@ export function WorkflowCard({
     setBusy(false);
     if (res?.error) { setErr(res.error); return; }
     setEditingName(false);
-    router.refresh();
-  }
-
-  async function changeRole(roleId: string | null) {
-    if (!workflowId || !setWorkflowRole) return;
-    setBusy(true); setErr(null);
-    const res = await setWorkflowRole(workflowId, roleId);
-    setBusy(false);
-    if (res?.error) { setErr(res.error); return; }
     router.refresh();
   }
 
@@ -191,18 +199,25 @@ export function WorkflowCard({
 
       {open && (
         <>
-          {workflowId && setWorkflowRole && roleOptions && (
-            <div className="flex items-center gap-2 border-t border-white/50 px-3 py-2 text-xs text-gray-600">
-              <span className="font-medium">Applies to role:</span>
-              <select
-                value={currentRoleId ?? ""}
-                onChange={(e) => changeRole(e.target.value || null)}
-                disabled={busy}
-                className="rounded-md border border-white/60 bg-white/70 px-2 py-1 text-sm text-gray-900"
-              >
-                <option value="">All roles</option>
-                {roleOptions.map((r) => (<option key={r.id} value={r.id}>{r.name}</option>))}
-              </select>
+          {workflowId && roleControl && (
+            <div className="border-t border-white/50 px-3 py-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-gray-600">{roleControl.label ?? "Applies to roles"}</span>
+                {roleDirty && (
+                  <button type="button" onClick={saveRoles} disabled={busy} className="rounded-md bg-brand-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-60">
+                    {busy ? "Saving…" : "Save roles"}
+                  </button>
+                )}
+              </div>
+              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                {roleControl.options.map((r) => (
+                  <label key={r.value} className="flex items-center gap-1.5 text-sm text-gray-700">
+                    <input type="checkbox" checked={roleSel.includes(r.value)} onChange={() => toggleRole(r.value)} className="h-4 w-4 rounded border-gray-300 text-brand-600" />
+                    {r.label}
+                  </label>
+                ))}
+              </div>
+              <span className="mt-1 block text-[11px] text-gray-400">None selected = applies to all roles.</span>
             </div>
           )}
 

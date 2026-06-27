@@ -26,22 +26,24 @@ const blankBox = (): Box => ({
 
 export function AddTemplateTask({
   forms,
-  roles,
+  roleOptions = [],
   saveAction = addTemplateTasks,
   showRole = true,
+  roleLabel = "Applies to roles",
 }: {
   forms: { id: string; name: string }[];
-  roles: { id: string; name: string }[];
+  /** Company: value = role UUID. Founder store: value = standard role name. */
+  roleOptions?: { value: string; label: string }[];
   /** Server action that saves the drafts. Defaults to the company workflow
    *  builder; the Founder workflow store passes its own store-saving action. */
   saveAction?: (drafts: TaskDraft[]) => Promise<{ ok?: boolean; error?: string }>;
-  /** Founder store workflows are role-agnostic (role is bound on apply). */
   showRole?: boolean;
+  roleLabel?: string;
 }) {
   const router = useRouter();
   // Workflow-level (shared across all tasks in this workflow).
   const [title, setTitle] = useState("");
-  const [roleId, setRoleId] = useState("");
+  const [roleValues, setRoleValues] = useState<string[]>([]);
   const [body, setBody] = useState("");
   // The repeatable task boxes.
   const [boxes, setBoxes] = useState<Box[]>([blankBox()]);
@@ -51,11 +53,15 @@ export function AddTemplateTask({
 
   function reset() {
     setTitle("");
-    setRoleId("");
+    setRoleValues([]);
     setBody("");
     setBoxes([blankBox()]);
     setCreated(false);
     setError(null);
+  }
+
+  function toggleRole(value: string) {
+    setRoleValues((rs) => (rs.includes(value) ? rs.filter((v) => v !== value) : [...rs, value]));
   }
 
   function updateBox(i: number, patch: Partial<Box>) {
@@ -86,7 +92,7 @@ export function AddTemplateTask({
       required: b.required,
       body,
       triggerStage: b.triggerStage,
-      roleId,
+      roleValues,
     }));
     setSaving(true);
     const res = await saveAction(drafts);
@@ -134,15 +140,27 @@ export function AddTemplateTask({
           />
         </label>
         {showRole && (
-          <label className="text-xs font-medium text-gray-600">
-            Role association
-            <select value={roleId} onChange={(e) => setRoleId(e.target.value)} className={cls}>
-              <option value="">All roles</option>
-              {roles.map((r) => (
-                <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
-          </label>
+          <div className="text-xs font-medium text-gray-600">
+            {roleLabel}
+            <div className="mt-1 max-h-32 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/70 backdrop-blur-sm p-2">
+              {roleOptions.length === 0 ? (
+                <p className="font-normal text-gray-400">No roles yet.</p>
+              ) : (
+                roleOptions.map((r) => (
+                  <label key={r.value} className="flex items-center gap-2 font-normal text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={roleValues.includes(r.value)}
+                      onChange={() => toggleRole(r.value)}
+                      className="h-4 w-4 rounded border-gray-300 text-brand-600"
+                    />
+                    {r.label}
+                  </label>
+                ))
+              )}
+            </div>
+            <span className="mt-1 block text-[11px] font-normal text-gray-400">None selected = all roles.</span>
+          </div>
         )}
       </div>
 

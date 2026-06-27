@@ -13,8 +13,12 @@ import {
   updateStoreWorkflowStep,
   renameStoreWorkflow,
   reorderStoreWorkflowSteps,
+  setStoreWorkflowRoleNames,
 } from "@/modules/workflows/actions";
 import type { WorkflowTask } from "@/components/dashboard/workflow-card";
+import { DEFAULT_ROLES } from "@/lib/setup/starter-pack";
+
+const STANDARD_ROLE_OPTIONS = DEFAULT_ROLES.map((r) => ({ value: r.name, label: r.name }));
 
 export default async function FounderWorkflowsPage() {
   const { supabase } = await requirePlatformAdmin();
@@ -22,7 +26,7 @@ export default async function FounderWorkflowsPage() {
   const [{ data: rows }, { data: forms }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, form_id, body, trigger_stage, required, due_days, position, workflow_id, workflow_name, store_published, store_archived, store_folder")
+      .select("id, title, task_type, form_id, body, trigger_stage, required, due_days, position, workflow_id, workflow_name, store_published, store_archived, store_folder, role_names")
       .eq("is_store", true)
       .order("workflow_id", { ascending: true })
       .order("position", { ascending: true }),
@@ -34,17 +38,18 @@ export default async function FounderWorkflowsPage() {
     required: boolean; due_days: number | null; body: string | null; form_id: string | null;
     workflow_id: string; workflow_name: string;
     store_published: boolean; store_archived: boolean; store_folder: string | null;
+    role_names: string[] | null;
   };
   const toTasks = (rs: Row[]): WorkflowTask[] => rs.map((t) => ({
     id: t.id, title: t.title, task_type: t.task_type, trigger_stage: t.trigger_stage,
     due_days: t.due_days, required: t.required, body: t.body, form_id: t.form_id,
   }));
-  type Wf = { id: string; name: string; published: boolean; archived: boolean; folder: string | null; items: Row[] };
+  type Wf = { id: string; name: string; published: boolean; archived: boolean; folder: string | null; roleNames: string[]; items: Row[] };
   const map = new Map<string, Wf>();
   for (const r of (rows ?? []) as Row[]) {
     const wf = map.get(r.workflow_id) ?? {
       id: r.workflow_id, name: r.workflow_name, published: r.store_published,
-      archived: r.store_archived, folder: r.store_folder, items: [],
+      archived: r.store_archived, folder: r.store_folder, roleNames: r.role_names ?? [], items: [],
     };
     wf.items.push(r);
     map.set(r.workflow_id, wf);
@@ -104,6 +109,12 @@ export default async function FounderWorkflowsPage() {
                   updateTask={updateStoreWorkflowStep}
                   renameWorkflow={renameStoreWorkflow}
                   reorderTasks={reorderStoreWorkflowSteps}
+                  roleControl={{
+                    options: STANDARD_ROLE_OPTIONS,
+                    selected: wf.roleNames,
+                    save: (vals) => setStoreWorkflowRoleNames(wf.id, vals),
+                    label: "Applies to roles (standard)",
+                  }}
                 />
               </div>
             ))}
@@ -114,9 +125,9 @@ export default async function FounderWorkflowsPage() {
           <p className="mb-3 text-sm font-medium text-gray-700">Add a workflow</p>
           <AddTemplateTask
             forms={(forms ?? []) as { id: string; name: string }[]}
-            roles={[]}
+            roleOptions={STANDARD_ROLE_OPTIONS}
+            roleLabel="Applies to roles (standard)"
             saveAction={addStoreWorkflowTasks}
-            showRole={false}
           />
         </div>
       </section>
@@ -153,6 +164,12 @@ export default async function FounderWorkflowsPage() {
                         updateTask={updateStoreWorkflowStep}
                         renameWorkflow={renameStoreWorkflow}
                         reorderTasks={reorderStoreWorkflowSteps}
+                        roleControl={{
+                          options: STANDARD_ROLE_OPTIONS,
+                          selected: wf.roleNames,
+                          save: (vals) => setStoreWorkflowRoleNames(wf.id, vals),
+                          label: "Applies to roles (standard)",
+                        }}
                       />
                     </div>
                   ))}

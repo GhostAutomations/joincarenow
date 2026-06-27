@@ -12,12 +12,18 @@ export default async function NewJobPage() {
     supabase.from("branches").select("id, name, kind").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("id, name, team").eq("company_id", current.company_id).order("team").order("position").order("name"),
     supabase.from("company_users").select("user_id, profiles(full_name, email)").eq("company_id", current.company_id),
-    supabase.from("onboarding_templates").select("role_id, workflow_name").eq("company_id", current.company_id).eq("is_store", false).not("role_id", "is", null),
+    supabase.from("onboarding_templates").select("role_id, role_ids, workflow_name").eq("company_id", current.company_id).eq("is_store", false),
   ]);
-  const wfSeen = new Set<string>();
-  const workflows = ((wfRows ?? []) as { role_id: string | null; workflow_name: string | null }[])
-    .filter((r) => r.role_id && !wfSeen.has(r.role_id) && wfSeen.add(r.role_id))
-    .map((r) => ({ role_id: r.role_id as string, workflow_name: r.workflow_name ?? "Workflow" }));
+  const wfByRole = new Map<string, Set<string>>();
+  for (const r of (wfRows ?? []) as { role_id: string | null; role_ids: string[] | null; workflow_name: string | null }[]) {
+    const rids = r.role_ids && r.role_ids.length ? r.role_ids : (r.role_id ? [r.role_id] : []);
+    for (const rid of rids) {
+      const s = wfByRole.get(rid) ?? new Set<string>();
+      if (r.workflow_name) s.add(r.workflow_name);
+      wfByRole.set(rid, s);
+    }
+  }
+  const workflows = [...wfByRole.entries()].map(([role_id, names]) => ({ role_id, workflow_name: [...names].join(", ") || "Workflow" }));
   const owners = (staff ?? []).map((m) => {
     const p = m.profiles as unknown as { full_name: string | null; email: string | null } | null;
     return { user_id: m.user_id as string, name: p?.full_name || p?.email || "Team member" };

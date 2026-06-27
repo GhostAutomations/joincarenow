@@ -25,6 +25,19 @@ const PERSONAL_EMAIL_DOMAINS = new Set([
   "proton.me", "protonmail.com", "gmx.com", "btinternet.com", "sky.com",
 ]);
 
+/** Equivalent addresses for matching — Apple routes me/mac/icloud to one
+ *  mailbox, so treat them as the same contact (avoids duplicate leads). */
+function emailAliases(email: string): string[] {
+  const at = email.lastIndexOf("@");
+  if (at < 0) return [email];
+  const local = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  if (["me.com", "mac.com", "icloud.com"].includes(domain)) {
+    return ["icloud.com", "me.com", "mac.com"].map((d) => `${local}@${d}`);
+  }
+  return [email];
+}
+
 /** Best company name for a cold lead: their display name, else the email domain
  *  for a business address, else a clear placeholder for personal providers. */
 function leadCompanyName(fromName: string, fromEmail: string): string {
@@ -171,10 +184,11 @@ export async function POST(req: Request) {
 
   // 1) Known prospect? Thread the reply onto its CRM timeline (also auto-stops
   //    any active sequence on the next cron run).
+  const aliasFilter = emailAliases(fromEmail).map((a) => `email.ilike.${a}`).join(",");
   const { data: pContacts } = await admin
     .from("prospect_contacts")
     .select("id, prospect_company_id")
-    .ilike("email", fromEmail)
+    .or(aliasFilter)
     .limit(1);
   const pContact = (pContacts ?? [])[0];
   if (pContact) {

@@ -1,19 +1,29 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { setBranding, type SettingsState } from "@/modules/companies/actions";
+import { LogoCropper } from "@/components/dashboard/logo-cropper";
 
 type Brand = { primary?: string; secondary?: string; accent?: string; logo_url?: string | null };
 
 export function BrandingForm({ companyId, brand, submitLabel = "Save branding" }: { companyId: string; brand: Brand; submitLabel?: string }) {
   const router = useRouter();
   const [state, action] = useActionState<SettingsState, FormData>(setBranding, undefined);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (state?.ok) router.refresh();
   }, [state, router]);
+
+  // The cropper hands back a cropped File; stash it on the hidden file input so
+  // it submits as `logo` with the form (the existing setBranding handling).
+  function onCropped(file: File | null) {
+    if (!fileRef.current) return;
+    const dt = new DataTransfer();
+    if (file) dt.items.add(file);
+    fileRef.current.files = dt.files;
+  }
 
   const swatch = (name: string, label: string, value?: string) => (
     <label className="flex items-center gap-2 text-xs font-medium text-gray-600">
@@ -37,17 +47,11 @@ export function BrandingForm({ companyId, brand, submitLabel = "Save branding" }
 
       <div>
         <p className="text-xs font-medium text-gray-600">Logo</p>
-        {brand.logo_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={brand.logo_url} alt="Current logo" className="mt-2 h-12 w-auto max-w-[180px] rounded bg-white object-contain p-1 ring-1 ring-gray-200" />
-        )}
-        <input
-          type="file"
-          name="logo"
-          accept="image/*"
-          className="mt-2 block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-brand-700"
-        />
-        <p className="mt-1 text-xs text-gray-400">PNG or SVG, under 2MB. Leave empty to keep the current logo.</p>
+        <div className="mt-2">
+          <LogoCropper currentLogoUrl={brand.logo_url} onCropped={onCropped} />
+        </div>
+        {/* Cropped logo is placed here for upload (name="logo"). */}
+        <input ref={fileRef} type="file" name="logo" accept="image/*" className="hidden" />
       </div>
 
       <div className="flex items-center gap-3">

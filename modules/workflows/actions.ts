@@ -149,6 +149,96 @@ export async function unarchiveStoreWorkflow(formData: FormData) {
   }
 }
 
+export type EditStoreStepInput = {
+  id: string;
+  title: string;
+  taskType: string;
+  triggerStage: string;
+  dueDays: string;
+  required: boolean;
+  body: string;
+  formId: string;
+};
+
+/** Founder: edit a single store-workflow step. */
+export async function updateStoreWorkflowStep(input: EditStoreStepInput): Promise<{ ok?: boolean; error?: string }> {
+  const { supabase } = await requirePlatformAdmin();
+  if (!input?.id) return { error: "Missing step" };
+  if (!["form", "document", "acknowledge"].includes(input.taskType)) return { error: "Pick a type" };
+  if (!STAGES.includes(input.triggerStage)) return { error: "Choose when to send it" };
+
+  const dueDays = input.dueDays.trim() === "" ? null : Math.max(0, parseInt(input.dueDays, 10) || 0);
+  const update: Record<string, unknown> = {
+    task_type: input.taskType,
+    trigger_stage: input.triggerStage,
+    required: input.required,
+    due_days: dueDays,
+    body: input.body.trim() || null,
+  };
+
+  if (input.taskType === "form") {
+    if (!input.formId) return { error: "Choose a form for this task" };
+    const { data: f } = await supabase
+      .from("forms")
+      .select("name")
+      .eq("id", input.formId)
+      .eq("is_store", true)
+      .maybeSingle();
+    if (!f) return { error: "Form not found" };
+    update.form_id = input.formId;
+    update.title = (f as { name: string }).name;
+  } else {
+    if (input.title.trim().length < 2) return { error: "Give the task a title" };
+    update.form_id = null;
+    update.title = input.title.trim();
+  }
+
+  const { error } = await supabase
+    .from("onboarding_templates")
+    .update(update)
+    .eq("id", input.id)
+    .eq("is_store", true);
+  if (error) return { error: "Could not save the step." };
+  revalidatePath("/founder/workflows");
+  return { ok: true };
+}
+
+/** Founder: rename a whole store workflow. */
+export async function renameStoreWorkflow(workflowId: string, name: string): Promise<{ ok?: boolean; error?: string }> {
+  const { supabase } = await requirePlatformAdmin();
+  if (!workflowId) return { error: "Missing workflow" };
+  if (name.trim().length < 2) return { error: "Give the workflow a name" };
+  const { error } = await supabase
+    .from("onboarding_templates")
+    .update({ workflow_name: name.trim() })
+    .eq("workflow_id", workflowId)
+    .eq("is_store", true);
+  if (error) return { error: "Could not rename." };
+  revalidatePath("/founder/workflows");
+  return { ok: true };
+}
+
+/** Founder: reorder steps within a store workflow. `ids` in desired order. */
+export async function reorderStoreWorkflowSteps(ids: string[]): Promise<{ ok?: boolean }> {
+  const { supabase } = await requirePlatformAdmin();
+  if (!Array.isArray(ids) || ids.length === 0) return { ok: true };
+  const { data: rows } = await supabase
+    .from("onboarding_templates")
+    .select("position")
+    .in("id", ids)
+    .eq("is_store", true)
+    .order("position", { ascending: true })
+    .limit(1);
+  const base = (rows?.[0]?.position as number | undefined) ?? 0;
+  await Promise.all(
+    ids.map((id, i) =>
+      supabase.from("onboarding_templates").update({ position: base + i }).eq("id", id).eq("is_store", true)
+    )
+  );
+  revalidatePath("/founder/workflows");
+  return { ok: true };
+}
+
 /** Founder: copy a published store workflow into a company, bound to a role.
  *  Deep-copies any store forms the steps use (decoupled, source_form_id set) and
  *  creates the company's own onboarding_templates. The company owns the copy.

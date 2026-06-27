@@ -10,16 +10,11 @@ import {
   deleteStoreWorkflowStep,
   setStoreWorkflowPublished,
   unarchiveStoreWorkflow,
+  updateStoreWorkflowStep,
+  renameStoreWorkflow,
+  reorderStoreWorkflowSteps,
 } from "@/modules/workflows/actions";
-
-const TYPE_LABEL: Record<string, string> = { form: "Form", document: "Document upload", acknowledge: "Read & confirm" };
-const TRIGGER_LABEL: Record<string, string> = {
-  on_application: "On application",
-  reviewing: "Under review",
-  interview: "Interview",
-  offer: "Offer",
-  hired: "Hired",
-};
+import type { WorkflowTask } from "@/components/dashboard/workflow-card";
 
 export default async function FounderWorkflowsPage() {
   const { supabase } = await requirePlatformAdmin();
@@ -27,7 +22,7 @@ export default async function FounderWorkflowsPage() {
   const [{ data: rows }, { data: forms }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, form_id, trigger_stage, required, due_days, position, workflow_id, workflow_name, store_published, store_archived, store_folder")
+      .select("id, title, task_type, form_id, body, trigger_stage, required, due_days, position, workflow_id, workflow_name, store_published, store_archived, store_folder")
       .eq("is_store", true)
       .order("workflow_id", { ascending: true })
       .order("position", { ascending: true }),
@@ -36,9 +31,14 @@ export default async function FounderWorkflowsPage() {
 
   type Row = {
     id: string; title: string; task_type: string; trigger_stage: string | null;
-    required: boolean; due_days: number | null; workflow_id: string; workflow_name: string;
+    required: boolean; due_days: number | null; body: string | null; form_id: string | null;
+    workflow_id: string; workflow_name: string;
     store_published: boolean; store_archived: boolean; store_folder: string | null;
   };
+  const toTasks = (rs: Row[]): WorkflowTask[] => rs.map((t) => ({
+    id: t.id, title: t.title, task_type: t.task_type, trigger_stage: t.trigger_stage,
+    due_days: t.due_days, required: t.required, body: t.body, form_id: t.form_id,
+  }));
   type Wf = { id: string; name: string; published: boolean; archived: boolean; folder: string | null; items: Row[] };
   const map = new Map<string, Wf>();
   for (const r of (rows ?? []) as Row[]) {
@@ -97,17 +97,13 @@ export default async function FounderWorkflowsPage() {
                   name={wf.name}
                   subtitle={`${wf.items.length} task${wf.items.length === 1 ? "" : "s"}`}
                   workflowId={wf.id}
-                  items={wf.items.map((t) => ({
-                    id: t.id,
-                    title: t.title,
-                    meta:
-                      (TYPE_LABEL[t.task_type] ?? t.task_type) +
-                      (t.trigger_stage ? ` · ${TRIGGER_LABEL[t.trigger_stage] ?? t.trigger_stage}` : "") +
-                      (t.due_days != null ? ` · due within ${t.due_days} day${t.due_days === 1 ? "" : "s"}` : "") +
-                      (!t.required ? " · optional" : ""),
-                  }))}
+                  items={toTasks(wf.items)}
+                  forms={(forms ?? []) as { id: string; name: string }[]}
                   deleteWorkflow={deleteStoreWorkflow}
                   deleteTask={deleteStoreWorkflowStep}
+                  updateTask={updateStoreWorkflowStep}
+                  renameWorkflow={renameStoreWorkflow}
+                  reorderTasks={reorderStoreWorkflowSteps}
                 />
               </div>
             ))}
@@ -150,17 +146,13 @@ export default async function FounderWorkflowsPage() {
                         name={wf.name}
                         subtitle={`${wf.items.length} task${wf.items.length === 1 ? "" : "s"}`}
                         workflowId={wf.id}
-                        items={wf.items.map((t) => ({
-                          id: t.id,
-                          title: t.title,
-                          meta:
-                            (TYPE_LABEL[t.task_type] ?? t.task_type) +
-                            (t.trigger_stage ? ` · ${TRIGGER_LABEL[t.trigger_stage] ?? t.trigger_stage}` : "") +
-                            (t.due_days != null ? ` · due within ${t.due_days} day${t.due_days === 1 ? "" : "s"}` : "") +
-                            (!t.required ? " · optional" : ""),
-                        }))}
+                        items={toTasks(wf.items)}
+                        forms={(forms ?? []) as { id: string; name: string }[]}
                         deleteWorkflow={deleteStoreWorkflow}
                         deleteTask={deleteStoreWorkflowStep}
+                        updateTask={updateStoreWorkflowStep}
+                        renameWorkflow={renameStoreWorkflow}
+                        reorderTasks={reorderStoreWorkflowSteps}
                       />
                     </div>
                   ))}

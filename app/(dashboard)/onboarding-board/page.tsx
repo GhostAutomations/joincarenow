@@ -1,21 +1,16 @@
 import { redirect } from "next/navigation";
 import { requireCompany } from "@/modules/auth/queries";
-import { deleteTemplateTask, deleteWorkflow } from "@/modules/onboarding/actions";
+import {
+  deleteTemplateTask,
+  deleteWorkflow,
+  updateTemplateTask,
+  renameWorkflow,
+  reorderTemplateTasks,
+  setWorkflowRole,
+} from "@/modules/onboarding/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AddTemplateTask } from "@/components/dashboard/add-template-task";
-import { WorkflowCard } from "@/components/dashboard/workflow-card";
-
-const TYPE_LABEL: Record<string, string> = {
-  form: "Form", document: "Document", acknowledge: "Read & confirm",
-};
-
-const TRIGGER_LABEL: Record<string, string> = {
-  on_application: "on application",
-  reviewing: "at Reviewing",
-  interview: "at Interview",
-  offer: "at Offer",
-  hired: "when Hired",
-};
+import { WorkflowCard, type WorkflowTask } from "@/components/dashboard/workflow-card";
 
 export default async function OnboardingBoardPage() {
   const { supabase, current } = await requireCompany();
@@ -26,7 +21,7 @@ export default async function OnboardingBoardPage() {
   const [{ data: templates }, { data: forms }, { data: roles }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, required, due_days, trigger_stage, role_id, workflow_id, workflow_name, position")
+      .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, workflow_id, workflow_name, position")
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
@@ -43,11 +38,17 @@ export default async function OnboardingBoardPage() {
     required: boolean;
     due_days: number | null;
     trigger_stage: string | null;
+    body: string | null;
+    form_id: string | null;
     role_id: string | null;
     workflow_id: string | null;
     workflow_name: string | null;
     position: number;
   };
+  const toTasks = (ts: Tpl[]): WorkflowTask[] => ts.map((t) => ({
+    id: t.id, title: t.title, task_type: t.task_type, trigger_stage: t.trigger_stage,
+    due_days: t.due_days, required: t.required, body: t.body, form_id: t.form_id,
+  }));
   const wfMap = new Map<
     string,
     { id: string | null; name: string; role_id: string | null; items: Tpl[] }
@@ -89,17 +90,16 @@ export default async function OnboardingBoardPage() {
                   name={wf.name}
                   subtitle={`${wf.role_id ? `${roleName.get(wf.role_id) ?? "role"} · ` : ""}${wf.items.length} task${wf.items.length === 1 ? "" : "s"}`}
                   workflowId={wf.id}
-                  items={wf.items.map((t) => ({
-                    id: t.id,
-                    title: t.title,
-                    meta:
-                      (TYPE_LABEL[t.task_type] ?? t.task_type) +
-                      (t.trigger_stage ? ` · ${TRIGGER_LABEL[t.trigger_stage] ?? t.trigger_stage}` : "") +
-                      (t.due_days != null ? ` · due within ${t.due_days} day${t.due_days === 1 ? "" : "s"}` : "") +
-                      (!t.required ? " · optional" : ""),
-                  }))}
+                  items={toTasks(wf.items)}
+                  forms={(forms ?? []) as { id: string; name: string }[]}
                   deleteWorkflow={deleteWorkflow}
                   deleteTask={deleteTemplateTask}
+                  updateTask={updateTemplateTask}
+                  renameWorkflow={renameWorkflow}
+                  reorderTasks={reorderTemplateTasks}
+                  roleOptions={(roles ?? []).map((r) => ({ id: String(r.id), name: String(r.name) }))}
+                  currentRoleId={wf.role_id}
+                  setWorkflowRole={setWorkflowRole}
                 />
               ))}
             </div>

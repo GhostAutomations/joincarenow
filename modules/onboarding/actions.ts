@@ -232,6 +232,125 @@ export async function deleteTemplateTask(formData: FormData) {
   revalidatePath("/onboarding-board");
 }
 
+export type EditTaskInput = {
+  id: string;
+  title: string;
+  taskType: string;
+  triggerStage: string;
+  dueDays: string;
+  required: boolean;
+  body: string;
+  formId: string;
+};
+
+const WF_STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
+
+/** Edit a single workflow task (company-scoped). */
+export async function updateTemplateTask(input: EditTaskInput): Promise<{ ok?: boolean; error?: string }> {
+  const { supabase, current } = await requireCompany();
+  if (!input?.id) return { error: "Missing task" };
+  if (!["form", "document", "acknowledge"].includes(input.taskType)) return { error: "Pick a type" };
+  if (!WF_STAGES.includes(input.triggerStage)) return { error: "Choose when to send it" };
+
+  const dueDays = input.dueDays.trim() === "" ? null : Math.max(0, parseInt(input.dueDays, 10) || 0);
+  const update: Record<string, unknown> = {
+    task_type: input.taskType,
+    trigger_stage: input.triggerStage,
+    required: input.required,
+    due_days: dueDays,
+    body: input.body.trim() || null,
+  };
+
+  if (input.taskType === "form") {
+    if (!input.formId) return { error: "Choose a form for this task" };
+    const { data: f } = await supabase
+      .from("forms")
+      .select("name")
+      .eq("id", input.formId)
+      .eq("company_id", current.company_id)
+      .maybeSingle();
+    if (!f) return { error: "Form not found" };
+    update.form_id = input.formId;
+    update.title = (f as { name: string }).name;
+  } else {
+    if (input.title.trim().length < 2) return { error: "Give the task a title" };
+    update.form_id = null;
+    update.title = input.title.trim();
+  }
+
+  const { error } = await supabase
+    .from("onboarding_templates")
+    .update(update)
+    .eq("id", input.id)
+    .eq("company_id", current.company_id);
+  if (error) return { error: "Could not save the task." };
+  revalidatePath("/onboarding-board");
+  return { ok: true };
+}
+
+/** Rename a whole workflow group (company-scoped). */
+export async function renameWorkflow(workflowId: string, name: string): Promise<{ ok?: boolean; error?: string }> {
+  const { supabase, current } = await requireCompany();
+  if (!workflowId) return { error: "Missing workflow" };
+  if (name.trim().length < 2) return { error: "Give the workflow a name" };
+  const { error } = await supabase
+    .from("onboarding_templates")
+    .update({ workflow_name: name.trim() })
+    .eq("workflow_id", workflowId)
+    .eq("company_id", current.company_id);
+  if (error) return { error: "Could not rename." };
+  revalidatePath("/onboarding-board");
+  return { ok: true };
+}
+
+/** Reassign which role a workflow applies to (company-scoped). null = all roles. */
+export async function setWorkflowRole(workflowId: string, roleId: string | null): Promise<{ ok?: boolean; error?: string }> {
+  const { supabase, current } = await requireCompany();
+  if (!workflowId) return { error: "Missing workflow" };
+  if (roleId) {
+    const { data: r } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("id", roleId)
+      .eq("company_id", current.company_id)
+      .maybeSingle();
+    if (!r) return { error: "Role not found" };
+  }
+  const { error } = await supabase
+    .from("onboarding_templates")
+    .update({ role_id: roleId })
+    .eq("workflow_id", workflowId)
+    .eq("company_id", current.company_id);
+  if (error) return { error: "Could not update the role." };
+  revalidatePath("/onboarding-board");
+  return { ok: true };
+}
+
+/** Reorder tasks within a workflow (company-scoped). `ids` in desired order. */
+export async function reorderTemplateTasks(ids: string[]): Promise<{ ok?: boolean }> {
+  const { supabase, current } = await requireCompany();
+  if (!Array.isArray(ids) || ids.length === 0) return { ok: true };
+  const { data: rows } = await supabase
+    .from("onboarding_templates")
+    .select("position")
+    .in("id", ids)
+    .eq("company_id", current.company_id)
+    .order("position", { ascending: true })
+    .limit(1);
+  const base = (rows?.[0]?.position as number | undefined) ?? 0;
+  await Promise.all(
+    ids.map((id, i) =>
+      supabase
+        .from("onboarding_templates")
+        .update({ position: base + i })
+        .eq("id", id)
+        .eq("company_id", current.company_id)
+    )
+  );
+  revalidatePath("/onboarding-board");
+  return { ok: true };
+}
+
 export type FormReview = {
   title: string;
   status: string;

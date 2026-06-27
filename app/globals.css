@@ -47,6 +47,30 @@ body {
   @apply bg-gray-50 text-gray-900 antialiased;
 }
 
+/* ----------------------------------------------------------------
+   GLASS EVERYWHERE (app shell). Standing rule: the product has NO plain
+   white boxes or white dropdowns. Every white surface frosts over the
+   gradient and text stays dark/readable. Scoped to .jcn-app (dashboard +
+   founder shells) so the public marketing/careers pages keep their design.
+   - .bg-white cards/panels/buttons/modals  -> frosted
+   - native select/textarea/text inputs that render white with NO explicit
+     bg utility               -> frosted + dark text
+   (Controls that already set their own bg, e.g. bg-white/70, are left alone.)
+   ---------------------------------------------------------------- */
+.jcn-app :where(.bg-white) {
+  background-color: rgb(255 255 255 / 0.72) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.jcn-app
+  :where(select, textarea,
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"])):not([class*="bg-"]) {
+  background-color: rgb(255 255 255 / 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #111827; /* gray-900 — readable */
+}
+
 @keyframes jcn-float {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(40px, -50px) scale(1.15); }

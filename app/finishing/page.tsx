@@ -22,7 +22,7 @@ export default async function FinishingPage() {
   const name = (co?.name as string) ?? "your account";
 
   return (
-    <main className="min-h-screen jcn-app-bg">
+    <main className="jcn-app min-h-screen jcn-app-bg">
       <header className="flex h-14 items-center justify-between border-b border-white/20 bg-white/10 px-6 backdrop-blur">
         <span className="text-base font-bold text-white drop-shadow-sm">Join Care Now</span>
         <form action={signOut}>

@@ -12,7 +12,7 @@ export default async function AdminLayout({
   const { profile } = await requirePlatformAdmin();
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden jcn-app-bg">
+    <div className="jcn-app flex h-screen flex-col overflow-hidden jcn-app-bg">
       <header className="flex h-14 items-center justify-between border-b border-white/20 bg-white/70 px-4 backdrop-blur-md sm:px-6">
         <Link
           href="/founder"

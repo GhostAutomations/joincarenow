@@ -124,7 +124,7 @@ export default async function PortalPage({
   }
 
   return (
-    <main className="min-h-screen jcn-app-bg">
+    <main className="jcn-app min-h-screen jcn-app-bg">
       <PortalLive />
       <header className="flex h-14 items-center justify-between border-b border-white/20 bg-white/70 px-4 backdrop-blur-md sm:px-6">
         <span className="text-base font-bold text-brand-700">Join Care Now</span>

@@ -34,7 +34,7 @@ export default async function DashboardLayout({
   const logoUrl = brand?.logo_url ?? null;
 
   return (
-    <div className="flex h-screen overflow-hidden jcn-app-bg">
+    <div className="jcn-app flex h-screen overflow-hidden jcn-app-bg">
       <BrandStyle brand={brand} />
       {showSidebar && <Sidebar companyName={current.companies.name} logoUrl={logoUrl} isAdmin={isAdmin} />}
       <div className="flex flex-1 flex-col overflow-hidden">

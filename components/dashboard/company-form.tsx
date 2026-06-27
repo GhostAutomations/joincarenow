@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { createCompany, type CompanyState } from "@/modules/companies/actions";
 import { Field, SubmitButton, FormError } from "@/components/ui/form";
 import { InviteLink } from "@/components/dashboard/invite-link";
+import { LogoCropper } from "@/components/dashboard/logo-cropper";
 
 const COLOURS = [
   { name: "brandPrimary", label: "Primary", hint: "Buttons, links, highlights", def: "#0d9488" },
@@ -11,25 +12,35 @@ const COLOURS = [
   { name: "brandAccent", label: "Accent", hint: "Deepest gradient tone", def: "#3730a3" },
 ];
 
+const sectionClass = "border-t border-white/40 pt-4";
+
 export function CompanyForm() {
   const [state, action] = useActionState<CompanyState, FormData>(
     createCompany,
     undefined
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const logoRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (state?.inviteLink) formRef.current?.reset();
   }, [state]);
 
+  function onCropped(file: File | null) {
+    if (!logoRef.current) return;
+    const dt = new DataTransfer();
+    if (file) dt.items.add(file);
+    logoRef.current.files = dt.files;
+  }
+
   return (
     <div className="space-y-4">
-      <form ref={formRef} action={action} className="space-y-4">
+      <form ref={formRef} action={action} className="space-y-5">
         <FormError error={state?.error} />
         <Field label="Company name" name="name" placeholder="e.g. Acme Care Ltd" />
 
         {/* Administrator */}
-        <div className="rounded-xl border border-white/40 bg-white/40 p-4 backdrop-blur">
+        <div className={sectionClass}>
           <p className="text-sm font-medium text-gray-900">Administrator</p>
           <p className="mt-0.5 text-xs text-gray-500">
             The person who runs this company&apos;s account. They&apos;ll be invited as admin.
@@ -43,7 +54,7 @@ export function CompanyForm() {
         </div>
 
         {/* Plan & billing */}
-        <div className="rounded-xl border border-white/40 bg-white/40 p-4 backdrop-blur">
+        <div className={sectionClass}>
           <p className="text-sm font-medium text-gray-900">Plan &amp; billing</p>
           <p className="mt-0.5 text-xs text-gray-500">
             Choose what they were sold. They&apos;ll set up the subscription themselves from the
@@ -82,12 +93,11 @@ export function CompanyForm() {
         </div>
 
         {/* Branding */}
-        <div className="rounded-xl border border-white/40 bg-white/40 p-4 backdrop-blur">
+        <div className={sectionClass}>
           <p className="text-sm font-medium text-gray-900">Branding</p>
           <p className="mt-0.5 text-xs text-gray-500">
-            Choose up to three brand colours and upload a logo. These theme the
-            whole platform for this company — leave them as the defaults to keep
-            the standard Join Care Now look.
+            Choose up to three brand colours and a logo. These theme the whole platform for this
+            company — leave them as the defaults to keep the standard Join Care Now look.
           </p>
 
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -107,15 +117,11 @@ export function CompanyForm() {
             ))}
           </div>
 
-          <label className="mt-3 block text-xs font-medium text-gray-600">
-            Company logo (PNG or SVG, under 2MB)
-            <input
-              type="file"
-              name="logo"
-              accept="image/png,image/jpeg,image/svg+xml,image/webp"
-              className="mt-1 block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-700"
-            />
-          </label>
+          <div className="mt-3">
+            <p className="mb-1 text-xs font-medium text-gray-600">Company logo</p>
+            <LogoCropper onCropped={onCropped} />
+            <input ref={logoRef} type="file" name="logo" accept="image/*" className="hidden" />
+          </div>
         </div>
 
         <p className="text-xs text-gray-500">

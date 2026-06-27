@@ -14,7 +14,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   STARTER_PACK_VERSION,
   STARTER_FORMS,
-  STARTER_ONBOARDING,
   STARTER_TEMPLATES,
   DEFAULT_ROLES,
   STARTER_CAREERS,
@@ -139,25 +138,11 @@ export async function seedCompanyStarter(
   }
 
   // ---- 2. Onboarding workflow -----------------------------
-  const { count: onbCount } = await db
-    .from("onboarding_templates")
-    .select("id", { count: "exact", head: true })
-    .eq("company_id", companyId);
-  if (!onbCount) {
-    const onbRows = STARTER_ONBOARDING.map((t, i) => ({
-      company_id: companyId,
-      title: t.title,
-      task_type: t.task_type,
-      form_id: t.formKey ? formIdByKey.get(t.formKey) ?? null : null,
-      body: t.body ?? null,
-      required: t.required ?? true,
-      due_days: t.due_days ?? null,
-      position: i,
-    }));
-    const { error: onbErr } = await db.from("onboarding_templates").insert(onbRows);
-    if (onbErr) return { ok: false, error: `Onboarding: ${onbErr.message}` };
-    created.onboardingTasks = onbRows.length;
-  }
+  // Intentionally NOT auto-seeded. New companies start with an empty Workflow
+  // board; the founder applies workflows from the Workflow Library instead
+  // (avoids dumping loose default tasks alongside applied workflows). The
+  // onboarding-purpose forms above are still seeded so any applied/new workflow
+  // can reference them.
 
   // ---- 3. Message templates -------------------------------
   const { count: tplCount } = await db

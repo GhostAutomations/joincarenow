@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Link2, Link2Off } from "lucide-react";
 import { setFieldLinkEnabled, setFieldParent } from "@/modules/forms/actions";
-import type { BuilderField } from "@/components/dashboard/monday-form-builder";
+import type { BuilderField } from "@/components/dashboard/jcn-form-builder";
 
 const CHOICE = ["dropdown", "radio", "checkboxes", "yes_no"];
 const answersFor = (f: BuilderField): string[] =>

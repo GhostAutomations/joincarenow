@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Sparkles, FileUp } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { deleteStoreForm } from "@/modules/forms/actions";
-import { MondayFormBuilder, type BuilderField } from "@/components/dashboard/monday-form-builder";
+import { JcnFormBuilder, type BuilderField } from "@/components/dashboard/jcn-form-builder";
 import { StoreFormBar } from "@/components/dashboard/store-form-bar";
 import { DeleteFormButton } from "@/components/dashboard/delete-form-button";
 import { BuildTabs } from "@/components/dashboard/build-tabs";
@@ -47,7 +47,7 @@ export default async function FounderFormBuildPage({
     .order("position");
 
   const builder = (
-    <MondayFormBuilder
+    <JcnFormBuilder
       form={{
         id: form.id,
         name: form.name,

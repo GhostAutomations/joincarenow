@@ -112,7 +112,7 @@ const DESC_SIZES = ["sm", "base", "lg", "xl"];
 const alignCls = (a?: string) =>
   a === "center" ? "text-center" : a === "right" ? "text-right" : "text-left";
 
-export function MondayFormBuilder({
+export function JcnFormBuilder({
   form,
   fields,
   managed,

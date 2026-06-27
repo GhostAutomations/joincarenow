@@ -5,7 +5,7 @@ import { requireCompany } from "@/modules/auth/queries";
 import { PdfImport } from "@/components/dashboard/pdf-import";
 import { FormAiGenerate } from "@/components/dashboard/form-ai-generate";
 import { BuildTabs } from "@/components/dashboard/build-tabs";
-import { MondayFormBuilder, type BuilderField } from "@/components/dashboard/monday-form-builder";
+import { JcnFormBuilder, type BuilderField } from "@/components/dashboard/jcn-form-builder";
 
 // PDF import calls Claude, which can take longer than the default function
 // limit. Allow up to 60s (Vercel Hobby cap) for this route's server actions.
@@ -59,7 +59,7 @@ export default async function FormBuildPage({
   const defaultLogo = companyLogo || "/brand/jcn-mark-transparent.png";
 
   const builder = (
-    <MondayFormBuilder
+    <JcnFormBuilder
       form={{
         id: form.id,
         name: form.name,

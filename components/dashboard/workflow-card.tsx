@@ -24,7 +24,7 @@ export function WorkflowCard({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
+    <div className="rounded-lg border border-white/50 bg-white/70 backdrop-blur-sm shadow-sm">
       <div className="flex items-center justify-between gap-3 px-3 py-2.5">
         <button
           onClick={() => setOpen((o) => !o)}
@@ -52,7 +52,7 @@ export function WorkflowCard({
       </div>
 
       {open && (
-        <ul className="divide-y divide-gray-100 border-t border-gray-100 px-3">
+        <ul className="divide-y divide-white/50 border-t border-white/50 px-3">
           {items.map((t) => (
             <li key={t.id} className="flex items-center justify-between py-2">
               <div className="min-w-0">

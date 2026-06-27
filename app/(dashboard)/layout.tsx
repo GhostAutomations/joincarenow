@@ -43,6 +43,7 @@ export default async function DashboardLayout({
           userName={profile?.full_name || profile?.email || ""}
           showHome={!showSidebar}
           logoUrl={logoUrl}
+          companyName={current.companies.name}
         />
         <main className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24">{children}</main>
       </div>

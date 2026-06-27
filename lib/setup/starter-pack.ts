@@ -38,8 +38,7 @@ export const STARTER_FORMS: StarterForm[] = [
     name: "Care Worker Application",
     purpose: "application",
     category: "recruitment",
-    description:
-      "A ready-to-use application form for care assistant and support worker roles. Edit it to suit your service.",
+    description: "",
     fields: [
       { label: "First name", field_type: "short_text", required: true },
       { label: "Last name", field_type: "short_text", required: true },
@@ -82,7 +81,7 @@ export const STARTER_FORMS: StarterForm[] = [
     name: "Emergency Contact & Next of Kin",
     purpose: "onboarding",
     category: "onboarding",
-    description: "Collected during onboarding so you always have an up-to-date emergency contact on file.",
+    description: "",
     fields: [
       { label: "Contact full name", field_type: "short_text", required: true },
       { label: "Relationship to you", field_type: "short_text", required: true },
@@ -96,7 +95,7 @@ export const STARTER_FORMS: StarterForm[] = [
     name: "Availability & Working Preferences",
     purpose: "onboarding",
     category: "onboarding",
-    description: "Captures a new starter's availability and preferences so you can plan their first rota.",
+    description: "",
     fields: [
       {
         label: "Hours you're looking for",

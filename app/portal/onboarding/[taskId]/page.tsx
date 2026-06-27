@@ -21,7 +21,7 @@ export default async function OnboardingFormPage({
   const defaults = (prev ?? {}) as Record<string, string | string[]>;
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-white">
       <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6">
         <span className="text-base font-bold text-brand-700">Join Care Now</span>
         <div className="flex items-center gap-4">

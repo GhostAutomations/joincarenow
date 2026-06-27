@@ -38,7 +38,7 @@ export default async function PortalConversationsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-white">
       <PortalLive />
       <div className="mx-auto max-w-2xl px-4 py-6">
         <Link href="/portal" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800">

@@ -43,24 +43,29 @@
   );
 }
 
+/* The brand gradient is the background of the WHOLE site, so frosted-glass
+   surfaces always have something colourful behind them (otherwise glass reads
+   as flat grey). Fixed so it stays put while long pages scroll. */
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  @apply text-gray-900 antialiased;
+  min-height: 100vh;
+  background-image: linear-gradient(
+    to bottom right,
+    var(--brand-primary),
+    var(--brand-secondary),
+    var(--brand-accent)
+  );
+  background-attachment: fixed;
 }
 
 /* ----------------------------------------------------------------
-   GLASS EVERYWHERE (app shell). Standing rule: the product has NO plain
-   white boxes or white dropdowns. Every white surface frosts over the
-   gradient and text stays dark/readable. Scoped to .jcn-app (dashboard +
-   founder shells) so the public marketing/careers pages keep their design.
-   - .bg-white cards/panels/buttons/modals  -> frosted
-   - native select/textarea/text inputs that render white with NO explicit
-     bg utility               -> frosted + dark text
-   (Controls that already set their own bg, e.g. bg-white/70, are left alone.)
+   GLASS EVERYWHERE (whole site). Standing rule: NO plain white boxes or white
+   dropdowns anywhere. One canonical frosted-glass look on every white/
+   translucent surface, so there's never a mix of glass/grey/white:
+   lower opacity + real blur + saturate (keeps the gradient vivid instead of
+   going grey) + a white rim. Text stays dark/readable.
    ---------------------------------------------------------------- */
-/* One canonical frosted-glass look used for EVERY white/translucent surface, so
-   there's never a mix of glass/grey/white. Lower opacity + a real blur +
-   saturate (keeps the gradient vivid instead of going grey) + a white rim. */
-.jcn-app :where(.bg-white, [class*="bg-white/"]) {
+:where(.bg-white, [class*="bg-white/"]) {
   background-color: rgb(255 255 255 / 0.55) !important;
   -webkit-backdrop-filter: blur(18px) saturate(160%);
   backdrop-filter: blur(18px) saturate(160%);
@@ -68,9 +73,8 @@ body {
 }
 /* Native controls that render white with no bg utility (selects, text inputs,
    textareas) — same glass, dark readable text. */
-.jcn-app
-  :where(select, textarea,
-    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"])):not([class*="bg-"]) {
+:where(select, textarea,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"])):not([class*="bg-"]) {
   background-color: rgb(255 255 255 / 0.6);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
   backdrop-filter: blur(18px) saturate(160%);

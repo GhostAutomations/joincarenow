@@ -60,7 +60,7 @@ export function ReminderSettingsForm({
   const [state, action] = useActionState<SettingsState, FormData>(setReminderSettings, undefined);
   const router = useRouter();
   useEffect(() => {
-    if (state?.ok) router.refresh();
+    if (state?.ok) { router.refresh(); window.dispatchEvent(new Event("jcn-section-saved")); }
   }, [state, router]);
 
   return (

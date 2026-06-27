@@ -21,7 +21,7 @@ export function EmployeeNumberSettings({
   );
   const router = useRouter();
   useEffect(() => {
-    if (state?.ok) router.refresh();
+    if (state?.ok) { router.refresh(); window.dispatchEvent(new Event("jcn-section-saved")); }
   }, [state, router]);
   const [manual, setManual] = useState(initialMode === "manual");
 

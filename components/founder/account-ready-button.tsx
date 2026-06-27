@@ -19,7 +19,7 @@ export function AccountReadyButton({
   const [state, action] = useActionState<SettingsState, FormData>(sendAccountReadyEmail, undefined);
   const [confirming, setConfirming] = useState(false);
   useEffect(() => {
-    if (state?.ok) router.refresh();
+    if (state?.ok) { router.refresh(); window.dispatchEvent(new Event("jcn-section-saved")); }
   }, [state, router]);
 
   const sent = Boolean(sentAt) || state?.ok;

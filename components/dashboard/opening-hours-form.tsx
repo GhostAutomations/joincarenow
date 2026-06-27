@@ -17,7 +17,7 @@ export function OpeningHoursForm({
   const [state, action] = useActionState<SettingsState, FormData>(setOpeningHours, undefined);
   const router = useRouter();
   useEffect(() => {
-    if (state?.ok) router.refresh();
+    if (state?.ok) { router.refresh(); window.dispatchEvent(new Event("jcn-section-saved")); }
   }, [state, router]);
 
   // Local state per day so toggling open/closed shows/hides the time inputs.

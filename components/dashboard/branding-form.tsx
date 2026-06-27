@@ -13,7 +13,7 @@ export function BrandingForm({ companyId, brand, submitLabel = "Save branding" }
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (state?.ok) router.refresh();
+    if (state?.ok) { router.refresh(); window.dispatchEvent(new Event("jcn-section-saved")); }
   }, [state, router]);
 
   // The cropper hands back a cropped File; stash it on the hidden file input so

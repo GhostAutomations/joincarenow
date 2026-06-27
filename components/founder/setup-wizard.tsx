@@ -41,6 +41,17 @@ export function FounderSetupWizard({
     if (openKey && active?.done && !wasDoneRef.current) setOpenKey(null);
   }, [openKey, active?.done]);
 
+  // Reliable close: section forms fire "jcn-section-saved" on a successful save
+  // (the done-flip above can lag behind server re-render/caching).
+  useEffect(() => {
+    function onSaved() {
+      setOpenKey(null);
+      router.refresh();
+    }
+    window.addEventListener("jcn-section-saved", onSaved);
+    return () => window.removeEventListener("jcn-section-saved", onSaved);
+  }, [router]);
+
   function openTask(t: WizardTask) {
     wasDoneRef.current = t.done;
     setOpenKey(t.key);

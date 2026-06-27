@@ -141,6 +141,9 @@ export function JcnFormBuilder({
   const [selected, setSelected] = useState<string | null>(null);
   const [openPlus, setOpenPlus] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  // Save button: white "Save" while there are edits, green "Saved" after an
+  // explicit click; reverts to white on any further change.
+  const [saved, setSaved] = useState(false);
   const [flds, setFlds] = useState<BuilderField[]>(fields);
   const [order, setOrder] = useState<string[]>(fields.map((f) => f.id));
   const dragId = useRef<string | null>(null);
@@ -156,6 +159,7 @@ export function JcnFormBuilder({
       headerMounted.current = true;
       return;
     }
+    setSaved(false); // a header/style edit means there are unsaved changes
     const t = setTimeout(() => {
       // Persist quietly; local state already reflects these, so no refresh
       // (a refresh here causes a jarring full re-render of the builder).
@@ -179,8 +183,27 @@ export function JcnFormBuilder({
   const byId = new Map(flds.map((f) => [f.id, f]));
   const ordered = order.map((id) => byId.get(id)).filter(Boolean) as BuilderField[];
 
-  // Tell the store Save button (above) that the form has unsaved changes.
-  const markEdited = () => window.dispatchEvent(new Event("jcn-form-edited"));
+  // Tell the store Save button (above) + our own Save button there are edits.
+  const markEdited = () => {
+    window.dispatchEvent(new Event("jcn-form-edited"));
+    setSaved(false);
+  };
+
+  // Explicit Save: flush the header now and turn the button green "Saved".
+  async function saveNow() {
+    await updateFormHeader({
+      id: form.id,
+      name,
+      description: desc,
+      style: {
+        title: { color: tColor, size: tSize, align: tAlign },
+        description: { color: dColor, size: dSize, align: dAlign },
+        logo_url: defaultLogo ?? "",
+        logo_align: logoAlign,
+      },
+    });
+    setSaved(true);
+  }
 
   /** Swap a temporary field id for the real one returned by the server. */
   function reconcileId(tempId: string, realId: string | null) {
@@ -309,8 +332,17 @@ export function JcnFormBuilder({
 
   return (
     <>
-    {/* Small screens: Preview sits above the form (no side gutters there). */}
-    <div className="mb-3 flex justify-end xl:hidden">
+    {/* Small screens: Save + Preview sit above the form (no side gutters there). */}
+    <div className="mb-3 flex justify-end gap-2 xl:hidden">
+      <button
+        type="button"
+        onClick={saveNow}
+        className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium ${
+          saved ? "bg-green-600 text-white hover:bg-green-700" : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+        }`}
+      >
+        {saved ? "Saved" : "Save"}
+      </button>
       <button
         type="button"
         onClick={() => setShowPreview(true)}
@@ -350,57 +382,39 @@ export function JcnFormBuilder({
 
       {/* MIDDLE: canvas */}
       <div className="w-full max-w-2xl rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-6 sm:p-8">
-        {/* logo — always the company logo (or JCN's); no per-form upload. Click to align. */}
+        {/* logo — always the company logo (or JCN's); no per-form upload. Click to select; align from the right panel. */}
         {defaultLogo && (
-          <div className="mb-3">
-            <div
-              onClick={() => setSelected("logo")}
-              className={`flex cursor-pointer ${logoAlign === "center" ? "justify-center" : logoAlign === "right" ? "justify-end" : "justify-start"}`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={defaultLogo} alt="Logo" className="h-12 w-auto rounded" />
-            </div>
-            {selected === "logo" && (
-              <div className="mt-1 flex items-center gap-2 rounded-md bg-gray-50 p-1.5">
-                <span className="text-xs text-gray-500">Logo</span>
-                <div className="flex overflow-hidden rounded border border-gray-300">
-                  {([["left", AlignLeft], ["center", AlignCenter], ["right", AlignRight]] as const).map(([a, Icon]) => (
-                    <button key={a} onClick={() => setLogoAlign(a)} className={`p-1.5 ${logoAlign === a ? "bg-brand-100 text-brand-700" : "bg-white text-gray-500 hover:bg-gray-100"}`} aria-label={`Align logo ${a}`}>
-                      <Icon className="h-3.5 w-3.5" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+          <div
+            onClick={() => setSelected("logo")}
+            className={`mb-3 flex cursor-pointer rounded-lg p-1 ${selected === "logo" ? "ring-1 ring-brand-300" : ""} ${logoAlign === "center" ? "justify-center" : logoAlign === "right" ? "justify-end" : "justify-start"}`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={defaultLogo} alt="Logo" className="h-12 w-auto rounded" />
           </div>
         )}
 
-        {/* title — bordered so it's clearly editable */}
+        {/* title — labelled + bordered so it's clearly editable */}
+        <label className="block text-xs font-medium text-gray-500">Edit Form Title</label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           onFocus={() => setSelected("title")}
-          placeholder="Form title"
+          placeholder="Edit Form Title"
           style={{ color: tColor }}
-          className={`block w-full rounded-lg border border-dashed border-gray-300 bg-white/50 px-3 py-2 font-bold placeholder-gray-400 hover:border-brand-300 focus:border-brand-500 focus:outline-none focus:ring-0 ${SIZE_CLASS[tSize]} ${alignCls(tAlign)}`}
+          className={`mt-1 block w-full rounded-lg border border-dashed border-gray-300 bg-white/50 px-3 py-2 font-bold placeholder-gray-400 hover:border-brand-300 focus:border-brand-500 focus:outline-none focus:ring-0 ${SIZE_CLASS[tSize]} ${alignCls(tAlign)}`}
         />
-        {selected === "title" && (
-          <Toolbar sizes={TITLE_SIZES} size={tSize} setSize={setTSize} color={tColor} setColor={setTColor} align={tAlign} setAlign={setTAlign} />
-        )}
 
-        {/* description — bordered so it's clearly editable */}
+        {/* description — labelled + bordered so it's clearly editable */}
+        <label className="mt-3 block text-xs font-medium text-gray-500">Edit Form Description</label>
         <textarea
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
           onFocus={() => setSelected("description")}
           rows={2}
-          placeholder="Add a description"
+          placeholder="Edit Form Description"
           style={{ color: dColor }}
-          className={`mt-2 block w-full resize-none rounded-lg border border-dashed border-gray-300 bg-white/50 px-3 py-2 placeholder-gray-400 hover:border-brand-300 focus:border-brand-500 focus:outline-none focus:ring-0 ${SIZE_CLASS[dSize]} ${alignCls(dAlign)}`}
+          className={`mt-1 block w-full resize-none rounded-lg border border-dashed border-gray-300 bg-white/50 px-3 py-2 placeholder-gray-400 hover:border-brand-300 focus:border-brand-500 focus:outline-none focus:ring-0 ${SIZE_CLASS[dSize]} ${alignCls(dAlign)}`}
         />
-        {selected === "description" && (
-          <Toolbar sizes={DESC_SIZES} size={dSize} setSize={setDSize} color={dColor} setColor={setDColor} align={dAlign} setAlign={setDAlign} />
-        )}
 
         <div className="my-4 h-px bg-gray-100" />
 
@@ -539,16 +553,45 @@ export function JcnFormBuilder({
         ))}
       </div>
 
-      {/* RIGHT: Preview, top-aligned with the form. Shrinks to the button so
-          the form sits an equal gap from both the outline and Preview. */}
-      <div className="hidden shrink-0 xl:flex">
-        <button
-          type="button"
-          onClick={() => setShowPreview(true)}
-          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
-        >
-          <Eye className="h-4 w-4" /> Preview form
-        </button>
+      {/* RIGHT: Save + Preview, and the formatting panel for the selected element. */}
+      <div className="hidden w-56 shrink-0 space-y-3 xl:block">
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={saveNow}
+            className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium ${
+              saved ? "bg-green-600 text-white hover:bg-green-700" : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            {saved ? "Saved" : "Save"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowPreview(true)}
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          >
+            <Eye className="h-4 w-4" /> Preview form
+          </button>
+        </div>
+
+        <div className="rounded-2xl border border-white/40 bg-white/55 p-3 shadow-sm backdrop-blur-md">
+          <p className="mb-2 text-xs font-medium text-gray-900">Format</p>
+          {selected === "title" ? (
+            <Toolbar sizes={TITLE_SIZES} size={tSize} setSize={setTSize} color={tColor} setColor={setTColor} align={tAlign} setAlign={setTAlign} />
+          ) : selected === "description" ? (
+            <Toolbar sizes={DESC_SIZES} size={dSize} setSize={setDSize} color={dColor} setColor={setDColor} align={dAlign} setAlign={setDAlign} />
+          ) : selected === "logo" ? (
+            <div className="flex overflow-hidden rounded border border-gray-300">
+              {([["left", AlignLeft], ["center", AlignCenter], ["right", AlignRight]] as const).map(([a, Icon]) => (
+                <button key={a} onClick={() => setLogoAlign(a)} className={`p-1.5 ${logoAlign === a ? "bg-brand-100 text-brand-700" : "bg-white text-gray-500 hover:bg-gray-100"}`} aria-label={`Align logo ${a}`}>
+                  <Icon className="h-3.5 w-3.5" />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-500">Click the logo, title or description to format it.</p>
+          )}
+        </div>
       </div>
     </div>
     {showPreview && (

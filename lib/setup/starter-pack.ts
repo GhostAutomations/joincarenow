@@ -339,8 +339,7 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
 // team: 'care' = branch/care-delivery roles · 'office' = head-office team.
 export type StarterRole = { name: string; team: "care" | "office" };
 export const DEFAULT_ROLES: StarterRole[] = [
-  { name: "Carer (Walker)", team: "care" },
-  { name: "Carer (Driver)", team: "care" },
+  { name: "Carer", team: "care" },
   { name: "Senior Carer", team: "care" },
   { name: "Supervisor", team: "office" },
   { name: "Planner", team: "office" },

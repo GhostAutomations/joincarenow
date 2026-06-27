@@ -29,7 +29,7 @@ export function CompanyForm() {
         <Field label="Company name" name="name" placeholder="e.g. Acme Care Ltd" />
 
         {/* Administrator */}
-        <div className="rounded-xl border border-white/50 bg-white/70 p-4 backdrop-blur">
+        <div className="rounded-xl border border-white/40 bg-white/40 p-4 backdrop-blur">
           <p className="text-sm font-medium text-gray-900">Administrator</p>
           <p className="mt-0.5 text-xs text-gray-500">
             The person who runs this company&apos;s account. They&apos;ll be invited as admin.
@@ -43,7 +43,7 @@ export function CompanyForm() {
         </div>
 
         {/* Plan & billing */}
-        <div className="rounded-xl border border-white/50 bg-white/70 p-4 backdrop-blur">
+        <div className="rounded-xl border border-white/40 bg-white/40 p-4 backdrop-blur">
           <p className="text-sm font-medium text-gray-900">Plan &amp; billing</p>
           <p className="mt-0.5 text-xs text-gray-500">
             Choose what they were sold. They&apos;ll set up the subscription themselves from the
@@ -82,7 +82,7 @@ export function CompanyForm() {
         </div>
 
         {/* Branding */}
-        <div className="rounded-xl border border-white/50 bg-white/70 p-4 backdrop-blur">
+        <div className="rounded-xl border border-white/40 bg-white/40 p-4 backdrop-blur">
           <p className="text-sm font-medium text-gray-900">Branding</p>
           <p className="mt-0.5 text-xs text-gray-500">
             Choose up to three brand colours and upload a logo. These theme the

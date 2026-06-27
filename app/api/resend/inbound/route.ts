@@ -17,6 +17,23 @@ function senderName(raw: string): string {
   return m ? m[1].trim() : "";
 }
 
+// Free/personal email providers — their domain is NOT a company name.
+const PERSONAL_EMAIL_DOMAINS = new Set([
+  "gmail.com", "googlemail.com", "icloud.com", "me.com", "mac.com",
+  "outlook.com", "hotmail.com", "hotmail.co.uk", "live.com", "live.co.uk", "msn.com",
+  "yahoo.com", "yahoo.co.uk", "ymail.com", "aol.com",
+  "proton.me", "protonmail.com", "gmx.com", "btinternet.com", "sky.com",
+]);
+
+/** Best company name for a cold lead: their display name, else the email domain
+ *  for a business address, else a clear placeholder for personal providers. */
+function leadCompanyName(fromName: string, fromEmail: string): string {
+  if (fromName) return fromName;
+  const domain = fromEmail.split("@")[1]?.toLowerCase() ?? "";
+  if (domain && !PERSONAL_EMAIL_DOMAINS.has(domain)) return domain;
+  return `New enquiry (${fromEmail})`;
+}
+
 /** Forward a copy of a sales@ email to the founder's inbox so they can read it
  *  (e.g. verification links) and reply directly. */
 async function forwardToFounder(
@@ -186,7 +203,7 @@ export async function POST(req: Request) {
     // Unknown sender. If they emailed sales@, create a new CRM lead with the
     // message on its timeline; otherwise ignore.
     if (isSales) {
-      const companyName = fromName || fromEmail.split("@")[1] || fromEmail;
+      const companyName = leadCompanyName(fromName, fromEmail);
       const { data: pc } = await admin
         .from("prospect_companies")
         .insert({ name: companyName, source: "Inbound email (sales@)", stage: "new" })

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  Lock, Trash2, Plus, GripVertical, ImagePlus, X, GitBranch, Eye,
+  Lock, Trash2, Plus, GripVertical, GitBranch, Eye,
   AlignLeft, AlignCenter, AlignRight,
 } from "lucide-react";
 import {
-  addFieldOfType, addFieldFromTemplate, deleteField, reorderFields, updateFormHeader, uploadFormLogo,
+  addFieldOfType, addFieldFromTemplate, deleteField, reorderFields, updateFormHeader,
 } from "@/modules/forms/actions";
 
 export type QuestionBankItem = {
@@ -138,7 +138,6 @@ export function MondayFormBuilder({
   const [dColor, setDColor] = useState(form.style.description?.color ?? "#6b7280");
   const [dSize, setDSize] = useState(form.style.description?.size ?? "sm");
   const [dAlign, setDAlign] = useState(form.style.description?.align ?? "left");
-  const [logoUrl, setLogoUrl] = useState(form.style.logo_url ?? "");
 
   const [selected, setSelected] = useState<string | null>(null);
   const [openPlus, setOpenPlus] = useState<string | null>(null);
@@ -168,13 +167,14 @@ export function MondayFormBuilder({
         style: {
           title: { color: tColor, size: tSize, align: tAlign },
           description: { color: dColor, size: dSize, align: dAlign },
-          logo_url: logoUrl,
+          // Forms always use the company logo (or JCN's) — no per-form upload.
+          logo_url: defaultLogo ?? "",
         },
       });
     }, 700);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [name, desc, tColor, tSize, tAlign, dColor, dSize, dAlign, logoUrl]);
+  }, [name, desc, tColor, tSize, tAlign, dColor, dSize, dAlign]);
 
   const byId = new Map(flds.map((f) => [f.id, f]));
   const ordered = order.map((id) => byId.get(id)).filter(Boolean) as BuilderField[];
@@ -282,16 +282,6 @@ export function MondayFormBuilder({
     deleteField(fd);
   }
 
-  async function onLogo(e: ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const fd = new FormData();
-    fd.append("id", form.id);
-    fd.append("logo", f);
-    const res = await uploadFormLogo(fd);
-    if (res.url) setLogoUrl(res.url);
-  }
-
   function onDrop(targetId: string) {
     const from = dragId.current;
     dragId.current = null;
@@ -360,32 +350,14 @@ export function MondayFormBuilder({
 
       {/* MIDDLE: canvas */}
       <div className="w-full max-w-2xl rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-6 sm:p-8">
-        {/* logo */}
-        <div className="mb-3">
-          {logoUrl ? (
-            <div className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logoUrl} alt="Logo" className="h-12 w-auto rounded" />
-              <button onClick={() => setLogoUrl("")} className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-red-600">
-                <X className="h-3.5 w-3.5" /> Remove
-              </button>
-            </div>
-          ) : defaultLogo ? (
-            <div className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={defaultLogo} alt="Logo" className="h-12 w-auto rounded" />
-              <label className="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-400 hover:text-brand-700">
-                <ImagePlus className="h-3.5 w-3.5" /> Using {defaultLogoLabel} · upload to override
-                <input type="file" accept="image/*" onChange={onLogo} className="hidden" />
-              </label>
-            </div>
-          ) : (
-            <label className="inline-flex cursor-pointer items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700">
-              <ImagePlus className="h-4 w-4" /> Add logo
-              <input type="file" accept="image/*" onChange={onLogo} className="hidden" />
-            </label>
-          )}
-        </div>
+        {/* logo — always the company logo (or JCN's); no per-form upload */}
+        {defaultLogo && (
+          <div className="mb-3 flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={defaultLogo} alt="Logo" className="h-12 w-auto rounded" />
+            <span className="text-xs text-gray-500">Using {defaultLogoLabel}</span>
+          </div>
+        )}
 
         {/* title */}
         <input
@@ -565,7 +537,7 @@ export function MondayFormBuilder({
     </div>
     {showPreview && (
       <FormPreview
-        form={{ name, description: desc, style: { title: { color: tColor, size: tSize, align: tAlign }, description: { color: dColor, size: dSize, align: dAlign }, logo_url: logoUrl || defaultLogo || "" } }}
+        form={{ name, description: desc, style: { title: { color: tColor, size: tSize, align: tAlign }, description: { color: dColor, size: dSize, align: dAlign }, logo_url: defaultLogo || "" } }}
         fields={previewFields}
         onClose={() => setShowPreview(false)}
         managed={managed}

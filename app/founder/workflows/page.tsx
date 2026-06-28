@@ -112,7 +112,7 @@ export default async function FounderWorkflowsPage() {
                   roleControl={{
                     options: STANDARD_ROLE_OPTIONS,
                     selected: wf.roleNames,
-                    save: (vals) => setStoreWorkflowRoleNames(wf.id, vals),
+                    save: setStoreWorkflowRoleNames,
                     label: "Applies to roles (standard)",
                   }}
                 />
@@ -167,7 +167,7 @@ export default async function FounderWorkflowsPage() {
                         roleControl={{
                           options: STANDARD_ROLE_OPTIONS,
                           selected: wf.roleNames,
-                          save: (vals) => setStoreWorkflowRoleNames(wf.id, vals),
+                          save: setStoreWorkflowRoleNames,
                           label: "Applies to roles (standard)",
                         }}
                       />

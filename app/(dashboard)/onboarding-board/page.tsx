@@ -106,7 +106,7 @@ export default async function OnboardingBoardPage() {
                   roleControl={wf.id ? {
                     options: roleOptions,
                     selected: wf.roleIds,
-                    save: (vals) => setWorkflowRoles(wf.id as string, vals),
+                    save: setWorkflowRoles,
                   } : undefined}
                 />
               ))}

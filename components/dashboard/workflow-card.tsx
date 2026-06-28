@@ -82,7 +82,8 @@ export function WorkflowCard({
   roleControl?: {
     options: { value: string; label: string }[];
     selected: string[];
-    save: (values: string[]) => Promise<{ ok?: boolean; error?: string }>;
+    /** Raw server action — must be passed directly (not wrapped in a closure). */
+    save: (workflowId: string, values: string[]) => Promise<{ ok?: boolean; error?: string }>;
     label?: string;
   };
 }) {
@@ -101,9 +102,9 @@ export function WorkflowCard({
     setRoleSel((rs) => (rs.includes(value) ? rs.filter((v) => v !== value) : [...rs, value]));
   }
   async function saveRoles() {
-    if (!roleControl) return;
+    if (!roleControl || !workflowId) return;
     setBusy(true); setErr(null);
-    const res = await roleControl.save(roleSel);
+    const res = await roleControl.save(workflowId, roleSel);
     setBusy(false);
     if (res?.error) { setErr(res.error); return; }
     setRoleDirty(false);

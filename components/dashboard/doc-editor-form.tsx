@@ -66,6 +66,9 @@ export function DocEditorForm({
   const taRef = useRef<HTMLTextAreaElement>(null);
   const noun = kind === "contract" ? "contract template" : kind === "policy" ? "policy" : "job description";
   const isJD = kind === "job_description";
+  // Job descriptions appear on a public advert (not personalised per applicant),
+  // so only company-level fields can be merged in.
+  const mergeFields = isJD ? ["company_name", "job_title"] : MERGE_FIELDS;
   const BACK = isJD ? "/settings?s=jobdescriptions" : "/settings?s=contracts";
   const backLabel = isJD ? "Job descriptions" : "Contracts & policies";
 
@@ -242,13 +245,14 @@ export function DocEditorForm({
           </p>
         </div>
 
-        {!isJD && (
         <div className="rounded-lg bg-gray-50 px-3 py-2.5">
           <p className="mb-1.5 text-xs text-gray-600">
-            Highlight a word in the text below, then click a field to drop it in:
+            {isJD
+              ? "Click a field to drop it in (filled automatically on the advert):"
+              : "Highlight a word in the text below, then click a field to drop it in:"}
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {MERGE_FIELDS.map((f) => (
+            {mergeFields.map((f) => (
               <button
                 key={f}
                 type="button"
@@ -260,7 +264,6 @@ export function DocEditorForm({
             ))}
           </div>
         </div>
-        )}
 
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-medium text-gray-600">Paste the text below, or:</span>

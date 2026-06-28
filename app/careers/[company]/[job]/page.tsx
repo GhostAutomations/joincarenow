@@ -49,6 +49,12 @@ async function loadJob(
       p_job_slug: jobSlug,
     })
     .maybeSingle<PublicJob>();
+  if (data?.description) {
+    // Fill the advert-safe merge fields in the (linked) job description.
+    data.description = data.description
+      .replaceAll("{{company_name}}", data.company_name ?? "")
+      .replaceAll("{{job_title}}", data.title ?? "");
+  }
   return data ?? null;
 }
 

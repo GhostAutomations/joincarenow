@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Trash2, Pencil, Check, X, ArrowUp, ArrowDown } from "lucide-react";
+import { MultiSelect } from "@/components/dashboard/multi-select";
 
 export type WorkflowTask = {
   id: string;
@@ -97,10 +98,6 @@ export function WorkflowCard({
   const [roleSel, setRoleSel] = useState<string[]>(roleControl?.selected ?? []);
   const [roleDirty, setRoleDirty] = useState(false);
 
-  function toggleRole(value: string) {
-    setRoleDirty(true);
-    setRoleSel((rs) => (rs.includes(value) ? rs.filter((v) => v !== value) : [...rs, value]));
-  }
   async function saveRoles() {
     if (!roleControl || !workflowId) return;
     setBusy(true); setErr(null);
@@ -202,23 +199,21 @@ export function WorkflowCard({
         <>
           {workflowId && roleControl && (
             <div className="border-t border-white/50 px-3 py-2">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium text-gray-600">{roleControl.label ?? "Applies to roles"}</span>
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-xs font-medium text-gray-600">{roleControl.label ?? "Applies to roles"}</span>
+                <MultiSelect
+                  options={roleControl.options}
+                  selected={roleSel}
+                  onChange={(vals) => { setRoleSel(vals); setRoleDirty(true); }}
+                  allLabel="All roles"
+                  className="max-w-xs flex-1"
+                />
                 {roleDirty && (
-                  <button type="button" onClick={saveRoles} disabled={busy} className="rounded-md bg-brand-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-60">
-                    {busy ? "Saving…" : "Save roles"}
+                  <button type="button" onClick={saveRoles} disabled={busy} className="shrink-0 rounded-md bg-brand-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-60">
+                    {busy ? "Saving…" : "Save"}
                   </button>
                 )}
               </div>
-              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-                {roleControl.options.map((r) => (
-                  <label key={r.value} className="flex items-center gap-1.5 text-sm text-gray-700">
-                    <input type="checkbox" checked={roleSel.includes(r.value)} onChange={() => toggleRole(r.value)} className="h-4 w-4 rounded border-gray-300 text-brand-600" />
-                    {r.label}
-                  </label>
-                ))}
-              </div>
-              <span className="mt-1 block text-[11px] text-gray-400">None selected = applies to all roles.</span>
             </div>
           )}
 

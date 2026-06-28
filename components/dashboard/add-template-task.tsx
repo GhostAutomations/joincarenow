@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { addTemplateTasks, type TaskDraft } from "@/modules/onboarding/actions";
+import { MultiSelect } from "@/components/dashboard/multi-select";
 
 const cls =
   "mt-1 block w-full rounded-md border border-white/60 bg-white/70 backdrop-blur-sm shadow-sm px-2 py-1.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-brand-500 focus:bg-white/90 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -58,10 +59,6 @@ export function AddTemplateTask({
     setBoxes([blankBox()]);
     setCreated(false);
     setError(null);
-  }
-
-  function toggleRole(value: string) {
-    setRoleValues((rs) => (rs.includes(value) ? rs.filter((v) => v !== value) : [...rs, value]));
   }
 
   function updateBox(i: number, patch: Partial<Box>) {
@@ -142,23 +139,13 @@ export function AddTemplateTask({
         {showRole && (
           <div className="text-xs font-medium text-gray-600">
             {roleLabel}
-            <div className="mt-1 max-h-32 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/70 backdrop-blur-sm p-2">
-              {roleOptions.length === 0 ? (
-                <p className="font-normal text-gray-400">No roles yet.</p>
-              ) : (
-                roleOptions.map((r) => (
-                  <label key={r.value} className="flex items-center gap-2 font-normal text-gray-700">
-                    <input
-                      type="checkbox"
-                      checked={roleValues.includes(r.value)}
-                      onChange={() => toggleRole(r.value)}
-                      className="h-4 w-4 rounded border-gray-300 text-brand-600"
-                    />
-                    {r.label}
-                  </label>
-                ))
-              )}
-            </div>
+            <MultiSelect
+              options={roleOptions}
+              selected={roleValues}
+              onChange={setRoleValues}
+              allLabel="All roles"
+              className="mt-1"
+            />
             <span className="mt-1 block text-[11px] font-normal text-gray-400">None selected = all roles.</span>
           </div>
         )}

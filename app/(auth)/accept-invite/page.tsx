@@ -33,6 +33,7 @@ export default async function AcceptInvitePage({
       company_name: string;
       status: string;
       is_expired: boolean;
+      invited_name: string | null;
     }>();
 
   if (!invite) {
@@ -136,7 +137,7 @@ export default async function AcceptInvitePage({
           {error}
         </p>
       )}
-      <NewUserAcceptForm token={token} email={invite.email} />
+      <NewUserAcceptForm token={token} email={invite.email} defaultName={invite.invited_name ?? ""} />
       <p className="mt-4 text-center text-sm text-gray-600">
         Already have an account?{" "}
         <Link

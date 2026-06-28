@@ -5,6 +5,7 @@ export type PendingInvite = {
   email: string;
   role: string;
   expires_at: string;
+  invited_name?: string | null;
   companies?: { name: string } | null;
 };
 
@@ -27,9 +28,10 @@ export function PendingInvites({
         <li key={inv.id} className="flex items-center justify-between gap-4 py-3">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-gray-900">
-              {inv.email}
+              {inv.invited_name || inv.email}
             </p>
             <p className="text-xs text-gray-500">
+              {inv.invited_name ? `${inv.email} · ` : ""}
               {showCompany && inv.companies?.name
                 ? `${inv.companies.name} · `
                 : ""}

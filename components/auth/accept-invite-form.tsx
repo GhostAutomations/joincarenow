@@ -7,9 +7,11 @@ import { Field, SubmitButton, FormError } from "@/components/ui/form";
 export function NewUserAcceptForm({
   token,
   email,
+  defaultName = "",
 }: {
   token: string;
   email: string;
+  defaultName?: string;
 }) {
   const [state, action] = useActionState(acceptAsNewUser, undefined);
 
@@ -29,7 +31,7 @@ export function NewUserAcceptForm({
         />
       </div>
 
-      <Field label="Full name" name="fullName" autoComplete="name" />
+      <Field label="Full name" name="fullName" autoComplete="name" defaultValue={defaultName} />
       <Field
         label="Create a password"
         name="password"

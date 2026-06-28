@@ -55,7 +55,7 @@ export default async function CompaniesPage() {
         .eq("role", "admin"),
       supabase
         .from("invitations")
-        .select("id, company_id, email, role, expires_at")
+        .select("id, company_id, email, role, expires_at, invited_name")
         .eq("status", "pending")
         .eq("role", "admin")
         .order("created_at", { ascending: false }),
@@ -81,7 +81,7 @@ export default async function CompaniesPage() {
 
   const invitesByCompany = new Map<
     string,
-    { id: string; email: string; role: string; expires_at: string }[]
+    { id: string; email: string; role: string; expires_at: string; invited_name?: string | null }[]
   >();
   for (const i of adminInvites ?? []) {
     const list = invitesByCompany.get(i.company_id) ?? [];

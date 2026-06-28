@@ -25,6 +25,13 @@ export function InviteForm({
         <FormError error={state?.error} />
         <input type="hidden" name="companyId" value={companyId} />
 
+        <Field
+          label="Full name"
+          name="name"
+          autoComplete="off"
+          placeholder="e.g. Jane Smith"
+        />
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
           <Field
             label="Email address"

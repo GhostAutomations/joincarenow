@@ -69,7 +69,7 @@ export default async function SettingsPage() {
   const { data: invites } = isAdmin
     ? await supabase
         .from("invitations")
-        .select("id, email, role, expires_at")
+        .select("id, email, role, expires_at, invited_name")
         .eq("company_id", current.company_id)
         .eq("status", "pending")
         .order("created_at", { ascending: false })

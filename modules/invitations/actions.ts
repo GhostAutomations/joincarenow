@@ -18,6 +18,7 @@ async function acceptUrl(token: string): Promise<string> {
 
 const inviteSchema = z.object({
   companyId: z.string().uuid(),
+  name: z.string().trim().min(2, "Enter their name").max(120),
   email: z.string().email("Enter a valid email address"),
   role: z.enum(["admin", "manager", "recruiter"]),
 });
@@ -32,6 +33,7 @@ export async function createInvitation(
 ): Promise<InviteState> {
   const parsed = inviteSchema.safeParse({
     companyId: formData.get("companyId"),
+    name: formData.get("name"),
     email: formData.get("email"),
     role: formData.get("role"),
   });
@@ -42,6 +44,7 @@ export async function createInvitation(
     p_company_id: parsed.data.companyId,
     p_email: parsed.data.email,
     p_role: parsed.data.role,
+    p_name: parsed.data.name,
   });
 
   if (error) return { error: error.message };

@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { notifyApplicant } from "@/modules/comms/actions";
 import { renderMergeFields } from "@/lib/comms/send";
-import { formatSalary } from "@/lib/utils";
+import { formatSalary, formatMileage } from "@/lib/utils";
 
 const BASE_URL = "https://www.joincarenow.com";
 
@@ -161,6 +161,14 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
     .single();
   if (!app?.applicant_id) return { error: "Application not found" };
 
+  // Carry the job's mileage rate onto the offer so the contract's {{mileage}}
+  // merge field can be filled.
+  let mileage: string | null = null;
+  if (app.job_id) {
+    const { data: jobRow } = await supabase.from("jobs").select("mileage").eq("id", app.job_id).maybeSingle();
+    mileage = (jobRow as { mileage?: string | null } | null)?.mileage ?? null;
+  }
+
   // Contract + policies to attach for signing — taken from the offer popup
   // (which pre-selects the job's set but lets the recruiter adjust).
   const contractTemplateId = formData.get("contract_template_id")?.toString() || null;
@@ -177,6 +185,7 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
       start_date: startDate,
       pay,
       hours,
+      mileage,
       employment_type: employmentType,
       conditional,
       conditions,
@@ -208,6 +217,7 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
     startDate ? `Start date: ${new Date(startDate).toLocaleDateString("en-GB")}` : "",
     pay ? `Pay: ${formatSalary(pay)}` : "",
     hours ? `Hours: ${hours}` : "",
+    mileage ? `Mileage: ${formatMileage(mileage)} per mile` : "",
     conditional && conditions ? `Conditions: ${conditions}` : "",
     message ? `\n${message}` : "",
     "",
@@ -259,6 +269,7 @@ function mergeContextFromOfferRow(row: Record<string, unknown>): Record<string, 
     role: (row.role as string) ?? (row.job_title as string) ?? "",
     pay: formatSalary(row.pay as string),
     hours: (row.hours as string) ?? "",
+    mileage: formatMileage(row.mileage as string),
     start_date: startDate ? new Date(startDate).toLocaleDateString("en-GB") : "",
     company_name: (row.company_name as string) ?? "",
     conditions: (row.conditions as string) ?? "",

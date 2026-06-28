@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, Briefcase, Users, CalendarClock } from "lucide-react
 import { createClient } from "@/lib/supabase/server";
 import { BrandStyle } from "@/components/dashboard/brand-style";
 import { buildJobPostingJsonLd, computeValidThrough } from "@/lib/seo/job-posting";
-import { formatSalary } from "@/lib/utils";
+import { formatSalary, formatMileage } from "@/lib/utils";
 import type { Metadata } from "next";
 
 type PublicProfile = {
@@ -33,6 +33,7 @@ type PublicJob = {
   location: string | null;
   employment_type: string | null;
   salary: string | null;
+  mileage: string | null;
   vacancies: number;
   closing_date: string | null;
   created_at: string;
@@ -182,9 +183,11 @@ export default async function PublicJobPage({
             )}
           </div>
 
-          {data.salary && (
+          {(data.salary || data.mileage) && (
             <p className="mt-3 text-base font-semibold text-gray-900">
               {formatSalary(data.salary)}
+              {data.salary && data.mileage && <span className="text-gray-400"> · </span>}
+              {data.mileage && <span>{formatMileage(data.mileage)} per mile</span>}
             </p>
           )}
 

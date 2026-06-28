@@ -28,6 +28,7 @@ const MERGE_FIELDS = [
   "role",
   "pay",
   "hours",
+  "mileage",
   "start_date",
   "company_name",
   "conditions",

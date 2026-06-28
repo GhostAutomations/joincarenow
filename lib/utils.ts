@@ -16,6 +16,17 @@ export function formatSalary(raw: string | null | undefined): string {
   return s ? `£${s}` : "";
 }
 
+/** Strip a trailing "p"/"P" + spaces (mileage is stored as just the number). */
+export function stripPence(raw: string | null | undefined): string {
+  return (raw ?? "").trim().replace(/\s*p$/i, "").trim();
+}
+
+/** Display a mileage rate with a trailing "p" (idempotent). Empty -> "". */
+export function formatMileage(raw: string | null | undefined): string {
+  const s = stripPence(raw);
+  return s ? `${s}p` : "";
+}
+
 /** "Acme Care Ltd" -> "acme-care-ltd" */
 export function slugify(input: string): string {
   return input

@@ -15,6 +15,7 @@ export type JobDefaults = {
   role_id?: string;
   workflow_role_id?: string;
   salary?: string;
+  mileage?: string;
   vacancies?: number;
   closing_date?: string;
   application_form_id?: string;
@@ -240,24 +241,44 @@ export function JobForm({
               : "The onboarding workflow applicants get. “Match role” uses whatever workflow is assigned to the Role above."}
           </p>
         </div>
-        <div>
-          <label htmlFor="salary" className="block text-sm font-medium text-gray-700">
-            Salary / rate
-          </label>
-          <div className="relative mt-1">
-            <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-sm font-semibold text-gray-900">£</span>
-            <input
-              id="salary"
-              name="salary"
-              defaultValue={(defaults?.salary ?? "").replace(/^£\s*/, "")}
-              placeholder="e.g. 12.50 per hour"
-              className={`${inputClass} mt-0 pl-7`}
-            />
+        <div className="grid grid-cols-2 gap-5">
+          <div>
+            <label htmlFor="salary" className="block text-sm font-medium text-gray-700">
+              Salary / rate
+            </label>
+            <div className="relative mt-1">
+              <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-sm font-semibold text-gray-900">£</span>
+              <input
+                id="salary"
+                name="salary"
+                defaultValue={(defaults?.salary ?? "").replace(/^£\s*/, "")}
+                placeholder="e.g. 12.50 per hour"
+                className={`${inputClass} mt-0 pl-7`}
+              />
+            </div>
           </div>
-          <p className="mt-1 text-xs text-gray-500">
-            Just the amount — the £ is added automatically on adverts and contracts.
-          </p>
+          <div>
+            <label htmlFor="mileage" className="block text-sm font-medium text-gray-700">
+              Mileage
+            </label>
+            <div className="relative mt-1">
+              <input
+                id="mileage"
+                name="mileage"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={(defaults?.mileage ?? "").replace(/\s*p$/i, "")}
+                placeholder="e.g. 45"
+                className={`${inputClass} mt-0 pr-7`}
+              />
+              <span className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2 text-sm font-semibold text-gray-900">p</span>
+            </div>
+          </div>
         </div>
+        <p className="-mt-3 text-xs text-gray-500">
+          Just the numbers — the £ and p are added automatically on adverts and contracts.
+        </p>
         <div className="grid grid-cols-2 gap-5">
           <div>
             <label htmlFor="vacancies" className="block text-sm font-medium text-gray-700">

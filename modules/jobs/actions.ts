@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireCompany } from "@/modules/auth/queries";
-import { slugify, stripPound } from "@/lib/utils";
+import { slugify, stripPound, stripPence } from "@/lib/utils";
 
 const jobSchema = z.object({
   title: z.string().min(2, "Job title is required").max(150),
@@ -14,6 +14,7 @@ const jobSchema = z.object({
   role_id: z.string().uuid().optional().or(z.literal("")),
   workflow_role_id: z.string().uuid().optional().or(z.literal("")),
   salary: z.string().max(100).optional().or(z.literal("")),
+  mileage: z.string().max(20).optional().or(z.literal("")),
   vacancies: z.coerce.number().int().min(1).max(999).default(1),
   closing_date: z.string().optional().or(z.literal("")),
   application_form_id: z.string().uuid().optional().or(z.literal("")),
@@ -33,6 +34,7 @@ function parseJob(formData: FormData) {
     role_id: formData.get("role_id") ?? "",
     workflow_role_id: formData.get("workflow_role_id") ?? "",
     salary: formData.get("salary") ?? "",
+    mileage: formData.get("mileage") ?? "",
     vacancies: formData.get("vacancies") ?? 1,
     closing_date: formData.get("closing_date") ?? "",
     application_form_id: formData.get("application_form_id") ?? "",
@@ -85,6 +87,7 @@ export async function createJob(
         role_id: parsed.data.role_id || null,
         workflow_role_id: parsed.data.workflow_role_id || null,
         salary: stripPound(parsed.data.salary) || null,
+        mileage: stripPence(parsed.data.mileage) || null,
         vacancies: parsed.data.vacancies,
         closing_date: parsed.data.closing_date || null,
         application_form_id: parsed.data.application_form_id || null,
@@ -148,6 +151,7 @@ export async function updateJob(
       role_id: parsed.data.role_id || null,
       workflow_role_id: parsed.data.workflow_role_id || null,
       salary: stripPound(parsed.data.salary) || null,
+      mileage: stripPence(parsed.data.mileage) || null,
       vacancies: parsed.data.vacancies,
       closing_date: parsed.data.closing_date || null,
       application_form_id: parsed.data.application_form_id || null,

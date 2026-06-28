@@ -61,7 +61,7 @@ export default async function DashboardPage() {
     checklist = [
       { label: "Set up your careers page", hint: "Personalise the intro and benefits applicants see — this is where your job ads appear.", href: "/settings?s=careers", done: careersDone },
       { label: "Publish your first job", hint: "Create a role and publish it to start receiving applicants.", href: "/jobs", done: count(pubJobs) > 0 },
-      { label: "Invite your team", hint: "Add managers and recruiters to your company.", href: "/settings", done: count(teamCount) > 1 },
+      { label: "Invite your team", hint: "Add managers and recruiters to your company.", href: "/settings?s=team", done: count(teamCount) > 1 },
     ];
 
     // Tasks the founder handed to the admin during setup — shown here to finish.

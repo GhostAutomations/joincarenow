@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { sendBrandedEmail } from "@/lib/comms/branded";
+import { COMPANY_ROLE_LABEL } from "@/lib/roles";
 
 /** Build an absolute accept-invite URL from the incoming request host. */
 async function acceptUrl(token: string): Promise<string> {
@@ -24,7 +26,7 @@ const inviteSchema = z.object({
 });
 
 export type InviteState =
-  | { error?: string; inviteLink?: string; invitedEmail?: string }
+  | { error?: string; inviteLink?: string; invitedEmail?: string; emailSent?: boolean }
   | undefined;
 
 export async function createInvitation(
@@ -49,11 +51,41 @@ export async function createInvitation(
 
   if (error) return { error: error.message };
 
+  const link = await acceptUrl(data.token);
+
+  // Auto-send the invite email for team members (manager/recruiter). Founder→admin
+  // invites stay manual on purpose — the founder controls that send via the
+  // "account ready" / "Notify the customer" flow once setup is complete.
+  let emailSent = false;
+  if (parsed.data.role !== "admin") {
+    const { data: company } = await supabase
+      .from("companies")
+      .select("name")
+      .eq("id", parsed.data.companyId)
+      .maybeSingle();
+    const companyName = (company as { name?: string } | null)?.name ?? "your team";
+    const firstName = parsed.data.name.split(" ")[0];
+    const roleLabel = COMPANY_ROLE_LABEL[parsed.data.role] ?? "team member";
+
+    const res = await sendBrandedEmail(supabase, parsed.data.companyId, {
+      to: parsed.data.email,
+      subject: `You've been invited to join ${companyName} on Join Care Now`,
+      text:
+        `Hi ${firstName},\n\n` +
+        `You've been invited to join ${companyName} on Join Care Now as a ${roleLabel}.\n\n` +
+        `Use the button below to set your password and get started.\n\n` +
+        `The Join Care Now team`,
+      cta: { label: "Accept your invitation", url: link },
+    });
+    emailSent = res.ok;
+  }
+
   revalidatePath("/settings");
   revalidatePath("/founder");
   return {
-    inviteLink: await acceptUrl(data.token),
+    inviteLink: link,
     invitedEmail: parsed.data.email,
+    emailSent,
   };
 }
 

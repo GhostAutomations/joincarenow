@@ -6,7 +6,15 @@ import { useEffect, useState } from "react";
  *  console and Settings. A welcome email is sent automatically on company
  *  creation; this link is a manual fallback (and the primary route for team
  *  invites from Settings). */
-export function InviteLink({ link, email }: { link: string; email: string }) {
+export function InviteLink({
+  link,
+  email,
+  emailSent,
+}: {
+  link: string;
+  email: string;
+  emailSent?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -27,11 +35,14 @@ export function InviteLink({ link, email }: { link: string; email: string }) {
   return (
     <div className="rounded-lg border border-green-200 bg-green-50 p-4">
       <p className="text-sm font-medium text-green-800">
-        Invitation created for {email}
+        {emailSent
+          ? `Invitation emailed to ${email}`
+          : `Invitation created for ${email}`}
       </p>
       <p className="mt-1 text-xs text-green-700">
-        Manual fallback link (expires in 14 days) — they normally get their login link
-        in the &ldquo;account ready&rdquo; email you fire once setup is complete:
+        {emailSent
+          ? "We've emailed them a link to join (expires in 14 days). If it doesn't arrive, you can share this link directly:"
+          : "Share this link with them directly (expires in 14 days):"}
       </p>
       <div className="mt-2 flex gap-2">
         <input

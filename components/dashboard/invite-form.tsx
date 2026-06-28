@@ -73,7 +73,11 @@ export function InviteForm({
       </form>
 
       {state?.inviteLink && (
-        <InviteLink link={state.inviteLink} email={state.invitedEmail!} />
+        <InviteLink
+          link={state.inviteLink}
+          email={state.invitedEmail!}
+          emailSent={state.emailSent}
+        />
       )}
     </div>
   );

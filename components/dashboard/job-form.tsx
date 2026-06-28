@@ -242,7 +242,7 @@ export function JobForm({
             Salary / rate
           </label>
           <div className="relative mt-1">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-900">£</span>
+            <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-sm font-semibold text-gray-900">£</span>
             <input
               id="salary"
               name="salary"

@@ -51,10 +51,10 @@ export default async function DashboardPage() {
       supabase.from("company_users").select("id", { count: "exact", head: true }).eq("company_id", cid),
     ]);
     const brand = (companyRow?.settings as { brand?: { logo_url?: string | null } } | null)?.brand;
-    const careers = (companyRow?.settings as { careers?: { intro?: string } } | null)?.careers;
-    // Seeded intro still carries the "[Edit this introduction…]" placeholder, so
-    // it only ticks once the admin has personalised the careers page.
-    const careersDone = Boolean(careers?.intro && !careers.intro.includes("[Edit this introduction"));
+    // "Done" once the careers page has been saved (the save action sets this flag);
+    // the seed does NOT set it, so the task shows until the admin personalises it.
+    const setupChecked = (companyRow?.settings as { setup_checked?: Record<string, boolean> } | null)?.setup_checked ?? {};
+    const careersDone = setupChecked.careers === true;
     checklist = [
       { label: "Add your logo and brand colours", hint: "Make the platform and emails look like yours.", href: "/settings", done: Boolean(brand?.logo_url) },
       { label: "Set up your branches", hint: "Add the branches/locations you recruit for.", href: "/settings", done: count(branchCount) > 0 },

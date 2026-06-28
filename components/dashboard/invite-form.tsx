@@ -3,7 +3,6 @@
 import { useActionState } from "react";
 import { createInvitation, type InviteState } from "@/modules/invitations/actions";
 import { Field, SubmitButton, FormError } from "@/components/ui/form";
-import { InviteLink } from "@/components/dashboard/invite-link";
 
 type Role = { value: "admin" | "registered_individual" | "manager" | "recruiter"; label: string };
 
@@ -72,12 +71,20 @@ export function InviteForm({
         </div>
       </form>
 
-      {state?.inviteLink && (
-        <InviteLink
-          link={state.inviteLink}
-          email={state.invitedEmail!}
-          emailSent={state.emailSent}
-        />
+      {state?.invitedEmail && (
+        <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+          <p className="text-sm font-medium text-green-800">
+            {state.emailSent
+              ? `Invitation emailed to ${state.invitedEmail}`
+              : `Invitation created for ${state.invitedEmail}`}
+          </p>
+          {!state.emailSent && (
+            <p className="mt-1 text-xs text-green-700">
+              The email couldn&apos;t be sent automatically — use the Resend button
+              below once it&apos;s listed under pending invitations.
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

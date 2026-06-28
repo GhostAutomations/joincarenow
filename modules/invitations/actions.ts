@@ -16,6 +16,35 @@ async function acceptUrl(token: string): Promise<string> {
   return `${proto}://${host}/accept-invite?token=${token}`;
 }
 
+/** Send the branded invitation email (CTA button only — no plain-text link).
+ *  Used on both first send and Resend. Returns whether it went out. */
+async function sendInviteEmail(
+  db: Awaited<ReturnType<typeof createClient>>,
+  opts: { companyId: string; email: string; name?: string | null; role: string; token: string }
+): Promise<boolean> {
+  const { data: company } = await db
+    .from("companies")
+    .select("name")
+    .eq("id", opts.companyId)
+    .maybeSingle();
+  const companyName = (company as { name?: string } | null)?.name ?? "your team";
+  const firstName = (opts.name ?? "").trim().split(" ")[0] || "there";
+  const roleLabel = COMPANY_ROLE_LABEL[opts.role] ?? "team member";
+  const link = await acceptUrl(opts.token);
+
+  const res = await sendBrandedEmail(db, opts.companyId, {
+    to: opts.email,
+    subject: `You've been invited to join ${companyName} on Join Care Now`,
+    text:
+      `Hi ${firstName},\n\n` +
+      `You've been invited to join ${companyName} on Join Care Now as a ${roleLabel}.\n\n` +
+      `Use the button below to set your password and get started.\n\n` +
+      `The Join Care Now team`,
+    cta: { label: "Accept your invitation", url: link },
+  });
+  return res.ok;
+}
+
 // ---------- Create invitation (founder→admin, admin→manager/recruiter) ----------
 
 const inviteSchema = z.object({
@@ -26,7 +55,7 @@ const inviteSchema = z.object({
 });
 
 export type InviteState =
-  | { error?: string; inviteLink?: string; invitedEmail?: string; emailSent?: boolean }
+  | { error?: string; invitedEmail?: string; emailSent?: boolean }
   | undefined;
 
 export async function createInvitation(
@@ -51,42 +80,75 @@ export async function createInvitation(
 
   if (error) return { error: error.message };
 
-  const link = await acceptUrl(data.token);
-
   // Auto-send the invite email for team members (manager/recruiter). Founder→admin
   // invites stay manual on purpose — the founder controls that send via the
   // "account ready" / "Notify the customer" flow once setup is complete.
   let emailSent = false;
   if (parsed.data.role !== "admin") {
-    const { data: company } = await supabase
-      .from("companies")
-      .select("name")
-      .eq("id", parsed.data.companyId)
-      .maybeSingle();
-    const companyName = (company as { name?: string } | null)?.name ?? "your team";
-    const firstName = parsed.data.name.split(" ")[0];
-    const roleLabel = COMPANY_ROLE_LABEL[parsed.data.role] ?? "team member";
-
-    const res = await sendBrandedEmail(supabase, parsed.data.companyId, {
-      to: parsed.data.email,
-      subject: `You've been invited to join ${companyName} on Join Care Now`,
-      text:
-        `Hi ${firstName},\n\n` +
-        `You've been invited to join ${companyName} on Join Care Now as a ${roleLabel}.\n\n` +
-        `Use the button below to set your password and get started.\n\n` +
-        `The Join Care Now team`,
-      cta: { label: "Accept your invitation", url: link },
+    emailSent = await sendInviteEmail(supabase, {
+      companyId: parsed.data.companyId,
+      email: parsed.data.email,
+      name: parsed.data.name,
+      role: parsed.data.role,
+      token: data.token,
     });
-    emailSent = res.ok;
   }
 
   revalidatePath("/settings");
   revalidatePath("/founder");
-  return {
-    inviteLink: link,
-    invitedEmail: parsed.data.email,
-    emailSent,
-  };
+  return { invitedEmail: parsed.data.email, emailSent };
+}
+
+// ---------- Resend invitation email (team invites) ----------
+
+export type ResendState = { ok?: boolean; error?: string } | undefined;
+
+/** Re-send the invite email for a pending invitation. Company-admin only;
+ *  scoped to their own company via RLS. */
+export async function resendInvitation(
+  _prev: ResendState,
+  formData: FormData
+): Promise<ResendState> {
+  const id = formData.get("id");
+  if (typeof id !== "string" || !id) return { error: "Missing invitation." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+
+  // RLS only returns invitations for companies the caller belongs to.
+  const { data: inv } = await supabase
+    .from("invitations")
+    .select("company_id, email, role, token, invited_name, status")
+    .eq("id", id)
+    .maybeSingle();
+  if (!inv) return { error: "Invitation not found." };
+  if ((inv as { status: string }).status !== "pending")
+    return { error: "This invitation is no longer pending." };
+
+  // Only a company admin may resend.
+  const { data: membership } = await supabase
+    .from("company_users")
+    .select("role")
+    .eq("company_id", (inv as { company_id: string }).company_id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if ((membership as { role?: string } | null)?.role !== "admin")
+    return { error: "Only a company admin can resend invitations." };
+
+  const i = inv as { company_id: string; email: string; role: string; token: string; invited_name: string | null };
+  const ok = await sendInviteEmail(supabase, {
+    companyId: i.company_id,
+    email: i.email,
+    name: i.invited_name,
+    role: i.role,
+    token: i.token,
+  });
+
+  revalidatePath("/settings");
+  return ok ? { ok: true } : { error: "Couldn't send the email — please try again." };
 }
 
 // ---------- Revoke invitation ----------

@@ -1,4 +1,5 @@
 import { revokeInvitation } from "@/modules/invitations/actions";
+import { ResendButton } from "@/components/dashboard/resend-invite-button";
 
 export type PendingInvite = {
   id: string;
@@ -14,9 +15,11 @@ export type PendingInvite = {
 export function PendingInvites({
   invites,
   showCompany = false,
+  canResend = false,
 }: {
   invites: PendingInvite[];
   showCompany?: boolean;
+  canResend?: boolean;
 }) {
   if (invites.length === 0) {
     return <p className="mt-4 text-sm text-gray-500">No pending invitations.</p>;
@@ -43,11 +46,12 @@ export function PendingInvites({
             <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
               Pending
             </span>
+            {canResend && <ResendButton id={inv.id} />}
             <form action={revokeInvitation}>
               <input type="hidden" name="id" value={inv.id} />
               <button
                 type="submit"
-                className="rounded-md border border-gray-300 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-100"
+                className="rounded-md border border-red-300 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
               >
                 Revoke
               </button>

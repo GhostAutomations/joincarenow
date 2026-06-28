@@ -237,7 +237,7 @@ export default async function SettingsPage() {
             <div>
               <InviteForm companyId={current.company_id} roles={INVITE_ROLES} />
               <h3 className="mt-6 text-sm font-medium text-gray-900">Pending invitations</h3>
-              <PendingInvites invites={invites ?? []} />
+              <PendingInvites invites={invites ?? []} canResend />
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-900">Team members</h3>

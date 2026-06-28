@@ -17,7 +17,10 @@ export async function manageAsCompany(formData: FormData) {
     path: "/",
     maxAge: 60 * 60 * 8, // 8 hours
   });
-  redirect("/dashboard");
+  // Optional deep-link (e.g. straight to a Settings section); defaults to the
+  // company dashboard. Only same-site relative paths are honoured.
+  const next = formData.get("next")?.toString();
+  redirect(next && next.startsWith("/") ? next : "/dashboard");
 }
 
 /** Founder: stop managing as a company and return to the Founder console. */

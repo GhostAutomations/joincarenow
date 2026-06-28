@@ -112,7 +112,7 @@ export default async function PublicJobPage({
     : null;
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen">
       {/* Google for Jobs structured data — matches the visible page. */}
       <script
         type="application/ld+json"

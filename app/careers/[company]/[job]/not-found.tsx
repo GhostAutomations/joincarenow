@@ -4,7 +4,7 @@ import Link from "next/link";
 // 404 here is deliberate — Google for Jobs needs expired postings gone.
 export default function JobClosedNotFound() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
+    <main className="flex min-h-screen items-center justify-center px-6">
       <div className="max-w-md text-center">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">Role closed</p>
         <h1 className="mt-2 text-2xl font-bold text-gray-900">This role is no longer available</h1>

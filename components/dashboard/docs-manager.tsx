@@ -6,11 +6,11 @@ import { FileText, Plus, Pencil, Trash2 } from "lucide-react";
 import { deleteDoc } from "@/modules/contracts/actions";
 
 export type DocItem = { id: string; name: string; body: string; version: number };
-type Kind = "contract" | "policy";
+type Kind = "contract" | "policy" | "job_description";
 
 export function DocsManager({ kind, items }: { kind: Kind; items: DocItem[] }) {
   const router = useRouter();
-  const noun = kind === "contract" ? "contract template" : "policy";
+  const noun = kind === "contract" ? "contract template" : kind === "policy" ? "policy" : "job description";
 
   async function onDelete(id: string) {
     if (!confirm(`Delete this ${noun}? This won't affect copies already signed.`)) return;

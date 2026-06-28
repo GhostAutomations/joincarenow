@@ -7,12 +7,13 @@ import { JobForm } from "@/components/dashboard/job-form";
 export default async function NewJobPage() {
   // Guard: only company members reach this.
   const { supabase, current } = await requireCompany();
-  const [{ data: forms }, { data: branches }, { data: roles }, { data: staff }, { data: wfRows }] = await Promise.all([
+  const [{ data: forms }, { data: branches }, { data: roles }, { data: staff }, { data: wfRows }, { data: jobDescriptions }] = await Promise.all([
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).eq("category", "application").order("name"),
     supabase.from("branches").select("id, name, kind").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("id, name, team").eq("company_id", current.company_id).order("team").order("position").order("name"),
     supabase.from("company_users").select("user_id, profiles(full_name, email)").eq("company_id", current.company_id),
     supabase.from("onboarding_templates").select("role_id, role_ids, workflow_name").eq("company_id", current.company_id).eq("is_store", false),
+    supabase.from("job_descriptions").select("id, name").eq("company_id", current.company_id).order("name"),
   ]);
   const wfByRole = new Map<string, Set<string>>();
   for (const r of (wfRows ?? []) as { role_id: string | null; role_ids: string[] | null; workflow_name: string | null }[]) {
@@ -46,7 +47,7 @@ export default async function NewJobPage() {
       </p>
 
       <div className="mt-6 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-6">
-        <JobForm action={createJob} submitLabel="Save draft" forms={forms ?? []} branches={branches ?? []} roles={roles ?? []} workflows={workflows} owners={owners} />
+        <JobForm action={createJob} submitLabel="Save draft" forms={forms ?? []} branches={branches ?? []} roles={roles ?? []} workflows={workflows} jobDescriptions={jobDescriptions ?? []} owners={owners} />
       </div>
     </div>
   );

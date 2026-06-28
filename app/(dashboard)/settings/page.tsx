@@ -29,7 +29,7 @@ export default async function SettingsPage() {
     .select("id, role, profiles ( full_name, email )")
     .eq("company_id", current.company_id);
 
-  const [{ data: branches }, { data: roles }, { data: contractDocs }, { data: policyDocs }] = await Promise.all([
+  const [{ data: branches }, { data: roles }, { data: contractDocs }, { data: policyDocs }, { data: jobDescDocs }] = await Promise.all([
     supabase.from("branches").select("id, name, kind").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("id, name, team").eq("company_id", current.company_id).order("team").order("position").order("name"),
     isAdmin
@@ -37,6 +37,9 @@ export default async function SettingsPage() {
       : Promise.resolve({ data: [] }),
     isAdmin
       ? supabase.from("policy_documents").select("id, name, body, version").eq("company_id", current.company_id).order("name")
+      : Promise.resolve({ data: [] }),
+    isAdmin
+      ? supabase.from("job_descriptions").select("id, name, body, version").eq("company_id", current.company_id).order("name")
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -177,6 +180,19 @@ export default async function SettingsPage() {
               </p>
               <DocsManager kind="policy" items={policyDocs ?? []} />
             </div>
+          </div>
+        ),
+      },
+      {
+        key: "jobdescriptions",
+        label: "Job descriptions",
+        description: "Write or AI-generate reusable job descriptions; pick one when you create a job.",
+        content: (
+          <div>
+            <p className="mb-3 text-xs text-gray-500">
+              Each job advert uses one of these. Editing a description updates every job that uses it.
+            </p>
+            <DocsManager kind="job_description" items={jobDescDocs ?? []} />
           </div>
         ),
       },

@@ -11,6 +11,7 @@ export type DocResult = { ok?: boolean; error?: string; id?: string };
 const TABLE = {
   contract: "contract_templates",
   policy: "policy_documents",
+  job_description: "job_descriptions",
 } as const;
 
 type Kind = keyof typeof TABLE;
@@ -26,8 +27,10 @@ export async function saveDoc(kind: Kind, formData: FormData): Promise<DocResult
   if (name.length < 2) return { error: "Give the document a name." };
 
   const { supabase, current, user } = await requireCompany();
-  if (current.role !== "admin") return { error: "Only admins can manage contracts and policies." };
+  if (current.role !== "admin") return { error: "Only admins can manage these documents." };
   const table = TABLE[kind];
+  // Job descriptions have no signature method (they aren't signed).
+  const sig = kind === "job_description" ? {} : { signature_method: signatureMethod };
 
   if (id) {
     // Bump the version on edit.
@@ -40,7 +43,7 @@ export async function saveDoc(kind: Kind, formData: FormData): Promise<DocResult
     const nextVersion = ((existing?.version as number) ?? 1) + 1;
     const { error } = await supabase
       .from(table)
-      .update({ name, body, version: nextVersion, signature_method: signatureMethod })
+      .update({ name, body, version: nextVersion, ...sig })
       .eq("id", id)
       .eq("company_id", current.company_id);
     if (error) return { error: "Could not save your changes." };
@@ -50,7 +53,7 @@ export async function saveDoc(kind: Kind, formData: FormData): Promise<DocResult
 
   const { data, error } = await supabase
     .from(table)
-    .insert({ company_id: current.company_id, name, body, signature_method: signatureMethod, created_by: user.id })
+    .insert({ company_id: current.company_id, name, body, ...sig, created_by: user.id })
     .select("id")
     .single();
   if (error) return { error: "Could not create the document." };

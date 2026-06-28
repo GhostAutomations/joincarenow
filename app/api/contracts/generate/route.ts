@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCompany } from "@/modules/auth/queries";
 import { generateContractDraft } from "@/lib/ai/generate-contract";
 import { generatePolicyDraft } from "@/lib/ai/generate-policy";
+import { generateJobDescriptionDraft } from "@/lib/ai/generate-job-description";
 import { recordUsage } from "@/lib/billing/usage";
 
 // AI generation of a full contract/policy can take 60-90s — give the function
@@ -24,7 +25,9 @@ export async function POST(req: NextRequest) {
     const text =
       kind === "policy"
         ? await generatePolicyDraft(name ?? "", brief ?? "")
-        : await generateContractDraft(brief ?? "");
+        : kind === "job_description"
+          ? await generateJobDescriptionDraft(name ?? "", brief ?? "")
+          : await generateContractDraft(brief ?? "");
 
     await recordUsage(current.company_id, "ai");
 

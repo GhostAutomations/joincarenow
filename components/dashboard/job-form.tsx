@@ -21,6 +21,7 @@ export type JobDefaults = {
   contract_template_id?: string;
   policy_ids?: string[];
   owner_id?: string;
+  job_description_id?: string;
 };
 
 const inputClass =
@@ -42,6 +43,7 @@ export function JobForm({
   branches = [],
   roles = [],
   workflows = [],
+  jobDescriptions = [],
   owners = [],
 }: {
   action: Action;
@@ -52,6 +54,7 @@ export function JobForm({
   roles?: { id: string; name: string; team?: string }[];
   /** Workflows actually applied to this company, bound to a role. */
   workflows?: { role_id: string; workflow_name: string }[];
+  jobDescriptions?: { id: string; name: string }[];
   owners?: { user_id: string; name: string }[];
 }) {
   const [state, formAction] = useActionState<JobState, FormData>(action, undefined);
@@ -286,17 +289,27 @@ export function JobForm({
       </div>
 
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="job_description_id" className="block text-sm font-medium text-gray-700">
           Job description
         </label>
-        <textarea
-          id="description"
-          name="description"
-          rows={10}
-          defaultValue={defaults?.description}
-          placeholder="Describe the role, responsibilities, requirements and benefits…"
+        <select
+          id="job_description_id"
+          name="job_description_id"
+          defaultValue={defaults?.job_description_id ?? ""}
           className={inputClass}
-        />
+        >
+          <option value="">Select one</option>
+          {jobDescriptions.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.name}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-gray-500">
+          {jobDescriptions.length === 0
+            ? "Create job descriptions in Settings → Job descriptions, then pick one here."
+            : "Shown on the advert. Manage these in Settings → Job descriptions."}
+        </p>
       </div>
 
       <div>

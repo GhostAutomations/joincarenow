@@ -19,6 +19,7 @@ const jobSchema = z.object({
   application_form_id: z.string().uuid().optional().or(z.literal("")),
   contract_template_id: z.string().uuid().optional().or(z.literal("")),
   owner_id: z.string().uuid().optional().or(z.literal("")),
+  job_description_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 export type JobState = { error?: string } | undefined;
@@ -37,6 +38,7 @@ function parseJob(formData: FormData) {
     application_form_id: formData.get("application_form_id") ?? "",
     contract_template_id: formData.get("contract_template_id") ?? "",
     owner_id: formData.get("owner_id") ?? "",
+    job_description_id: formData.get("job_description_id") ?? "",
   });
 }
 
@@ -87,6 +89,7 @@ export async function createJob(
         closing_date: parsed.data.closing_date || null,
         application_form_id: parsed.data.application_form_id || null,
         contract_template_id: parsed.data.contract_template_id || null,
+        job_description_id: parsed.data.job_description_id || null,
         owner_id: ownerId,
       })
       .select("id")
@@ -140,7 +143,6 @@ export async function updateJob(
     .from("jobs")
     .update({
       title: parsed.data.title,
-      description: parsed.data.description || null,
       employment_type: parsed.data.employment_type || null,
       branch_id: parsed.data.branch_id || null,
       role_id: parsed.data.role_id || null,
@@ -150,6 +152,7 @@ export async function updateJob(
       closing_date: parsed.data.closing_date || null,
       application_form_id: parsed.data.application_form_id || null,
       contract_template_id: newContract,
+      job_description_id: parsed.data.job_description_id || null,
       owner_id: newOwner,
     })
     .eq("id", id)

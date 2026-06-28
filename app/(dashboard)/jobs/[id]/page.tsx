@@ -23,11 +23,11 @@ export default async function EditJobPage({
   const { id } = await params;
   const { supabase, current } = await requireCompany();
 
-  const [{ data: job }, { data: forms }, { data: branches }, { data: roles }, { data: company }, { data: staff }, { data: wfRows }] = await Promise.all([
+  const [{ data: job }, { data: forms }, { data: branches }, { data: roles }, { data: company }, { data: staff }, { data: wfRows }, { data: jobDescriptions }] = await Promise.all([
     supabase
       .from("jobs")
       .select(
-        "id, title, slug, description, location, employment_type, branch_id, role_id, workflow_role_id, salary, vacancies, closing_date, status, application_form_id, contract_template_id, owner_id"
+        "id, title, slug, description, location, employment_type, branch_id, role_id, workflow_role_id, salary, vacancies, closing_date, status, application_form_id, contract_template_id, job_description_id, owner_id"
       )
       .eq("id", id)
       .eq("company_id", current.company_id)
@@ -64,6 +64,11 @@ export default async function EditJobPage({
       .select("role_id, role_ids, workflow_name")
       .eq("company_id", current.company_id)
       .eq("is_store", false),
+    supabase
+      .from("job_descriptions")
+      .select("id, name")
+      .eq("company_id", current.company_id)
+      .order("name"),
   ]);
 
   if (!job) notFound();
@@ -194,6 +199,7 @@ export default async function EditJobPage({
           branches={branches ?? []}
           roles={roles ?? []}
           workflows={workflows}
+          jobDescriptions={jobDescriptions ?? []}
           owners={owners}
           defaults={{
             id: job.id,

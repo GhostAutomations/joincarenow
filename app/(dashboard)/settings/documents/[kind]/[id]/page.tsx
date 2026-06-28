@@ -9,6 +9,7 @@ export const maxDuration = 60;
 const TABLE = {
   contract: "contract_templates",
   policy: "policy_documents",
+  job_description: "job_descriptions",
 } as const;
 
 export default async function DocEditorPage({
@@ -17,25 +18,28 @@ export default async function DocEditorPage({
   params: Promise<{ kind: string; id: string }>;
 }) {
   const { kind, id } = await params;
-  if (kind !== "contract" && kind !== "policy") notFound();
+  if (kind !== "contract" && kind !== "policy" && kind !== "job_description") notFound();
 
   const { supabase, current } = await requireCompany();
   if (current.role !== "admin") redirect("/settings");
 
   let doc: { id: string; name: string; body: string; signatureMethod: "type" | "draw" } | null = null;
   if (id !== "new") {
+    // Job descriptions aren't signed, so they have no signature_method column.
+    const cols = kind === "job_description" ? "id, name, body" : "id, name, body, signature_method";
     const { data } = await supabase
       .from(TABLE[kind])
-      .select("id, name, body, signature_method")
+      .select(cols)
       .eq("id", id)
       .eq("company_id", current.company_id)
       .maybeSingle();
     if (!data) notFound();
+    const row = data as unknown as { id: string; name: string; body: string | null; signature_method?: string };
     doc = {
-      id: data.id as string,
-      name: data.name as string,
-      body: (data.body as string) ?? "",
-      signatureMethod: data.signature_method === "draw" ? "draw" : "type",
+      id: row.id,
+      name: row.name,
+      body: row.body ?? "",
+      signatureMethod: row.signature_method === "draw" ? "draw" : "type",
     };
   }
 

@@ -3,10 +3,23 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Sparkles } from "lucide-react";
+import { ChevronLeft, Sparkles, Upload } from "lucide-react";
 import { saveDoc } from "@/modules/contracts/actions";
 
-type Kind = "contract" | "policy";
+/** Load mammoth (docx -> text) from cdnjs on demand (npm install is blocked). */
+function loadMammoth(): Promise<{ extractRawText: (o: { arrayBuffer: ArrayBuffer }) => Promise<{ value: string }> }> {
+  const w = window as unknown as { mammoth?: { extractRawText: (o: { arrayBuffer: ArrayBuffer }) => Promise<{ value: string }> } };
+  if (w.mammoth) return Promise.resolve(w.mammoth);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
+    s.onload = () => (w.mammoth ? resolve(w.mammoth) : reject(new Error("Reader failed to load.")));
+    s.onerror = () => reject(new Error("Could not load the document reader."));
+    document.head.appendChild(s);
+  });
+}
+
+type Kind = "contract" | "policy" | "job_description";
 
 const MERGE_FIELDS = [
   "first_name",
@@ -19,8 +32,6 @@ const MERGE_FIELDS = [
   "company_name",
   "conditions",
 ];
-
-const BACK = "/settings?s=contracts";
 
 export function DocEditorForm({
   kind,
@@ -38,7 +49,10 @@ export function DocEditorForm({
   const [brief, setBrief] = useState("");
   const [generating, setGenerating] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
-  const noun = kind === "contract" ? "contract template" : "policy";
+  const noun = kind === "contract" ? "contract template" : kind === "policy" ? "policy" : "job description";
+  const isJD = kind === "job_description";
+  const BACK = isJD ? "/settings?s=jobdescriptions" : "/settings?s=contracts";
+  const backLabel = isJD ? "Job descriptions" : "Contracts & policies";
 
   async function generate() {
     if (body.trim() && !confirm(`Replace the current ${noun} text with a fresh AI-generated draft?`)) {
@@ -97,6 +111,30 @@ export function DocEditorForm({
     });
   }
 
+  const fileRef = useRef<HTMLInputElement>(null);
+  async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-uploading the same file
+    if (!file) return;
+    if (body.trim() && !confirm("Replace the current text with the uploaded document?")) return;
+    setError(null);
+    const lower = file.name.toLowerCase();
+    try {
+      if (lower.endsWith(".docx")) {
+        const mammoth = await loadMammoth();
+        const arrayBuffer = await file.arrayBuffer();
+        const res = await mammoth.extractRawText({ arrayBuffer });
+        setBody((res.value ?? "").trim());
+      } else if (lower.endsWith(".txt") || lower.endsWith(".md") || file.type.startsWith("text/")) {
+        setBody((await file.text()).trim());
+      } else {
+        setError("Please upload a Word (.docx) or text (.txt) file — or paste the text directly. (PDFs aren't supported; copy the text out and paste it.)");
+      }
+    } catch {
+      setError("Could not read that file. Please paste the text in instead.");
+    }
+  }
+
   async function action(fd: FormData) {
     setBusy(true);
     setError(null);
@@ -116,7 +154,7 @@ export function DocEditorForm({
         href={BACK}
         className="inline-flex items-center gap-1.5 text-sm font-medium text-white/80 hover:text-white"
       >
-        <ChevronLeft className="h-4 w-4" /> Contracts &amp; policies
+        <ChevronLeft className="h-4 w-4" /> {backLabel}
       </Link>
 
       <h1 className="mt-3 text-2xl font-semibold text-white drop-shadow-sm">
@@ -130,26 +168,30 @@ export function DocEditorForm({
             name="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={kind === "contract" ? "e.g. Care Assistant — Permanent Contract" : "e.g. Data Protection (GDPR) Policy"}
+            placeholder={kind === "contract" ? "e.g. Care Assistant — Permanent Contract" : kind === "policy" ? "e.g. Data Protection (GDPR) Policy" : "e.g. Care Worker"}
             className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </label>
 
-        <p className="text-xs text-gray-500">
-          Editing creates a new version — copies already signed are never changed.
-        </p>
+        {!isJD && (
+          <p className="text-xs text-gray-500">
+            Editing creates a new version — copies already signed are never changed.
+          </p>
+        )}
 
         <div className="rounded-xl border border-violet-200 bg-violet-50/70 p-3">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-violet-600" />
             <span className="text-sm font-medium text-violet-900">
-              {kind === "contract" ? "Generate a contract" : "Generate a policy"}
+              {kind === "contract" ? "Generate a contract" : kind === "policy" ? "Generate a policy" : "Generate a job description"}
             </span>
           </div>
           <p className="mt-1 text-xs text-violet-800/80">
             {kind === "contract"
               ? "Drafts a care-sector employment contract reflecting current UK employment law and ACAS guidance, with merge fields ready to fill. Add any specifics below (optional)."
-              : "Drafts a care-sector policy on the topic in the Name field above, reflecting current UK employment law and ACAS guidance. Add any specifics below (optional)."}
+              : kind === "policy"
+                ? "Drafts a care-sector policy on the topic in the Name field above, reflecting current UK employment law and ACAS guidance. Add any specifics below (optional)."
+                : "Drafts a care-sector job description for the role in the Name field above. Add any specifics below (optional)."}
           </p>
           <div className="mt-2 flex flex-col gap-2 sm:flex-row">
             <input
@@ -158,7 +200,9 @@ export function DocEditorForm({
               placeholder={
                 kind === "contract"
                   ? "e.g. 6-month probation, zero-hours bank staff, mileage paid…"
-                  : "e.g. covers social media, refer to disciplinary procedure…"
+                  : kind === "policy"
+                    ? "e.g. covers social media, refer to disciplinary procedure…"
+                    : "e.g. driver role, evenings & weekends, medication trained…"
               }
               className="min-w-0 flex-1 rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm focus:border-violet-400 focus:outline-none focus:ring-1 focus:ring-violet-400"
             />
@@ -169,7 +213,7 @@ export function DocEditorForm({
               className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-60"
             >
               <Sparkles className="h-4 w-4" />
-              {generating ? "Generating… (up to a minute)" : kind === "contract" ? "Generate contract" : "Generate policy"}
+              {generating ? "Generating… (up to a minute)" : kind === "contract" ? "Generate contract" : kind === "policy" ? "Generate policy" : "Generate job description"}
             </button>
           </div>
           <p className="mt-2 text-[11px] leading-snug text-violet-800/70">
@@ -178,6 +222,7 @@ export function DocEditorForm({
           </p>
         </div>
 
+        {!isJD && (
         <div className="rounded-lg bg-gray-50 px-3 py-2.5">
           <p className="mb-1.5 text-xs text-gray-600">
             Highlight a word in the text below, then click a field to drop it in:
@@ -195,10 +240,29 @@ export function DocEditorForm({
             ))}
           </div>
         </div>
+        )}
+
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-medium text-gray-600">Paste the text below, or:</span>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <Upload className="h-4 w-4" /> Upload a document
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".docx,.txt,.md,text/plain"
+            onChange={onUpload}
+            className="hidden"
+          />
+        </div>
 
         <label className="block">
           <span className="text-xs font-medium text-gray-600">
-            {kind === "contract" ? "Contract text" : "Policy text"}
+            {kind === "contract" ? "Contract text" : kind === "policy" ? "Policy text" : "Job description text"}
           </span>
           <textarea
             ref={taRef}
@@ -210,6 +274,7 @@ export function DocEditorForm({
           />
         </label>
 
+        {!isJD && (
         <div className="rounded-lg border border-gray-200 p-3">
           <p className="text-xs font-medium text-gray-700">How the applicant signs this {kind === "contract" ? "contract" : "policy"}</p>
           <div className="mt-2 flex flex-col gap-2 sm:flex-row">
@@ -243,6 +308,7 @@ export function DocEditorForm({
             </label>
           </div>
         </div>
+        )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 

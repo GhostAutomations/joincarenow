@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { Circle } from "lucide-react";
+import { Circle, CheckCircle2 } from "lucide-react";
 import { dismissOnboardingChecklist } from "@/modules/companies/actions";
 
 export type ChecklistItem = {
@@ -57,20 +57,30 @@ export function GettingStartedChecklist({
       </div>
 
       <ul className="mt-4 space-y-1.5">
-        {remaining.map((item) => (
-          <li key={item.label}>
-            <Link
-              href={item.href}
-              className="group flex items-start gap-3 rounded-xl px-2 py-2 transition hover:bg-white/15"
-            >
-              <Circle className="mt-0.5 h-5 w-5 shrink-0 text-white/50 group-hover:text-white/80" />
+        {/* Outstanding first (actionable), then the completed ones with a tick. */}
+        {[...remaining, ...items.filter((i) => i.done)].map((item) =>
+          item.done ? (
+            <li key={item.label} className="flex items-start gap-3 rounded-xl px-2 py-2">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-300" />
               <span className="min-w-0">
-                <span className="block text-sm font-medium text-white">{item.label}</span>
-                <span className="block text-xs text-white/60">{item.hint}</span>
+                <span className="block text-sm font-medium text-white/70 line-through">{item.label}</span>
               </span>
-            </Link>
-          </li>
-        ))}
+            </li>
+          ) : (
+            <li key={item.label}>
+              <Link
+                href={item.href}
+                className="group flex items-start gap-3 rounded-xl px-2 py-2 transition hover:bg-white/15"
+              >
+                <Circle className="mt-0.5 h-5 w-5 shrink-0 text-white/50 group-hover:text-white/80" />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-white">{item.label}</span>
+                  <span className="block text-xs text-white/60">{item.hint}</span>
+                </span>
+              </Link>
+            </li>
+          )
+        )}
       </ul>
     </div>
   );

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { MapPin, Briefcase, ArrowRight, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { BrandStyle } from "@/components/dashboard/brand-style";
+import { formatSalary } from "@/lib/utils";
 import type { Metadata } from "next";
 
 type CareersRow = {
@@ -186,7 +187,7 @@ export default async function CompanyCareersPage({
                         </span>
                       )}
                       {job.salary && (
-                        <span className="font-medium text-gray-800">{job.salary}</span>
+                        <span className="font-medium text-gray-800">{formatSalary(job.salary)}</span>
                       )}
                     </div>
                   </div>

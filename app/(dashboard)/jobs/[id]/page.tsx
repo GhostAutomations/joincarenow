@@ -6,6 +6,7 @@ import { updateJob, setJobStatus, reopenJob } from "@/modules/jobs/actions";
 import { JobForm } from "@/components/dashboard/job-form";
 import { ArchiveJobButton } from "@/components/dashboard/archive-job";
 import { JobPromote } from "@/components/dashboard/job-promote";
+import { formatSalary } from "@/lib/utils";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-gray-100 text-gray-700",
@@ -177,7 +178,7 @@ export default async function EditJobPage({
           companyName={companyRow?.name ?? current.companies.name}
           jobTitle={job.title}
           location={job.location ?? null}
-          salary={job.salary ?? null}
+          salary={formatSalary(job.salary) || null}
           employmentType={job.employment_type ?? null}
           jobUrl={`https://www.joincarenow.com${careersUrl}`}
           brandPrimary={brand?.primary ?? null}

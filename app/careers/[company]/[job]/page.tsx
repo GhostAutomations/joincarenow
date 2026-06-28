@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Briefcase, Users, CalendarClock } from "lucide-react
 import { createClient } from "@/lib/supabase/server";
 import { BrandStyle } from "@/components/dashboard/brand-style";
 import { buildJobPostingJsonLd, computeValidThrough } from "@/lib/seo/job-posting";
+import { formatSalary } from "@/lib/utils";
 import type { Metadata } from "next";
 
 type PublicProfile = {
@@ -165,7 +166,7 @@ export default async function PublicJobPage({
 
           {data.salary && (
             <p className="mt-3 text-base font-semibold text-gray-900">
-              {data.salary}
+              {formatSalary(data.salary)}
             </p>
           )}
 

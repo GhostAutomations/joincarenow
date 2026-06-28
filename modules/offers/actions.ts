@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { notifyApplicant } from "@/modules/comms/actions";
 import { renderMergeFields } from "@/lib/comms/send";
+import { formatSalary } from "@/lib/utils";
 
 const BASE_URL = "https://www.joincarenow.com";
 
@@ -205,7 +206,7 @@ export async function sendOffer(formData: FormData): Promise<{ ok?: boolean; err
       conditional ? " (conditional offer)" : ""
     }.`,
     startDate ? `Start date: ${new Date(startDate).toLocaleDateString("en-GB")}` : "",
-    pay ? `Pay: ${pay}` : "",
+    pay ? `Pay: ${formatSalary(pay)}` : "",
     hours ? `Hours: ${hours}` : "",
     conditional && conditions ? `Conditions: ${conditions}` : "",
     message ? `\n${message}` : "",
@@ -256,7 +257,7 @@ function mergeContextFromOfferRow(row: Record<string, unknown>): Record<string, 
     last_name: (row.last_name as string) ?? "",
     job_title: (row.job_title as string) ?? "",
     role: (row.role as string) ?? (row.job_title as string) ?? "",
-    pay: (row.pay as string) ?? "",
+    pay: formatSalary(row.pay as string),
     hours: (row.hours as string) ?? "",
     start_date: startDate ? new Date(startDate).toLocaleDateString("en-GB") : "",
     company_name: (row.company_name as string) ?? "",

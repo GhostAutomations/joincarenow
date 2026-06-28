@@ -241,13 +241,19 @@ export function JobForm({
           <label htmlFor="salary" className="block text-sm font-medium text-gray-700">
             Salary / rate
           </label>
-          <input
-            id="salary"
-            name="salary"
-            defaultValue={defaults?.salary}
-            placeholder="e.g. £12.50 per hour"
-            className={inputClass}
-          />
+          <div className="relative mt-1">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">£</span>
+            <input
+              id="salary"
+              name="salary"
+              defaultValue={(defaults?.salary ?? "").replace(/^£\s*/, "")}
+              placeholder="e.g. 12.50 per hour"
+              className={`${inputClass} mt-0 pl-7`}
+            />
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Just the amount — the £ is added automatically on adverts and contracts.
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-5">
           <div>
@@ -313,11 +319,6 @@ export function JobForm({
             </option>
           ))}
         </select>
-        <p className="mt-1 text-xs text-gray-500">
-          {forms.length === 0
-            ? "Optional. Only forms in the “Application forms” category appear here — set a form’s category to “Application forms” to use it. Otherwise applicants fill the built-in basics."
-            : "Optional. Adds your custom questions on top of the built-in basics. Only forms in the “Application forms” category are listed."}
-        </p>
       </div>
 
       <div className="sm:w-48">

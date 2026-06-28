@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireCompany } from "@/modules/auth/queries";
-import { slugify } from "@/lib/utils";
+import { slugify, stripPound } from "@/lib/utils";
 
 const jobSchema = z.object({
   title: z.string().min(2, "Job title is required").max(150),
@@ -82,7 +82,7 @@ export async function createJob(
         branch_id: parsed.data.branch_id || null,
         role_id: parsed.data.role_id || null,
         workflow_role_id: parsed.data.workflow_role_id || null,
-        salary: parsed.data.salary || null,
+        salary: stripPound(parsed.data.salary) || null,
         vacancies: parsed.data.vacancies,
         closing_date: parsed.data.closing_date || null,
         application_form_id: parsed.data.application_form_id || null,
@@ -145,7 +145,7 @@ export async function updateJob(
       branch_id: parsed.data.branch_id || null,
       role_id: parsed.data.role_id || null,
       workflow_role_id: parsed.data.workflow_role_id || null,
-      salary: parsed.data.salary || null,
+      salary: stripPound(parsed.data.salary) || null,
       vacancies: parsed.data.vacancies,
       closing_date: parsed.data.closing_date || null,
       application_form_id: parsed.data.application_form_id || null,

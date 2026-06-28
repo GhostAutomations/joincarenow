@@ -5,6 +5,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Strip any leading £ + spaces (we store salary/pay as just the amount). */
+export function stripPound(raw: string | null | undefined): string {
+  return (raw ?? "").trim().replace(/^£\s*/, "");
+}
+
+/** Display a salary/pay with exactly one leading £ (idempotent). Empty -> "". */
+export function formatSalary(raw: string | null | undefined): string {
+  const s = stripPound(raw);
+  return s ? `£${s}` : "";
+}
+
 /** "Acme Care Ltd" -> "acme-care-ltd" */
 export function slugify(input: string): string {
   return input

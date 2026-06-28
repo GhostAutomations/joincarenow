@@ -66,9 +66,7 @@ export function DocEditorForm({
   const taRef = useRef<HTMLTextAreaElement>(null);
   const noun = kind === "contract" ? "contract template" : kind === "policy" ? "policy" : "job description";
   const isJD = kind === "job_description";
-  // Job descriptions appear on a public advert (not personalised per applicant),
-  // so only company-level fields can be merged in.
-  const mergeFields = isJD ? ["company_name", "job_title"] : MERGE_FIELDS;
+  const mergeFields = MERGE_FIELDS;
   const BACK = isJD ? "/settings?s=jobdescriptions" : "/settings?s=contracts";
   const backLabel = isJD ? "Job descriptions" : "Contracts & policies";
 
@@ -247,9 +245,7 @@ export function DocEditorForm({
 
         <div className="rounded-lg bg-gray-50 px-3 py-2.5">
           <p className="mb-1.5 text-xs text-gray-600">
-            {isJD
-              ? "Click a field to drop it in (filled automatically on the advert):"
-              : "Highlight a word in the text below, then click a field to drop it in:"}
+            Highlight a word in the text below, then click a field to drop it in:
           </p>
           <div className="flex flex-wrap gap-1.5">
             {mergeFields.map((f) => (

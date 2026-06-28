@@ -56,9 +56,9 @@ export default async function DashboardPage() {
     // the seed does NOT set it, so the task shows until the admin personalises it.
     const setupChecked = (companyRow?.settings as { setup_checked?: Record<string, boolean> } | null)?.setup_checked ?? {};
     const careersDone = setupChecked.careers === true;
+    // Standard admin tasks. Logo/branches are NOT here by default — they only
+    // appear if the founder passed them off (handled below via passed_tasks).
     checklist = [
-      { label: "Add your logo and brand colours", hint: "Make the platform and emails look like yours.", href: "/settings", done: Boolean(brand?.logo_url) },
-      { label: "Set up your branches", hint: "Add the branches/locations you recruit for.", href: "/settings", done: count(branchCount) > 0 },
       { label: "Set up your careers page", hint: "Personalise the intro and benefits applicants see — this is where your job ads appear.", href: "/settings?s=careers", done: careersDone },
       { label: "Publish your first job", hint: "Create a role and publish it to start receiving applicants.", href: "/jobs", done: count(pubJobs) > 0 },
       { label: "Invite your team", hint: "Add managers and recruiters to your company.", href: "/settings", done: count(teamCount) > 1 },

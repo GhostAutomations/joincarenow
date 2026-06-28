@@ -51,9 +51,14 @@ export default async function DashboardPage() {
       supabase.from("company_users").select("id", { count: "exact", head: true }).eq("company_id", cid),
     ]);
     const brand = (companyRow?.settings as { brand?: { logo_url?: string | null } } | null)?.brand;
+    const careers = (companyRow?.settings as { careers?: { intro?: string } } | null)?.careers;
+    // Seeded intro still carries the "[Edit this introduction…]" placeholder, so
+    // it only ticks once the admin has personalised the careers page.
+    const careersDone = Boolean(careers?.intro && !careers.intro.includes("[Edit this introduction"));
     checklist = [
       { label: "Add your logo and brand colours", hint: "Make the platform and emails look like yours.", href: "/settings", done: Boolean(brand?.logo_url) },
       { label: "Set up your branches", hint: "Add the branches/locations you recruit for.", href: "/settings", done: count(branchCount) > 0 },
+      { label: "Set up your careers page", hint: "Personalise the intro and benefits applicants see — this is where your job ads appear.", href: "/settings?s=careers", done: careersDone },
       { label: "Publish your first job", hint: "Create a role and publish it to start receiving applicants.", href: "/jobs", done: count(pubJobs) > 0 },
       { label: "Invite your team", hint: "Add managers and recruiters to your company.", href: "/settings", done: count(teamCount) > 1 },
     ];

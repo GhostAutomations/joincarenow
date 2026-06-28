@@ -78,7 +78,12 @@ body {
    lower opacity + real blur + saturate (keeps the gradient vivid instead of
    going grey) + a white rim. Text stays dark/readable.
    ---------------------------------------------------------------- */
-:where(.bg-white, [class*="bg-white/"]) {
+/* Only frost the LIGHT card surfaces (solid white + /55 and above, which carry
+   dark text). Low white tints (/5–/50) are intentionally dark glass with WHITE
+   text over the gradient — leave those alone or the white text disappears. */
+:where(.bg-white,
+  [class*="bg-white/55"], [class*="bg-white/60"], [class*="bg-white/70"],
+  [class*="bg-white/80"], [class*="bg-white/90"], [class*="bg-white/95"]) {
   background-color: rgb(255 255 255 / 0.55) !important;
   -webkit-backdrop-filter: blur(18px) saturate(160%);
   backdrop-filter: blur(18px) saturate(160%);

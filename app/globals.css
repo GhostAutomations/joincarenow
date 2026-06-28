@@ -46,6 +46,10 @@
 /* The brand gradient is the background of the WHOLE site, so frosted-glass
    surfaces always have something colourful behind them (otherwise glass reads
    as flat grey). Fixed so it stays put while long pages scroll. */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   @apply text-gray-900 antialiased;
   min-height: 100vh;

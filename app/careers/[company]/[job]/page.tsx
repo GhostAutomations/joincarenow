@@ -136,14 +136,26 @@ export default async function PublicJobPage({
       <div className="mx-auto max-w-3xl px-6 py-8">
 
         <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
-          <p className="text-xs font-medium uppercase tracking-wide text-brand-600">
-            {data.company_name}
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-            {data.title}
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-brand-600">
+                {data.company_name}
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+                {data.title}
+              </h1>
+            </div>
+            {profile?.logo_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.logo_url}
+                alt={data.company_name}
+                className="h-14 w-auto max-w-[140px] shrink-0 rounded-lg object-contain"
+              />
+            )}
+          </div>
 
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-600">
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-700">
             {data.location && (
               <span className="inline-flex items-center gap-1.5">
                 <MapPin className="h-4 w-4" aria-hidden />
@@ -178,7 +190,7 @@ export default async function PublicJobPage({
 
           <div className="mt-6 border-t border-gray-100 pt-6">
             {data.description ? (
-              <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
+              <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-900">
                 {data.description}
               </div>
             ) : (

@@ -15,31 +15,8 @@ import { StarterPackPanel } from "@/components/founder/starter-pack-panel";
 import { AccountReadyButton } from "@/components/founder/account-ready-button";
 import { FounderSetupWizard, type WizardTask } from "@/components/founder/setup-wizard";
 import { WorkflowApplyPanel } from "@/components/founder/workflow-apply-panel";
-import { manageAsCompany } from "@/modules/founder/actions";
+import { FounderDocsManager } from "@/components/founder/founder-docs-manager";
 import type { OpeningHours } from "@/lib/opening-hours";
-
-/** A founder setup task that drops into the company's own Settings (manage-as-
- *  company) to build documents there, where paste / upload / AI / merge live. */
-function docSetupTask(companyId: string, count: number, noun: string, section: string) {
-  return (
-    <div>
-      <p className="text-sm text-gray-600">
-        {count > 0 ? `${count} already set up. ` : "None yet. "}
-        Build {noun} for this company — paste them in, upload a Word/text file, or generate with AI, and drop in merge fields.
-      </p>
-      <form action={manageAsCompany} className="mt-3">
-        <input type="hidden" name="companyId" value={companyId} />
-        <input type="hidden" name="next" value={`/settings?s=${section}`} />
-        <button className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-700">
-          Set up {noun} →
-        </button>
-      </form>
-      <p className="mt-2 text-xs text-gray-500">
-        Opens this company&apos;s Settings (managing as them). Use &quot;Stop managing&quot; to return.
-      </p>
-    </div>
-  );
-}
 
 export default async function CompanySetupPage({
   params,
@@ -50,7 +27,7 @@ export default async function CompanySetupPage({
   await requirePlatformAdmin();
   const db = createAdminClient();
 
-  const [{ data: company }, { data: branches }, { data: roles }, { data: storeWfRows }, { data: appliedRows }, { count: contractCount }, { count: policyCount }, { count: jobDescCount }] = await Promise.all([
+  const [{ data: company }, { data: branches }, { data: roles }, { data: storeWfRows }, { data: appliedRows }, { data: contractDocs }, { data: policyDocs }, { data: jobDescDocs }] = await Promise.all([
     db.from("companies").select("id, name, slug, settings").eq("id", id).single(),
     db.from("branches").select("id, name, kind").eq("company_id", id).order("name"),
     db.from("roles").select("id, name, team").eq("company_id", id).order("team").order("position").order("name"),
@@ -67,9 +44,9 @@ export default async function CompanySetupPage({
       .select("workflow_name")
       .eq("company_id", id)
       .eq("is_store", false),
-    db.from("contract_templates").select("id", { count: "exact", head: true }).eq("company_id", id),
-    db.from("policy_documents").select("id", { count: "exact", head: true }).eq("company_id", id),
-    db.from("job_descriptions").select("id", { count: "exact", head: true }).eq("company_id", id),
+    db.from("contract_templates").select("id, name, body").eq("company_id", id).order("name"),
+    db.from("policy_documents").select("id, name, body").eq("company_id", id).order("name"),
+    db.from("job_descriptions").select("id, name, body").eq("company_id", id).order("name"),
   ]);
   if (!company) notFound();
 
@@ -134,18 +111,18 @@ export default async function CompanySetupPage({
     },
     {
       key: "contracts", label: "Contracts", isManager: true, done: checked.contracts === true,
-      description: "Employment contracts the applicant signs on accepting an offer.",
-      content: docSetupTask(id, contractCount ?? 0, "contracts", "contracts"),
+      description: "Employment contracts the applicant signs on accepting an offer. Paste, upload (Word/text) or AI-generate, with merge fields.",
+      content: <FounderDocsManager companyId={id} kind="contract" items={contractDocs ?? []} noun="contract" />,
     },
     {
       key: "policies", label: "Policies", isManager: true, done: checked.policies === true,
-      description: "Handbook, GDPR, code of conduct, etc. — acknowledged by the applicant.",
-      content: docSetupTask(id, policyCount ?? 0, "policies", "contracts"),
+      description: "Handbook, GDPR, code of conduct, etc. — acknowledged by the applicant. Paste, upload or AI-generate.",
+      content: <FounderDocsManager companyId={id} kind="policy" items={policyDocs ?? []} noun="policy" />,
     },
     {
       key: "jobdescriptions", label: "Job descriptions", isManager: true, done: checked.jobdescriptions === true,
-      description: "Reusable job descriptions selected when creating a job.",
-      content: docSetupTask(id, jobDescCount ?? 0, "job descriptions", "jobdescriptions"),
+      description: "Reusable job descriptions selected when creating a job. Paste, upload or AI-generate.",
+      content: <FounderDocsManager companyId={id} kind="job_description" items={jobDescDocs ?? []} noun="job description" />,
     },
     {
       key: "careers", label: "Careers page", isManager: false, done: checked.careers === true,

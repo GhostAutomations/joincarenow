@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireCompany } from "@/modules/auth/queries";
+import { requireCompany, requirePlatformAdmin } from "@/modules/auth/queries";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { generateContractDraft } from "@/lib/ai/generate-contract";
 import { generatePolicyDraft } from "@/lib/ai/generate-policy";
 import { recordUsage } from "@/lib/billing/usage";
@@ -92,6 +93,52 @@ export async function generatePolicy(
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not generate the policy." };
   }
+}
+
+/** Founder: create/update a doc for a company they're setting up (admin client,
+ *  platform-admin only). Same shape as saveDoc; companyId comes from the form. */
+export async function saveFounderDoc(kind: Kind, formData: FormData): Promise<DocResult> {
+  await requirePlatformAdmin();
+  const companyId = formData.get("companyId")?.toString() || "";
+  const id = formData.get("id")?.toString() || null;
+  const name = (formData.get("name")?.toString() ?? "").trim();
+  const body = formData.get("body")?.toString() ?? "";
+  const signatureMethod = formData.get("signature_method")?.toString() === "draw" ? "draw" : "type";
+  if (!companyId) return { error: "Missing company." };
+  if (name.length < 2) return { error: "Give the document a name." };
+
+  const db = createAdminClient();
+  const table = TABLE[kind];
+  const sig = kind === "job_description" ? {} : { signature_method: signatureMethod };
+
+  if (id) {
+    const { data: existing } = await db.from(table).select("version").eq("id", id).eq("company_id", companyId).maybeSingle();
+    const nextVersion = ((existing?.version as number) ?? 1) + 1;
+    const { error } = await db.from(table).update({ name, body, version: nextVersion, ...sig }).eq("id", id).eq("company_id", companyId);
+    if (error) return { error: "Could not save your changes." };
+    revalidatePath(`/founder/companies/${companyId}`);
+    return { ok: true, id };
+  }
+
+  const { data, error } = await db
+    .from(table)
+    .insert({ company_id: companyId, name, body, ...sig, created_by: null })
+    .select("id")
+    .single();
+  if (error) return { error: "Could not create the document." };
+  revalidatePath(`/founder/companies/${companyId}`);
+  return { ok: true, id: data.id as string };
+}
+
+/** Founder: delete a company's doc (platform-admin only). */
+export async function deleteFounderDoc(kind: Kind, companyId: string, id: string): Promise<DocResult> {
+  await requirePlatformAdmin();
+  if (!companyId || !id) return { error: "Missing document." };
+  const db = createAdminClient();
+  const { error } = await db.from(TABLE[kind]).delete().eq("id", id).eq("company_id", companyId);
+  if (error) return { error: "Could not delete the document." };
+  revalidatePath(`/founder/companies/${companyId}`);
+  return { ok: true };
 }
 
 export async function deleteDoc(kind: Kind, id: string): Promise<DocResult> {

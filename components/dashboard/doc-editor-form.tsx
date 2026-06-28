@@ -33,12 +33,27 @@ const MERGE_FIELDS = [
   "conditions",
 ];
 
+type SaveAction = (kind: Kind, fd: FormData) => Promise<{ ok?: boolean; error?: string; id?: string }>;
+
 export function DocEditorForm({
   kind,
   doc,
+  companyId,
+  embedded = false,
+  saveAction,
+  onSaved,
+  onCancel,
 }: {
   kind: Kind;
   doc: { id: string; name: string; body: string; signatureMethod?: "type" | "draw" } | null;
+  /** When set, the doc is saved for this company (founder setup) + sent to AI. */
+  companyId?: string;
+  /** Render without the page chrome (back link / heading / card), for inline use. */
+  embedded?: boolean;
+  /** Override the save action (defaults to the company saveDoc). */
+  saveAction?: SaveAction;
+  onSaved?: () => void;
+  onCancel?: () => void;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -70,7 +85,7 @@ export function DocEditorForm({
       const res = await fetch("/api/contracts/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, name, brief }),
+        body: JSON.stringify({ kind, name, brief, companyId }),
         signal: controller.signal,
       });
       const data = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
@@ -139,29 +154,34 @@ export function DocEditorForm({
     setBusy(true);
     setError(null);
     if (doc) fd.set("id", doc.id);
-    const r = await saveDoc(kind, fd);
+    if (companyId) fd.set("companyId", companyId);
+    const r = await (saveAction ?? saveDoc)(kind, fd);
     setBusy(false);
     if (r?.error) {
       setError(r.error);
       return;
     }
-    router.push(BACK);
+    if (onSaved) onSaved();
+    else router.push(BACK);
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <Link
-        href={BACK}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-white/80 hover:text-white"
-      >
-        <ChevronLeft className="h-4 w-4" /> {backLabel}
-      </Link>
+    <div className={embedded ? "" : "mx-auto max-w-3xl"}>
+      {!embedded && (
+        <>
+          <Link
+            href={BACK}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-white/80 hover:text-white"
+          >
+            <ChevronLeft className="h-4 w-4" /> {backLabel}
+          </Link>
+          <h1 className="mt-3 text-2xl font-semibold text-white drop-shadow-sm">
+            {doc ? `Edit ${noun}` : `New ${noun}`}
+          </h1>
+        </>
+      )}
 
-      <h1 className="mt-3 text-2xl font-semibold text-white drop-shadow-sm">
-        {doc ? `Edit ${noun}` : `New ${noun}`}
-      </h1>
-
-      <form action={action} className="mt-6 space-y-4 rounded-2xl border border-white/40 bg-white/90 p-6 shadow-lg backdrop-blur-md">
+      <form action={action} className={embedded ? "space-y-4" : "mt-6 space-y-4 rounded-2xl border border-white/40 bg-white/90 p-6 shadow-lg backdrop-blur-md"}>
         <label className="block">
           <span className="text-xs font-medium text-gray-600">Name</span>
           <input
@@ -313,12 +333,22 @@ export function DocEditorForm({
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-4">
-          <Link
-            href={BACK}
-            className="rounded-lg border border-gray-300 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-          >
-            Cancel
-          </Link>
+          {embedded ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-lg border border-gray-300 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+          ) : (
+            <Link
+              href={BACK}
+              className="rounded-lg border border-gray-300 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            >
+              Cancel
+            </Link>
+          )}
           <button
             disabled={busy}
             className="rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"

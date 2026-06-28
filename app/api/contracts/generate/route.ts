@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCompany } from "@/modules/auth/queries";
+import { requireCompany, requireUser } from "@/modules/auth/queries";
 import { generateContractDraft } from "@/lib/ai/generate-contract";
 import { generatePolicyDraft } from "@/lib/ai/generate-policy";
 import { generateJobDescriptionDraft } from "@/lib/ai/generate-job-description";
@@ -12,15 +12,26 @@ export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
   try {
-    const { current } = await requireCompany();
-    if (current.role !== "admin") {
-      return NextResponse.json({ error: "Only admins can generate documents." }, { status: 403 });
-    }
-    const { kind, name, brief } = (await req.json()) as {
+    const { kind, name, brief, companyId } = (await req.json()) as {
       kind?: string;
       name?: string;
       brief?: string;
+      companyId?: string;
     };
+
+    // Founders (platform admins) can generate for a company they're setting up;
+    // otherwise the caller must be that company's own admin.
+    const { profile } = await requireUser();
+    let billCompanyId: string;
+    if (profile?.is_platform_admin && companyId) {
+      billCompanyId = companyId;
+    } else {
+      const { current } = await requireCompany();
+      if (current.role !== "admin") {
+        return NextResponse.json({ error: "Only admins can generate documents." }, { status: 403 });
+      }
+      billCompanyId = current.company_id;
+    }
 
     const text =
       kind === "policy"
@@ -29,7 +40,7 @@ export async function POST(req: NextRequest) {
           ? await generateJobDescriptionDraft(name ?? "", brief ?? "")
           : await generateContractDraft(brief ?? "");
 
-    await recordUsage(current.company_id, "ai");
+    await recordUsage(billCompanyId, "ai");
 
     return NextResponse.json({ text });
   } catch (e) {

@@ -59,6 +59,15 @@ body {
 }
 
 /* ----------------------------------------------------------------
+   READABLE SECONDARY TEXT. The lightest greys (gray-300/400) were nearly
+   invisible on the frosted-glass surfaces, so bump them a notch site-wide.
+   Only targets the base utilities — placeholder:/hover: variants are separate
+   classes and keep their lighter shade.
+   ---------------------------------------------------------------- */
+.text-gray-400 { color: #4b5563 !important; } /* was gray-400 -> gray-600 */
+.text-gray-300 { color: #6b7280 !important; } /* was gray-300 -> gray-500 */
+
+/* ----------------------------------------------------------------
    GLASS EVERYWHERE (whole site). Standing rule: NO plain white boxes or white
    dropdowns anywhere. One canonical frosted-glass look on every white/
    translucent surface, so there's never a mix of glass/grey/white:

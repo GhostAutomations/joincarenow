@@ -4,6 +4,7 @@ import { londonToUtcIso } from "@/lib/time";
 import { AppGrid } from "@/components/dashboard/app-grid";
 import { SignoffLive } from "@/components/dashboard/signoff-live";
 import { GettingStartedChecklist, type ChecklistItem } from "@/components/dashboard/getting-started-checklist";
+import { SETUP_TASK_META } from "@/lib/setup-tasks";
 import { feedbackOpen } from "@/lib/feedback";
 
 export default async function DashboardPage() {
@@ -62,6 +63,34 @@ export default async function DashboardPage() {
       { label: "Publish your first job", hint: "Create a role and publish it to start receiving applicants.", href: "/jobs", done: count(pubJobs) > 0 },
       { label: "Invite your team", hint: "Add managers and recruiters to your company.", href: "/settings", done: count(teamCount) > 1 },
     ];
+
+    // Tasks the founder handed to the admin during setup — shown here to finish.
+    const passed = (companyRow?.settings as { passed_tasks?: string[] } | null)?.passed_tasks ?? [];
+    if (passed.length) {
+      const [rolesC, wfC, contractsC, policiesC, jdC] = await Promise.all([
+        supabase.from("roles").select("id", { count: "exact", head: true }).eq("company_id", cid),
+        supabase.from("onboarding_templates").select("id", { count: "exact", head: true }).eq("company_id", cid).eq("is_store", false),
+        supabase.from("contract_templates").select("id", { count: "exact", head: true }).eq("company_id", cid),
+        supabase.from("policy_documents").select("id", { count: "exact", head: true }).eq("company_id", cid),
+        supabase.from("job_descriptions").select("id", { count: "exact", head: true }).eq("company_id", cid),
+      ]);
+      const passedDone = (k: string): boolean => {
+        switch (k) {
+          case "branding": return Boolean(brand?.logo_url);
+          case "branches": return count(branchCount) > 0;
+          case "roles": return count(rolesC) > 0;
+          case "workflows": return count(wfC) > 0;
+          case "contracts": return count(contractsC) > 0;
+          case "policies": return count(policiesC) > 0;
+          case "jobdescriptions": return count(jdC) > 0;
+          default: return setupChecked[k] === true; // numbers/interview/hours/communication
+        }
+      };
+      for (const k of passed) {
+        const meta = SETUP_TASK_META[k];
+        if (meta) checklist.push({ label: meta.label, hint: meta.hint, href: meta.href, done: passedDone(k) });
+      }
+    }
   }
 
   const first = profile?.full_name?.split(" ")[0] ?? "there";

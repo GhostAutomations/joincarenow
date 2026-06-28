@@ -285,10 +285,17 @@ export async function sendAccountReadyEmail(
   });
   if (!res.ok) return { error: res.error || "Could not send the email." };
 
+  // Tasks the founder chose to hand to the company admin to finish themselves.
+  const passKeys = formData.getAll("passKey").map(String).filter(Boolean);
+  const prevSettings = (company as { settings?: Record<string, unknown> }).settings ?? {};
+  const existingPassed = (prevSettings.passed_tasks as string[] | undefined) ?? [];
+  const passed_tasks = [...new Set([...existingPassed, ...passKeys])];
+
   const settings = {
-    ...((company as { settings?: Record<string, unknown> }).settings ?? {}),
+    ...prevSettings,
     setup_complete: true,
     ready_email_sent_at: new Date().toISOString(),
+    passed_tasks,
   };
   await db.from("companies").update({ settings }).eq("id", companyId);
   revalidatePath(`/founder/companies/${companyId}`);

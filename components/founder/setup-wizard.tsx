@@ -13,6 +13,8 @@ export type WizardTask = {
    *  a footer "Finalise" button. Single-form sections tick on their own save. */
   isManager: boolean;
   done: boolean;
+  /** Founder handed this task to the company admin to finish. */
+  passed?: boolean;
   content: ReactNode;
 };
 
@@ -30,7 +32,7 @@ export function FounderSetupWizard({
   // task to edit doesn't instantly snap shut.
   const wasDoneRef = useRef(false);
 
-  const done = tasks.filter((t) => t.done).length;
+  const done = tasks.filter((t) => t.done || t.passed).length;
   const total = tasks.length;
   const pct = total ? Math.round((done / total) * 100) : 0;
   const active = tasks.find((t) => t.key === openKey) ?? null;
@@ -95,12 +97,19 @@ export function FounderSetupWizard({
             >
               {t.done ? (
                 <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
+              ) : t.passed ? (
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-amber-500" />
               ) : (
                 <Circle className="h-5 w-5 shrink-0 text-gray-400" />
               )}
               <span className="min-w-0 flex-1">
                 <span className={`block text-sm font-medium ${t.done ? "text-gray-400 line-through" : "text-gray-900"}`}>
                   {t.label}
+                  {t.passed && !t.done && (
+                    <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800 align-middle">
+                      Passed to admin
+                    </span>
+                  )}
                 </span>
                 <span className="block text-xs text-gray-500">{t.description}</span>
               </span>

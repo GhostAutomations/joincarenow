@@ -8,7 +8,6 @@ import { RolesManager } from "@/components/dashboard/roles-manager";
 import { EmployeeNumberSettings } from "@/components/dashboard/employee-number-settings";
 import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
 import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard/reminder-settings-form";
-import { CareersContentForm } from "@/components/dashboard/careers-content-form";
 import { InterviewAddressForm } from "@/components/dashboard/interview-address-form";
 import { BrandingForm } from "@/components/dashboard/branding-form";
 import { StarterPackPanel } from "@/components/founder/starter-pack-panel";
@@ -16,6 +15,7 @@ import { AccountReadyButton } from "@/components/founder/account-ready-button";
 import { FounderSetupWizard, type WizardTask } from "@/components/founder/setup-wizard";
 import { WorkflowApplyPanel } from "@/components/founder/workflow-apply-panel";
 import { FounderDocsManager } from "@/components/founder/founder-docs-manager";
+import { SETUP_TASK_META } from "@/lib/setup-tasks";
 import type { OpeningHours } from "@/lib/opening-hours";
 
 export default async function CompanySetupPage({
@@ -72,13 +72,19 @@ export default async function CompanySetupPage({
     starter_seeded_at?: string;
     ready_email_sent_at?: string;
     setup_checked?: Record<string, boolean>;
+    passed_tasks?: string[];
   };
   const seeded = (settings.starter_pack_version ?? 0) >= 1;
   const checked = settings.setup_checked ?? {};
+  const passed = settings.passed_tasks ?? [];
   // Setup completion for the notify warning — the nine setup tasks (NOT the
   // notify action itself), so all-done = 100% = no warning.
-  const SETUP_KEYS = ["branding", "branches", "roles", "workflows", "contracts", "policies", "jobdescriptions", "careers", "numbers", "interview", "hours", "communication"];
-  const setupPct = Math.round((SETUP_KEYS.filter((k) => checked[k] === true).length / SETUP_KEYS.length) * 100);
+  const SETUP_KEYS = ["branding", "branches", "roles", "workflows", "contracts", "policies", "jobdescriptions", "numbers", "interview", "hours", "communication"];
+  // A task counts as resolved if it's been finalised OR passed to the admin.
+  const setupPct = Math.round((SETUP_KEYS.filter((k) => checked[k] === true || passed.includes(k)).length / SETUP_KEYS.length) * 100);
+  const outstanding = SETUP_KEYS
+    .filter((k) => checked[k] !== true && !passed.includes(k))
+    .map((k) => ({ key: k, label: SETUP_TASK_META[k]?.label ?? k }));
 
   const FINALISE = "Finalise";
   const wizardTasks: WizardTask[] = [
@@ -125,11 +131,6 @@ export default async function CompanySetupPage({
       content: <FounderDocsManager companyId={id} kind="job_description" items={jobDescDocs ?? []} noun="job description" />,
     },
     {
-      key: "careers", label: "Careers page", isManager: false, done: checked.careers === true,
-      description: "Intro and benefits shown to candidates on the public careers page.",
-      content: <CareersContentForm companyId={id} intro={settings.careers?.intro ?? ""} benefits={settings.careers?.benefits ?? []} submitLabel={FINALISE} />,
-    },
-    {
       key: "numbers", label: "Employee numbers", isManager: false, done: checked.numbers === true,
       description: "Choose how each new hire's Employee ID is set.",
       content: <EmployeeNumberSettings companyId={id} mode={settings.employee_number_mode === "manual" ? "manual" : "auto"} prefix={settings.employee_number_prefix ?? "EMP-"} submitLabel={FINALISE} />,
@@ -152,7 +153,7 @@ export default async function CompanySetupPage({
     {
       key: "notify", label: "Notify the customer", isManager: false, done: Boolean(settings.ready_email_sent_at),
       description: "Send the account-ready email so they can log in with full access.",
-      content: <AccountReadyButton companyId={id} sentAt={settings.ready_email_sent_at ?? null} setupPct={setupPct} />,
+      content: <AccountReadyButton companyId={id} sentAt={settings.ready_email_sent_at ?? null} setupPct={setupPct} outstanding={outstanding} />,
     },
   ];
 
@@ -168,7 +169,7 @@ export default async function CompanySetupPage({
       </p>
       <div className="mt-6 space-y-4">
         <StarterPackPanel companyId={id} seeded={seeded} seededAt={settings.starter_seeded_at ?? null} />
-        <FounderSetupWizard companyId={id} tasks={wizardTasks} />
+        <FounderSetupWizard companyId={id} tasks={wizardTasks.map((t) => ({ ...t, passed: passed.includes(t.key) }))} />
       </div>
     </div>
   );

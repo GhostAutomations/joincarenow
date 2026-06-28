@@ -9,15 +9,19 @@ export function AccountReadyButton({
   companyId,
   sentAt,
   setupPct = 100,
+  outstanding = [],
 }: {
   companyId: string;
   sentAt?: string | null;
   /** Overall setup progress — used to warn before notifying if it's below 100%. */
   setupPct?: number;
+  /** Unfinished setup tasks the founder can hand to the company admin. */
+  outstanding?: { key: string; label: string }[];
 }) {
   const router = useRouter();
   const [state, action] = useActionState<SettingsState, FormData>(sendAccountReadyEmail, undefined);
   const [confirming, setConfirming] = useState(false);
+  const [passToAdmin, setPassToAdmin] = useState(true);
   useEffect(() => {
     if (state?.ok) { router.refresh(); window.dispatchEvent(new Event("jcn-section-saved")); }
   }, [state, router]);
@@ -59,9 +63,34 @@ export function AccountReadyButton({
               <TriangleAlert className="h-4 w-4" /> Setup is only at {setupPct}%
             </p>
             <p className="mt-1">
-              Some tasks haven&apos;t been finalised yet. Are you sure you want to mark setup complete
-              and email the customer? They&apos;ll get full access straight away.
+              Some tasks haven&apos;t been finalised. You can still notify the customer — they&apos;ll get
+              full access straight away.
             </p>
+            {outstanding.length > 0 && (
+              <div className="mt-2 rounded-lg border border-amber-200 bg-white/70 p-2.5">
+                <label className="flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    checked={passToAdmin}
+                    onChange={(e) => setPassToAdmin(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-amber-400 text-brand-600"
+                  />
+                  <span>
+                    <span className="font-medium">Pass the {outstanding.length} unfinished{" "}
+                      {outstanding.length === 1 ? "task" : "tasks"} to the company admin</span>
+                    <span className="mt-0.5 block text-xs text-amber-900/80">
+                      They&apos;ll appear on the admin&apos;s own setup checklist to finish.
+                    </span>
+                    <ul className="mt-1.5 list-disc pl-4 text-xs text-amber-900/80">
+                      {outstanding.map((o) => <li key={o.key}>{o.label}</li>)}
+                    </ul>
+                  </span>
+                </label>
+              </div>
+            )}
+            {passToAdmin && outstanding.map((o) => (
+              <input key={o.key} type="hidden" name="passKey" value={o.key} />
+            ))}
           </div>
         )}
 

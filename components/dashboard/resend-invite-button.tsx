@@ -16,7 +16,7 @@ export function ResendButton({ id }: { id: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md border border-brand-300 px-2.5 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-md bg-brand-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {pending ? "Sending…" : state?.ok ? "Sent ✓" : "Resend"}
       </button>

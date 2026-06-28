@@ -51,7 +51,7 @@ export function PendingInvites({
               <input type="hidden" name="id" value={inv.id} />
               <button
                 type="submit"
-                className="rounded-md border border-red-300 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                className="rounded-md bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700"
               >
                 Revoke
               </button>

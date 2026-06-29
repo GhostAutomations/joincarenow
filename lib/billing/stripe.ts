@@ -244,6 +244,42 @@ export async function listInvoices(customerId: string, limit = 24): Promise<Invo
   }
 }
 
+/** Charge a one-off amount to a customer's saved card immediately (off-session).
+ *  Used for Form Store purchases. Creates an isolated draft invoice, attaches a
+ *  single invoice item to it (so it can't sweep up unrelated pending items),
+ *  finalises and pays it. Throws if the payment doesn't settle, so the caller
+ *  never grants the purchase unpaid. Returns the paid invoice id. */
+export async function chargeOneOff(
+  customerId: string,
+  amountPence: number,
+  description: string
+): Promise<{ invoiceId: string }> {
+  if (!process.env.STRIPE_SECRET_KEY) throw new Error("Billing isn't configured.");
+  if (!Number.isInteger(amountPence) || amountPence <= 0) throw new Error("Invalid amount.");
+
+  // Draft invoice first, so the invoice item below attaches only to this one.
+  const inv = await stripeRequest<{ id: string }>("/invoices", "POST", {
+    customer: customerId,
+    collection_method: "charge_automatically",
+    auto_advance: false,
+  });
+  await stripeRequest("/invoiceitems", "POST", {
+    customer: customerId,
+    invoice: inv.id,
+    amount: amountPence,
+    currency: "gbp",
+    description,
+  });
+  await stripeRequest(`/invoices/${inv.id}/finalize`, "POST", {});
+  const paid = await stripeRequest<{ id: string; status: string }>(
+    `/invoices/${inv.id}/pay`,
+    "POST",
+    { off_session: true }
+  );
+  if (paid.status !== "paid") throw new Error("The payment could not be completed.");
+  return { invoiceId: inv.id };
+}
+
 /** Report metered usage to Stripe via the Billing Meters API (per customer). */
 export async function reportMeterEvent(eventName: string, customerId: string, value: number) {
   return stripeRequest("/billing/meter_events", "POST", {

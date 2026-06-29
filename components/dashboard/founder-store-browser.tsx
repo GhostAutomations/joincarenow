@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, FileText, Pencil, Trash2 } from "lucide-react";
-import { TierBadge } from "@/components/dashboard/store-badge";
+import { PriceBadge } from "@/components/dashboard/store-badge";
 import { deleteStoreFormsBulk } from "@/modules/forms/actions";
 import { categoryLabel, sortCategories } from "@/lib/form-categories";
 
@@ -12,7 +12,7 @@ export type FounderStoreCard = {
   id: string;
   name: string;
   category: string;
-  store_tier: string;
+  price_pence: number;
   fieldCount: number;
   published: boolean;
 };
@@ -150,7 +150,7 @@ export function FounderStoreBrowser({ forms }: { forms: FounderStoreCard[] }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 pr-6">
                   <h3 className="truncate font-semibold text-gray-900">{f.name}</h3>
-                  <TierBadge tier={f.store_tier} />
+                  <PriceBadge pricePence={f.price_pence} />
                   {f.published ? (
                     <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-800">Live</span>
                   ) : (

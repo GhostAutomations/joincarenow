@@ -6,7 +6,8 @@ import { requireCompany, requireUser, requirePlatformAdmin } from "@/modules/aut
 import { extractFormFields, type ExtractedField } from "@/lib/ai/extract-form";
 import { generateFormFields } from "@/lib/ai/generate-form";
 import { recordUsage } from "@/lib/billing/usage";
-import { TIERS, tierRank } from "@/modules/forms/tiers";
+import { chargeOneOff } from "@/lib/billing/stripe";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const FIELD_TYPES = [
   "short_text",
@@ -705,7 +706,7 @@ export async function createBlankStoreForm() {
   redirect(`/founder/forms/${data.id}/build`);
 }
 
-/** Founder: save a store form's category + required subscription tier. */
+/** Founder: save a store form's category + one-off price. */
 export async function saveStoreSettings(
   _prev: DetailsState,
   formData: FormData
@@ -713,13 +714,21 @@ export async function saveStoreSettings(
   const id = formData.get("id");
   const name = (formData.get("name")?.toString() ?? "").trim();
   const categoryRaw = formData.get("category")?.toString() ?? "";
-  const tierRaw = formData.get("storeTier")?.toString() ?? "free";
+  // Price entered in pounds (e.g. "4.99"); store as integer pence. Blank/0 = free.
+  const priceRaw = formData.get("price")?.toString().trim() ?? "";
   if (typeof id !== "string") return { error: "Missing form" };
+
+  let pricePence = 0;
+  if (priceRaw) {
+    const pounds = Number(priceRaw.replace(/[£,\s]/g, ""));
+    if (!Number.isFinite(pounds) || pounds < 0) return { error: "Enter a valid price." };
+    pricePence = Math.round(pounds * 100);
+  }
 
   // Lenient draft save (auto-saved as you type). A full name + category are only
   // *required to publish* (see setStorePublished), not to save a draft.
   const update: Record<string, unknown> = {
-    store_tier: TIERS.includes(tierRaw) ? tierRaw : "free",
+    price_pence: pricePence,
     category: CATEGORIES.includes(categoryRaw) ? categoryRaw : null,
   };
   if (name.length >= 2) update.name = name;
@@ -792,36 +801,62 @@ export async function deleteStoreFormsBulk(ids: string[]): Promise<{ ok?: boolea
   return { ok: true };
 }
 
-/** Founder: set a company's subscription tier. */
-export async function setCompanyTier(formData: FormData) {
-  const companyId = formData.get("companyId");
-  const tierRaw = formData.get("tier")?.toString() ?? "free";
-  if (typeof companyId !== "string") return;
-  const tier = TIERS.includes(tierRaw) ? tierRaw : "free";
-  const { supabase } = await requirePlatformAdmin();
-  await supabase.from("companies").update({ subscription_tier: tier }).eq("id", companyId);
-  revalidatePath("/founder");
-}
+type AcquireResult = { id?: string; error?: string };
 
-/** Copy one store template into the company's own forms (tier-gated).
- *  Returns the new form id, or null if not allowed / not found. */
-async function acquireOne(storeId: string): Promise<string | null> {
+/** Copy one store template into the company's own forms. Free forms (price 0)
+ *  copy straight away; paid forms charge the company's saved card once, record
+ *  the purchase, then copy. Idempotent: a form already bought (or already
+ *  copied) is never charged again — the existing copy is returned. */
+async function acquireOne(storeId: string): Promise<AcquireResult> {
   const { supabase, user, current } = await requireCompany();
-  if (current.role !== "admin") return null;
+  if (current.role !== "admin") return { error: "Only an admin can add Store forms." };
 
-  const { data: company } = await supabase
-    .from("companies")
-    .select("subscription_tier")
-    .eq("id", current.company_id)
-    .single();
   const { data: store } = await supabase
     .from("forms")
-    .select("id, name, description, style, category, store_tier")
+    .select("id, name, description, style, category, price_pence")
     .eq("id", storeId)
     .eq("is_store", true)
     .single();
-  if (!store) return null;
-  if (tierRank(company?.subscription_tier ?? "free") < tierRank(store.store_tier)) return null;
+  if (!store) return { error: "That form is no longer available." };
+
+  // Already have a copy of this store form? Return it — never re-charge.
+  const { data: existingCopy } = await supabase
+    .from("forms")
+    .select("id")
+    .eq("company_id", current.company_id)
+    .eq("source_form_id", store.id)
+    .limit(1)
+    .maybeSingle();
+  if (existingCopy?.id) return { id: existingCopy.id as string };
+
+  const price = (store.price_pence as number) ?? 0;
+
+  // Paid form → charge before copying.
+  let invoiceId: string | null = null;
+  if (price > 0) {
+    const { data: company } = await supabase
+      .from("companies")
+      .select("billing_status, billing_comped, stripe_customer_id")
+      .eq("id", current.company_id)
+      .single();
+    const comped = company?.billing_comped === true;
+    const status = (company?.billing_status as string) ?? "none";
+    const active = status === "active" || status === "trialing";
+    const customerId = company?.stripe_customer_id as string | null;
+
+    if (!comped) {
+      if (!active || !customerId) {
+        return { error: "Set up billing with a saved card before buying paid forms." };
+      }
+      try {
+        const r = await chargeOneOff(customerId, price, `Form Store: ${store.name}`);
+        invoiceId = r.invoiceId;
+      } catch (e) {
+        return { error: e instanceof Error ? e.message : "Payment could not be completed." };
+      }
+    }
+    // comped companies get paid forms at no charge (founder concession).
+  }
 
   const { data: copy } = await supabase
     .from("forms")
@@ -837,7 +872,7 @@ async function acquireOne(storeId: string): Promise<string | null> {
     })
     .select("id")
     .single();
-  if (!copy) return null;
+  if (!copy) return { error: "Could not add the form. Please try again." };
 
   const { data: fields } = await supabase
     .from("form_fields")
@@ -849,40 +884,68 @@ async function acquireOne(storeId: string): Promise<string | null> {
       .from("form_fields")
       .insert(fields.map((f) => ({ ...f, form_id: copy.id })));
   }
-  return copy.id;
+
+  // Record the purchase (audit + idempotency). Best-effort: the form is already
+  // theirs, so a logging hiccup must not undo a successful charge.
+  if (price > 0) {
+    const admin = createAdminClient();
+    await admin.from("form_purchases").insert({
+      company_id: current.company_id,
+      store_form_id: store.id,
+      form_id: copy.id,
+      price_pence: invoiceId ? price : 0,
+      stripe_invoice_id: invoiceId,
+      purchased_by: user.id,
+    });
+  }
+
+  return { id: copy.id as string };
 }
 
 /** Admin: "Customise and add" — copy then open the builder. */
 export async function acquireStoreForm(formData: FormData) {
   const storeId = formData.get("storeFormId");
   if (typeof storeId !== "string") return;
-  const id = await acquireOne(storeId);
+  const r = await acquireOne(storeId);
   revalidatePath("/forms");
-  if (id) redirect(`/forms/${id}/build`);
+  if (r.id) redirect(`/forms/${r.id}/build`);
 }
 
-/** Admin: "Add to my forms" — copy without leaving the store. */
+/** Admin: "Add to my forms" / "Buy & add" — copy (and charge if paid) in place. */
 export async function addStoreForm(
   _prev: { ok?: boolean; error?: string } | undefined,
   formData: FormData
 ): Promise<{ ok?: boolean; error?: string }> {
   const storeId = formData.get("storeFormId");
   if (typeof storeId !== "string") return { error: "Missing form" };
-  const id = await acquireOne(storeId);
-  if (!id) return { error: "Could not add this form (check your plan)." };
+  const r = await acquireOne(storeId);
+  if (r.error) return { error: r.error };
   revalidatePath("/forms");
   return { ok: true };
 }
 
-/** Admin: add several store forms at once. */
-export async function addStoreFormsBulk(ids: string[]): Promise<{ added: number }> {
+/** Admin: add several FREE store forms at once. Paid forms are skipped — they
+ *  must be bought one at a time so the charge is always explicit. */
+export async function addStoreFormsBulk(ids: string[]): Promise<{ added: number; skippedPaid: number }> {
+  const { supabase } = await requireCompany();
   let added = 0;
+  let skippedPaid = 0;
   for (const id of ids) {
+    const { data: f } = await supabase
+      .from("forms")
+      .select("price_pence")
+      .eq("id", id)
+      .eq("is_store", true)
+      .maybeSingle();
+    if (((f?.price_pence as number) ?? 0) > 0) {
+      skippedPaid++;
+      continue;
+    }
     const made = await acquireOne(id);
-    if (made) added++;
+    if (made.id) added++;
   }
   revalidatePath("/forms");
-  return { added };
+  return { added, skippedPaid };
 }
 
 /** Fields + meta for previewing a store form (read-only). */

@@ -10,7 +10,6 @@ import {
   type DetailsState,
   type ImportState,
 } from "@/modules/forms/actions";
-import { TIERS, TIER_LABEL } from "@/modules/forms/tiers";
 
 const CATEGORIES: { value: string; label: string }[] = [
   { value: "application", label: "Application forms" },
@@ -27,13 +26,13 @@ export function StoreFormBar({
   formId,
   name,
   category,
-  storeTier,
+  pricePence,
   published,
 }: {
   formId: string;
   name: string;
   category: string;
-  storeTier: string;
+  pricePence: number;
   published: boolean;
 }) {
   const [saveState, saveAction] = useActionState<DetailsState, FormData>(saveStoreSettings, undefined);
@@ -50,7 +49,7 @@ export function StoreFormBar({
   // their defaults (that was making the category jump back to "Recruitment").
   const [nameV, setNameV] = useState(name === "Untitled form" ? "" : name);
   const [categoryV, setCategoryV] = useState(category || "");
-  const [tierV, setTierV] = useState(storeTier);
+  const [priceV, setPriceV] = useState(pricePence > 0 ? (pricePence / 100).toFixed(2) : "");
 
   useEffect(() => {
     if (saveState?.ok && clickedSave.current) {
@@ -100,15 +99,20 @@ export function StoreFormBar({
             </select>
           </label>
           <label className="text-sm font-medium text-gray-700">
-            Required plan
-            <select
-              name="storeTier"
-              value={tierV}
-              onChange={(e) => { setTierV(e.target.value); e.currentTarget.form?.requestSubmit(); }}
-              className={cls}
-            >
-              {TIERS.map((t) => (<option key={t} value={t}>{TIER_LABEL[t]}</option>))}
-            </select>
+            Price
+            <div className="relative mt-1">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">£</span>
+              <input
+                name="price"
+                inputMode="decimal"
+                value={priceV}
+                onChange={(e) => setPriceV(e.target.value)}
+                onBlur={autosave}
+                placeholder="0.00"
+                className={`${cls} mt-0 pl-7`}
+              />
+            </div>
+            <span className="mt-1 block text-xs text-gray-400">Leave blank or 0 for a free / included form.</span>
           </label>
         </div>
       </form>

@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, Plus, Pencil, Check, Search, FileText } from "lucide-react";
+import { Eye, Plus, Pencil, Check, Search, FileText, CreditCard, AlertTriangle, X, Loader2 } from "lucide-react";
 import {
   acquireStoreForm,
   addStoreForm,
   addStoreFormsBulk,
   getStoreFormPreview,
 } from "@/modules/forms/actions";
-import { TIER_LABEL, tierRank } from "@/modules/forms/tiers";
 import { FormPreview } from "@/components/dashboard/form-preview";
-import { TierBadge } from "@/components/dashboard/store-badge";
+import { PriceBadge, formatPrice } from "@/components/dashboard/store-badge";
 import { categoryLabel, sortCategories } from "@/lib/form-categories";
 import type { FormField } from "@/components/careers/apply-form";
 
@@ -20,7 +20,7 @@ export type StoreCard = {
   name: string;
   description: string | null;
   category: string;
-  store_tier: string;
+  pricePence: number;
   fieldCount: number;
   acquired: boolean;
 };
@@ -49,12 +49,14 @@ function gradientFor(cat: string): string {
 
 export function StoreBrowser({
   forms,
-  companyTier,
   isAdmin,
+  billingReady,
+  comped,
 }: {
   forms: StoreCard[];
-  companyTier: string;
   isAdmin: boolean;
+  billingReady: boolean;
+  comped: boolean;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -64,6 +66,8 @@ export function StoreBrowser({
   const [pending, startTransition] = useTransition();
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState<string>("all");
+  const [error, setError] = useState<string | null>(null);
+  const [buying, setBuying] = useState<StoreCard | null>(null);
 
   const categories = useMemo(
     () => sortCategories(Array.from(new Set(forms.map((f) => f.category || "other")))),
@@ -98,25 +102,42 @@ export function StoreBrowser({
     setPreview(data as unknown as PreviewData);
   }
 
+  // Free forms add straight away; paid forms confirm first (then charge).
   function addOne(id: string) {
+    setError(null);
     setBusyId(id);
     const fd = new FormData();
     fd.set("storeFormId", id);
     startTransition(async () => {
-      await addStoreForm(undefined, fd);
+      const r = await addStoreForm(undefined, fd);
       setBusyId(null);
+      setBuying(null);
+      if (r?.error) {
+        setError(r.error);
+        return;
+      }
       setAdded((p) => new Set(p).add(id));
       router.refresh();
     });
   }
 
+  function onAddClick(f: StoreCard) {
+    if (f.pricePence > 0 && !comped) setBuying(f);
+    else addOne(f.id);
+  }
+
+  // Bulk only adds FREE forms (paid forms are bought one at a time).
   function addSelected() {
     const ids = [...selected];
     if (ids.length === 0) return;
+    setError(null);
     startTransition(async () => {
-      await addStoreFormsBulk(ids);
+      const r = await addStoreFormsBulk(ids);
       setAdded((p) => new Set([...p, ...ids]));
       setSelected(new Set());
+      if (r.skippedPaid > 0) {
+        setError(`${r.skippedPaid} paid form${r.skippedPaid === 1 ? "" : "s"} skipped — buy paid forms individually.`);
+      }
       router.refresh();
     });
   }
@@ -149,7 +170,13 @@ export function StoreBrowser({
         </div>
       </div>
 
-      {/* Bulk-select bar */}
+      {error && (
+        <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
+        </div>
+      )}
+
+      {/* Bulk-select bar (free forms only) */}
       {isAdmin && selected.size > 0 && (
         <div className="sticky top-2 z-10 mt-3 flex items-center justify-between gap-3 rounded-xl border border-brand-200 bg-white/90 px-4 py-2.5 shadow-sm backdrop-blur">
           <span className="text-sm text-gray-700">
@@ -178,14 +205,17 @@ export function StoreBrowser({
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {filtered.map((f) => {
-            const unlocked = tierRank(companyTier) >= tierRank(f.store_tier);
             const isAdded = added.has(f.id) || f.acquired;
+            const paid = f.pricePence > 0 && !comped;
+            const blocked = paid && !billingReady;
+            // Only free forms can be bulk-selected.
+            const selectable = isAdmin && !f.acquired && !paid;
             return (
               <div
                 key={f.id}
                 className="relative flex gap-4 rounded-2xl border border-white/50 bg-white/70 p-4 shadow-sm backdrop-blur-md transition hover:border-brand-200 hover:shadow-md"
               >
-                {isAdmin && !f.acquired && (
+                {selectable && (
                   <input
                     type="checkbox"
                     checked={selected.has(f.id)}
@@ -202,7 +232,7 @@ export function StoreBrowser({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 pr-6">
                     <h3 className="truncate font-semibold text-gray-900">{f.name}</h3>
-                    {!unlocked && !f.acquired && <TierBadge tier={f.store_tier} />}
+                    {!isAdded && <PriceBadge pricePence={comped ? 0 : f.pricePence} />}
                   </div>
                   <p className="truncate text-xs capitalize text-gray-500">
                     {categoryLabel(f.category)} · {f.fieldCount} question{f.fieldCount === 1 ? "" : "s"}
@@ -223,25 +253,29 @@ export function StoreBrowser({
                         <Check className="h-3.5 w-3.5" /> Added
                       </span>
                     ) : isAdmin ? (
-                      unlocked ? (
+                      blocked ? (
+                        <Link href="/billing" className="text-xs font-medium text-amber-700 hover:underline">
+                          Set up billing to buy
+                        </Link>
+                      ) : (
                         <span className="flex items-center gap-2">
                           <button
-                            onClick={() => addOne(f.id)}
-                            disabled={pending}
-                            className="rounded-full bg-brand-600 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-white hover:bg-brand-700 disabled:opacity-60"
+                            onClick={() => onAddClick(f)}
+                            disabled={pending && busyId === f.id}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-white hover:bg-brand-700 disabled:opacity-60"
                           >
-                            Add
+                            {paid ? <><CreditCard className="h-3.5 w-3.5" /> Buy {formatPrice(f.pricePence)}</> : "Add"}
                           </button>
-                          <form action={acquireStoreForm}>
-                            <input type="hidden" name="storeFormId" value={f.id} />
-                            <button className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800">
-                              <Pencil className="h-3.5 w-3.5" /> Customise
-                            </button>
-                          </form>
-                        </span>
-                      ) : (
-                        <span className="text-xs font-medium text-amber-700">
-                          Requires {TIER_LABEL[f.store_tier] ?? f.store_tier} plan
+                          {/* Free forms can be customised on add (copies, no charge). Paid
+                              forms must go through Buy first, then edit in Forms. */}
+                          {!paid && (
+                            <form action={acquireStoreForm}>
+                              <input type="hidden" name="storeFormId" value={f.id} />
+                              <button className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800">
+                                <Pencil className="h-3.5 w-3.5" /> Customise
+                              </button>
+                            </form>
+                          )}
                         </span>
                       )
                     ) : null}
@@ -255,6 +289,42 @@ export function StoreBrowser({
 
       {preview && (
         <FormPreview form={preview.form} fields={preview.fields} onClose={() => setPreview(null)} />
+      )}
+
+      {/* Buy confirmation (paid forms) */}
+      {buying && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Buy form">
+          <button aria-label="Close" onClick={() => !pending && setBuying(null)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Buy this form</h3>
+              <button onClick={() => !pending && setBuying(null)} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mt-3 text-sm text-gray-600">
+              Add <strong>{buying.name}</strong> to your forms for a one-off <strong>{formatPrice(buying.pricePence)}</strong>.
+            </p>
+            <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              <CreditCard className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>Your saved card will be <strong>charged {formatPrice(buying.pricePence)} now</strong>. The form is then yours to keep and edit.</span>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" disabled={pending} onClick={() => setBuying(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => addOne(buying.id)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-70"
+              >
+                {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                {pending ? "Charging…" : `Pay ${formatPrice(buying.pricePence)} & add`}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

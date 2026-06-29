@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { requireCompany } from "@/modules/auth/queries";
-import { TIER_LABEL } from "@/modules/forms/tiers";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StoreBrowser, type StoreCard } from "@/components/dashboard/store-browser";
 
@@ -9,7 +8,7 @@ type StoreForm = {
   name: string;
   description: string | null;
   category: string;
-  store_tier: string;
+  price_pence: number | null;
   form_fields: { count: number }[] | null;
 };
 
@@ -20,10 +19,14 @@ export default async function StorePage() {
   const isAdmin = true;
 
   const [{ data: company }, { data: forms }, { data: mine }] = await Promise.all([
-    supabase.from("companies").select("subscription_tier").eq("id", current.company_id).single(),
+    supabase
+      .from("companies")
+      .select("billing_status, billing_comped, stripe_customer_id")
+      .eq("id", current.company_id)
+      .single(),
     supabase
       .from("forms")
-      .select("id, name, description, category, store_tier, form_fields(count)")
+      .select("id, name, description, category, price_pence, form_fields(count)")
       .eq("is_store", true)
       .eq("store_published", true)
       .order("created_at", { ascending: false }),
@@ -38,14 +41,18 @@ export default async function StorePage() {
     (mine ?? []).map((m) => m.source_form_id as string).filter(Boolean)
   );
 
-  const companyTier = company?.subscription_tier ?? "free";
+  const comped = company?.billing_comped === true;
+  const status = (company?.billing_status as string) ?? "none";
+  const billingReady =
+    comped || ((status === "active" || status === "trialing") && !!company?.stripe_customer_id);
+
   const list = (forms ?? []) as unknown as StoreForm[];
   const cards: StoreCard[] = list.map((f) => ({
     id: f.id,
     name: f.name,
     description: f.description,
     category: f.category,
-    store_tier: f.store_tier,
+    pricePence: f.price_pence ?? 0,
     fieldCount: f.form_fields?.[0]?.count ?? 0,
     acquired: acquiredIds.has(f.id),
   }));
@@ -55,11 +62,7 @@ export default async function StorePage() {
       <PageHeader
         title="Form Store"
         subtitle="Ready-made forms. Preview, add to your Forms, or customise before adding."
-      >
-        <span className="rounded-full border border-white/40 bg-white/20 px-3 py-1 text-xs font-medium text-white">
-          Your plan: {TIER_LABEL[companyTier] ?? companyTier}
-        </span>
-      </PageHeader>
+      />
 
       <div className="mt-6">
         {cards.length === 0 ? (
@@ -67,7 +70,7 @@ export default async function StorePage() {
             No store forms available yet.
           </div>
         ) : (
-          <StoreBrowser forms={cards} companyTier={companyTier} isAdmin={isAdmin} />
+          <StoreBrowser forms={cards} isAdmin={isAdmin} billingReady={billingReady} comped={comped} />
         )}
       </div>
     </div>

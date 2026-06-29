@@ -27,7 +27,7 @@ export default async function FounderFormBuildPage({
 
   const { data: form } = await supabase
     .from("forms")
-    .select("id, name, description, style, category, store_tier, store_published")
+    .select("id, name, description, style, category, price_pence, store_published")
     .eq("id", id)
     .eq("is_store", true)
     .single();
@@ -106,7 +106,7 @@ export default async function FounderFormBuildPage({
       <h1 className="mt-2 text-2xl font-semibold text-white drop-shadow-sm">
         {form.name || "Untitled form"}
       </h1>
-      <p className="text-sm text-white/80">Store form · set its category and plan below.</p>
+      <p className="text-sm text-white/80">Store form · set its category and price below.</p>
 
       {/* Store settings + actions, above the tabs. */}
       <div className="mt-4">
@@ -114,7 +114,7 @@ export default async function FounderFormBuildPage({
           formId={form.id}
           name={form.name ?? ""}
           category={(form as { category?: string }).category ?? ""}
-          storeTier={(form as { store_tier?: string }).store_tier ?? "free"}
+          pricePence={(form as { price_pence?: number }).price_pence ?? 0}
           published={(form as { store_published?: boolean }).store_published ?? false}
         />
       </div>

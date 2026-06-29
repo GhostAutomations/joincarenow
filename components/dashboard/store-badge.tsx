@@ -1,5 +1,9 @@
 import { Store } from "lucide-react";
-import { TIER_LABEL } from "@/modules/forms/tiers";
+
+/** Format pence as a £ price. */
+export function formatPrice(pence: number): string {
+  return "£" + (pence / 100).toFixed(2);
+}
 
 /** Gold marker (the Form Store app icon, in gold) shown on forms that come
  *  from the Form Store. */
@@ -14,17 +18,17 @@ export function StoreBadge() {
   );
 }
 
-/** Subscription-tier pill. Consistent across founder + company screens:
- *  Free is neutral slate (never green); paid tiers are amber. */
-export function TierBadge({ tier }: { tier: string }) {
-  const isFree = tier === "free";
+/** Price pill. Consistent across founder + company screens: free is neutral
+ *  slate (never green); a paid price is amber. */
+export function PriceBadge({ pricePence }: { pricePence: number }) {
+  const isFree = !pricePence || pricePence <= 0;
   return (
     <span
       className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
         isFree ? "bg-slate-100 text-slate-600" : "bg-amber-100 text-amber-700"
       }`}
     >
-      {TIER_LABEL[tier] ?? tier}
+      {isFree ? "Free" : formatPrice(pricePence)}
     </span>
   );
 }

@@ -7,7 +7,7 @@ type StoreFormRow = {
   id: string;
   name: string;
   category: string | null;
-  store_tier: string;
+  price_pence: number | null;
   store_published: boolean | null;
   form_fields: { count: number }[] | null;
 };
@@ -17,7 +17,7 @@ export default async function FounderFormsPage() {
 
   const { data: forms } = await supabase
     .from("forms")
-    .select("id, name, category, store_tier, store_published, form_fields(count)")
+    .select("id, name, category, price_pence, store_published, form_fields(count)")
     .eq("is_store", true)
     .order("name", { ascending: true });
 
@@ -25,7 +25,7 @@ export default async function FounderFormsPage() {
     id: f.id,
     name: f.name,
     category: f.category || "other",
-    store_tier: f.store_tier,
+    price_pence: f.price_pence ?? 0,
     fieldCount: f.form_fields?.[0]?.count ?? 0,
     published: f.store_published ?? false,
   }));
@@ -42,7 +42,7 @@ export default async function FounderFormsPage() {
       </div>
       <p className="mt-1 text-sm text-white/80">
         Templates you create here appear in every company&apos;s Form Store.
-        Admins can add them to their own forms, gated by their subscription plan.
+        Free templates add instantly; priced ones are bought per form.
       </p>
 
       <div className="mt-6">

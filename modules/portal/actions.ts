@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireApplicant } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyJobOwner } from "@/lib/comms/notify-owner";
+import { handlePoppyReply } from "@/lib/poppy/conversation";
 
 export type PortalReplyState = { error?: string; ok?: boolean } | undefined;
 
@@ -34,6 +35,17 @@ export async function postApplicantReply(_prev: PortalReplyState, formData: Form
     status: "delivered",
   });
   if (error) return { error: "Could not send your message." };
+
+  // If Poppy is mid-screening with this applicant, let Poppy handle the reply
+  // (record the answer, ask the next question). Skip the human owner notification
+  // in that case — the owner is alerted when the screening completes/declines.
+  const admin = createAdminClient();
+  const handledByPoppy = await handlePoppyReply(admin, app.id, body);
+  if (handledByPoppy) {
+    revalidatePath(`/portal/conversations/${applicationId}`);
+    revalidatePath("/portal/conversations");
+    return { ok: true };
+  }
 
   // Notify the job's owner of the applicant's reply (in-app + email).
   const { data: ap } = await supabase

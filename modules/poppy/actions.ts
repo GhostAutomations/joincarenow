@@ -8,7 +8,8 @@ import {
   generateInterviewQuestions,
   type InterviewQuestionGroup,
 } from "@/lib/ai/generate-interview-questions";
-import { generatePoppyReport, type PoppyReport } from "@/lib/ai/generate-poppy-report";
+import { generatePoppyAnalysis, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
+import { startPoppyConversation } from "@/lib/poppy/conversation";
 
 export type InterviewQuestionsResult = {
   entitled: boolean; // company has Poppy
@@ -203,13 +204,14 @@ export async function getInterviewQuestions(applicationId: string): Promise<Inte
 export type PoppyReportResult = {
   entitled: boolean;
   status: "ready" | "none";
-  report?: PoppyReport;
+  phase?: string; // analysed | conversing | complete | declined
+  report?: PoppyReportData;
   generatedAt?: string | null;
 };
 
 /** Load the Poppy report for an application (staff-only, tenant-scoped). Returns
  *  entitled=false when the company doesn't have Poppy, {status:'none'} when no
- *  report exists yet. */
+ *  report exists yet. `phase` says where the screening conversation is up to. */
 export async function getPoppyReport(applicationId: string): Promise<PoppyReportResult> {
   const { current } = await requireCompany();
   const admin = createAdminClient();
@@ -218,12 +220,18 @@ export async function getPoppyReport(applicationId: string): Promise<PoppyReport
 
   const { data } = await admin
     .from("poppy_reports")
-    .select("status, report, generated_at")
+    .select("status, phase, report, generated_at")
     .eq("application_id", applicationId)
     .eq("company_id", current.company_id)
     .maybeSingle();
   if (data && data.status === "ready") {
-    return { entitled: true, status: "ready", report: data.report as PoppyReport, generatedAt: data.generated_at as string };
+    return {
+      entitled: true,
+      status: "ready",
+      phase: (data.phase as string) ?? "complete",
+      report: data.report as PoppyReportData,
+      generatedAt: data.generated_at as string,
+    };
   }
   return { entitled: true, status: "none" };
 }
@@ -293,9 +301,9 @@ export async function runPoppyForApplication(
   }
   const name = [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ").trim() || "the candidate";
 
-  let report: PoppyReport;
+  let analysis: { summary: string; concerns: string[]; questions: { question: string; rationale: string }[] };
   try {
-    report = await generatePoppyReport({
+    analysis = await generatePoppyAnalysis({
       jobTitle: app.jobs?.title ?? "Care role",
       jobDescription: app.jobs?.description ?? "",
       applicantName: name,
@@ -304,14 +312,16 @@ export async function runPoppyForApplication(
       cvBase64Pdf,
     });
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Poppy couldn't generate the report." };
+    return { error: e instanceof Error ? e.message : "Poppy couldn't analyse the application." };
   }
 
+  const report: PoppyReportData = { summary: analysis.summary, concerns: analysis.concerns, questions: analysis.questions };
   await admin.from("poppy_reports").upsert(
     {
       company_id: current.company_id,
       application_id: app.id,
       status: "ready",
+      phase: "analysed",
       report,
       model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6",
       generated_at: new Date().toISOString(),
@@ -319,6 +329,8 @@ export async function runPoppyForApplication(
     { onConflict: "application_id" }
   );
   await recordUsage(current.company_id, "ai");
+  // Start the screening conversation (consent message + nudge SMS to the applicant).
+  await startPoppyConversation(admin, app.id);
   return { ok: true };
 }
 

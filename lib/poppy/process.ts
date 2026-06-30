@@ -1,8 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { recordUsage } from "@/lib/billing/usage";
-import { notifyJobOwner } from "@/lib/comms/notify-owner";
-import { generatePoppyReport } from "@/lib/ai/generate-poppy-report";
-import { BASE_URL } from "@/lib/billing/stripe";
+import { generatePoppyAnalysis, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
+import { startPoppyConversation } from "@/lib/poppy/conversation";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -187,7 +186,9 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
         const name =
           [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ").trim() || "the candidate";
 
-        const report = await generatePoppyReport({
+        // Phase 1 — analyse into concerns + questions. The conversation (Slice B)
+        // asks the questions; the final report is written once they're answered.
+        const analysis = await generatePoppyAnalysis({
           jobTitle: app.jobs?.title ?? "Care role",
           jobDescription: app.jobs?.description ?? "",
           applicantName: name,
@@ -195,12 +196,18 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
           answersText,
           cvBase64Pdf,
         });
+        const report: PoppyReportData = {
+          summary: analysis.summary,
+          concerns: analysis.concerns,
+          questions: analysis.questions,
+        };
 
         await db.from("poppy_reports").upsert(
           {
             company_id: companyId,
             application_id: app.id,
             status: "ready",
+            phase: "analysed",
             report,
             model,
             generated_at: new Date().toISOString(),
@@ -208,26 +215,8 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
           { onConflict: "application_id" }
         );
         await recordUsage(companyId, "ai");
-
-        await notifyJobOwner(db, {
-          applicationId: app.id,
-          type: "poppy_report",
-          prefKey: "new_application",
-          title: `Poppy screening ready: ${name}`,
-          body: report.summary?.slice(0, 160) || null,
-          link: "/pipeline",
-          email: {
-            subject: `Poppy screening ready for ${name}`,
-            text: `Poppy has reviewed ${name}'s application against the job description and prepared a screening summary and interview questions.`,
-            ctaLabel: "Open pipeline",
-            ctaUrl: `${BASE_URL}/pipeline`,
-          },
-        });
-        await db
-          .from("poppy_reports")
-          .update({ notified_owner_at: new Date().toISOString() })
-          .eq("application_id", app.id);
-
+        // Kick off the screening conversation (consent message + nudge SMS).
+        await startPoppyConversation(db, app.id);
         res.generated++;
       } catch (e) {
         res.errors++;

@@ -22,15 +22,19 @@ export default async function PortalConversationPage({
 
   const { data: msgs } = await supabase
     .from("messages")
-    .select("id, body, direction, created_at")
+    .select("id, body, direction, created_at, from_poppy")
     .eq("application_id", applicationId)
     .order("created_at", { ascending: true });
 
   const messages: ChatMessage[] = (msgs ?? []).map((m) => ({
     id: m.id as string,
     mine: m.direction === "inbound", // applicant's own messages
-    // Clean the greeting/sign-off off the company's (outbound) messages.
-    body: m.direction === "outbound" ? cleanMessageBody(m.body as string) : (m.body as string),
+    // Clean the greeting/sign-off off the company's outbound messages — but leave
+    // Poppy's messages as written (they're already chat-style).
+    body:
+      m.direction === "outbound" && !m.from_poppy
+        ? cleanMessageBody(m.body as string)
+        : (m.body as string),
     at: m.created_at as string,
   }));
 

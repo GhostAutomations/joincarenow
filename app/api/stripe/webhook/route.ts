@@ -125,6 +125,12 @@ export async function POST(req: Request) {
       break;
     }
     case "invoice.payment_failed": {
+      // Only a *subscription* invoice failing should mark the account past_due.
+      // One-off invoices (e.g. Form Store purchases) must NEVER change the
+      // subscription's billing status — otherwise a failed £x form charge would
+      // de-activate the whole company and trip the activation gate.
+      const isSubscriptionInvoice = !!obj.subscription && obj?.metadata?.kind !== "form_purchase";
+      if (!isSubscriptionInvoice) break;
       const id = await findCompany();
       if (id) await db.from("companies").update({ billing_status: "past_due" }).eq("id", id);
       break;

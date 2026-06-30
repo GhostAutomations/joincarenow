@@ -244,25 +244,49 @@ export async function listInvoices(customerId: string, limit = 24): Promise<Invo
   }
 }
 
-/** Find a usable saved card for off-session charges. Prefers the customer's
- *  invoice-settings default; otherwise the most recent attached card. The card
- *  added during subscription Checkout lives on the subscription, not always as
- *  the customer default — so we fall back to listing the customer's cards. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function pmId(v: any): string | null {
+  if (!v) return null;
+  return typeof v === "string" ? v : ((v.id as string) ?? null);
+}
+
+/** Find a usable saved payment method for off-session charges. Order of trust:
+ *  (1) the customer's invoice-settings default; (2) the payment method the
+ *  customer's active subscription is billed on (the card Stripe already charges
+ *  successfully — works even when it's a Link-wrapped card); (3) any attached
+ *  payment method of any type. The subscription card is the reliable source
+ *  because cards added during Checkout attach to the subscription, not always
+ *  to the customer as a plain `card` type. */
 async function resolveDefaultPaymentMethod(customerId: string): Promise<string | null> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cust = (await stripeRequest(`/customers/${customerId}`, "GET")) as any;
-    const di = cust?.invoice_settings?.default_payment_method;
-    if (di) return typeof di === "string" ? di : (di.id as string);
+    const di = pmId(cust?.invoice_settings?.default_payment_method);
+    if (di) return di;
   } catch {
-    /* fall through to listing cards */
+    /* fall through */
   }
   try {
-    const pms = await stripeRequest<{ data: { id: string }[] }>("/payment_methods", "GET", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const subs = (await stripeRequest("/subscriptions", "GET", {
       customer: customerId,
-      type: "card",
+      status: "active",
       limit: 1,
-    });
+      "expand[]": "data.default_payment_method",
+    })) as any;
+    const sub = subs?.data?.[0];
+    const fromSub = pmId(sub?.default_payment_method);
+    if (fromSub) return fromSub;
+  } catch {
+    /* fall through */
+  }
+  try {
+    // Newer endpoint returns ALL attached payment-method types (card, link, …).
+    const pms = await stripeRequest<{ data: { id: string }[] }>(
+      `/customers/${customerId}/payment_methods`,
+      "GET",
+      { limit: 1 }
+    );
     return pms.data?.[0]?.id ?? null;
   } catch {
     return null;
@@ -295,6 +319,7 @@ export async function chargeOneOff(
     collection_method: "charge_automatically",
     auto_advance: false,
     default_payment_method: paymentMethod,
+    "metadata[kind]": "form_purchase",
   });
   await stripeRequest("/invoiceitems", "POST", {
     customer: customerId,

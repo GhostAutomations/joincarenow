@@ -16,12 +16,21 @@ const cls =
   "block w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 type Channel = "email" | "sms" | "note";
-type Filter = "both" | "email" | "sms";
+type Filter = "all" | "email" | "sms" | "portal";
 
 const CH_ICON: Record<string, React.ReactNode> = {
   email: <Mail className="h-3.5 w-3.5" />,
   sms: <MessageSquare className="h-3.5 w-3.5" />,
+  portal: <MessagesSquare className="h-3.5 w-3.5" />,
   note: <StickyNote className="h-3.5 w-3.5" />,
+};
+// Per-message channel label (so an in-app portal message is never mistaken for a
+// charged SMS).
+const CH_LABEL: Record<string, string> = {
+  email: "Email",
+  sms: "SMS",
+  portal: "Portal",
+  note: "Note",
 };
 
 export function ApplicantComms({
@@ -37,7 +46,7 @@ export function ApplicantComms({
   const [templates, setTemplates] = useState<ThreadTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const listRef = useRef<HTMLDivElement>(null);
-  const [filter, setFilter] = useState<Filter>("both");
+  const [filter, setFilter] = useState<Filter>("all");
   const [channel, setChannel] = useState<Channel>("email");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -118,10 +127,10 @@ export function ApplicantComms({
   const canSend =
     channel === "note" || (channel === "email" ? !!email : !!phone);
 
-  // Inbox view filter. "Both" shows everything (incl. internal notes);
-  // Email/SMS narrow to that channel only.
+  // Inbox view filter. "All" shows everything (incl. internal notes);
+  // Email/SMS/Portal narrow to that channel only.
   const visible = messages.filter((m) =>
-    filter === "both" ? true : m.channel === filter
+    filter === "all" ? true : m.channel === filter
   );
 
   // Keep the conversation pinned to the latest message (newest is at the bottom).
@@ -131,9 +140,10 @@ export function ApplicantComms({
   }, [visible.length, filter, loading]);
 
   const FILTERS: { key: Filter; label: string }[] = [
-    { key: "both", label: "Both" },
+    { key: "all", label: "All" },
     { key: "email", label: "Email" },
     { key: "sms", label: "SMS" },
+    { key: "portal", label: "Portal" },
   ];
 
   return (
@@ -164,7 +174,7 @@ export function ApplicantComms({
           <p className="text-sm text-gray-400">Loading…</p>
         ) : visible.length === 0 ? (
           <p className="text-sm text-gray-500">
-            {messages.length === 0 ? "No messages yet." : `No ${filter} messages.`}
+            {messages.length === 0 ? "No messages yet." : filter === "all" ? "No messages yet." : `No ${CH_LABEL[filter] ?? filter} messages.`}
           </p>
         ) : (
           visible.map((m) => {
@@ -187,7 +197,7 @@ export function ApplicantComms({
                   <p className="whitespace-pre-wrap break-words">{text}</p>
                   <p className={`mt-1 flex items-center gap-1 text-[10px] ${inbound ? "text-gray-400" : "text-white/70"}`}>
                     {CH_ICON[m.channel]}
-                    {new Date(m.created_at).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}
+                    {CH_LABEL[m.channel] ?? m.channel} · {new Date(m.created_at).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}
                     {!inbound && m.status === "failed" && <span className="text-red-200">· failed</span>}
                   </p>
                   {m.error && !inbound && <p className="mt-0.5 text-[10px] text-red-200">{m.error}</p>}

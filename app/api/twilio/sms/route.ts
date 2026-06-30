@@ -2,6 +2,8 @@ import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { autoStage } from "@/lib/prospects/auto-stage";
 import { notifyJobOwner } from "@/lib/comms/notify-owner";
+import { sendCompanySms } from "@/lib/billing/usage";
+import { BASE_URL } from "@/lib/billing/stripe";
 
 export const runtime = "nodejs";
 
@@ -127,6 +129,30 @@ export async function POST(req: Request) {
     body,
     status: "delivered",
   });
+
+  // If Poppy is mid-screening with this applicant, the conversation lives in
+  // their portal — nudge them back there (one SMS) instead of alerting the owner.
+  const { data: pr } = await admin
+    .from("poppy_reports")
+    .select("phase")
+    .eq("application_id", app.id)
+    .maybeSingle();
+  if (pr?.phase === "conversing") {
+    const link = `${BASE_URL}/portal/conversations/${app.id}`;
+    const nudge = `Thanks! To make sure I record your answer, please reply in your portal: ${link}`;
+    const r = await sendCompanySms(app.company_id, { to: from, body: nudge });
+    await admin.from("messages").insert({
+      company_id: app.company_id,
+      application_id: app.id,
+      applicant_id: applicant.id,
+      channel: "sms",
+      direction: "outbound",
+      from_poppy: true,
+      body: nudge,
+      status: r.ok ? "sent" : "failed",
+    });
+    return xml(200);
+  }
 
   // Route the reply to the job's owner (in-app + email).
   const name =

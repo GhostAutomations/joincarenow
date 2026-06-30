@@ -10,6 +10,7 @@ import {
   type ThreadTemplate,
 } from "@/modules/comms/actions";
 import { cleanMessageBody } from "@/lib/comms/clean";
+import { createClient } from "@/lib/supabase/client";
 
 const cls =
   "block w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -53,6 +54,30 @@ export function ApplicantComms({
   useEffect(() => {
     load();
   }, [load]);
+
+  // Live updates: refetch the thread whenever messages change (Poppy posts, the
+  // applicant replies, a send completes). RLS scopes events to this company; the
+  // refetch is scoped to this application. Slow poll as a socket-drop safety net.
+  useEffect(() => {
+    const supabase = createClient();
+    let pending: ReturnType<typeof setTimeout> | null = null;
+    const bump = () => {
+      if (pending) clearTimeout(pending);
+      pending = setTimeout(() => load(), 400);
+    };
+    const channel = supabase
+      .channel(`applicant-comms-${applicationId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, bump)
+      .subscribe();
+    const t = setInterval(() => {
+      if (!document.hidden) load();
+    }, 60000);
+    return () => {
+      if (pending) clearTimeout(pending);
+      clearInterval(t);
+      supabase.removeChannel(channel);
+    };
+  }, [applicationId, load]);
 
   function applyTemplate(id: string) {
     const t = templates.find((x) => x.id === id);

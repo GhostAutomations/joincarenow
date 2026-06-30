@@ -14,6 +14,9 @@ export type WorkflowTask = {
   required: boolean;
   body: string | null;
   form_id: string | null;
+  poppy_engage?: string | null;
+  poppy_form_ids?: string[] | null;
+  poppy_include_cv?: boolean | null;
 };
 
 type EditInput = {
@@ -25,7 +28,19 @@ type EditInput = {
   required: boolean;
   body: string;
   formId: string;
+  poppyEngage: string;
+  poppyFormIds: string[];
+  poppyIncludeCv: boolean;
 };
+
+const POPPY_STAGE_OPTIONS: [string, string][] = [
+  ["on_application", "Application submitted"],
+  ["reviewing", "Reviewing"],
+  ["interview", "Interview"],
+  ["right_to_work", "Right to work"],
+  ["offer", "Offer"],
+  ["hired", "Hired"],
+];
 
 const TYPE_LABEL: Record<string, string> = {
   form: "Form", document: "Document upload", acknowledge: "Read & confirm", poppy: "Poppy AI screening",
@@ -68,12 +83,14 @@ export function WorkflowCard({
   renameWorkflow,
   reorderTasks,
   roleControl,
+  poppyEnabled = false,
 }: {
   name: string;
   subtitle: string;
   workflowId: string | null;
   items: WorkflowTask[];
   forms?: { id: string; name: string }[];
+  poppyEnabled?: boolean;
   deleteWorkflow: (formData: FormData) => void | Promise<void>;
   deleteTask: (formData: FormData) => void | Promise<void>;
   updateTask: (input: EditInput) => Promise<{ ok?: boolean; error?: string }>;
@@ -130,6 +147,19 @@ export function WorkflowCard({
       required: t.required,
       body: t.body ?? "",
       formId: t.form_id ?? "",
+      poppyEngage: t.poppy_engage ?? "",
+      poppyFormIds: t.poppy_form_ids ?? [],
+      poppyIncludeCv: t.poppy_include_cv === true,
+    });
+  }
+
+  function toggleEditPoppyForm(id: string) {
+    if (!edit) return;
+    setEdit({
+      ...edit,
+      poppyFormIds: edit.poppyFormIds.includes(id)
+        ? edit.poppyFormIds.filter((x) => x !== id)
+        : [...edit.poppyFormIds, id],
     });
   }
 
@@ -250,38 +280,83 @@ export function WorkflowCard({
                           <option value="document">Upload a document</option>
                           <option value="form">Fill in a form</option>
                           <option value="acknowledge">Read &amp; confirm</option>
+                          {(poppyEnabled || edit.taskType === "poppy") && <option value="poppy">Poppy AI screening</option>}
                         </select>
                       </label>
-                      <label className="text-xs font-medium text-gray-600">Send when…
-                        <select value={edit.triggerStage} onChange={(e) => setEdit({ ...edit, triggerStage: e.target.value })} className={fieldCls}>
-                          <option value="" disabled>Select one…</option>
-                          {STAGE_OPTIONS.map(([v, l]) => (<option key={v} value={v}>{l}</option>))}
-                        </select>
-                      </label>
+                      {edit.taskType === "poppy" ? (
+                        <label className="text-xs font-medium text-gray-600">When should Poppy engage?
+                          <select value={edit.poppyEngage} onChange={(e) => setEdit({ ...edit, poppyEngage: e.target.value })} className={fieldCls}>
+                            <option value="" disabled>Select one…</option>
+                            <option value="all_forms">When the selected forms are complete</option>
+                            <option value="as_forms">As the selected forms come in</option>
+                            <option value="stage">When they reach a pipeline stage</option>
+                          </select>
+                        </label>
+                      ) : (
+                        <label className="text-xs font-medium text-gray-600">Send when…
+                          <select value={edit.triggerStage} onChange={(e) => setEdit({ ...edit, triggerStage: e.target.value })} className={fieldCls}>
+                            <option value="" disabled>Select one…</option>
+                            {STAGE_OPTIONS.map(([v, l]) => (<option key={v} value={v}>{l}</option>))}
+                          </select>
+                        </label>
+                      )}
                     </div>
 
-                    {edit.taskType === "form" ? (
-                      <label className="mt-3 block text-xs font-medium text-gray-600">Form
-                        <select value={edit.formId} onChange={(e) => setEdit({ ...edit, formId: e.target.value })} className={fieldCls}>
-                          <option value="">Select a form…</option>
-                          {forms.map((f) => (<option key={f.id} value={f.id}>{f.name}</option>))}
-                        </select>
-                      </label>
+                    {edit.taskType === "poppy" ? (
+                      <>
+                        {edit.poppyEngage === "stage" && (
+                          <label className="mt-3 block text-xs font-medium text-gray-600">Which stage?
+                            <select value={edit.triggerStage} onChange={(e) => setEdit({ ...edit, triggerStage: e.target.value })} className={fieldCls}>
+                              <option value="" disabled>Select one…</option>
+                              {POPPY_STAGE_OPTIONS.map(([v, l]) => (<option key={v} value={v}>{l}</option>))}
+                            </select>
+                          </label>
+                        )}
+                        <div className="mt-3 text-xs font-medium text-gray-600">Forms Poppy reviews
+                          <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 backdrop-blur-sm p-2">
+                            <label className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
+                              <input type="checkbox" checked={edit.poppyIncludeCv} onChange={() => setEdit({ ...edit, poppyIncludeCv: !edit.poppyIncludeCv })} className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+                              CV (uploaded)
+                            </label>
+                            {forms.length === 0 ? (
+                              <p className="px-1 font-normal text-gray-400">No forms yet.</p>
+                            ) : (
+                              forms.map((f) => (
+                                <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
+                                  <input type="checkbox" checked={edit.poppyFormIds.includes(f.id)} onChange={() => toggleEditPoppyForm(f.id)} className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+                                  {f.name}
+                                </label>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </>
                     ) : (
-                      <label className="mt-3 block text-xs font-medium text-gray-600">Title
-                        <input value={edit.title} onChange={(e) => setEdit({ ...edit, title: e.target.value })} className={fieldCls} />
-                      </label>
-                    )}
+                      <>
+                        {edit.taskType === "form" ? (
+                          <label className="mt-3 block text-xs font-medium text-gray-600">Form
+                            <select value={edit.formId} onChange={(e) => setEdit({ ...edit, formId: e.target.value })} className={fieldCls}>
+                              <option value="">Select a form…</option>
+                              {forms.map((f) => (<option key={f.id} value={f.id}>{f.name}</option>))}
+                            </select>
+                          </label>
+                        ) : (
+                          <label className="mt-3 block text-xs font-medium text-gray-600">Title
+                            <input value={edit.title} onChange={(e) => setEdit({ ...edit, title: e.target.value })} className={fieldCls} />
+                          </label>
+                        )}
 
-                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <label className="text-xs font-medium text-gray-600">Due within (days)
-                        <input value={edit.dueDays} onChange={(e) => setEdit({ ...edit, dueDays: e.target.value })} type="number" min="0" placeholder="e.g. 7" className={fieldCls} />
-                      </label>
-                      <label className="mt-5 flex items-center gap-2 text-sm text-gray-700">
-                        <input type="checkbox" checked={edit.required} onChange={(e) => setEdit({ ...edit, required: e.target.checked })} className="h-4 w-4 rounded border-gray-300 text-brand-600" />
-                        Required
-                      </label>
-                    </div>
+                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <label className="text-xs font-medium text-gray-600">Due within (days)
+                            <input value={edit.dueDays} onChange={(e) => setEdit({ ...edit, dueDays: e.target.value })} type="number" min="0" placeholder="e.g. 7" className={fieldCls} />
+                          </label>
+                          <label className="mt-5 flex items-center gap-2 text-sm text-gray-700">
+                            <input type="checkbox" checked={edit.required} onChange={(e) => setEdit({ ...edit, required: e.target.checked })} className="h-4 w-4 rounded border-gray-300 text-brand-600" />
+                            Required
+                          </label>
+                        </div>
+                      </>
+                    )}
 
                     <label className="mt-3 block text-xs font-medium text-gray-600">Instructions (optional)
                       <textarea value={edit.body} onChange={(e) => setEdit({ ...edit, body: e.target.value })} rows={2} className={fieldCls} />

@@ -287,6 +287,9 @@ export type EditTaskInput = {
   required: boolean;
   body: string;
   formId: string;
+  poppyEngage?: string;
+  poppyFormIds?: string[];
+  poppyIncludeCv?: boolean;
 };
 
 const WF_STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
@@ -295,6 +298,37 @@ const WF_STAGES = ["on_application", "reviewing", "interview", "offer", "hired"]
 export async function updateTemplateTask(input: EditTaskInput): Promise<{ ok?: boolean; error?: string }> {
   const { supabase, current } = await requireCompany();
   if (!input?.id) return { error: "Missing task" };
+
+  // Poppy step edit.
+  if (input.taskType === "poppy") {
+    if (!["all_forms", "as_forms", "stage"].includes(input.poppyEngage ?? "")) {
+      return { error: "Choose when Poppy should engage" };
+    }
+    if (input.poppyEngage === "stage" && ![...WF_STAGES, "right_to_work"].includes(input.triggerStage)) {
+      return { error: "Choose which stage Poppy engages at" };
+    }
+    if ((!input.poppyFormIds || input.poppyFormIds.length === 0) && !input.poppyIncludeCv) {
+      return { error: "Choose at least one form (or the CV) for Poppy to review" };
+    }
+    const { error } = await supabase
+      .from("onboarding_templates")
+      .update({
+        task_type: "poppy",
+        poppy_engage: input.poppyEngage,
+        poppy_form_ids: input.poppyFormIds ?? [],
+        poppy_include_cv: input.poppyIncludeCv === true,
+        trigger_stage: input.poppyEngage === "stage" ? input.triggerStage : null,
+        body: input.body.trim() || null,
+        title: input.title.trim() || "Poppy screening",
+        form_id: null,
+      })
+      .eq("id", input.id)
+      .eq("company_id", current.company_id);
+    if (error) return { error: "Could not save the step." };
+    revalidatePath("/onboarding-board");
+    return { ok: true };
+  }
+
   if (!["form", "document", "acknowledge"].includes(input.taskType)) return { error: "Pick a type" };
   if (!WF_STAGES.includes(input.triggerStage)) return { error: "Choose when to send it" };
 

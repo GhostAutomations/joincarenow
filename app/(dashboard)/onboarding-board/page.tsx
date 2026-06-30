@@ -21,7 +21,7 @@ export default async function OnboardingBoardPage() {
   const [{ data: templates }, { data: forms }, { data: roles }, { data: company }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, role_ids, workflow_id, workflow_name, position")
+      .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, role_ids, workflow_id, workflow_name, position, poppy_engage, poppy_form_ids, poppy_include_cv")
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
@@ -47,10 +47,14 @@ export default async function OnboardingBoardPage() {
     workflow_id: string | null;
     workflow_name: string | null;
     position: number;
+    poppy_engage: string | null;
+    poppy_form_ids: string[] | null;
+    poppy_include_cv: boolean | null;
   };
   const toTasks = (ts: Tpl[]): WorkflowTask[] => ts.map((t) => ({
     id: t.id, title: t.title, task_type: t.task_type, trigger_stage: t.trigger_stage,
     due_days: t.due_days, required: t.required, body: t.body, form_id: t.form_id,
+    poppy_engage: t.poppy_engage, poppy_form_ids: t.poppy_form_ids, poppy_include_cv: t.poppy_include_cv,
   }));
   const wfMap = new Map<
     string,
@@ -100,6 +104,7 @@ export default async function OnboardingBoardPage() {
                   workflowId={wf.id}
                   items={toTasks(wf.items)}
                   forms={(forms ?? []) as { id: string; name: string }[]}
+                  poppyEnabled={poppyEnabled}
                   deleteWorkflow={deleteWorkflow}
                   deleteTask={deleteTemplateTask}
                   updateTask={updateTemplateTask}

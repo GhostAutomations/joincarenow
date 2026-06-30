@@ -18,7 +18,15 @@ export async function addStoreWorkflowTasks(
   if (!Array.isArray(drafts) || drafts.length === 0) return { error: "Nothing to add" };
   for (const d of drafts) {
     if ((d.title ?? "").trim().length < 2) return { error: "Give the workflow a title" };
-    if (!["form", "document", "acknowledge"].includes(d.taskType)) return { error: "Pick a type for each task" };
+    if (!["form", "document", "acknowledge", "poppy"].includes(d.taskType)) return { error: "Pick a type for each task" };
+    if (d.taskType === "poppy") {
+      if (!["all_forms", "as_forms", "stage"].includes(d.poppyEngage ?? "")) return { error: "Choose when Poppy should engage" };
+      if (d.poppyEngage === "stage" && ![...STAGES, "right_to_work"].includes(d.triggerStage)) return { error: "Choose which stage Poppy engages at" };
+      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv) {
+        return { error: "Choose at least one form (or the CV) for Poppy to review" };
+      }
+      continue;
+    }
     if (!STAGES.includes(d.triggerStage)) return { error: "Choose when to send each task" };
     if (d.taskType === "form" && (!d.formIds || d.formIds.length === 0)) {
       return { error: "Choose at least one form for each form task" };
@@ -72,7 +80,19 @@ export async function addStoreWorkflowTasks(
       workflow_id: workflowId,
       workflow_name: workflowName,
     };
-    if (d.taskType === "form") {
+    if (d.taskType === "poppy") {
+      rows.push({
+        ...base,
+        title: d.title.trim(),
+        task_type: "poppy",
+        form_id: null,
+        trigger_stage: d.poppyEngage === "stage" ? d.triggerStage : null,
+        poppy_engage: d.poppyEngage,
+        poppy_form_ids: d.poppyFormIds ?? [],
+        poppy_include_cv: d.poppyIncludeCv === true,
+        position: pos++,
+      });
+    } else if (d.taskType === "form") {
       for (const fid of d.formIds) {
         rows.push({ ...base, title: names.get(fid) ?? d.title.trim(), task_type: "form", form_id: fid, position: pos++ });
       }
@@ -163,12 +183,41 @@ export type EditStoreStepInput = {
   required: boolean;
   body: string;
   formId: string;
+  poppyEngage?: string;
+  poppyFormIds?: string[];
+  poppyIncludeCv?: boolean;
 };
 
 /** Founder: edit a single store-workflow step. */
 export async function updateStoreWorkflowStep(input: EditStoreStepInput): Promise<{ ok?: boolean; error?: string }> {
   const { supabase } = await requirePlatformAdmin();
   if (!input?.id) return { error: "Missing step" };
+
+  if (input.taskType === "poppy") {
+    if (!["all_forms", "as_forms", "stage"].includes(input.poppyEngage ?? "")) return { error: "Choose when Poppy should engage" };
+    if (input.poppyEngage === "stage" && ![...STAGES, "right_to_work"].includes(input.triggerStage)) return { error: "Choose which stage Poppy engages at" };
+    if ((!input.poppyFormIds || input.poppyFormIds.length === 0) && !input.poppyIncludeCv) {
+      return { error: "Choose at least one form (or the CV) for Poppy to review" };
+    }
+    const { error } = await supabase
+      .from("onboarding_templates")
+      .update({
+        task_type: "poppy",
+        poppy_engage: input.poppyEngage,
+        poppy_form_ids: input.poppyFormIds ?? [],
+        poppy_include_cv: input.poppyIncludeCv === true,
+        trigger_stage: input.poppyEngage === "stage" ? input.triggerStage : null,
+        body: input.body.trim() || null,
+        title: input.title.trim() || "Poppy screening",
+        form_id: null,
+      })
+      .eq("id", input.id)
+      .eq("is_store", true);
+    if (error) return { error: "Could not save the step." };
+    revalidatePath("/founder/workflows");
+    return { ok: true };
+  }
+
   if (!["form", "document", "acknowledge"].includes(input.taskType)) return { error: "Pick a type" };
   if (!STAGES.includes(input.triggerStage)) return { error: "Choose when to send it" };
 
@@ -275,7 +324,7 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
 
   const { data: steps } = await db
     .from("onboarding_templates")
-    .select("title, task_type, form_id, body, required, due_days, trigger_stage, position, workflow_name, role_names")
+    .select("title, task_type, form_id, body, required, due_days, trigger_stage, position, workflow_name, role_names, poppy_engage, poppy_form_ids, poppy_include_cv")
     .eq("is_store", true)
     .eq("workflow_id", workflowId)
     .order("position", { ascending: true });
@@ -284,7 +333,15 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
   const storeRoleNames = ((steps[0] as { role_names: string[] | null }).role_names) ?? [];
 
   // Copy referenced store forms into the company (reuse if already copied).
-  const storeFormIds = [...new Set(steps.map((s) => (s as { form_id: string | null }).form_id).filter(Boolean) as string[])];
+  // Include forms a Poppy step reviews so they're copied + remappable too.
+  const storeFormIds = [
+    ...new Set(
+      [
+        ...steps.map((s) => (s as { form_id: string | null }).form_id),
+        ...steps.flatMap((s) => ((s as { poppy_form_ids: string[] | null }).poppy_form_ids) ?? []),
+      ].filter(Boolean) as string[]
+    ),
+  ];
   const formMap = new Map<string, string>();
   for (const storeFormId of storeFormIds) {
     const { data: alreadyCopied } = await db
@@ -381,6 +438,7 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
     const step = s as {
       title: string; task_type: string; form_id: string | null; body: string | null;
       required: boolean; due_days: number | null; trigger_stage: string | null;
+      poppy_engage: string | null; poppy_form_ids: string[] | null; poppy_include_cv: boolean | null;
     };
     return {
       company_id: companyId,
@@ -392,6 +450,10 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
       required: step.required,
       due_days: step.due_days,
       trigger_stage: step.trigger_stage,
+      // Remap the Poppy reviewer forms onto the company's copies.
+      poppy_engage: step.poppy_engage,
+      poppy_form_ids: (step.poppy_form_ids ?? []).map((fid) => formMap.get(fid)).filter(Boolean),
+      poppy_include_cv: step.poppy_include_cv ?? false,
       role_id: null,
       role_ids,
       workflow_id: newWorkflowId,

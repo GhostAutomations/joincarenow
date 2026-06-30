@@ -26,7 +26,7 @@ export default async function FounderWorkflowsPage() {
   const [{ data: rows }, { data: forms }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, form_id, body, trigger_stage, required, due_days, position, workflow_id, workflow_name, store_published, store_archived, store_folder, role_names")
+      .select("id, title, task_type, form_id, body, trigger_stage, required, due_days, position, workflow_id, workflow_name, store_published, store_archived, store_folder, role_names, poppy_engage, poppy_form_ids, poppy_include_cv")
       .eq("is_store", true)
       .order("workflow_id", { ascending: true })
       .order("position", { ascending: true }),
@@ -39,10 +39,12 @@ export default async function FounderWorkflowsPage() {
     workflow_id: string; workflow_name: string;
     store_published: boolean; store_archived: boolean; store_folder: string | null;
     role_names: string[] | null;
+    poppy_engage: string | null; poppy_form_ids: string[] | null; poppy_include_cv: boolean | null;
   };
   const toTasks = (rs: Row[]): WorkflowTask[] => rs.map((t) => ({
     id: t.id, title: t.title, task_type: t.task_type, trigger_stage: t.trigger_stage,
     due_days: t.due_days, required: t.required, body: t.body, form_id: t.form_id,
+    poppy_engage: t.poppy_engage, poppy_form_ids: t.poppy_form_ids, poppy_include_cv: t.poppy_include_cv,
   }));
   type Wf = { id: string; name: string; published: boolean; archived: boolean; folder: string | null; roleNames: string[]; items: Row[] };
   const map = new Map<string, Wf>();
@@ -104,6 +106,7 @@ export default async function FounderWorkflowsPage() {
                   workflowId={wf.id}
                   items={toTasks(wf.items)}
                   forms={(forms ?? []) as { id: string; name: string }[]}
+                  poppyEnabled
                   deleteWorkflow={deleteStoreWorkflow}
                   deleteTask={deleteStoreWorkflowStep}
                   updateTask={updateStoreWorkflowStep}
@@ -128,6 +131,7 @@ export default async function FounderWorkflowsPage() {
             roleOptions={STANDARD_ROLE_OPTIONS}
             roleLabel="Applies to roles (standard)"
             saveAction={addStoreWorkflowTasks}
+            poppyEnabled
           />
         </div>
       </section>
@@ -159,6 +163,7 @@ export default async function FounderWorkflowsPage() {
                         workflowId={wf.id}
                         items={toTasks(wf.items)}
                         forms={(forms ?? []) as { id: string; name: string }[]}
+                  poppyEnabled
                         deleteWorkflow={deleteStoreWorkflow}
                         deleteTask={deleteStoreWorkflowStep}
                         updateTask={updateStoreWorkflowStep}

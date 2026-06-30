@@ -18,7 +18,7 @@ export default async function FounderHomePage() {
   const head = { count: "exact" as const, head: true };
 
   const [
-    companies, hires, liveJobs, emails, sms, errors, syncErrors, newFeedback, newRequests, demosToday, upcomingDemos,
+    companies, hires, liveJobs, emails, sms, errors, syncErrors, newFeedback, newRequests, demosToday, upcomingDemos, formsPurchased,
   ] = await Promise.all([
     db.from("companies").select("id", head),
     db.from("employees").select("id", head),
@@ -31,6 +31,7 @@ export default async function FounderHomePage() {
     db.from("feature_requests").select("id", head).eq("status", "new"),
     db.from("prospect_companies").select("id", head).not("demo_at", "is", null).gte("demo_at", todayStartUtc).lt("demo_at", tomorrowStartUtc),
     db.from("prospect_companies").select("id", head).not("demo_at", "is", null).gte("demo_at", nowIso),
+    db.from("form_purchases").select("id", head),
   ]);
 
   const first = profile?.full_name?.split(" ")[0] ?? "there";
@@ -46,6 +47,7 @@ export default async function FounderHomePage() {
     { label: "Upcoming demos", value: n(upcomingDemos), href: "/founder/sales/demos" },
     { label: "Emails this month", value: n(emails) },
     { label: "SMS this month", value: n(sms), href: "/founder/sms" },
+    { label: "Forms purchased", value: n(formsPurchased), href: "/founder/forms/sales" },
     { label: "New feedback", value: n(newFeedback), href: "/founder/feedback", alert: n(newFeedback) > 0 },
     { label: "Requests to quote", value: n(newRequests), href: "/founder/requests", alert: n(newRequests) > 0 },
     { label: "Errors", value: n(errors), href: "/founder/errors", alert: n(errors) > 0 },

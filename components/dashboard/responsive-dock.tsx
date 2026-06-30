@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { MoreHorizontal, X, ChevronDown, LayoutGrid, type LucideIcon } from "lucide-react";
-
-const COLLAPSE_KEY = "jcn-dock-collapsed";
+import { MoreHorizontal, X, LayoutGrid, type LucideIcon } from "lucide-react";
 
 export type DockItem = { href: string; label: string; icon: LucideIcon; grad: string };
 
@@ -25,32 +23,15 @@ export function ResponsiveDock({
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-
-  // Restore the minimise choice (desktop only) after mount to avoid a hydration
-  // mismatch. A brief expanded flash on load is acceptable.
-  useEffect(() => {
-    try {
-      if (localStorage.getItem(COLLAPSE_KEY) === "1") setCollapsed(true);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const setCollapsedPersist = (v: boolean) => {
-    setCollapsed(v);
-    try {
-      localStorage.setItem(COLLAPSE_KEY, v ? "1" : "0");
-    } catch {
-      /* ignore */
-    }
-  };
+  // Desktop dock sits minimised and opens on hover (click as a touch fallback).
+  const [expanded, setExpanded] = useState(false);
 
   const active = (href: string) =>
     isActive ? isActive(pathname, href) : pathname === href || pathname.startsWith(href + "/");
 
   const go = (href: string) => {
     setOpen(false);
+    setExpanded(false);
     router.push(href);
   };
 
@@ -61,22 +42,17 @@ export function ResponsiveDock({
 
   return (
     <>
-      {/* Desktop / tablet floating dock — single row, never wraps (scrolls
-          sideways if needed), with a minimise toggle. */}
+      {/* Desktop / tablet floating dock — minimised to an "Apps" pill that opens
+          on hover (click to open on touch); a single row that never wraps
+          (scrolls sideways if needed). Collapses again on mouse-leave. */}
       <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 hidden justify-center px-3 sm:flex">
-        {collapsed ? (
-          <button
-            onClick={() => setCollapsedPersist(false)}
-            aria-label="Show app dock"
-            title="Show apps"
-            className="pointer-events-auto flex items-center gap-2 rounded-2xl border border-white/50 bg-white/70 px-4 py-2.5 text-gray-700 shadow-xl backdrop-blur-xl transition hover:bg-white/90"
-          >
-            <LayoutGrid className="h-5 w-5" strokeWidth={1.9} />
-            <span className="text-sm font-medium">Apps</span>
-          </button>
-        ) : (
-          <div className="pointer-events-auto flex max-w-[94vw] items-center gap-1.5 rounded-2xl border border-white/50 bg-white/70 px-2.5 py-2 shadow-xl backdrop-blur-xl">
-            <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div
+          className="pointer-events-auto"
+          onMouseEnter={() => setExpanded(true)}
+          onMouseLeave={() => setExpanded(false)}
+        >
+          {expanded ? (
+            <div className="flex max-w-[94vw] items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/50 bg-white/70 px-2.5 py-2 shadow-xl backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {items.map(({ href, label, icon: Icon, grad }) => (
                 <button
                   key={href}
@@ -91,16 +67,18 @@ export function ResponsiveDock({
                 </button>
               ))}
             </div>
+          ) : (
             <button
-              onClick={() => setCollapsedPersist(true)}
-              aria-label="Minimise dock"
-              title="Minimise"
-              className="ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/60 text-gray-500 transition hover:bg-white/90 hover:text-gray-800"
+              onClick={() => setExpanded(true)}
+              aria-label="Show app dock"
+              title="Apps"
+              className="flex items-center gap-2 rounded-2xl border border-white/50 bg-white/70 px-4 py-2.5 text-gray-700 shadow-xl backdrop-blur-xl transition hover:bg-white/90"
             >
-              <ChevronDown className="h-5 w-5" strokeWidth={2} />
+              <LayoutGrid className="h-5 w-5" strokeWidth={1.9} />
+              <span className="text-sm font-medium">Apps</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Mobile bottom tab bar */}

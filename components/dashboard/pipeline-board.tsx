@@ -9,6 +9,7 @@ import { InterviewSlotPicker, type BookedInterview } from "@/components/dashboar
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { ApplicantForms } from "@/components/dashboard/applicant-forms";
 import { ApplicantReferences } from "@/components/dashboard/applicant-references";
+import { ApplicantInterviewQuestions } from "@/components/dashboard/applicant-interview-questions";
 import { ApplicantTeamMessages } from "@/components/dashboard/applicant-team-messages";
 import { CvRequest } from "@/components/dashboard/cv-request";
 import { DocRequest } from "@/components/dashboard/doc-request";
@@ -800,6 +801,9 @@ function ApplicantPanel({
 
           {/* References */}
           <ApplicantReferences applicationId={app.id} />
+
+          {/* Poppy — AI interview questions (renders only if the company has Poppy) */}
+          <ApplicantInterviewQuestions applicationId={app.id} />
 
           {/* Internal team messages tagged to this applicant (staff-only) */}
           <ApplicantTeamMessages applicationId={app.id} />

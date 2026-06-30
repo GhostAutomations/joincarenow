@@ -803,7 +803,10 @@ function ApplicantPanel({
           <ApplicantReferences applicationId={app.id} />
 
           {/* Poppy — workflow screening report, else on-demand interview questions */}
-          <ApplicantPoppyReport applicationId={app.id} />
+          <ApplicantPoppyReport
+            applicationId={app.id}
+            applicantName={[app.first_name, app.last_name].filter(Boolean).join(" ") || "Applicant"}
+          />
 
           {/* Internal team messages tagged to this applicant (staff-only) */}
           <ApplicantTeamMessages applicationId={app.id} />

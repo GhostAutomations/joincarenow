@@ -19,10 +19,11 @@ export type TaskDraft = {
   /** Workflow-level role association. Company: role UUIDs. Founder store:
    *  standard role names. Empty = applies to all roles. */
   roleValues: string[];
-  /** Poppy step only: when it engages (all_forms | as_forms | stage) and which
-   *  company form ids it reviews. */
+  /** Poppy step only: when it engages (all_forms | as_forms | stage), which
+   *  company form ids it reviews, and whether it also reviews the CV. */
   poppyEngage?: string;
   poppyFormIds?: string[];
+  poppyIncludeCv?: boolean;
 };
 
 /** Add one or more workflow tasks at once. Each form task expands to one task
@@ -45,8 +46,8 @@ export async function addTemplateTasks(
       if (d.poppyEngage === "stage" && !STAGES.includes(d.triggerStage)) {
         return { error: "Choose which stage Poppy engages at" };
       }
-      if (!d.poppyFormIds || d.poppyFormIds.length === 0) {
-        return { error: "Choose at least one form for Poppy to review" };
+      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv) {
+        return { error: "Choose at least one form (or the CV) for Poppy to review" };
       }
       continue;
     }
@@ -104,6 +105,7 @@ export async function addTemplateTasks(
         trigger_stage: d.poppyEngage === "stage" ? d.triggerStage : null,
         poppy_engage: d.poppyEngage,
         poppy_form_ids: d.poppyFormIds ?? [],
+        poppy_include_cv: d.poppyIncludeCv === true,
         role_id: null,
         role_ids,
         workflow_id: workflowId,

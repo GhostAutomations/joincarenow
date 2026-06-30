@@ -64,7 +64,13 @@ async function downloadCvPdf(db: Admin, cvPath: string | null): Promise<string |
   return null;
 }
 
-type PoppyStep = { poppy_engage: string | null; poppy_form_ids: string[] | null; trigger_stage: string | null; role_ids: string[] | null };
+type PoppyStep = {
+  poppy_engage: string | null;
+  poppy_form_ids: string[] | null;
+  poppy_include_cv: boolean | null;
+  trigger_stage: string | null;
+  role_ids: string[] | null;
+};
 type AppRow = {
   id: string;
   stage: string;
@@ -75,21 +81,33 @@ type AppRow = {
   applicants: { first_name: string | null; last_name: string | null } | null;
 };
 
-/** Does this Poppy step's engage condition hold for this application? */
+/** Does this Poppy step's engage condition hold for this application? The CV (if
+ *  selected) counts as a reviewable item — "complete" once a CV is uploaded. */
 async function conditionMet(db: Admin, app: AppRow, step: PoppyStep): Promise<boolean> {
   const engage = step.poppy_engage;
   if (engage === "stage") return stageReached(app.stage, step.trigger_stage);
 
   const formIds = (step.poppy_form_ids ?? []).filter(Boolean);
-  if (formIds.length === 0) return false;
-  const { data: subs } = await db
-    .from("form_submissions")
-    .select("form_id")
-    .eq("application_id", app.id)
-    .in("form_id", formIds);
-  const done = new Set((subs ?? []).map((s) => s.form_id as string));
-  if (engage === "all_forms") return formIds.every((f) => done.has(f));
-  if (engage === "as_forms") return done.size > 0;
+  const wantCv = step.poppy_include_cv === true;
+  const cvDone = !!app.cv_path;
+  if (formIds.length === 0 && !wantCv) return false;
+
+  let done = new Set<string>();
+  if (formIds.length > 0) {
+    const { data: subs } = await db
+      .from("form_submissions")
+      .select("form_id")
+      .eq("application_id", app.id)
+      .in("form_id", formIds);
+    done = new Set((subs ?? []).map((s) => s.form_id as string));
+  }
+
+  if (engage === "all_forms") {
+    return formIds.every((f) => done.has(f)) && (!wantCv || cvDone);
+  }
+  if (engage === "as_forms") {
+    return done.size > 0 || (wantCv && cvDone);
+  }
   return false;
 }
 
@@ -120,7 +138,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
 
     const { data: stepsRaw } = await db
       .from("onboarding_templates")
-      .select("poppy_engage, poppy_form_ids, trigger_stage, role_ids")
+      .select("poppy_engage, poppy_form_ids, poppy_include_cv, trigger_stage, role_ids")
       .eq("company_id", companyId)
       .eq("is_store", false)
       .eq("task_type", "poppy");
@@ -162,7 +180,8 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
       }
 
       try {
-        const cvBase64Pdf = await downloadCvPdf(db, app.cv_path);
+        // Only read the CV if this step's reviewer list includes it.
+        const cvBase64Pdf = chosen.poppy_include_cv === true ? await downloadCvPdf(db, app.cv_path) : null;
         const formsText = await gatherFormsText(db, app.id);
         const answersText = [formsText, formatAnswers(app.answers)].filter(Boolean).join("\n\n") || null;
         const name =

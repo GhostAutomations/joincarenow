@@ -17,6 +17,7 @@ type Box = {
   triggerStage: string;
   poppyEngage: string;
   poppyFormIds: string[];
+  poppyIncludeCv: boolean;
 };
 
 const blankBox = (): Box => ({
@@ -27,6 +28,7 @@ const blankBox = (): Box => ({
   triggerStage: "",
   poppyEngage: "",
   poppyFormIds: [],
+  poppyIncludeCv: false,
 });
 
 export function AddTemplateTask({
@@ -113,6 +115,7 @@ export function AddTemplateTask({
       roleValues,
       poppyEngage: b.poppyEngage,
       poppyFormIds: b.poppyFormIds,
+      poppyIncludeCv: b.poppyIncludeCv,
     }));
     setSaving(true);
     const res = await saveAction(drafts);
@@ -211,8 +214,8 @@ export function AddTemplateTask({
                   className={cls}
                 >
                   <option value="" disabled>Select one…</option>
-                  <option value="all_forms">When all its forms are complete</option>
-                  <option value="as_forms">As the forms come in</option>
+                  <option value="all_forms">When the selected forms are complete</option>
+                  <option value="as_forms">As the selected forms come in</option>
                   <option value="stage">When they reach a pipeline stage</option>
                 </select>
               </label>
@@ -257,11 +260,21 @@ export function AddTemplateTask({
               )}
               <div className="text-xs font-medium text-gray-600">
                 Forms Poppy reviews
-                {forms.length === 0 ? (
-                  <p className="mt-1 font-normal text-gray-400">No forms yet — create one in Forms first.</p>
-                ) : (
-                  <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 backdrop-blur-sm p-2">
-                    {forms.map((f) => (
+                <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 backdrop-blur-sm p-2">
+                  {/* CV is reviewable like a form (counts toward 'complete' once uploaded). */}
+                  <label className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={b.poppyIncludeCv}
+                      onChange={() => updateBox(i, { poppyIncludeCv: !b.poppyIncludeCv })}
+                      className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                    />
+                    CV (uploaded)
+                  </label>
+                  {forms.length === 0 ? (
+                    <p className="px-1 font-normal text-gray-400">No forms yet — create one in Forms first.</p>
+                  ) : (
+                    forms.map((f) => (
                       <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
                         <input
                           type="checkbox"
@@ -271,9 +284,9 @@ export function AddTemplateTask({
                         />
                         {f.name}
                       </label>
-                    ))}
-                  </div>
-                )}
+                    ))
+                  )}
+                </div>
                 <span className="mt-1 block text-[11px] font-normal text-gray-400">
                   Poppy compares these against the job description to build screening questions.
                 </span>

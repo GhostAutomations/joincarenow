@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { MoreHorizontal, X, type LucideIcon } from "lucide-react";
+import { MoreHorizontal, X, ChevronDown, LayoutGrid, type LucideIcon } from "lucide-react";
+
+const COLLAPSE_KEY = "jcn-dock-collapsed";
 
 export type DockItem = { href: string; label: string; icon: LucideIcon; grad: string };
 
@@ -23,6 +25,26 @@ export function ResponsiveDock({
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Restore the minimise choice (desktop only) after mount to avoid a hydration
+  // mismatch. A brief expanded flash on load is acceptable.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(COLLAPSE_KEY) === "1") setCollapsed(true);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const setCollapsedPersist = (v: boolean) => {
+    setCollapsed(v);
+    try {
+      localStorage.setItem(COLLAPSE_KEY, v ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  };
 
   const active = (href: string) =>
     isActive ? isActive(pathname, href) : pathname === href || pathname.startsWith(href + "/");
@@ -39,25 +61,46 @@ export function ResponsiveDock({
 
   return (
     <>
-      {/* Desktop / tablet floating dock */}
+      {/* Desktop / tablet floating dock — single row, never wraps (scrolls
+          sideways if needed), with a minimise toggle. */}
       <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 hidden justify-center px-3 sm:flex">
-        <div className="pointer-events-auto flex max-w-[94vw] flex-wrap items-center justify-center gap-1.5 rounded-2xl border border-white/50 bg-white/70 px-2.5 py-2 shadow-xl backdrop-blur-xl">
-          {items.map(({ href, label, icon: Icon, grad }) => (
+        {collapsed ? (
+          <button
+            onClick={() => setCollapsedPersist(false)}
+            aria-label="Show app dock"
+            title="Show apps"
+            className="pointer-events-auto flex items-center gap-2 rounded-2xl border border-white/50 bg-white/70 px-4 py-2.5 text-gray-700 shadow-xl backdrop-blur-xl transition hover:bg-white/90"
+          >
+            <LayoutGrid className="h-5 w-5" strokeWidth={1.9} />
+            <span className="text-sm font-medium">Apps</span>
+          </button>
+        ) : (
+          <div className="pointer-events-auto flex max-w-[94vw] items-center gap-1.5 rounded-2xl border border-white/50 bg-white/70 px-2.5 py-2 shadow-xl backdrop-blur-xl">
+            <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {items.map(({ href, label, icon: Icon, grad }) => (
+                <button
+                  key={href}
+                  onClick={() => go(href)}
+                  aria-label={label}
+                  title={label}
+                  className={`grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${grad} text-white shadow transition hover:brightness-110 ${
+                    active(href) ? "ring-2 ring-brand-600 ring-offset-2 ring-offset-white/60" : ""
+                  }`}
+                >
+                  <Icon className="h-8 w-8" strokeWidth={1.9} />
+                </button>
+              ))}
+            </div>
             <button
-              key={href}
-              onClick={() => go(href)}
-              aria-label={label}
-              className={`group relative grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${grad} text-white shadow transition-transform hover:-translate-y-1 ${
-                active(href) ? "ring-2 ring-brand-600 ring-offset-2 ring-offset-white/60" : ""
-              }`}
+              onClick={() => setCollapsedPersist(true)}
+              aria-label="Minimise dock"
+              title="Minimise"
+              className="ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/60 text-gray-500 transition hover:bg-white/90 hover:text-gray-800"
             >
-              <Icon className="h-8 w-8" strokeWidth={1.9} />
-              <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white opacity-0 shadow transition-opacity duration-75 group-hover:opacity-100">
-                {label}
-              </span>
+              <ChevronDown className="h-5 w-5" strokeWidth={2} />
             </button>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Mobile bottom tab bar */}

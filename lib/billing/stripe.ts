@@ -244,11 +244,37 @@ export async function listInvoices(customerId: string, limit = 24): Promise<Invo
   }
 }
 
+/** Find a usable saved card for off-session charges. Prefers the customer's
+ *  invoice-settings default; otherwise the most recent attached card. The card
+ *  added during subscription Checkout lives on the subscription, not always as
+ *  the customer default — so we fall back to listing the customer's cards. */
+async function resolveDefaultPaymentMethod(customerId: string): Promise<string | null> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cust = (await stripeRequest(`/customers/${customerId}`, "GET")) as any;
+    const di = cust?.invoice_settings?.default_payment_method;
+    if (di) return typeof di === "string" ? di : (di.id as string);
+  } catch {
+    /* fall through to listing cards */
+  }
+  try {
+    const pms = await stripeRequest<{ data: { id: string }[] }>("/payment_methods", "GET", {
+      customer: customerId,
+      type: "card",
+      limit: 1,
+    });
+    return pms.data?.[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Charge a one-off amount to a customer's saved card immediately (off-session).
- *  Used for Form Store purchases. Creates an isolated draft invoice, attaches a
- *  single invoice item to it (so it can't sweep up unrelated pending items),
- *  finalises and pays it. Throws if the payment doesn't settle, so the caller
- *  never grants the purchase unpaid. Returns the paid invoice id. */
+ *  Used for Form Store purchases. Resolves the saved card explicitly, creates an
+ *  isolated draft invoice (so it can't sweep up unrelated pending items), pays it
+ *  with that card, and voids it if the payment fails so nothing is left to charge
+ *  later. Throws if it can't settle, so the caller never grants a purchase unpaid.
+ *  Returns the paid invoice id. */
 export async function chargeOneOff(
   customerId: string,
   amountPence: number,
@@ -257,11 +283,18 @@ export async function chargeOneOff(
   if (!process.env.STRIPE_SECRET_KEY) throw new Error("Billing isn't configured.");
   if (!Number.isInteger(amountPence) || amountPence <= 0) throw new Error("Invalid amount.");
 
-  // Draft invoice first, so the invoice item below attaches only to this one.
+  const paymentMethod = await resolveDefaultPaymentMethod(customerId);
+  if (!paymentMethod) {
+    throw new Error("No saved card on file. Add a card under Manage billing, then try again.");
+  }
+
+  // Draft invoice first, pinned to the resolved card, so the invoice item below
+  // attaches only to this one.
   const inv = await stripeRequest<{ id: string }>("/invoices", "POST", {
     customer: customerId,
     collection_method: "charge_automatically",
     auto_advance: false,
+    default_payment_method: paymentMethod,
   });
   await stripeRequest("/invoiceitems", "POST", {
     customer: customerId,
@@ -271,12 +304,29 @@ export async function chargeOneOff(
     description,
   });
   await stripeRequest(`/invoices/${inv.id}/finalize`, "POST", {});
-  const paid = await stripeRequest<{ id: string; status: string }>(
-    `/invoices/${inv.id}/pay`,
-    "POST",
-    { off_session: true }
-  );
-  if (paid.status !== "paid") throw new Error("The payment could not be completed.");
+
+  const voidInvoice = async () => {
+    try {
+      await stripeRequest(`/invoices/${inv.id}/void`, "POST", {});
+    } catch {
+      /* best-effort cleanup */
+    }
+  };
+
+  let paid: { id: string; status: string };
+  try {
+    paid = await stripeRequest<{ id: string; status: string }>(`/invoices/${inv.id}/pay`, "POST", {
+      off_session: true,
+      payment_method: paymentMethod,
+    });
+  } catch (e) {
+    await voidInvoice();
+    throw e;
+  }
+  if (paid.status !== "paid") {
+    await voidInvoice();
+    throw new Error("The payment could not be completed.");
+  }
   return { invoiceId: inv.id };
 }
 

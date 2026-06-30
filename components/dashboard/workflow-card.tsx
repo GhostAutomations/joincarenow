@@ -28,7 +28,7 @@ type EditInput = {
 };
 
 const TYPE_LABEL: Record<string, string> = {
-  form: "Form", document: "Document upload", acknowledge: "Read & confirm",
+  form: "Form", document: "Document upload", acknowledge: "Read & confirm", poppy: "Poppy AI screening",
 };
 const TRIGGER_LABEL: Record<string, string> = {
   on_application: "On application", reviewing: "Under review", interview: "Interview", offer: "Offer", hired: "Hired",

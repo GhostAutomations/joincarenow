@@ -15,6 +15,8 @@ type Box = {
   dueDays: string;
   required: boolean;
   triggerStage: string;
+  poppyEngage: string;
+  poppyFormIds: string[];
 };
 
 const blankBox = (): Box => ({
@@ -23,6 +25,8 @@ const blankBox = (): Box => ({
   dueDays: "",
   required: true,
   triggerStage: "",
+  poppyEngage: "",
+  poppyFormIds: [],
 });
 
 export function AddTemplateTask({
@@ -31,6 +35,7 @@ export function AddTemplateTask({
   saveAction = addTemplateTasks,
   showRole = true,
   roleLabel = "Applies to roles",
+  poppyEnabled = false,
 }: {
   forms: { id: string; name: string }[];
   /** Company: value = role UUID. Founder store: value = standard role name. */
@@ -40,6 +45,8 @@ export function AddTemplateTask({
   saveAction?: (drafts: TaskDraft[]) => Promise<{ ok?: boolean; error?: string }>;
   showRole?: boolean;
   roleLabel?: string;
+  /** Show the Poppy AI screening step type (company has Poppy). */
+  poppyEnabled?: boolean;
 }) {
   const router = useRouter();
   // Workflow-level (shared across all tasks in this workflow).
@@ -78,6 +85,20 @@ export function AddTemplateTask({
       )
     );
   }
+  function togglePoppyForm(i: number, id: string) {
+    setBoxes((bs) =>
+      bs.map((b, idx) =>
+        idx === i
+          ? {
+              ...b,
+              poppyFormIds: b.poppyFormIds.includes(id)
+                ? b.poppyFormIds.filter((x) => x !== id)
+                : [...b.poppyFormIds, id],
+            }
+          : b
+      )
+    );
+  }
 
   async function submit() {
     setError(null);
@@ -90,6 +111,8 @@ export function AddTemplateTask({
       body,
       triggerStage: b.triggerStage,
       roleValues,
+      poppyEngage: b.poppyEngage,
+      poppyFormIds: b.poppyFormIds,
     }));
     setSaving(true);
     const res = await saveAction(drafts);
@@ -176,24 +199,87 @@ export function AddTemplateTask({
                 <option value="document">Upload a document</option>
                 <option value="form">Fill in a form</option>
                 <option value="acknowledge">Read &amp; confirm</option>
+                {poppyEnabled && <option value="poppy">Poppy AI screening</option>}
               </select>
             </label>
-            <label className="text-xs font-medium text-gray-600">
-              Send this to the applicant when…
-              <select
-                value={b.triggerStage}
-                onChange={(e) => updateBox(i, { triggerStage: e.target.value })}
-                className={cls}
-              >
-                <option value="" disabled>Select one…</option>
-                <option value="on_application">They submit their application</option>
-                <option value="reviewing">They reach Reviewing</option>
-                <option value="interview">They reach Interview</option>
-                <option value="offer">They reach Offer</option>
-                <option value="hired">They are Hired</option>
-              </select>
-            </label>
+            {b.taskType === "poppy" ? (
+              <label className="text-xs font-medium text-gray-600">
+                When should Poppy engage?
+                <select
+                  value={b.poppyEngage}
+                  onChange={(e) => updateBox(i, { poppyEngage: e.target.value })}
+                  className={cls}
+                >
+                  <option value="" disabled>Select one…</option>
+                  <option value="all_forms">When all its forms are complete</option>
+                  <option value="as_forms">As the forms come in</option>
+                  <option value="stage">When they reach a pipeline stage</option>
+                </select>
+              </label>
+            ) : (
+              <label className="text-xs font-medium text-gray-600">
+                Send this to the applicant when…
+                <select
+                  value={b.triggerStage}
+                  onChange={(e) => updateBox(i, { triggerStage: e.target.value })}
+                  className={cls}
+                >
+                  <option value="" disabled>Select one…</option>
+                  <option value="on_application">They submit their application</option>
+                  <option value="reviewing">They reach Reviewing</option>
+                  <option value="interview">They reach Interview</option>
+                  <option value="offer">They reach Offer</option>
+                  <option value="hired">They are Hired</option>
+                </select>
+              </label>
+            )}
           </div>
+
+          {/* Poppy: pick the stage (when engage = stage) + the forms it reviews. */}
+          {b.taskType === "poppy" && (
+            <>
+              {b.poppyEngage === "stage" && (
+                <label className="text-xs font-medium text-gray-600">
+                  Which stage?
+                  <select
+                    value={b.triggerStage}
+                    onChange={(e) => updateBox(i, { triggerStage: e.target.value })}
+                    className={cls}
+                  >
+                    <option value="" disabled>Select one…</option>
+                    <option value="on_application">Application submitted</option>
+                    <option value="reviewing">Reviewing</option>
+                    <option value="interview">Interview</option>
+                    <option value="offer">Offer</option>
+                    <option value="hired">Hired</option>
+                  </select>
+                </label>
+              )}
+              <div className="text-xs font-medium text-gray-600">
+                Forms Poppy reviews
+                {forms.length === 0 ? (
+                  <p className="mt-1 font-normal text-gray-400">No forms yet — create one in Forms first.</p>
+                ) : (
+                  <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 backdrop-blur-sm p-2">
+                    {forms.map((f) => (
+                      <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
+                        <input
+                          type="checkbox"
+                          checked={b.poppyFormIds.includes(f.id)}
+                          onChange={() => togglePoppyForm(i, f.id)}
+                          className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                        />
+                        {f.name}
+                      </label>
+                    ))}
+                  </div>
+                )}
+                <span className="mt-1 block text-[11px] font-normal text-gray-400">
+                  Poppy compares these against the job description to build screening questions.
+                </span>
+              </div>
+            </>
+          )}
 
           {b.taskType === "form" && (
             <div className="text-xs font-medium text-gray-600">
@@ -223,28 +309,31 @@ export function AddTemplateTask({
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="text-xs font-medium text-gray-600">
-              Due within (days)
-              <input
-                value={b.dueDays}
-                onChange={(e) => updateBox(i, { dueDays: e.target.value })}
-                type="number"
-                min="0"
-                placeholder="e.g. 7"
-                className={cls}
-              />
-            </label>
-            <label className="mt-5 flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={b.required}
-                onChange={(e) => updateBox(i, { required: e.target.checked })}
-                className="h-4 w-4 rounded border-gray-300 text-brand-600"
-              />
-              Required
-            </label>
-          </div>
+          {/* Due / required don't apply to the Poppy step. */}
+          {b.taskType !== "poppy" && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="text-xs font-medium text-gray-600">
+                Due within (days)
+                <input
+                  value={b.dueDays}
+                  onChange={(e) => updateBox(i, { dueDays: e.target.value })}
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 7"
+                  className={cls}
+                />
+              </label>
+              <label className="mt-5 flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={b.required}
+                  onChange={(e) => updateBox(i, { required: e.target.checked })}
+                  className="h-4 w-4 rounded border-gray-300 text-brand-600"
+                />
+                Required
+              </label>
+            </div>
+          )}
         </div>
       ))}
 

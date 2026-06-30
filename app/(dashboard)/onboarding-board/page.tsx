@@ -18,7 +18,7 @@ export default async function OnboardingBoardPage() {
   if (current.role !== "admin") redirect("/dashboard");
   const isAdmin = current.role === "admin";
 
-  const [{ data: templates }, { data: forms }, { data: roles }] = await Promise.all([
+  const [{ data: templates }, { data: forms }, { data: roles }, { data: company }] = await Promise.all([
     supabase
       .from("onboarding_templates")
       .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, role_ids, workflow_id, workflow_name, position")
@@ -26,7 +26,9 @@ export default async function OnboardingBoardPage() {
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("position").order("name"),
+    supabase.from("companies").select("poppy_enabled").eq("id", current.company_id).single(),
   ]);
+  const poppyEnabled = company?.poppy_enabled === true;
 
   const roleName = new Map((roles ?? []).map((r) => [r.id as string, r.name as string]));
 
@@ -114,7 +116,7 @@ export default async function OnboardingBoardPage() {
           )}
 
           <div className="mt-4 rounded-lg border border-dashed border-gray-300 p-4">
-            <AddTemplateTask forms={forms ?? []} roleOptions={roleOptions} />
+            <AddTemplateTask forms={forms ?? []} roleOptions={roleOptions} poppyEnabled={poppyEnabled} />
           </div>
         </section>
       )}

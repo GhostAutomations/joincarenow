@@ -8,6 +8,7 @@ import {
   generateInterviewQuestions,
   type InterviewQuestionGroup,
 } from "@/lib/ai/generate-interview-questions";
+import type { PoppyReport } from "@/lib/ai/generate-poppy-report";
 
 export type InterviewQuestionsResult = {
   entitled: boolean; // company has Poppy
@@ -195,6 +196,28 @@ export async function getInterviewQuestions(applicationId: string): Promise<Inte
   } catch (e) {
     return { entitled: true, status: "error", error: e instanceof Error ? e.message : "Generation failed." };
   }
+}
+
+export type PoppyReportResult = {
+  status: "ready" | "none";
+  report?: PoppyReport;
+  generatedAt?: string | null;
+};
+
+/** Load the workflow-generated Poppy report for an application (staff-only,
+ *  tenant-scoped). Returns {status:'none'} when none exists yet. */
+export async function getPoppyReport(applicationId: string): Promise<PoppyReportResult> {
+  const { current } = await requireCompany();
+  const { data } = await createAdminClient()
+    .from("poppy_reports")
+    .select("status, report, generated_at")
+    .eq("application_id", applicationId)
+    .eq("company_id", current.company_id)
+    .maybeSingle();
+  if (data && data.status === "ready") {
+    return { status: "ready", report: data.report as PoppyReport, generatedAt: data.generated_at as string };
+  }
+  return { status: "none" };
 }
 
 /** Founder: turn the Poppy entitlement on/off for a company. */

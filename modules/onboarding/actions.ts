@@ -19,6 +19,10 @@ export type TaskDraft = {
   /** Workflow-level role association. Company: role UUIDs. Founder store:
    *  standard role names. Empty = applies to all roles. */
   roleValues: string[];
+  /** Poppy step only: when it engages (all_forms | as_forms | stage) and which
+   *  company form ids it reviews. */
+  poppyEngage?: string;
+  poppyFormIds?: string[];
 };
 
 /** Add one or more workflow tasks at once. Each form task expands to one task
@@ -28,12 +32,25 @@ export async function addTemplateTasks(
 ): Promise<{ ok?: boolean; error?: string }> {
   if (!Array.isArray(drafts) || drafts.length === 0) return { error: "Nothing to add" };
 
+  const STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
   for (const d of drafts) {
     if ((d.title ?? "").trim().length < 2) return { error: "Give each task a title" };
-    if (!["form", "document", "acknowledge"].includes(d.taskType)) {
+    if (!["form", "document", "acknowledge", "poppy"].includes(d.taskType)) {
       return { error: "Pick a type for each task" };
     }
-    if (!["on_application", "reviewing", "interview", "offer", "hired"].includes(d.triggerStage)) {
+    if (d.taskType === "poppy") {
+      if (!["all_forms", "as_forms", "stage"].includes(d.poppyEngage ?? "")) {
+        return { error: "Choose when Poppy should engage" };
+      }
+      if (d.poppyEngage === "stage" && !STAGES.includes(d.triggerStage)) {
+        return { error: "Choose which stage Poppy engages at" };
+      }
+      if (!d.poppyFormIds || d.poppyFormIds.length === 0) {
+        return { error: "Choose at least one form for Poppy to review" };
+      }
+      continue;
+    }
+    if (!STAGES.includes(d.triggerStage)) {
       return { error: "Choose when to send each task" };
     }
     if (d.taskType === "form" && (!d.formIds || d.formIds.length === 0)) {
@@ -74,7 +91,26 @@ export async function addTemplateTasks(
   for (const d of drafts) {
     const dueDays = d.dueDays === "" ? null : Math.max(0, parseInt(d.dueDays, 10) || 0);
     const body = (d.body ?? "").trim() || null;
-    if (d.taskType === "form") {
+    if (d.taskType === "poppy") {
+      rows.push({
+        company_id: current.company_id,
+        title: d.title.trim(),
+        task_type: "poppy",
+        form_id: null,
+        body,
+        required: d.required,
+        due_days: dueDays,
+        // Only meaningful when Poppy engages at a pipeline stage.
+        trigger_stage: d.poppyEngage === "stage" ? d.triggerStage : null,
+        poppy_engage: d.poppyEngage,
+        poppy_form_ids: d.poppyFormIds ?? [],
+        role_id: null,
+        role_ids,
+        workflow_id: workflowId,
+        workflow_name: workflowName,
+        position: pos++,
+      });
+    } else if (d.taskType === "form") {
       for (const fid of d.formIds) {
         rows.push({
           company_id: current.company_id,

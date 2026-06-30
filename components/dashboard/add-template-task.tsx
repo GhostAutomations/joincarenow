@@ -253,6 +253,7 @@ export function AddTemplateTask({
                     <option value="on_application">Application submitted</option>
                     <option value="reviewing">Reviewing</option>
                     <option value="interview">Interview</option>
+                    <option value="right_to_work">Right to work</option>
                     <option value="offer">Offer</option>
                     <option value="hired">Hired</option>
                   </select>

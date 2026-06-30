@@ -43,7 +43,9 @@ export async function addTemplateTasks(
       if (!["all_forms", "as_forms", "stage"].includes(d.poppyEngage ?? "")) {
         return { error: "Choose when Poppy should engage" };
       }
-      if (d.poppyEngage === "stage" && !STAGES.includes(d.triggerStage)) {
+      // Poppy can also engage at Right to work (a real pipeline stage the legacy
+      // workflow trigger list doesn't include).
+      if (d.poppyEngage === "stage" && ![...STAGES, "right_to_work"].includes(d.triggerStage)) {
         return { error: "Choose which stage Poppy engages at" };
       }
       if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv) {

@@ -8,7 +8,7 @@ import {
   generateInterviewQuestions,
   type InterviewQuestionGroup,
 } from "@/lib/ai/generate-interview-questions";
-import type { PoppyReport } from "@/lib/ai/generate-poppy-report";
+import { generatePoppyReport, type PoppyReport } from "@/lib/ai/generate-poppy-report";
 
 export type InterviewQuestionsResult = {
   entitled: boolean; // company has Poppy
@@ -37,12 +37,14 @@ type SubRow = { form_id: string; answers: unknown; forms: { name: string | null 
 /** Gather the applicant's submitted forms — the application form AND any forms
  *  added in the workflow — as readable "Label: answer" blocks, with field labels
  *  resolved from form_fields. This is Poppy's primary input. */
-async function gatherFormsText(applicationId: string): Promise<string | null> {
+async function gatherFormsText(applicationId: string, onlyFormIds?: string[]): Promise<string | null> {
   const admin = createAdminClient();
-  const { data: subs } = await admin
+  let q = admin
     .from("form_submissions")
     .select("form_id, answers, forms(name)")
     .eq("application_id", applicationId);
+  if (onlyFormIds && onlyFormIds.length) q = q.in("form_id", onlyFormIds);
+  const { data: subs } = await q;
   const rows = (subs as unknown as SubRow[]) ?? [];
   if (!rows.length) return null;
 
@@ -199,25 +201,125 @@ export async function getInterviewQuestions(applicationId: string): Promise<Inte
 }
 
 export type PoppyReportResult = {
+  entitled: boolean;
   status: "ready" | "none";
   report?: PoppyReport;
   generatedAt?: string | null;
 };
 
-/** Load the workflow-generated Poppy report for an application (staff-only,
- *  tenant-scoped). Returns {status:'none'} when none exists yet. */
+/** Load the Poppy report for an application (staff-only, tenant-scoped). Returns
+ *  entitled=false when the company doesn't have Poppy, {status:'none'} when no
+ *  report exists yet. */
 export async function getPoppyReport(applicationId: string): Promise<PoppyReportResult> {
   const { current } = await requireCompany();
-  const { data } = await createAdminClient()
+  const admin = createAdminClient();
+  const { data: co } = await admin.from("companies").select("poppy_enabled").eq("id", current.company_id).single();
+  if (co?.poppy_enabled !== true) return { entitled: false, status: "none" };
+
+  const { data } = await admin
     .from("poppy_reports")
     .select("status, report, generated_at")
     .eq("application_id", applicationId)
     .eq("company_id", current.company_id)
     .maybeSingle();
   if (data && data.status === "ready") {
-    return { status: "ready", report: data.report as PoppyReport, generatedAt: data.generated_at as string };
+    return { entitled: true, status: "ready", report: data.report as PoppyReport, generatedAt: data.generated_at as string };
   }
-  return { status: "none" };
+  return { entitled: true, status: "none" };
+}
+
+type ManualAppRow = {
+  id: string;
+  company_id: string;
+  cv_path: string | null;
+  answers: unknown;
+  cover_message: string | null;
+  applicants: { first_name: string | null; last_name: string | null } | null;
+  jobs: { title: string | null; description: string | null; role_id: string | null } | null;
+};
+
+/** Run Poppy now for one application (manual "Run / Regenerate"). Respects the
+ *  applicable Poppy step's selected forms + CV when one exists; otherwise reviews
+ *  everything submitted. Generates the report, stores it, meters the AI. Does NOT
+ *  notify the owner (that's for the automatic workflow run). */
+export async function runPoppyForApplication(
+  applicationId: string
+): Promise<{ ok?: boolean; error?: string }> {
+  const { current } = await requireCompany();
+  const admin = createAdminClient();
+
+  const { data: co } = await admin.from("companies").select("poppy_enabled").eq("id", current.company_id).single();
+  if (co?.poppy_enabled !== true) return { error: "Poppy isn't enabled for this company." };
+
+  const { data: appRaw } = await admin
+    .from("applications")
+    .select("id, company_id, cv_path, answers, cover_message, applicants(first_name, last_name), jobs(title, description, role_id)")
+    .eq("id", applicationId)
+    .eq("company_id", current.company_id)
+    .maybeSingle();
+  const app = appRaw as unknown as ManualAppRow | null;
+  if (!app) return { error: "Application not found." };
+
+  // Find an applicable Poppy step (for its selected forms + CV choice).
+  const { data: stepsRaw } = await admin
+    .from("onboarding_templates")
+    .select("poppy_form_ids, poppy_include_cv, role_ids")
+    .eq("company_id", current.company_id)
+    .eq("is_store", false)
+    .eq("task_type", "poppy");
+  const steps = (stepsRaw ?? []) as { poppy_form_ids: string[] | null; poppy_include_cv: boolean | null; role_ids: string[] | null }[];
+  const roleId = app.jobs?.role_id ?? null;
+  const step = steps.find((s) => !s.role_ids || s.role_ids.length === 0 || (!!roleId && s.role_ids.includes(roleId))) ?? null;
+
+  // If a step restricts the forms, review only those; else review everything.
+  const onlyFormIds = step && (step.poppy_form_ids ?? []).length > 0 ? (step.poppy_form_ids as string[]) : undefined;
+  // Include the CV when the step says so, or (no step) by default if present.
+  const includeCv = step ? step.poppy_include_cv === true : true;
+
+  let cvBase64Pdf: string | null = null;
+  if (includeCv && app.cv_path && app.cv_path.toLowerCase().endsWith(".pdf")) {
+    try {
+      const { data: blob } = await admin.storage.from("applications").download(app.cv_path);
+      if (blob) cvBase64Pdf = Buffer.from(await blob.arrayBuffer()).toString("base64");
+    } catch {
+      /* generate without CV */
+    }
+  }
+
+  const formsText = await gatherFormsText(app.id, onlyFormIds);
+  const answersText = [formsText, formatAnswers(app.answers)].filter(Boolean).join("\n\n") || null;
+  if (!answersText && !cvBase64Pdf) {
+    return { error: "Nothing to review yet — the applicant hasn't submitted a form or CV." };
+  }
+  const name = [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ").trim() || "the candidate";
+
+  let report: PoppyReport;
+  try {
+    report = await generatePoppyReport({
+      jobTitle: app.jobs?.title ?? "Care role",
+      jobDescription: app.jobs?.description ?? "",
+      applicantName: name,
+      coverMessage: app.cover_message,
+      answersText,
+      cvBase64Pdf,
+    });
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Poppy couldn't generate the report." };
+  }
+
+  await admin.from("poppy_reports").upsert(
+    {
+      company_id: current.company_id,
+      application_id: app.id,
+      status: "ready",
+      report,
+      model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6",
+      generated_at: new Date().toISOString(),
+    },
+    { onConflict: "application_id" }
+  );
+  await recordUsage(current.company_id, "ai");
+  return { ok: true };
 }
 
 /** Founder: turn the Poppy entitlement on/off for a company. */

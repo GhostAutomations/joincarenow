@@ -1,19 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sparkles, CheckCircle2, AlertTriangle, ClipboardList } from "lucide-react";
-import { getPoppyReport, type PoppyReportResult } from "@/modules/poppy/actions";
-import { ApplicantInterviewQuestions } from "@/components/dashboard/applicant-interview-questions";
+import { Sparkles, CheckCircle2, AlertTriangle, ClipboardList, RefreshCw } from "lucide-react";
+import {
+  getPoppyReport,
+  runPoppyForApplication,
+  type PoppyReportResult,
+} from "@/modules/poppy/actions";
 
 /**
- * Poppy on the applicant panel. If a workflow-generated screening report exists,
- * show the full report (summary / strengths / concerns / recommendation +
- * questions). Otherwise fall back to the on-demand interview-question generator
- * (v0.1) — so there's only ever one Poppy section and no double generation.
+ * Poppy on the applicant panel. Shows the screening report (summary / strengths
+ * / concerns / recommendation + questions) once generated — automatically by a
+ * Poppy workflow step, or on demand via "Run Poppy". Renders nothing unless the
+ * company has Poppy.
  */
 export function ApplicantPoppyReport({ applicationId }: { applicationId: string }) {
   const [res, setRes] = useState<PoppyReportResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  function load() {
+    return getPoppyReport(applicationId).then(setRes);
+  }
   useEffect(() => {
     let alive = true;
     setRes(null);
@@ -25,22 +33,78 @@ export function ApplicantPoppyReport({ applicationId }: { applicationId: string 
     };
   }, [applicationId]);
 
-  // Still loading the report check — render nothing yet (avoids flashing the
-  // fallback then swapping).
-  if (res === null) return null;
+  async function run() {
+    setBusy(true);
+    setError(null);
+    const r = await runPoppyForApplication(applicationId);
+    if (r.error) {
+      setError(r.error);
+      setBusy(false);
+      return;
+    }
+    await load();
+    setBusy(false);
+  }
 
-  // No workflow report → fall back to the on-demand v0.1 generator.
+  // Still checking, or company doesn't have Poppy → render nothing.
+  if (res === null) return null;
+  if (!res.entitled) return null;
+
+  const Header = (
+    <div className="flex items-center justify-between">
+      <p className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-gray-400">
+        <Sparkles className="h-3.5 w-3.5 text-brand-500" /> Poppy · Screening report
+      </p>
+      {res.status === "ready" && (
+        <button
+          onClick={run}
+          disabled={busy}
+          className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+        >
+          <RefreshCw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} /> {busy ? "Working…" : "Regenerate"}
+        </button>
+      )}
+    </div>
+  );
+
+  if (busy) {
+    return (
+      <div>
+        {Header}
+        <p className="mt-1 flex items-center gap-2 text-sm text-gray-500">
+          <Sparkles className="h-4 w-4 animate-pulse text-brand-500" /> Poppy is reviewing the application…
+        </p>
+      </div>
+    );
+  }
+
+  // No report yet — offer to run it now.
   if (res.status !== "ready" || !res.report) {
-    return <ApplicantInterviewQuestions applicationId={applicationId} />;
+    return (
+      <div>
+        {Header}
+        <p className="mt-1 text-sm text-gray-500">
+          No screening report yet. It runs automatically when this applicant reaches your Poppy workflow step — or run it now.
+        </p>
+        {error && (
+          <p className="mt-1.5 flex items-start gap-1.5 text-sm text-red-600">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
+          </p>
+        )}
+        <button
+          onClick={run}
+          className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+        >
+          <Sparkles className="h-4 w-4" /> Run Poppy screening
+        </button>
+      </div>
+    );
   }
 
   const r = res.report;
   return (
     <div>
-      <p className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-gray-400">
-        <Sparkles className="h-3.5 w-3.5 text-brand-500" /> Poppy · Screening report
-      </p>
-
+      {Header}
       {r.summary && <p className="mt-1.5 text-sm text-gray-800">{r.summary}</p>}
 
       {r.recommendation && (

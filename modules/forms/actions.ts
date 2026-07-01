@@ -519,7 +519,7 @@ export async function importFormFromPdf(
     return { error: "The PDF must be 10MB or smaller." };
   }
 
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
   const { data: form } = await supabase
     .from("forms")
     .select("id, company_id")
@@ -531,7 +531,7 @@ export async function importFormFromPdf(
   try {
     const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
     fields = await extractFormFields(base64);
-    await recordUsage(form.company_id as string | null, "ai");
+    await recordUsage(form.company_id as string | null, "ai", 1, { label: "Form", actorId: user.id });
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not read that PDF." };
   }
@@ -617,7 +617,7 @@ export async function generateFormFromBrief(
   if (typeof formId !== "string") return { error: "Missing form" };
   if (brief.length < 3) return { error: "Describe the form you want first." };
 
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
   const { data: form } = await supabase
     .from("forms")
     .select("id, company_id, name")
@@ -628,7 +628,7 @@ export async function generateFormFromBrief(
   let fields;
   try {
     fields = await generateFormFields(brief, form.name as string | undefined);
-    await recordUsage(form.company_id as string | null, "ai");
+    await recordUsage(form.company_id as string | null, "ai", 1, { label: "Form", actorId: user.id });
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not generate the form." };
   }
@@ -663,7 +663,7 @@ export async function regenerateFormFromBrief(
   if (typeof formId !== "string") return { error: "Missing form" };
   if (brief.length < 3) return { error: "Describe the form you want first." };
 
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
   const { data: form } = await supabase
     .from("forms")
     .select("id, company_id, name")
@@ -674,7 +674,7 @@ export async function regenerateFormFromBrief(
   let fields;
   try {
     fields = await generateFormFields(brief, form.name as string | undefined);
-    await recordUsage(form.company_id as string | null, "ai");
+    await recordUsage(form.company_id as string | null, "ai", 1, { label: "Form", actorId: user.id });
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not generate the form." };
   }

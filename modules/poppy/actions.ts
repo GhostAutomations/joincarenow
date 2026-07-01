@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { requireCompany, requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { recordUsage } from "@/lib/billing/usage";
 import { recordPoppyApplicant } from "@/lib/billing/poppy-credits";
 import {
   generateInterviewQuestions,
@@ -114,9 +113,9 @@ async function generateAndStore(
     cvBase64Pdf,
   });
 
-  // Poppy AI usage is metered like any AI action (10p). Slice 2 will suppress
-  // this for companies on the Poppy monthly "included" option.
-  await recordUsage(app.company_id, "ai");
+  // Interview questions is a Poppy feature — bill it as a Poppy applicant credit
+  // (deduped per applicant), NEVER as a company AI action.
+  await recordPoppyApplicant(app.company_id, app.id);
 
   await admin
     .from("application_interview_questions")

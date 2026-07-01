@@ -158,7 +158,7 @@ async function fire(
     anyOk = anyOk || r.ok;
   }
   if (wantSms) {
-    const r = await sendCompanySms(ctx.companyId, { to: phoneN!, body });
+    const r = await sendCompanySms(ctx.companyId, { to: phoneN!, body }, { label: `Reminder — ${kind.replace(/_/g, " ")}`, actorId: null });
     await logMessage(db, ctx, "sms", phoneN!, null, body, r.ok, r.id, r.error);
     anyOk = anyOk || r.ok;
   }

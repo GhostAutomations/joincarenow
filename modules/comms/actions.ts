@@ -127,7 +127,7 @@ export async function sendMessage(_prev: SendState, formData: FormData): Promise
           to, subject: subject || "(no subject)", text: body,
           cta: { label: "Respond to the message", url: `https://www.joincarenow.com/portal/conversations/${applicationId}` },
         })
-      : await sendCompanySms(current.company_id, { to, body });
+      : await sendCompanySms(current.company_id, { to, body }, { label: "Message", actorId: user.id });
 
   await supabase.from("messages").insert({
     company_id: current.company_id,
@@ -182,7 +182,7 @@ export async function notifyApplicant(opts: {
   const result =
     channel === "email"
       ? await sendBrandedEmail(supabase, current.company_id, { to, subject: subject || "(no subject)", text: body, cta })
-      : await sendCompanySms(current.company_id, { to, body });
+      : await sendCompanySms(current.company_id, { to, body }, { label: "Notification", actorId: user.id });
 
   await supabase.from("messages").insert({
     company_id: current.company_id,

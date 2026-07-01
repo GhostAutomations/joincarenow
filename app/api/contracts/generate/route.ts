@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
           ? await generateJobDescriptionDraft(name ?? "", brief ?? "")
           : await generateContractDraft(brief ?? "");
 
-    await recordUsage(billCompanyId, "ai");
+    const label = kind === "policy" ? "Policy" : kind === "job_description" ? "Job description" : "Contract";
+    await recordUsage(billCompanyId, "ai", 1, { label, actorId: profile?.id ?? null });
 
     return NextResponse.json({ text });
   } catch (e) {

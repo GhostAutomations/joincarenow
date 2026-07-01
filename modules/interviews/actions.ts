@@ -211,7 +211,7 @@ async function sendInterviewInvite(
     if ((channel === "sms" || channel === "both")) {
       const phone = ukPhone(ap?.phone ?? null);
       if (phone) {
-        const r = await sendCompanySms(app?.company_id, { to: phone, body: smsBody });
+        const r = await sendCompanySms(app?.company_id, { to: phone, body: smsBody }, { label: "Interview", actorId: user?.id ?? null });
         await log("sms", phone, null, smsBody, r.ok ? "sent" : "failed", r.id, r.ok ? undefined : r.error);
       }
     }

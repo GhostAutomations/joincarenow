@@ -83,7 +83,9 @@ export async function startPoppyConversation(db: Admin, applicationId: string): 
   if (phone) {
     const link = `${BASE_URL}/portal/conversations/${applicationId}`;
     const smsBody = `Hi ${name}, it's Poppy from ${co} — I've a few quick questions about your application. Tap to answer in your portal: ${link}`;
-    const r = await sendCompanySms(app.company_id, { to: phone, body: smsBody });
+    // Poppy's nudge is covered by the per-applicant price — do NOT meter it as
+    // company SMS.
+    const r = await sendCompanySms(app.company_id, { to: phone, body: smsBody }, { meter: false });
     // Log the nudge SMS to the conversation so it shows in the staff SMS tab.
     await db.from("messages").insert({
       company_id: app.company_id,

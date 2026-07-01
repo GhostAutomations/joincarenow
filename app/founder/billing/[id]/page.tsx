@@ -1,10 +1,43 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Download, ExternalLink, MessageSquareText, Sparkles, Building2 } from "lucide-react";
+import { Download, ExternalLink, MessageSquareText, Sparkles, Building2, Bot, type LucideIcon } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listInvoices } from "@/lib/billing/stripe";
 import { FounderBillingControls } from "@/components/dashboard/founder-billing-controls";
+
+/** A clickable usage stat card showing month/quarter/year-to-date figures. */
+function UsageStatCard({
+  href,
+  icon: Icon,
+  label,
+  stats,
+}: {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  stats: { mtd: number; qtd: number; ytd: number };
+}) {
+  return (
+    <Link
+      href={href}
+      className="group rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm transition hover:bg-white/85"
+    >
+      <p className="flex items-center justify-between text-sm text-gray-500">
+        <span className="flex items-center gap-2"><Icon className="h-4 w-4 text-brand-600" /> {label}</span>
+        <span className="text-[11px] font-medium text-brand-600 opacity-0 transition group-hover:opacity-100">Details →</span>
+      </p>
+      <div className="mt-2 grid grid-cols-3 gap-1 text-center">
+        {([["MTD", stats.mtd], ["QTD", stats.qtd], ["YTD", stats.ytd]] as const).map(([k, v]) => (
+          <div key={k}>
+            <p className="text-xl font-bold text-gray-900">{v}</p>
+            <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">{k}</p>
+          </div>
+        ))}
+      </div>
+    </Link>
+  );
+}
 
 const STATUS_BADGE: Record<string, string> = {
   active: "bg-green-100 text-green-700",
@@ -14,11 +47,6 @@ const STATUS_BADGE: Record<string, string> = {
   incomplete: "bg-amber-100 text-amber-700",
   none: "bg-gray-100 text-gray-500",
 };
-
-function monthStartIso() {
-  const d = new Date();
-  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
-}
 
 export default async function CompanyBillingPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePlatformAdmin();
@@ -32,12 +60,25 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
     .single();
   if (!company) notFound();
 
-  const [{ data: usage }, { data: branches }] = await Promise.all([
-    db.from("usage_events").select("kind, quantity").eq("company_id", id).gte("created_at", monthStartIso()),
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+
+  const [{ data: usage }, { data: poppyCredits }, { data: branches }] = await Promise.all([
+    db.from("usage_events").select("kind, quantity, created_at").eq("company_id", id).gte("created_at", yearStart.toISOString()),
+    db.from("poppy_applicant_credits").select("consumed_at").eq("company_id", id).gte("consumed_at", yearStart.toISOString()),
     db.from("branches").select("id, name").eq("company_id", id).order("created_at", { ascending: true }),
   ]);
-  const sms = (usage ?? []).filter((u) => u.kind === "sms").reduce((s, u) => s + (u.quantity ?? 0), 0);
-  const ai = (usage ?? []).filter((u) => u.kind === "ai").reduce((s, u) => s + (u.quantity ?? 0), 0);
+  const sumUsage = (kind: string, since: Date) =>
+    (usage ?? [])
+      .filter((u) => u.kind === kind && new Date(u.created_at as string) >= since)
+      .reduce((s, u) => s + ((u.quantity as number) ?? 0), 0);
+  const countPoppy = (since: Date) =>
+    (poppyCredits ?? []).filter((c) => new Date(c.consumed_at as string) >= since).length;
+  const smsStats = { mtd: sumUsage("sms", monthStart), qtd: sumUsage("sms", quarterStart), ytd: sumUsage("sms", yearStart) };
+  const aiStats = { mtd: sumUsage("ai", monthStart), qtd: sumUsage("ai", quarterStart), ytd: sumUsage("ai", yearStart) };
+  const poppyStats = { mtd: countPoppy(monthStart), qtd: countPoppy(quarterStart), ytd: countPoppy(yearStart) };
 
   const customerId = company.stripe_customer_id as string | null;
   const invoices = customerId ? await listInvoices(customerId) : [];
@@ -95,19 +136,14 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
         </div>
       </div>
 
-      {/* Usage */}
-      <div className="mt-4 grid grid-cols-3 gap-3">
-        <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
-          <p className="flex items-center gap-2 text-sm text-gray-500"><MessageSquareText className="h-4 w-4 text-brand-600" /> SMS</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">{sms}<span className="text-sm font-normal text-gray-400"> / 100</span></p>
-        </div>
-        <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
-          <p className="flex items-center gap-2 text-sm text-gray-500"><Sparkles className="h-4 w-4 text-brand-600" /> AI</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">{ai}</p>
-        </div>
+      {/* Usage — MTD / QTD / YTD. Click SMS, AI or Poppy to see what it was used for. */}
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <UsageStatCard href={`/founder/billing/${id}/usage?kind=sms`} icon={MessageSquareText} label="SMS" stats={smsStats} />
+        <UsageStatCard href={`/founder/billing/${id}/usage?kind=ai`} icon={Sparkles} label="AI" stats={aiStats} />
+        <UsageStatCard href={`/founder/billing/${id}/usage?kind=poppy`} icon={Bot} label="Poppy" stats={poppyStats} />
         <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
           <p className="flex items-center gap-2 text-sm text-gray-500"><Building2 className="h-4 w-4 text-brand-600" /> Branches</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">{1 + ((company.extra_branches as number) ?? 0)}</p>
+          <p className="mt-2 text-xl font-bold text-gray-900">{1 + ((company.extra_branches as number) ?? 0)}</p>
         </div>
       </div>
 

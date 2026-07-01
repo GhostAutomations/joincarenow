@@ -67,11 +67,11 @@ export async function saveDoc(kind: Kind, formData: FormData): Promise<DocResult
 export async function generateContract(
   brief: string
 ): Promise<{ text?: string; error?: string }> {
-  const { current } = await requireCompany();
+  const { current, user } = await requireCompany();
   if (current.role !== "admin") return { error: "Only admins can generate contracts." };
   try {
     const text = await generateContractDraft(brief ?? "");
-    await recordUsage(current.company_id, "ai");
+    await recordUsage(current.company_id, "ai", 1, { label: "Contract", actorId: user.id });
     return { text };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not generate the contract." };
@@ -84,11 +84,11 @@ export async function generatePolicy(
   name: string,
   brief: string
 ): Promise<{ text?: string; error?: string }> {
-  const { current } = await requireCompany();
+  const { current, user } = await requireCompany();
   if (current.role !== "admin") return { error: "Only admins can generate policies." };
   try {
     const text = await generatePolicyDraft(name ?? "", brief ?? "");
-    await recordUsage(current.company_id, "ai");
+    await recordUsage(current.company_id, "ai", 1, { label: "Policy", actorId: user.id });
     return { text };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not generate the policy." };

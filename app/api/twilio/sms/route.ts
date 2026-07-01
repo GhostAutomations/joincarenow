@@ -151,7 +151,8 @@ export async function POST(req: Request) {
     if (!recentNudges) {
       const link = `${BASE_URL}/portal/conversations/${app.id}`;
       const nudge = `Thanks! To make sure I record your answer, please reply in your portal: ${link}`;
-      const r = await sendCompanySms(app.company_id, { to: from, body: nudge });
+      // Poppy nudge — covered by the per-applicant price, not company SMS.
+      const r = await sendCompanySms(app.company_id, { to: from, body: nudge }, { meter: false });
       await admin.from("messages").insert({
         company_id: app.company_id,
         application_id: app.id,

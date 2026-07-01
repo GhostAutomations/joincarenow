@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ExportCsvButton } from "@/components/dashboard/export-csv-button";
+import { FounderBillingTools } from "@/components/founder/founder-billing-tools";
 import { ExportPdfLink } from "@/components/dashboard/export-pdf-link";
 import { recordBillingSnapshot } from "@/lib/billing/snapshot";
 
@@ -211,6 +212,8 @@ export default async function AdminBillingPage({
           <ExportPdfLink href="/api/report/pdf?type=billing" />
         </div>
       </div>
+
+      <FounderBillingTools />
 
       <div className="mt-4 overflow-x-auto rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm">
         <table className="min-w-full divide-y divide-gray-100 text-sm">

@@ -18,18 +18,18 @@ function monthStartISO(): string {
 }
 
 /**
- * Record that Poppy has screened an applicant and report ONE usage unit to
- * Stripe.
+ * Record that Poppy has screened an applicant, and meter it if the company is
+ * over its allowance for THIS calendar month.
  *
  * Idempotent per applicant: UNIQUE(application_id) means an applicant only ever
  * consumes ONE credit, however many times Poppy runs, re-runs or refreshes for
- * them — so it's reported to Stripe at most once. This is Poppy's ONLY charge:
- * Poppy's internal AI calls do NOT trip the generic 10p AI meter.
+ * them. This is Poppy's ONLY charge — Poppy's internal AI calls do NOT trip the
+ * generic 10p AI meter.
  *
- * The included allowance (40/month, 480/year) is applied by the Stripe Price
- * itself, which is set up as GRADUATED tiers (first N units £0, the rest 75p).
- * So we report EVERY applicant and let Stripe zero-rate the free ones — we must
- * NOT also gate the first 40 here, or the allowance would be applied twice.
+ * The included allowance (40) is enforced HERE, per calendar month, so it resets
+ * on the 1st for every company regardless of billing interval (monthly OR
+ * annual). The Stripe Poppy Price must therefore be a FLAT 75p per unit (no
+ * graduated tiers) — we only report the applicants beyond the free 40.
  *
  * Best-effort: never throws, so metering can't break a Poppy run.
  */
@@ -50,6 +50,15 @@ export async function recordPoppyApplicant(
       .maybeSingle();
     if (error || !inserted) return;
 
+    // Count credits used THIS calendar month (includes the one just claimed).
+    const { count } = await db
+      .from("poppy_applicant_credits")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", companyId)
+      .gte("consumed_at", monthStartISO());
+    if ((count ?? 0) <= POPPY_INCLUDED_PER_MONTH) return; // within the free 40 this month
+
+    // Beyond the monthly allowance → report one 75p unit (flat Stripe price).
     if (!process.env.STRIPE_SECRET_KEY) return;
     const { data: co } = await db.from("companies").select("stripe_customer_id").eq("id", companyId).single();
     const customerId = (co?.stripe_customer_id as string | null) ?? null;

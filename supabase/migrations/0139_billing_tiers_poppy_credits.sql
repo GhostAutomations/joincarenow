@@ -5,9 +5,10 @@
 --      Poppy AI recruitment assistant. Backfilled from the existing
 --      poppy_enabled flag so nothing changes for current companies.
 --   2. poppy_applicant_credits — one row per applicant Poppy touches, deduped by
---      application_id so an applicant is reported to Stripe at most once. Every
---      credit reports 1 usage unit; the included allowance (40/mo, 480/yr) is
---      applied by the Stripe Price's graduated tiers (first N units £0, rest 75p).
+--      application_id so an applicant is reported to Stripe at most once. The
+--      first 40 credits each CALENDAR MONTH are free (enforced in-app so it
+--      resets monthly on any billing interval); the 41st+ report a 75p flat
+--      Stripe usage unit.
 -- poppy_enabled remains the runtime gate (unchanged); plan_tier is the
 -- billing-facing field and is kept in sync in code.
 -- Run AFTER 0135_poppy_interview_questions.sql and 0138_poppy_conversation.sql.

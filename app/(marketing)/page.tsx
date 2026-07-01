@@ -88,6 +88,14 @@ const ADD_ONS = [
   { label: "Forms", price: "from the Form Store, priced per form" },
 ];
 
+const POPPY_INCLUDES = [
+  "Everything in Core, plus Poppy",
+  "AI screens each applicant against the role, your job description & policies",
+  "Holds a friendly follow-up conversation with the candidate (consent-based)",
+  "Writes a clear report with a hire recommendation for your team",
+  "40 applicants screened / month included, then 75p each",
+];
+
 const STEPS = [
   { n: "1", title: "Advertise", body: "Post your roles to a branded careers page and share the link." },
   { n: "2", title: "Track", body: "Review applicants and move them through your hiring steps." },
@@ -278,44 +286,40 @@ export default function LandingPage() {
       {/* Pricing */}
       <section id="pricing" className="mx-auto max-w-6xl px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">One plan. Everything included.</h2>
+          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Simple, honest pricing.</h2>
           <p className="mt-3 text-gray-600">
-            No quote-chasing, no tiers to decode and no hidden fees. Every feature is in the
-            box, and core compliance (Right to Work, DBS and references) is always in the base,
-            never an add-on.
+            Two plans, no quote-chasing and no hidden fees. Core compliance (Right to Work, DBS
+            and references) is always in the base, never an add-on. Add <span className="font-semibold text-gray-900">Poppy</span>,
+            your AI recruitment assistant, when you&apos;re ready.
           </p>
         </div>
 
-        <div className="mx-auto mt-12 max-w-3xl overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-lg ring-1 ring-brand-100">
-          <div className="grid grid-cols-1 md:grid-cols-2">
-            {/* Price */}
-            <div className="jcn-app-bg flex flex-col justify-center p-8 text-white">
-              <p className="text-xs font-semibold uppercase tracking-wider text-white/80">Join Care Now</p>
+        <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 items-start gap-6 lg:grid-cols-2">
+          {/* Tier 1 — Core */}
+          <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-lg ring-1 ring-brand-100">
+            <div className="jcn-app-bg p-8 text-white">
+              <p className="text-xs font-semibold uppercase tracking-wider text-white/80">Core</p>
               <p className="mt-3 flex items-baseline gap-1">
                 <span className="text-5xl font-bold">£49</span>
                 <span className="text-lg text-white/80">/ month</span>
               </p>
-              <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-white/70">Three ways to pay</p>
-              <ul className="mt-2 space-y-2 text-sm">
+              <p className="mt-2 text-sm text-white/85">Everything you need to hire and onboard.</p>
+              <ul className="mt-5 space-y-2 text-sm">
                 <li className="rounded-lg bg-white/10 px-3 py-2">
                   <span className="font-semibold">Monthly:</span> £49/mo, cancel anytime. <span className="text-white/70">£150 one-off setup.</span>
                 </li>
                 <li className="rounded-lg bg-white/10 px-3 py-2">
-                  <span className="font-semibold">12-month plan:</span> £49/mo, <span className="text-white/90">no setup fee</span>. Committed for 12 months.
+                  <span className="font-semibold">12-month plan:</span> £49/mo, <span className="text-white/90">no setup fee</span>.
                 </li>
                 <li className="rounded-lg bg-white/10 px-3 py-2">
                   <span className="font-semibold">Annual:</span> £490/year (<span className="text-white/90">2 months free</span>), no setup fee.
                 </li>
               </ul>
-              <p className="mt-4 rounded-lg bg-white/10 px-3 py-2 text-sm">
-                <span className="font-semibold">Add Poppy</span> — AI recruitment assistant. From <span className="font-semibold">£79/mo</span> (£89 monthly · £790/year). 40 applicants/month included, then 75p each.
-              </p>
-              <a href="#demo" className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
+              <a href="#demo" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
                 Book a demo
               </a>
             </div>
-            {/* Includes */}
-            <div className="p-8">
+            <div className="flex-1 p-8">
               <p className="text-sm font-semibold text-gray-900">What&apos;s included</p>
               <ul className="mt-4 space-y-2.5">
                 {PLAN_INCLUDES.map((pt) => (
@@ -328,17 +332,57 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Add-ons */}
-          <div className="border-t border-gray-100 bg-gray-50 px-8 py-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Pay only for what you use</p>
-            <div className="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
-              {ADD_ONS.map((a) => (
-                <div key={a.label} className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="text-gray-700">{a.label}</span>
-                  <span className="font-medium text-gray-900">{a.price}</span>
-                </div>
-              ))}
+          {/* Tier 2 — Poppy (highlighted) */}
+          <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border-2 border-brand-500 bg-white shadow-xl ring-2 ring-brand-200">
+            <span className="absolute right-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-brand-700 shadow-sm backdrop-blur">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden /> Most popular
+            </span>
+            <div className="bg-gradient-to-br from-fuchsia-600 via-violet-600 to-brand-600 p-8 text-white">
+              <p className="text-xs font-semibold uppercase tracking-wider text-white/85">Core + Poppy</p>
+              <p className="mt-3 flex items-baseline gap-1">
+                <span className="text-5xl font-bold">£89</span>
+                <span className="text-lg text-white/80">/ month</span>
+              </p>
+              <p className="mt-2 text-sm text-white/90">Your AI recruitment assistant, built in.</p>
+              <ul className="mt-5 space-y-2 text-sm">
+                <li className="rounded-lg bg-white/15 px-3 py-2">
+                  <span className="font-semibold">Monthly:</span> £89/mo, cancel anytime. <span className="text-white/75">£150 one-off setup.</span>
+                </li>
+                <li className="rounded-lg bg-white/15 px-3 py-2">
+                  <span className="font-semibold">12-month plan:</span> £79/mo, <span className="text-white/90">no setup fee</span>.
+                </li>
+                <li className="rounded-lg bg-white/15 px-3 py-2">
+                  <span className="font-semibold">Annual:</span> £790/year (<span className="text-white/90">2 months free</span>), no setup fee.
+                </li>
+              </ul>
+              <a href="#demo" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
+                Book a demo
+              </a>
             </div>
+            <div className="flex-1 p-8">
+              <p className="text-sm font-semibold text-gray-900">What&apos;s included</p>
+              <ul className="mt-4 space-y-2.5">
+                {POPPY_INCLUDES.map((pt) => (
+                  <li key={pt} className="flex items-start gap-2 text-sm text-gray-700">
+                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                    {pt}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Add-ons (shared) */}
+        <div className="mx-auto mt-6 max-w-5xl rounded-2xl border border-gray-100 bg-gray-50 px-8 py-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Pay only for what you use — on either plan</p>
+          <div className="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
+            {ADD_ONS.map((a) => (
+              <div key={a.label} className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="text-gray-700">{a.label}</span>
+                <span className="font-medium text-gray-900">{a.price}</span>
+              </div>
+            ))}
           </div>
         </div>
 

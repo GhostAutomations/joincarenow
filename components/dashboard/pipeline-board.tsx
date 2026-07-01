@@ -730,8 +730,8 @@ function ApplicantPanel({
           </div>
         </div>
 
-        <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-3">
-        <div className="space-y-4 overflow-y-auto px-5 py-5 lg:col-span-2">
+        <div className="flex flex-1 flex-col overflow-y-auto lg:grid lg:grid-cols-3 lg:overflow-hidden">
+        <div className="space-y-4 px-5 py-5 lg:col-span-2 lg:overflow-y-auto">
           {/* Key facts + contact — 4 columns, each stacking two facts.
              Row order gives: [Applied for/Date] [Branch/Worker type]
              [Phone/Email] [Postcode/Right to work]. */}

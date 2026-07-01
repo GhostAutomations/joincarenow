@@ -232,7 +232,7 @@ export default async function AdminBillingPage({
               const status = comped(c) ? "complimentary" : c.billing_status ?? "none";
               const u = usageMap.get(c.id) ?? { sms: 0, ai: 0 };
               const pt = planType(c);
-              const planLabel = pt === "comped" ? "Complimentary" : pt === "annual" ? "£490 / yr" : pt === "committed" ? "£49 / mo · 12-mo" : pt === "monthly" ? "£49 / mo" : "—";
+              const planLabel = pt === "comped" ? "Complimentary" : pt === "diamond" ? "Usage only" : pt === "annual" ? "£490 / yr" : pt === "committed" ? "£49 / mo · 12-mo" : pt === "monthly" ? "£49 / mo" : "—";
               return (
                 <tr key={c.id} className="hover:bg-white/60">
                   <td className="px-4 py-3 font-medium text-gray-900">

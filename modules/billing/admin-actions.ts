@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { cancelSubscription, swapSubscriptionBasePrice, basePriceFor, setSubscriptionTier } from "@/lib/billing/stripe";
+import { cancelSubscription, swapSubscriptionBasePrice, basePriceFor, setSubscriptionTier, BASE_URL } from "@/lib/billing/stripe";
 import { runUsageReport } from "@/lib/billing/report-usage";
+import { sendBrandedEmail } from "@/lib/comms/branded";
 
 /** Founder: give or remove complimentary (free) access for a company. */
 export async function founderCompToggle(formData: FormData): Promise<void> {
@@ -94,6 +95,75 @@ export async function founderSetTier(formData: FormData): Promise<void> {
   revalidatePath(`/founder/billing/${id}`);
   revalidatePath(`/founder/companies/${id}`);
   revalidatePath("/founder/billing");
+}
+
+/**
+ * Founder: OFFER Poppy to a company. Nothing changes on their subscription — this
+ * records a pending offer (companies.settings.poppy_offer) and emails the
+ * company's admin(s). The admin accepts on their Billing page, which is what
+ * actually applies the tier change and the new billing. Idempotent.
+ */
+export async function founderOfferPoppy(formData: FormData): Promise<void> {
+  await requirePlatformAdmin();
+  const id = formData.get("id")?.toString();
+  if (!id) return;
+  const db = createAdminClient();
+  const { data: c } = await db
+    .from("companies")
+    .select("name, settings, plan_tier, agreed_plan")
+    .eq("id", id)
+    .single();
+  if (!c || c.plan_tier === "poppy") return; // already on Poppy — nothing to offer
+
+  const settings = { ...(c.settings && typeof c.settings === "object" ? (c.settings as Record<string, unknown>) : {}) };
+  settings.poppy_offer = { status: "pending", offered_at: new Date().toISOString() };
+  await db.from("companies").update({ settings }).eq("id", id);
+
+  // Email the company admin(s) — branded Join Care Now platform email, CTA only.
+  const { data: admins } = await db
+    .from("company_users")
+    .select("profiles ( email )")
+    .eq("company_id", id)
+    .eq("role", "admin");
+  const emails = [
+    ...new Set(
+      (admins ?? [])
+        .map((a) => (a.profiles as unknown as { email?: string } | null)?.email)
+        .filter((e): e is string => !!e)
+    ),
+  ];
+  const isDiamond = c.agreed_plan === "diamond";
+  const priceLine = isDiamond
+    ? "It adds 40 applicant screens each month included, then 75p each — on your usage-only plan."
+    : "It moves your plan to Tier 2 — £89/month (or £79/month on a 12-month term, or £790/year) — and includes 40 applicant screens each month, then 75p each.";
+  for (const to of emails) {
+    await sendBrandedEmail(db, null, {
+      to,
+      subject: "Add Poppy, your AI recruitment assistant, to your plan",
+      text:
+        `Poppy is the AI recruitment assistant that screens your applicants for you — reviewing each application against the role, asking the candidate a few follow-up questions, and giving you a clear hire recommendation.\n\n` +
+        `${priceLine}\n\n` +
+        `Nothing changes until you say yes. Open your Billing page to review and confirm — you'll authorise the updated billing there.`,
+      cta: { label: "Review & add Poppy", url: `${BASE_URL}/billing` },
+      footerNote: "You're receiving this because you're an admin on a Join Care Now account.",
+    });
+  }
+
+  revalidatePath(`/founder/billing/${id}`);
+  revalidatePath(`/founder/companies/${id}`);
+}
+
+/** Founder: withdraw a pending Poppy offer (before the admin accepts). */
+export async function founderWithdrawPoppyOffer(formData: FormData): Promise<void> {
+  await requirePlatformAdmin();
+  const id = formData.get("id")?.toString();
+  if (!id) return;
+  const db = createAdminClient();
+  const { data: c } = await db.from("companies").select("settings").eq("id", id).single();
+  const settings = { ...(c?.settings && typeof c.settings === "object" ? (c.settings as Record<string, unknown>) : {}) };
+  delete settings.poppy_offer;
+  await db.from("companies").update({ settings }).eq("id", id);
+  revalidatePath(`/founder/billing/${id}`);
 }
 
 /** Founder: push all unreported usage to Stripe now. */

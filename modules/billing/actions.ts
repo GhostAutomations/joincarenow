@@ -120,6 +120,57 @@ export async function upgradeToPoppy(): Promise<{ ok?: boolean; error?: string }
   return { ok: true };
 }
 
+/** Company admin ACCEPTS a founder's Poppy offer — this is what authorises the
+ *  new billing and applies it (moves Core to Tier 2 / adds the meter on Diamond,
+ *  turns Poppy on). Clears the pending offer. */
+export async function acceptPoppyOffer(): Promise<{ ok?: boolean; error?: string }> {
+  const { current } = await requireCompany();
+  if (current.role !== "admin") return { error: "Only admins can accept this." };
+  const db = createAdminClient();
+  const { data: company } = await db
+    .from("companies")
+    .select("settings, stripe_subscription_id, billing_status, commitment_until, plan_tier")
+    .eq("id", current.company_id)
+    .single();
+
+  const offer = (company?.settings as { poppy_offer?: { status?: string } } | null)?.poppy_offer;
+  if (!offer || offer.status !== "pending") return { error: "There's no Poppy offer to accept." };
+
+  const subId = company?.stripe_subscription_id as string | null;
+  if (subId && company?.billing_status === "active") {
+    const committed = company?.commitment_until ? new Date(company.commitment_until as string) > new Date() : false;
+    try {
+      await setSubscriptionTier(subId, "poppy", committed);
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : "Couldn't update the subscription." };
+    }
+  }
+
+  const settings = { ...(company?.settings && typeof company.settings === "object" ? (company.settings as Record<string, unknown>) : {}) };
+  delete settings.poppy_offer;
+  await db
+    .from("companies")
+    .update({ settings, plan_tier: "poppy", agreed_tier: "poppy", poppy_enabled: true })
+    .eq("id", current.company_id);
+
+  revalidatePath("/billing");
+  revalidatePath("/settings");
+  return { ok: true };
+}
+
+/** Company admin DECLINES a founder's Poppy offer — clears it, nothing changes. */
+export async function declinePoppyOffer(): Promise<{ ok?: boolean; error?: string }> {
+  const { current } = await requireCompany();
+  if (current.role !== "admin") return { error: "Only admins can do this." };
+  const db = createAdminClient();
+  const { data: company } = await db.from("companies").select("settings").eq("id", current.company_id).single();
+  const settings = { ...(company?.settings && typeof company.settings === "object" ? (company.settings as Record<string, unknown>) : {}) };
+  delete settings.poppy_offer;
+  await db.from("companies").update({ settings }).eq("id", current.company_id);
+  revalidatePath("/billing");
+  return { ok: true };
+}
+
 /** Company admin opens the Stripe Customer Portal to manage their subscription. */
 export async function openBillingPortal(): Promise<void> {
   const { current } = await requireCompany({ allowSetup: true });

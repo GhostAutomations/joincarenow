@@ -6,6 +6,7 @@ import { startCheckout, openBillingPortal, upgradeToPoppy } from "@/modules/bill
 import { BranchBilling } from "@/components/dashboard/branch-billing";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
 import { PoppyUpgradeButton } from "@/components/dashboard/poppy-upgrade-button";
+import { PoppyOfferBanner } from "@/components/dashboard/poppy-offer-banner";
 import { listInvoices } from "@/lib/billing/stripe";
 import { poppyAllowanceUsed } from "@/lib/billing/poppy-credits";
 
@@ -37,7 +38,7 @@ export default async function BillingPage() {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id, commitment_until, billing_comped, sms_bonus, agreed_plan, plan_tier")
+    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id, commitment_until, billing_comped, sms_bonus, agreed_plan, plan_tier, settings")
     .eq("id", current.company_id)
     .single();
 
@@ -46,6 +47,9 @@ export default async function BillingPage() {
   const diamond = company?.agreed_plan === "diamond";
   const isPoppy = company?.plan_tier === "poppy";
   const poppyUsage = isPoppy ? await poppyAllowanceUsed(current.company_id) : null;
+  const poppyOfferPending =
+    !isPoppy &&
+    ((company?.settings as { poppy_offer?: { status?: string } } | null)?.poppy_offer?.status === "pending");
   const periodEnd = company?.current_period_end as string | null;
   const comped = company?.billing_comped === true;
   const active = status === "active" || status === "trialing" || comped;
@@ -92,6 +96,8 @@ export default async function BillingPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <PageHeader title="Billing" subtitle="Manage your subscription, payment method and invoices." />
+
+      {poppyOfferPending && <PoppyOfferBanner diamond={diamond} />}
 
       {active ? (
         <div className="mt-6 space-y-4">

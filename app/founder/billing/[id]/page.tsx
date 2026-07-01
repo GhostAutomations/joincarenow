@@ -27,7 +27,7 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
 
   const { data: company } = await db
     .from("companies")
-    .select("id, name, billing_status, billing_interval, current_period_end, commitment_until, extra_branches, stripe_customer_id, stripe_subscription_id, billing_comped, created_at, plan_tier, agreed_plan")
+    .select("id, name, billing_status, billing_interval, current_period_end, commitment_until, extra_branches, stripe_customer_id, stripe_subscription_id, billing_comped, created_at, plan_tier, agreed_plan, settings")
     .eq("id", id)
     .single();
   if (!company) notFound();
@@ -48,6 +48,8 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
   const committed = company.commitment_until && new Date(company.commitment_until as string) > new Date();
   const isPoppy = company.plan_tier === "poppy";
   const isDiamond = company.agreed_plan === "diamond";
+  const poppyOfferPending =
+    (company.settings as { poppy_offer?: { status?: string } } | null)?.poppy_offer?.status === "pending";
   const corePrice = interval === "year" ? "£490 / year" : committed ? "£49 / month · 12-month commitment" : "£49 / month";
   const poppyPrice = interval === "year" ? "£790 / year" : committed ? "£79 / month · 12-month commitment" : "£89 / month";
   const planLabel = comped
@@ -143,6 +145,7 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
           comped={comped}
           hasSubscription={Boolean(company.stripe_subscription_id)}
           poppy={isPoppy}
+          offerPending={poppyOfferPending}
         />
       </div>
     </div>

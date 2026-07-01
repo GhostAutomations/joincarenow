@@ -8,6 +8,7 @@ import {
   type PoppyReportResult,
 } from "@/modules/poppy/actions";
 import { loadJsPdf, poppyReportPdf, pdfSafeName } from "@/lib/pdf/poppy-report-pdf";
+import { createClient } from "@/lib/supabase/client";
 
 /**
  * Poppy on the applicant panel. Collapsed by default (just a header) — expands
@@ -57,6 +58,28 @@ export function ApplicantPoppyReport({
     });
     return () => {
       alive = false;
+    };
+  }, [applicationId]);
+
+  // Live updates: every conversation step (an answer, the completion) inserts a
+  // message, so refetch the report on message changes — the panel switches to
+  // the finished report on the last answer without a refresh. RLS-scoped.
+  useEffect(() => {
+    const supabase = createClient();
+    let pending: ReturnType<typeof setTimeout> | null = null;
+    const bump = () => {
+      if (pending) clearTimeout(pending);
+      pending = setTimeout(() => {
+        getPoppyReport(applicationId).then(setRes);
+      }, 500);
+    };
+    const channel = supabase
+      .channel(`poppy-report-${applicationId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, bump)
+      .subscribe();
+    return () => {
+      if (pending) clearTimeout(pending);
+      supabase.removeChannel(channel);
     };
   }, [applicationId]);
 

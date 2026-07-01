@@ -179,6 +179,21 @@ export function ApplicantPoppyReport({
   );
 }
 
+/** Traffic-light tone for the recommendation: red = not a fit, amber = caution,
+ *  green = proceed. */
+function verdictTone(rec: string): "green" | "amber" | "red" {
+  const t = rec.toLowerCase();
+  if (/\b(not a fit|not suitable|unlikely|do not proceed|not proceed|reject|decline|not recommend|unsuitable)\b/.test(t)) return "red";
+  if (/\b(caution|reservation|some concern|mixed|borderline|maybe|possibly)\b/.test(t)) return "amber";
+  if (/\b(proceed|interview|good fit|strong|suitable|recommend|yes)\b/.test(t)) return "green";
+  return "amber";
+}
+const TONE: Record<string, string> = {
+  green: "bg-green-50 text-green-800",
+  amber: "bg-amber-50 text-amber-800",
+  red: "bg-red-50 text-red-800",
+};
+
 function Report({
   r,
   phase,
@@ -203,7 +218,7 @@ function Report({
       {r.summary && <p className="text-sm text-gray-800">{r.summary}</p>}
 
       {complete && r.recommendation && (
-        <p className="mt-2 inline-flex items-start gap-1.5 rounded-lg bg-brand-50 px-2.5 py-1.5 text-sm font-medium text-brand-800">
+        <p className={`mt-2 inline-flex items-start gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium ${TONE[verdictTone(r.recommendation)]}`}>
           <ClipboardList className="mt-0.5 h-4 w-4 shrink-0" /> {r.recommendation}
         </p>
       )}
@@ -217,11 +232,13 @@ function Report({
       {r.concerns.length > 0 && (
         <div className="mt-3 rounded-xl border border-white/50 bg-white/60 p-3 backdrop-blur-sm">
           <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
-            <AlertTriangle className="h-3.5 w-3.5" /> Worth checking
+            <AlertTriangle className="h-3.5 w-3.5" /> {complete ? "Concerns raised" : "Worth checking"}
           </p>
-          <ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-gray-700">
-            {r.concerns.map((c, i) => <li key={i}>{c}</li>)}
-          </ul>
+          <div className="mt-1 gap-x-5 text-sm text-gray-700 sm:columns-2 lg:columns-3">
+            {r.concerns.map((c, i) => (
+              <p key={i} className="mb-1 break-inside-avoid pl-4 -indent-4">• {c}</p>
+            ))}
+          </div>
         </div>
       )}
 
@@ -230,18 +247,18 @@ function Report({
           <p className="text-xs font-semibold text-brand-700">
             {complete ? "Screening questions & answers" : "Screening questions"}
           </p>
-          <ul className="mt-1.5 space-y-2.5">
+          <div className="mt-1.5 gap-x-5 sm:columns-2">
             {r.questions.map((q, i) => (
-              <li key={i} className="text-sm">
+              <div key={i} className="mb-2.5 break-inside-avoid text-sm">
                 <p className="text-gray-900">{q.question}</p>
                 {q.answer ? (
                   <p className="mt-0.5 rounded-md bg-brand-50/60 px-2 py-1 text-gray-800">{q.answer}</p>
                 ) : (
                   q.rationale && <p className="mt-0.5 text-xs text-gray-500">{q.rationale}</p>
                 )}
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 

@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { recordUsage } from "@/lib/billing/usage";
 import { generatePoppyAnalysis, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
 import { startPoppyConversation } from "@/lib/poppy/conversation";
+import { loadPoppyRuntimeConfig } from "@/lib/poppy/config";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -188,6 +189,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
 
         // Phase 1 — analyse into concerns + questions. The conversation (Slice B)
         // asks the questions; the final report is written once they're answered.
+        const cfg = await loadPoppyRuntimeConfig(companyId);
         const analysis = await generatePoppyAnalysis({
           jobTitle: app.jobs?.title ?? "Care role",
           jobDescription: app.jobs?.description ?? "",
@@ -195,6 +197,10 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
           coverMessage: app.cover_message,
           answersText,
           cvBase64Pdf,
+          referenceDocs: cfg.referenceDocs,
+          focus: cfg.focus,
+          instructions: cfg.instructions,
+          questionCount: cfg.questionCount,
         });
         const report: PoppyReportData = {
           summary: analysis.summary,

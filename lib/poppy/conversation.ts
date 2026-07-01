@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendCompanySms, recordUsage } from "@/lib/billing/usage";
 import { synthesizePoppyReport, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
+import { loadPoppyRuntimeConfig } from "@/lib/poppy/config";
 import { notifyJobOwner } from "@/lib/comms/notify-owner";
 import { BASE_URL } from "@/lib/billing/stripe";
 
@@ -169,6 +170,7 @@ async function finish(db: Admin, app: ConvApp, data: PoppyReportData): Promise<v
   // Recommendation + refreshed summary — best-effort; the report is already
   // complete with the concerns + Q&A if this is slow or fails.
   try {
+    const cfg = await loadPoppyRuntimeConfig(app.company_id);
     const synth = await synthesizePoppyReport(
       {
         jobTitle: app.jobs?.title ?? "Care role",
@@ -177,6 +179,9 @@ async function finish(db: Admin, app: ConvApp, data: PoppyReportData): Promise<v
         coverMessage: app.cover_message,
         answersText: answersText(app),
         cvBase64Pdf: null,
+        referenceDocs: cfg.referenceDocs,
+        focus: cfg.focus,
+        instructions: cfg.instructions,
       },
       data.concerns,
       data.questions

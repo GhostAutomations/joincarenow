@@ -10,6 +10,7 @@ import {
 } from "@/lib/ai/generate-interview-questions";
 import { generatePoppyAnalysis, synthesizePoppyReport, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
 import { startPoppyConversation } from "@/lib/poppy/conversation";
+import { loadPoppyRuntimeConfig, readPoppyConfig, type PoppyConfig } from "@/lib/poppy/config";
 
 export type InterviewQuestionsResult = {
   entitled: boolean; // company has Poppy
@@ -282,6 +283,7 @@ export async function runPoppyForApplication(
     const data = (existing.report as PoppyReportData) ?? { summary: "", concerns: [], questions: [] };
     if (data.questions?.some((q) => q.answer)) {
       try {
+        const rcfg = await loadPoppyRuntimeConfig(current.company_id);
         const synth = await synthesizePoppyReport(
           {
             jobTitle: app.jobs?.title ?? "Care role",
@@ -290,6 +292,9 @@ export async function runPoppyForApplication(
             coverMessage: app.cover_message,
             answersText: [await gatherFormsText(app.id), formatAnswers(app.answers)].filter(Boolean).join("\n\n") || null,
             cvBase64Pdf: null,
+            referenceDocs: rcfg.referenceDocs,
+            focus: rcfg.focus,
+            instructions: rcfg.instructions,
           },
           data.concerns ?? [],
           data.questions ?? []
@@ -338,6 +343,7 @@ export async function runPoppyForApplication(
   }
   const name = [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ").trim() || "the candidate";
 
+  const cfg = await loadPoppyRuntimeConfig(current.company_id);
   let analysis: { summary: string[]; concerns: string[]; questions: { question: string; rationale: string }[] };
   try {
     analysis = await generatePoppyAnalysis({
@@ -347,6 +353,10 @@ export async function runPoppyForApplication(
       coverMessage: app.cover_message,
       answersText,
       cvBase64Pdf,
+      referenceDocs: cfg.referenceDocs,
+      focus: cfg.focus,
+      instructions: cfg.instructions,
+      questionCount: cfg.questionCount,
     });
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Poppy couldn't analyse the application." };
@@ -380,6 +390,40 @@ export async function setCompanyPoppyEnabled(companyId: string, enabled: boolean
   await createAdminClient().from("companies").update({ poppy_enabled: enabled }).eq("id", companyId);
   revalidatePath(`/founder/companies/${companyId}`);
   return { ok: true };
+}
+
+/** Save the company's Poppy Settings config (admin-only) into companies.settings.poppy. */
+export async function savePoppySettings(
+  input: PoppyConfig
+): Promise<{ ok?: boolean; error?: string }> {
+  const { supabase, current } = await requireCompany();
+  if (current.role !== "admin") return { error: "Only admins can change Poppy settings." };
+
+  const admin = createAdminClient();
+  const { data: co } = await admin.from("companies").select("poppy_enabled, settings").eq("id", current.company_id).single();
+  if (co?.poppy_enabled !== true) return { error: "Poppy isn't enabled for this company." };
+
+  const clean: PoppyConfig = {
+    documentIds: Array.isArray(input.documentIds) ? input.documentIds.filter((x) => typeof x === "string").slice(0, 50) : [],
+    focus: Array.isArray(input.focus) ? input.focus.filter((x) => typeof x === "string").slice(0, 20) : [],
+    instructions: typeof input.instructions === "string" ? input.instructions.slice(0, 2000) : "",
+    questionCount: Math.min(20, Math.max(1, Math.round(Number(input.questionCount) || 8))),
+  };
+
+  const settings = { ...(co.settings && typeof co.settings === "object" ? (co.settings as Record<string, unknown>) : {}), poppy: clean };
+  const { error } = await admin.from("companies").update({ settings }).eq("id", current.company_id);
+  if (error) return { error: "Couldn't save Poppy settings." };
+
+  void supabase; // tenant already resolved via requireCompany
+  revalidatePath("/settings");
+  return { ok: true };
+}
+
+/** Load the company's saved Poppy config for the Settings form. */
+export async function getPoppySettings(): Promise<PoppyConfig> {
+  const { current } = await requireCompany();
+  const { data: co } = await createAdminClient().from("companies").select("settings").eq("id", current.company_id).single();
+  return readPoppyConfig(co?.settings);
 }
 
 /** Force a fresh generation (Regenerate button). Re-meters as an AI action. */

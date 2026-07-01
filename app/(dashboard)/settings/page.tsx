@@ -13,6 +13,8 @@ import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
 import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
 import { CareersContentForm } from "@/components/dashboard/careers-content-form";
 import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard/reminder-settings-form";
+import { PoppySettingsForm } from "@/components/dashboard/poppy-settings-form";
+import { readPoppyConfig } from "@/lib/poppy/config";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SettingsHub, type SettingsSection } from "@/components/dashboard/settings-hub";
 import type { OpeningHours } from "@/lib/opening-hours";
@@ -45,7 +47,7 @@ export default async function SettingsPage() {
 
   const { data: companyRow } = await supabase
     .from("companies")
-    .select("settings")
+    .select("settings, poppy_enabled")
     .eq("id", current.company_id)
     .single();
   const settings = (companyRow?.settings as {
@@ -64,6 +66,12 @@ export default async function SettingsPage() {
     ((companyRow?.settings as { careers?: { intro?: string; benefits?: string[] } } | null)?.careers) ?? {};
   const reminderPrefs =
     ((companyRow?.settings as { reminders?: ReminderPrefs } | null)?.reminders) ?? {};
+  const poppyEnabled = companyRow?.poppy_enabled === true;
+  const poppyConfig = readPoppyConfig(companyRow?.settings);
+  const poppyDocOptions = [
+    ...(policyDocs ?? []).map((d) => ({ value: d.id as string, label: `${d.name} · Policy` })),
+    ...(contractDocs ?? []).map((d) => ({ value: d.id as string, label: `${d.name} · Contract` })),
+  ];
 
   // Admins manage invitations. RLS only returns this company's invites.
   const { data: invites } = isAdmin
@@ -228,6 +236,17 @@ export default async function SettingsPage() {
         description: "Automated reminders to applicants and new starters — on/off and channel.",
         content: <ReminderSettingsForm companyId={current.company_id} prefs={reminderPrefs} />,
       },
+      ...(poppyEnabled
+        ? [
+            {
+              key: "poppy",
+              label: "Poppy",
+              description:
+                "Configure your AI recruitment agent — the documents it compares against, what to focus on, and how many questions it asks.",
+              content: <PoppySettingsForm documents={poppyDocOptions} config={poppyConfig} />,
+            },
+          ]
+        : []),
       {
         key: "team",
         label: "Team",

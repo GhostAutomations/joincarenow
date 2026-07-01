@@ -12,6 +12,12 @@ export type InterviewInputs = {
   answersText?: string | null;
   /** The applicant's CV as a base64 PDF, if uploaded. */
   cvBase64Pdf?: string | null;
+  /** Poppy Settings config (company): extra reference docs (policies etc.),
+   *  focus areas, custom instructions, and how many questions to produce. */
+  referenceDocs?: { name: string; body: string }[];
+  focus?: string[];
+  instructions?: string | null;
+  questionCount?: number;
 };
 
 const ALLOWED_CATEGORIES = [

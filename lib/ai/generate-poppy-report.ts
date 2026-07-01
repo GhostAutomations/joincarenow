@@ -56,7 +56,8 @@ JOB DESCRIPTION:
 ${i.jobDescription || "(no description provided)"}
 
 CANDIDATE: ${i.applicantName}
-${i.coverMessage ? `COVER MESSAGE:\n${i.coverMessage}\n` : ""}${i.answersText ? `APPLICATION & FORM RESPONSES:\n${i.answersText}\n` : ""}${i.cvBase64Pdf ? "The candidate's CV is attached as a PDF." : "No CV was provided."}`;
+${i.coverMessage ? `COVER MESSAGE:\n${i.coverMessage}\n` : ""}${i.answersText ? `APPLICATION & FORM RESPONSES:\n${i.answersText}\n` : ""}${i.cvBase64Pdf ? "The candidate's CV is attached as a PDF." : "No CV was provided."}
+${i.referenceDocs?.length ? `\nCOMPANY REFERENCE DOCUMENTS (judge the candidate against these where relevant):\n${i.referenceDocs.map((d) => `--- ${d.name} ---\n${(d.body || "").slice(0, 4000)}`).join("\n\n")}\n` : ""}${i.focus?.length ? `\nFOCUS PARTICULARLY ON: ${i.focus.join(", ")}.` : ""}${i.instructions ? `\nCOMPANY INSTRUCTIONS (follow these): ${i.instructions}` : ""}`;
 
 const FAIRNESS = "Be fair and non-discriminatory: never reference age, race, religion, sex, disability, pregnancy, marital status or other protected characteristics. Focus on ability to do the job.";
 
@@ -79,10 +80,11 @@ Return ONLY a JSON object (no prose, no markdown):
 }
 
 Rules:
-- 3-6 questions — the most useful follow-ups to put to the candidate themselves (verify claimed experience, fill gaps vs the JD, clarify ambiguities). Phrase each as you would ask the candidate directly, warm and plain.
+- Produce EXACTLY ${Math.min(20, Math.max(1, Math.round(inputs.questionCount || 8)))} questions — the most useful follow-ups to put to the candidate themselves (verify claimed experience, fill gaps vs the JD, clarify ambiguities). Phrase each as you would ask the candidate directly, warm and plain.
 - "rationale" is one short internal note for the recruiter on why it's worth asking.
 - ${FAIRNESS}`;
 
+  const QCOUNT = Math.min(20, Math.max(1, Math.round(inputs.questionCount || 8)));
   const o = await askClaude(inputs, prompt);
   const questions: { question: string; rationale: string }[] = [];
   for (const q of Array.isArray(o.questions) ? o.questions : []) {
@@ -98,7 +100,7 @@ Rules:
   return {
     summary: asStrings(o.summary, 4),
     concerns: asStrings(o.concerns),
-    questions: questions.slice(0, 6),
+    questions: questions.slice(0, QCOUNT),
   };
 }
 

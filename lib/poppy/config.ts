@@ -1,0 +1,57 @@
+import { createAdminClient } from "@/lib/supabase/admin";
+
+export type PoppyConfig = {
+  documentIds: string[];
+  focus: string[];
+  instructions: string;
+  questionCount: number;
+};
+
+export const POPPY_FOCUS_OPTIONS = [
+  "Safeguarding",
+  "Availability & flexibility",
+  "Experience & qualifications",
+  "Compliance (RtW / DBS / registration)",
+  "Communication",
+];
+
+const DEFAULT: PoppyConfig = { documentIds: [], focus: [], instructions: "", questionCount: 8 };
+
+/** Read a company's Poppy Settings config from companies.settings.poppy. */
+export function readPoppyConfig(settings: unknown): PoppyConfig {
+  const p = (settings as { poppy?: Partial<PoppyConfig> } | null)?.poppy ?? {};
+  return {
+    documentIds: Array.isArray(p.documentIds) ? p.documentIds.filter((x): x is string => typeof x === "string") : [],
+    focus: Array.isArray(p.focus) ? p.focus.filter((x): x is string => typeof x === "string") : [],
+    instructions: typeof p.instructions === "string" ? p.instructions : "",
+    questionCount: typeof p.questionCount === "number" ? Math.min(20, Math.max(1, Math.round(p.questionCount))) : 8,
+  };
+}
+
+/**
+ * Load a company's Poppy config plus the bodies of the selected reference
+ * documents (policies + contracts). Job descriptions are NOT included here —
+ * Poppy always uses the applicant's own role JD automatically.
+ */
+export async function loadPoppyRuntimeConfig(
+  companyId: string
+): Promise<{ referenceDocs: { name: string; body: string }[]; focus: string[]; instructions: string; questionCount: number }> {
+  const db = createAdminClient();
+  const { data: co } = await db.from("companies").select("settings").eq("id", companyId).single();
+  const cfg = readPoppyConfig(co?.settings);
+
+  let referenceDocs: { name: string; body: string }[] = [];
+  if (cfg.documentIds.length) {
+    const [{ data: pol }, { data: con }] = await Promise.all([
+      db.from("policy_documents").select("id, name, body").eq("company_id", companyId).in("id", cfg.documentIds),
+      db.from("contract_templates").select("id, name, body").eq("company_id", companyId).in("id", cfg.documentIds),
+    ]);
+    referenceDocs = [...(pol ?? []), ...(con ?? [])].map((d) => ({
+      name: (d.name as string) ?? "Document",
+      body: (d.body as string) ?? "",
+    }));
+  }
+  return { referenceDocs, focus: cfg.focus, instructions: cfg.instructions, questionCount: cfg.questionCount };
+}
+
+export { DEFAULT as DEFAULT_POPPY_CONFIG };

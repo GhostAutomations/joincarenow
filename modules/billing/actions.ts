@@ -152,6 +152,7 @@ export async function acceptPoppyOffer(): Promise<{ ok?: boolean; error?: string
     .from("companies")
     .update({ settings, plan_tier: "poppy", agreed_tier: "poppy", poppy_enabled: true })
     .eq("id", current.company_id);
+  await db.from("notifications").delete().eq("company_id", current.company_id).eq("type", "poppy_offer");
 
   revalidatePath("/billing");
   revalidatePath("/settings");
@@ -167,6 +168,7 @@ export async function declinePoppyOffer(): Promise<{ ok?: boolean; error?: strin
   const settings = { ...(company?.settings && typeof company.settings === "object" ? (company.settings as Record<string, unknown>) : {}) };
   delete settings.poppy_offer;
   await db.from("companies").update({ settings }).eq("id", current.company_id);
+  await db.from("notifications").delete().eq("company_id", current.company_id).eq("type", "poppy_offer");
   revalidatePath("/billing");
   return { ok: true };
 }

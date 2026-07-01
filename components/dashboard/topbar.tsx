@@ -14,7 +14,7 @@ export function Topbar({
   companyName?: string;
 }) {
   return (
-    <header className="flex h-14 items-center justify-between border-b border-white/40 bg-white/70 px-4 backdrop-blur-md sm:px-6">
+    <header className="relative z-50 flex h-14 items-center justify-between border-b border-white/40 bg-white/70 px-4 backdrop-blur-md sm:px-6">
       {showHome ? (
         <Link
           href="/dashboard"

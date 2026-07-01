@@ -119,19 +119,28 @@ export async function founderOfferPoppy(formData: FormData): Promise<void> {
   settings.poppy_offer = { status: "pending", offered_at: new Date().toISOString() };
   await db.from("companies").update({ settings }).eq("id", id);
 
-  // Email the company admin(s) — branded Join Care Now platform email, CTA only.
+  // Notify + email the company admin(s) — branded Join Care Now platform email
+  // (CTA only) plus an in-app notification linking to Billing.
   const { data: admins } = await db
     .from("company_users")
-    .select("profiles ( email )")
+    .select("user_id, profiles ( email )")
     .eq("company_id", id)
     .eq("role", "admin");
-  const emails = [
-    ...new Set(
-      (admins ?? [])
-        .map((a) => (a.profiles as unknown as { email?: string } | null)?.email)
-        .filter((e): e is string => !!e)
-    ),
-  ];
+  const adminRows = (admins ?? []) as unknown as { user_id: string | null; profiles: { email?: string } | null }[];
+
+  const notifs = adminRows
+    .filter((a) => a.user_id)
+    .map((a) => ({
+      company_id: id,
+      user_id: a.user_id as string,
+      type: "poppy_offer",
+      title: "Add Poppy to your plan?",
+      body: "Your provider has offered to add Poppy, your AI recruitment assistant. Review & confirm in Billing.",
+      link: "/billing",
+    }));
+  if (notifs.length) await db.from("notifications").insert(notifs);
+
+  const emails = [...new Set(adminRows.map((a) => a.profiles?.email).filter((e): e is string => !!e))];
   const isDiamond = c.agreed_plan === "diamond";
   const priceLine = isDiamond
     ? "It adds 40 applicant screens each month included, then 75p each — on your usage-only plan."
@@ -163,6 +172,7 @@ export async function founderWithdrawPoppyOffer(formData: FormData): Promise<voi
   const settings = { ...(c?.settings && typeof c.settings === "object" ? (c.settings as Record<string, unknown>) : {}) };
   delete settings.poppy_offer;
   await db.from("companies").update({ settings }).eq("id", id);
+  await db.from("notifications").delete().eq("company_id", id).eq("type", "poppy_offer");
   revalidatePath(`/founder/billing/${id}`);
 }
 

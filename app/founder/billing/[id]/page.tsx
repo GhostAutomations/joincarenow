@@ -27,7 +27,7 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
 
   const { data: company } = await db
     .from("companies")
-    .select("id, name, billing_status, billing_interval, current_period_end, commitment_until, extra_branches, stripe_customer_id, stripe_subscription_id, billing_comped, created_at")
+    .select("id, name, billing_status, billing_interval, current_period_end, commitment_until, extra_branches, stripe_customer_id, stripe_subscription_id, billing_comped, created_at, plan_tier, agreed_plan")
     .eq("id", id)
     .single();
   if (!company) notFound();
@@ -46,15 +46,19 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
   const comped = company.billing_comped === true;
   const interval = company.billing_interval as string | null;
   const committed = company.commitment_until && new Date(company.commitment_until as string) > new Date();
+  const isPoppy = company.plan_tier === "poppy";
+  const isDiamond = company.agreed_plan === "diamond";
+  const corePrice = interval === "year" ? "£490 / year" : committed ? "£49 / month · 12-month commitment" : "£49 / month";
+  const poppyPrice = interval === "year" ? "£790 / year" : committed ? "£79 / month · 12-month commitment" : "£89 / month";
   const planLabel = comped
     ? "Complimentary"
     : status !== "active" && status !== "trialing"
     ? "—"
-    : interval === "year"
-    ? "£490 / year"
-    : committed
-    ? "£49 / month · 12-month commitment"
-    : "£49 / month";
+    : isDiamond
+    ? `Usage only${isPoppy ? " · Poppy" : ""}`
+    : isPoppy
+    ? poppyPrice
+    : corePrice;
   const date = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
   const money = (pence: number) => "£" + (pence / 100).toFixed(2);
 
@@ -138,6 +142,7 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
           companyId={company.id as string}
           comped={comped}
           hasSubscription={Boolean(company.stripe_subscription_id)}
+          poppy={isPoppy}
         />
       </div>
     </div>

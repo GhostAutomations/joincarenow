@@ -96,40 +96,6 @@ export async function founderSetTier(formData: FormData): Promise<void> {
   revalidatePath("/founder/billing");
 }
 
-/**
- * Founder: attach Poppy to every ACTIVE Diamond (usage-only) company that doesn't
- * have it yet. Diamond now includes Poppy — new Diamond signups get the meter at
- * checkout; this backfills existing ones. Adds the Poppy meter to the live
- * subscription and turns Poppy on. Idempotent — already-enabled companies skip.
- */
-export async function founderEnablePoppyForDiamond(): Promise<{ changed: number; skipped: number; errors: number }> {
-  await requirePlatformAdmin();
-  const res = { changed: 0, skipped: 0, errors: 0 };
-  const db = createAdminClient();
-  const { data: companies } = await db
-    .from("companies")
-    .select("id, stripe_subscription_id, billing_status, poppy_enabled")
-    .eq("agreed_plan", "diamond")
-    .not("stripe_subscription_id", "is", null);
-
-  for (const c of companies ?? []) {
-    const subId = c.stripe_subscription_id as string | null;
-    if (!subId || c.billing_status !== "active" || c.poppy_enabled === true) {
-      res.skipped++;
-      continue;
-    }
-    try {
-      await setSubscriptionTier(subId, "poppy"); // no base to swap on Diamond — just adds the meter
-      await db.from("companies").update({ plan_tier: "poppy", poppy_enabled: true }).eq("id", c.id);
-      res.changed++;
-    } catch {
-      res.errors++;
-    }
-  }
-  revalidatePath("/founder/billing");
-  return res;
-}
-
 /** Founder: push all unreported usage to Stripe now. */
 export async function founderRunUsageReport(): Promise<void> {
   await requirePlatformAdmin();

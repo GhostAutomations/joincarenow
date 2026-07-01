@@ -13,7 +13,7 @@ export function ProspectStageSelect({ id, stage }: { id: string; stage: string }
         name="stage"
         defaultValue={stage}
         onChange={() => ref.current?.requestSubmit()}
-        className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium focus:border-brand-500 focus:outline-none"
+        className="rounded-lg border border-white/40 bg-white px-3 py-1.5 text-sm font-medium focus:border-brand-500 focus:outline-none"
       >
         {STAGES.map((s) => (
           <option key={s} value={s}>{STAGE_LABEL[s]}</option>

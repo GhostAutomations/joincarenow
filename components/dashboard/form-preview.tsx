@@ -25,7 +25,7 @@ const alignCls = (a?: string) =>
   a === "center" ? "text-center" : a === "right" ? "text-right" : "text-left";
 
 const inputClass =
-  "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 /** A read-only-ish preview of the form, exactly as an applicant sees it
  *  (built-in basics + custom fields + conditional logic). Shown in a modal. */
@@ -97,7 +97,7 @@ export function FormPreview({
           </span>
           <button
             onClick={onClose}
-            className="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+            className="rounded-md p-1 text-gray-500 hover:bg-white/70 hover:text-gray-800"
             aria-label="Close preview"
           >
             <X className="h-5 w-5" />
@@ -151,7 +151,7 @@ export function FormPreview({
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
-                className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                className="rounded-lg border border-white/40 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-white/70"
               >
                 Back
               </button>

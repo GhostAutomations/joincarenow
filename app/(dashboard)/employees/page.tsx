@@ -122,7 +122,7 @@ export default async function EmployeesPage({
               name="q"
               defaultValue={q ?? ""}
               placeholder="Search by name, email or ID"
-              className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="block w-full rounded-lg border border-white/40 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
         </form>
@@ -161,7 +161,7 @@ export default async function EmployeesPage({
                 const name =
                   [e.first_name, e.last_name].filter(Boolean).join(" ") || e.email || "Employee";
                 return (
-                  <tr key={e.id} className="hover:bg-gray-50">
+                  <tr key={e.id} className="hover:bg-white/60">
                     <td className="px-4 py-3 font-mono text-xs text-gray-500">
                       {e.employee_ref || <span className="text-gray-300">Not set</span>}
                     </td>

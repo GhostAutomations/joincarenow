@@ -29,7 +29,7 @@ const TYPES = [
 ];
 const CHOICE = ["dropdown", "radio", "checkboxes"];
 const cls =
-  "mt-1 block w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-md border border-white/40 bg-white px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 export function QuestionBankManager({ questions }: { questions: QuestionTemplate[] }) {
   const [state, action] = useActionState<QuestionState, FormData>(saveQuestionTemplate, undefined);
@@ -111,7 +111,7 @@ export function QuestionBankManager({ questions }: { questions: QuestionTemplate
               <button
                 type="button"
                 onClick={() => { setEditing(null); setType("short_text"); formRef.current?.reset(); }}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                className="rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70"
               >
                 Cancel
               </button>
@@ -139,7 +139,7 @@ export function QuestionBankManager({ questions }: { questions: QuestionTemplate
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <button onClick={() => edit(q)} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700" aria-label="Edit">
+                    <button onClick={() => edit(q)} className="rounded p-1 text-gray-400 hover:bg-white/70 hover:text-gray-700" aria-label="Edit">
                       <Pencil className="h-4 w-4" />
                     </button>
                     <form action={deleteQuestionTemplate}>

@@ -54,7 +54,7 @@ export function InviteForm({
                 id="role"
                 name="role"
                 defaultValue={roles[0].value}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               >
                 {roles.map((r) => (
                   <option key={r.value} value={r.value}>

@@ -5,7 +5,7 @@ import { X, CheckCircle2 } from "lucide-react";
 import type { ReferenceReview } from "@/modules/references/actions";
 
 const box =
-  "mt-1 min-h-[2.25rem] w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-800";
+  "mt-1 min-h-[2.25rem] w-full rounded-md border border-white/40 bg-gray-50 px-3 py-2 text-sm text-gray-800";
 
 function FieldView({
   field,
@@ -29,7 +29,7 @@ function FieldView({
         {label}
         {typeof v === "string" && v.startsWith("data:image") ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={v} alt="Signature" className="mt-1 h-24 rounded-md border border-gray-300 bg-white" />
+          <img src={v} alt="Signature" className="mt-1 h-24 rounded-md border border-white/40 bg-white" />
         ) : (
           <div className={box}>{v ? "Signature captured" : "—"}</div>
         )}
@@ -75,7 +75,7 @@ export function ReferenceReviewModal({
             <h2 className="text-base font-semibold text-gray-900">Reference — {data.refereeName}</h2>
             <p className="text-xs text-gray-500">{data.refereeEmail}</p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+          <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-white/70 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -99,7 +99,7 @@ export function ReferenceReviewModal({
               onChange={(e) => setNote(e.target.value)}
               rows={2}
               placeholder="Optional note (reason for requesting changes)…"
-              className="block w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="block w-full rounded-md border border-white/40 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
             <div className="flex items-center gap-2">
               <button

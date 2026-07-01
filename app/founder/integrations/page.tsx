@@ -63,7 +63,7 @@ export default async function AdminIntegrationsPage() {
             {events.map((e) => {
               const emp = [e.employees?.first_name, e.employees?.last_name].filter(Boolean).join(" ") || "—";
               return (
-                <tr key={e.id} className="align-top hover:bg-gray-50">
+                <tr key={e.id} className="align-top hover:bg-white/60">
                   <td className="whitespace-nowrap px-4 py-3 text-gray-500">
                     {new Date(e.created_at).toLocaleString("en-GB")}
                   </td>

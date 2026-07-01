@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Send, Sparkles } from "lucide-react";
 import { sendProspectMessage, draftInline, type ProspectState } from "@/modules/prospects/actions";
 
-const input = "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+const input = "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 type Contact = { id: string; name: string | null; email: string | null; phone: string | null; opted_out: boolean };
 
@@ -47,7 +47,7 @@ export function ProspectComposer({ companyId, contacts }: { companyId: string; c
     <form ref={ref} action={action} className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
       <input type="hidden" name="id" value={companyId} />
       <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex rounded-lg border border-gray-300 bg-white p-0.5 text-sm">
+        <div className="inline-flex rounded-lg border border-white/40 bg-white p-0.5 text-sm">
           {(["email", "sms", "both"] as const).map((c) => (
             <button
               key={c}
@@ -64,7 +64,7 @@ export function ProspectComposer({ companyId, contacts }: { companyId: string; c
           name="contactId"
           value={contactId}
           onChange={(e) => setContactId(e.target.value)}
-          className="flex-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm"
+          className="flex-1 rounded-lg border border-white/40 px-2.5 py-1.5 text-sm"
         >
           <option value="" disabled>Choose contact…</option>
           {reachable.map((c) => (

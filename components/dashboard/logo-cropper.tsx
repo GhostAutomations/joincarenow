@@ -126,7 +126,7 @@ export function LogoCropper({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={currentLogoUrl} alt="Current logo" className="mb-2 h-12 w-auto max-w-[200px] rounded bg-white object-contain p-1 ring-1 ring-gray-200" />
         )}
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-white/40 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/60">
           <ImageUp className="h-4 w-4" /> {currentLogoUrl ? "Replace logo" : "Choose logo"}
           <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="hidden" onChange={onPick} />
         </label>
@@ -145,7 +145,7 @@ export function LogoCropper({
             key={a.value}
             type="button"
             onClick={() => changeAspect(a.value)}
-            className={`rounded-md border px-2 py-1 text-xs font-medium ${aspect === a.value ? "border-brand-500 bg-brand-50 text-brand-700" : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50"}`}
+            className={`rounded-md border px-2 py-1 text-xs font-medium ${aspect === a.value ? "border-brand-500 bg-brand-50 text-brand-700" : "border-white/40 bg-white text-gray-600 hover:bg-white/60"}`}
           >
             {a.label}
           </button>
@@ -153,7 +153,7 @@ export function LogoCropper({
       </div>
 
       <div
-        className="relative mt-2 touch-none overflow-hidden rounded-lg border border-gray-300"
+        className="relative mt-2 touch-none overflow-hidden rounded-lg border border-white/40"
         style={{
           width: FRAME_W,
           height: frameH,

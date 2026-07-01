@@ -37,7 +37,7 @@ export default async function JobsPage() {
       </PageHeader>
 
       {(jobs ?? []).length === 0 ? (
-        <div className="mt-6 rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
+        <div className="mt-6 rounded-xl border border-dashed border-white/40 bg-white p-10 text-center">
           <p className="text-sm font-medium text-gray-900">No jobs yet</p>
           <p className="mt-1 text-sm text-gray-500">
             Create your first role, then publish it to your careers page.
@@ -68,7 +68,7 @@ export default async function JobsPage() {
                   (j.applications as unknown as { count: number }[] | null)?.[0]
                     ?.count ?? 0;
                 return (
-                  <tr key={j.id} className="hover:bg-gray-50">
+                  <tr key={j.id} className="hover:bg-white/60">
                     <td className="px-4 py-3 font-medium text-gray-900">
                       <Link href={`/jobs/${j.id}`} className="hover:text-brand-700">
                         {j.title}
@@ -115,7 +115,7 @@ export default async function JobsPage() {
                     </div>
                     <form action={reopenJob}>
                       <input type="hidden" name="id" value={j.id} />
-                      <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">
+                      <button className="rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/70">
                         Reopen
                       </button>
                     </form>

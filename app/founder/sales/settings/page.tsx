@@ -38,13 +38,13 @@ export default async function CrmSettingsPage() {
         <form action={setSendWindow} className="mt-4 flex flex-wrap items-end gap-3">
           <label className="text-sm font-medium text-gray-700">
             From
-            <select name="start_hour" defaultValue={win.start} className="mt-1 block rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <select name="start_hour" defaultValue={win.start} className="mt-1 block rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
               {HOURS.map((h) => <option key={h} value={h}>{hourLabel(h)}</option>)}
             </select>
           </label>
           <label className="text-sm font-medium text-gray-700">
             Until
-            <select name="end_hour" defaultValue={win.end} className="mt-1 block rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <select name="end_hour" defaultValue={win.end} className="mt-1 block rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
               {HOURS.map((h) => <option key={h} value={h}>{hourLabel(h)}</option>)}
             </select>
           </label>
@@ -82,7 +82,7 @@ export default async function CrmSettingsPage() {
             type="url"
             defaultValue={videoLink}
             placeholder="https://us05web.zoom.us/j/your-personal-room"
-            className="min-w-[280px] flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="min-w-[280px] flex-1 rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
           <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">Save link</button>
         </form>

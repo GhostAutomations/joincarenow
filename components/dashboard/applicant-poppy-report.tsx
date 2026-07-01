@@ -133,7 +133,7 @@ export function ApplicantPoppyReport({
             {r && phase === "complete" && (
               <button
                 onClick={() => downloadPdf(r)}
-                className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center gap-1 rounded-md border border-white/40 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-white/60"
               >
                 <Download className="h-3 w-3" /> PDF
               </button>
@@ -142,7 +142,7 @@ export function ApplicantPoppyReport({
               <button
                 onClick={run}
                 disabled={busy}
-                className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                className="inline-flex items-center gap-1 rounded-lg border border-white/40 bg-white/60 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-white/60 disabled:opacity-60"
               >
                 <RefreshCw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} /> {busy ? "Working…" : "Re-run"}
               </button>

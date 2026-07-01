@@ -27,7 +27,7 @@ export function ArchiveWorkflowButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white/70 px-3 py-1.5 text-sm text-gray-700 hover:bg-white"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/70 px-3 py-1.5 text-sm text-gray-700 hover:bg-white"
       >
         <Archive className="h-4 w-4" /> Archive
       </button>
@@ -73,7 +73,7 @@ export function ArchiveWorkflowButton({
                   name="folder"
                   value={existing}
                   onChange={(e) => setExisting(e.target.value)}
-                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="block w-full rounded-lg border border-white/40 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 >
                   {folders.map((f) => (
                     <option key={f} value={f}>{f}</option>
@@ -87,7 +87,7 @@ export function ArchiveWorkflowButton({
                   placeholder="e.g. Domiciliary, Supported living, Old versions"
                   maxLength={80}
                   autoFocus
-                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="block w-full rounded-lg border border-white/40 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               )}
 
@@ -95,7 +95,7 @@ export function ArchiveWorkflowButton({
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                  className="rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/60"
                 >
                   Cancel
                 </button>

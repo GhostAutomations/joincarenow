@@ -11,7 +11,7 @@ import {
 } from "@/modules/applications/actions";
 
 const input =
-  "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 // Built-in reasons. Key → { label, body }.
 const BUILTIN: { key: string; label: string; body: string }[] = [
@@ -142,7 +142,7 @@ export function RejectModal({ applicationId, onClose }: { applicationId: string;
         <div className="rounded-2xl bg-white shadow-xl">
           <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
             <h2 className="text-base font-semibold text-gray-900">Not progressing — send a reply</h2>
-            <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+            <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-white/70 hover:text-gray-600">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -195,7 +195,7 @@ export function RejectModal({ applicationId, onClose }: { applicationId: string;
                     value={tplName}
                     onChange={(e) => setTplName(e.target.value)}
                     placeholder="Name this reason"
-                    className="block w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="block w-full rounded-lg border border-white/40 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                   <button
                     type="button"
@@ -215,7 +215,7 @@ export function RejectModal({ applicationId, onClose }: { applicationId: string;
                 type="checkbox"
                 checked={talentPool}
                 onChange={(e) => setTalentPool(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-gray-300"
+                className="mt-0.5 h-4 w-4 rounded border-white/40"
               />
               <span>Include a talent-pool opt-in link (email only) — lets them consent to be kept on file.</span>
             </label>
@@ -232,7 +232,7 @@ export function RejectModal({ applicationId, onClose }: { applicationId: string;
             {error && <p className="text-sm text-red-600">{error}</p>}
 
             <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
-              <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+              <button type="button" onClick={onClose} className="rounded-lg border border-white/40 bg-white/60 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-white/70">
                 Cancel
               </button>
               <button disabled={busy} className="inline-flex items-center gap-1.5 rounded-lg bg-gray-800 px-3.5 py-2 text-sm font-medium text-white hover:bg-gray-900 disabled:opacity-60">

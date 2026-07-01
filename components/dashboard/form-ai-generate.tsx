@@ -51,7 +51,7 @@ export function FormAiGenerate({ formId }: { formId: string }) {
         value={brief}
         onChange={(e) => setBrief(e.target.value)}
         placeholder="e.g. A supervision form for care assistants covering wellbeing, training needs, concerns and goals."
-        className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        className="block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       />
       <div className="flex flex-wrap gap-1.5">
         {EXAMPLES.map((ex) => (

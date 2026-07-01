@@ -89,7 +89,7 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
           <span className="text-gray-500">Add to calendar:</span>
           <button
             onClick={downloadIcs}
-            className="rounded-md border border-gray-300 bg-white px-2 py-1 font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-lg border border-white/40 bg-white px-2 py-1 font-medium text-gray-700 hover:bg-white/70"
           >
             Apple / iCal
           </button>
@@ -97,7 +97,7 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
             href={calHref.google}
             target="_blank"
             rel="noreferrer"
-            className="rounded-md border border-gray-300 bg-white px-2 py-1 font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-md border border-white/40 bg-white px-2 py-1 font-medium text-gray-700 hover:bg-white/70"
           >
             Google
           </a>
@@ -105,7 +105,7 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
             href={calHref.outlook}
             target="_blank"
             rel="noreferrer"
-            className="rounded-md border border-gray-300 bg-white px-2 py-1 font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-md border border-white/40 bg-white px-2 py-1 font-medium text-gray-700 hover:bg-white/70"
           >
             Outlook
           </a>
@@ -120,7 +120,7 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
                 type="checkbox"
                 checked={rtwAck}
                 onChange={(e) => setRtwAck(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600"
+                className="mt-0.5 h-4 w-4 rounded border-white/40 text-brand-600"
               />
               <span>I understand I must bring proof of my Right to Work in the UK to the interview.</span>
             </label>
@@ -165,7 +165,7 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
             name="note"
             rows={2}
             placeholder="Reason (optional)"
-            className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+            className="block w-full rounded-md border border-white/40 px-2 py-1.5 text-sm"
           />
           <div className="flex gap-2">
             <button className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700">
@@ -174,7 +174,7 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
             <button
               type="button"
               onClick={() => setMode("none")}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+              className="rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70"
             >
               Back
             </button>
@@ -194,7 +194,7 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
             name="note"
             rows={2}
             placeholder="Anything else the employer should know? (optional)"
-            className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+            className="block w-full rounded-md border border-white/40 px-2 py-1.5 text-sm"
           />
           <div className="flex gap-2">
             <button className="rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700">
@@ -203,7 +203,7 @@ export function InterviewInvite({ interview }: { interview: PortalInterview }) {
             <button
               type="button"
               onClick={() => setMode("none")}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+              className="rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70"
             >
               Back
             </button>

@@ -87,7 +87,7 @@ export default async function ApplicantsPage({
             name="q"
             defaultValue={q ?? ""}
             placeholder="Search by name or email"
-            className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="block w-full rounded-lg border border-white/40 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </div>
       </form>
@@ -109,7 +109,7 @@ export default async function ApplicantsPage({
             </thead>
             <tbody className="divide-y divide-gray-100">
               {applicants.map((a) => (
-                <tr key={a.id} className="hover:bg-gray-50">
+                <tr key={a.id} className="hover:bg-white/60">
                   <td className="px-4 py-3 font-medium text-gray-900">{a.name}</td>
                   <td className="px-4 py-3 text-gray-600">
                     <div>{a.email}</div>

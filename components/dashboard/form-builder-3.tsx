@@ -220,7 +220,7 @@ export function FormBuilder3({ form, fields }: { form: FormMeta; fields: Builder
                   <input type="hidden" name="id" value={selectedField.id} />
                   <input type="hidden" name="formId" value={form.id} />
                   <input type="hidden" name="direction" value="up" />
-                  <button className="rounded-md border border-gray-300 p-1.5 text-gray-500 hover:bg-gray-100" aria-label="Move up">
+                  <button className="rounded-lg border border-white/40 bg-white/60 p-1.5 text-gray-500 hover:bg-white/70" aria-label="Move up">
                     <ChevronUp className="h-4 w-4" />
                   </button>
                 </form>
@@ -228,14 +228,14 @@ export function FormBuilder3({ form, fields }: { form: FormMeta; fields: Builder
                   <input type="hidden" name="id" value={selectedField.id} />
                   <input type="hidden" name="formId" value={form.id} />
                   <input type="hidden" name="direction" value="down" />
-                  <button className="rounded-md border border-gray-300 p-1.5 text-gray-500 hover:bg-gray-100" aria-label="Move down">
+                  <button className="rounded-lg border border-white/40 bg-white/60 p-1.5 text-gray-500 hover:bg-white/70" aria-label="Move down">
                     <ChevronDown className="h-4 w-4" />
                   </button>
                 </form>
                 <form action={deleteField} className="ml-auto">
                   <input type="hidden" name="id" value={selectedField.id} />
                   <input type="hidden" name="formId" value={form.id} />
-                  <button className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-red-50 hover:text-red-600">
+                  <button className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/60 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-red-50 hover:text-red-600">
                     <Trash2 className="h-3.5 w-3.5" /> Delete
                   </button>
                 </form>

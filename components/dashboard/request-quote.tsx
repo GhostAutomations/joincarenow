@@ -27,14 +27,14 @@ export function RequestQuote({
         name="quoteAmount"
         defaultValue={amount ?? ""}
         placeholder="Price (e.g. £750, or £500 + £20/mo)"
-        className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        className="block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       />
       <textarea
         name="quoteNote"
         rows={2}
         defaultValue={note ?? ""}
         placeholder="Optional note (scope, timeline…)"
-        className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        className="block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       />
       <div className="flex items-center gap-3">
         <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700">

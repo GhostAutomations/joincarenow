@@ -52,7 +52,7 @@ export function FieldLinkControls({
     start(() => void setFieldParent(fd));
   }
 
-  const sel = "rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-brand-500 focus:outline-none";
+  const sel = "rounded-md border border-white/40 px-2 py-1 text-xs focus:border-brand-500 focus:outline-none";
 
   return (
     <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
@@ -62,7 +62,7 @@ export function FieldLinkControls({
             type="checkbox"
             checked={linkEnabled}
             onChange={(e) => toggleLink(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600"
+            className="mt-0.5 h-4 w-4 rounded border-white/40 text-brand-600"
           />
           <span>
             <span className="font-medium text-gray-800">Link</span> — let other questions follow on from this question&apos;s answer.

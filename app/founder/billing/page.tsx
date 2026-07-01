@@ -231,7 +231,7 @@ export default async function AdminBillingPage({
               const pt = planType(c);
               const planLabel = pt === "comped" ? "Complimentary" : pt === "annual" ? "£490 / yr" : pt === "committed" ? "£49 / mo · 12-mo" : pt === "monthly" ? "£49 / mo" : "—";
               return (
-                <tr key={c.id} className="hover:bg-gray-50">
+                <tr key={c.id} className="hover:bg-white/60">
                   <td className="px-4 py-3 font-medium text-gray-900">
                     <a href={`/founder/billing/${c.id}`} className="hover:text-brand-700 hover:underline">{c.name}</a>
                   </td>

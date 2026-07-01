@@ -195,7 +195,7 @@ export function WorkflowCard({
               className="flex-1 rounded-md border border-white/60 bg-white/80 px-2 py-1 text-sm text-gray-900"
             />
             <button type="button" onClick={saveName} disabled={busy} className="rounded p-1 text-green-600 hover:bg-green-50" aria-label="Save name"><Check className="h-4 w-4" /></button>
-            <button type="button" onClick={() => { setEditingName(false); setNameV(name); }} className="rounded p-1 text-gray-400 hover:bg-gray-100" aria-label="Cancel"><X className="h-4 w-4" /></button>
+            <button type="button" onClick={() => { setEditingName(false); setNameV(name); }} className="rounded p-1 text-gray-400 hover:bg-white/70" aria-label="Cancel"><X className="h-4 w-4" /></button>
           </div>
         ) : (
           <>
@@ -206,7 +206,7 @@ export function WorkflowCard({
             </button>
             <div className="flex shrink-0 items-center gap-1">
               {workflowId && (
-                <button type="button" onClick={() => { setEditingName(true); setNameV(name); setErr(null); }} className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700" aria-label="Rename workflow">
+                <button type="button" onClick={() => { setEditingName(true); setNameV(name); setErr(null); }} className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs text-gray-500 hover:bg-white/70 hover:text-gray-700" aria-label="Rename workflow">
                   <Pencil className="h-3.5 w-3.5" /> Rename
                 </button>
               )}
@@ -264,7 +264,7 @@ export function WorkflowCard({
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <button type="button" onClick={() => startEdit(t)} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700" aria-label="Edit task"><Pencil className="h-3.5 w-3.5" /></button>
+                    <button type="button" onClick={() => startEdit(t)} className="rounded p-1 text-gray-400 hover:bg-white/70 hover:text-gray-700" aria-label="Edit task"><Pencil className="h-3.5 w-3.5" /></button>
                     <form action={deleteTask}>
                       <input type="hidden" name="id" value={t.id} />
                       <button className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label="Remove task"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -314,16 +314,16 @@ export function WorkflowCard({
                         )}
                         <div className="mt-3 text-xs font-medium text-gray-600">Forms Poppy reviews
                           <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 backdrop-blur-sm p-2">
-                            <label className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
-                              <input type="checkbox" checked={edit.poppyIncludeCv} onChange={() => setEdit({ ...edit, poppyIncludeCv: !edit.poppyIncludeCv })} className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+                            <label className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
+                              <input type="checkbox" checked={edit.poppyIncludeCv} onChange={() => setEdit({ ...edit, poppyIncludeCv: !edit.poppyIncludeCv })} className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500" />
                               CV (uploaded)
                             </label>
                             {forms.length === 0 ? (
                               <p className="px-1 font-normal text-gray-400">No forms yet.</p>
                             ) : (
                               forms.map((f) => (
-                                <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
-                                  <input type="checkbox" checked={edit.poppyFormIds.includes(f.id)} onChange={() => toggleEditPoppyForm(f.id)} className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+                                <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
+                                  <input type="checkbox" checked={edit.poppyFormIds.includes(f.id)} onChange={() => toggleEditPoppyForm(f.id)} className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500" />
                                   {f.name}
                                 </label>
                               ))
@@ -351,7 +351,7 @@ export function WorkflowCard({
                             <input value={edit.dueDays} onChange={(e) => setEdit({ ...edit, dueDays: e.target.value })} type="number" min="0" placeholder="e.g. 7" className={fieldCls} />
                           </label>
                           <label className="mt-5 flex items-center gap-2 text-sm text-gray-700">
-                            <input type="checkbox" checked={edit.required} onChange={(e) => setEdit({ ...edit, required: e.target.checked })} className="h-4 w-4 rounded border-gray-300 text-brand-600" />
+                            <input type="checkbox" checked={edit.required} onChange={(e) => setEdit({ ...edit, required: e.target.checked })} className="h-4 w-4 rounded border-white/40 text-brand-600" />
                             Required
                           </label>
                         </div>
@@ -363,7 +363,7 @@ export function WorkflowCard({
                     </label>
 
                     <div className="mt-3 flex justify-end gap-2">
-                      <button type="button" onClick={() => setEdit(null)} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
+                      <button type="button" onClick={() => setEdit(null)} className="rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/60">Cancel</button>
                       <button type="button" onClick={saveEdit} disabled={busy} className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60">{busy ? "Saving…" : "Save"}</button>
                     </div>
                   </div>

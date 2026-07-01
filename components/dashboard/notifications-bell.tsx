@@ -70,7 +70,7 @@ export function NotificationsBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+        className="relative rounded-lg p-2 text-gray-500 hover:bg-white/70 hover:text-gray-700"
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />
@@ -109,7 +109,7 @@ export function NotificationsBell() {
                 <button
                   key={n.id}
                   onClick={() => openItem(n)}
-                  className={`flex w-full items-start gap-2.5 border-b border-gray-50 px-4 py-3 text-left hover:bg-gray-50 ${
+                  className={`flex w-full items-start gap-2.5 border-b border-gray-50 px-4 py-3 text-left hover:bg-white/60 ${
                     n.read_at ? "" : "bg-blue-50/50"
                   }`}
                 >

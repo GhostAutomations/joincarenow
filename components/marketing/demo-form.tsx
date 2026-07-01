@@ -6,7 +6,7 @@ import { CheckCircle2, Send } from "lucide-react";
 import { submitDemoLead, type DemoLeadState } from "@/modules/marketing/actions";
 
 const field =
-  "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200";
+  "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200";
 const label = "block text-sm font-medium text-gray-700";
 
 export function DemoForm() {
@@ -81,7 +81,7 @@ export function DemoForm() {
       </div>
 
       <div className="mt-4 flex items-start gap-2.5">
-        <input id="df-consent" name="consent" type="checkbox" required className="mt-1 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+        <input id="df-consent" name="consent" type="checkbox" required className="mt-1 h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500" />
         <label htmlFor="df-consent" className="text-sm text-gray-600">
           I&apos;m happy for Join Care Now to contact me about a demo. See our{" "}
           <Link href="/privacy" className="font-medium text-brand-700 underline">privacy notice</Link>.

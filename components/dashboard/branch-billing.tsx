@@ -87,7 +87,7 @@ export function BranchBilling({
       {canManage && (
         <button
           onClick={() => setOpen(true)}
-          className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/60"
         >
           <Plus className="h-4 w-4" /> Add a branch {free ? "(free)" : `(£${RATE.toFixed(2)}/${per === "year" ? "yr" : "mo"})`}
         </button>
@@ -130,14 +130,14 @@ export function BranchBilling({
                   name="name"
                   autoFocus
                   placeholder="e.g. Cardiff, North Team"
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="mt-1 block w-full rounded-md border border-white/40 px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </label>
               {pending && (
                 <p className="mt-3 text-xs text-gray-500">Adding the branch and updating your billing… this can take a few seconds.</p>
               )}
               <div className="mt-5 flex justify-end gap-2">
-                <button type="button" disabled={pending} onClick={() => setOpen(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+                <button type="button" disabled={pending} onClick={() => setOpen(false)} className="rounded-lg border border-white/40 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white/60 disabled:opacity-50">
                   Cancel
                 </button>
                 <button type="submit" disabled={pending} className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-70">
@@ -172,7 +172,7 @@ export function BranchBilling({
               <p className="mt-3 text-xs text-gray-500">Removing the branch and updating your billing… this can take a few seconds.</p>
             )}
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" disabled={removePending} onClick={() => setRemoving(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+              <button type="button" disabled={removePending} onClick={() => setRemoving(null)} className="rounded-lg border border-white/40 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white/60 disabled:opacity-50">
                 Cancel
               </button>
               <button type="button" disabled={removePending} onClick={confirmRemove} className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-70">

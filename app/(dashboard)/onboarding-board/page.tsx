@@ -120,7 +120,7 @@ export default async function OnboardingBoardPage() {
             </div>
           )}
 
-          <div className="mt-4 rounded-lg border border-dashed border-gray-300 p-4">
+          <div className="mt-4 rounded-lg border border-dashed border-white/40 p-4">
             <AddTemplateTask forms={forms ?? []} roleOptions={roleOptions} poppyEnabled={poppyEnabled} />
           </div>
         </section>

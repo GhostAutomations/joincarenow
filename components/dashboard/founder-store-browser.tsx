@@ -110,7 +110,7 @@ export function FounderStoreBrowser({ forms }: { forms: FounderStoreCard[] }) {
             {selected.size} template{selected.size === 1 ? "" : "s"} selected
           </span>
           <div className="flex items-center gap-2">
-            <button onClick={() => setSelected(new Set())} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
+            <button onClick={() => setSelected(new Set())} className="rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70">
               Clear
             </button>
             <button
@@ -141,7 +141,7 @@ export function FounderStoreBrowser({ forms }: { forms: FounderStoreCard[] }) {
                 type="checkbox"
                 checked={selected.has(f.id)}
                 onChange={() => toggle(f.id)}
-                className="absolute right-3 top-3 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                className="absolute right-3 top-3 h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
                 aria-label={`Select ${f.name}`}
               />
               <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${gradientFor(f.category || "other")} text-white shadow-sm`}>

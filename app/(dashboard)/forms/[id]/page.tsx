@@ -42,7 +42,7 @@ export default async function FormDetailsPage({
           formId={form.id}
           fieldCount={fieldCount ?? 0}
           label="Delete form"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600"
         />
       </div>
 

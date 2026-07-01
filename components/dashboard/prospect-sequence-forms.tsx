@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createSequence, addStep, type SeqState } from "@/modules/prospects/sequence-actions";
 
-const input = "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+const input = "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 export function SequenceCreateForm() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export function SequenceCreateForm() {
           </select>
         </label>
         <label className="flex items-center gap-2 pb-2 text-sm text-gray-700">
-          <input type="checkbox" name="auto_send" defaultChecked className="h-4 w-4 rounded border-gray-300" />
+          <input type="checkbox" name="auto_send" defaultChecked className="h-4 w-4 rounded border-white/40" />
           Auto-send
         </label>
         <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">Create</button>
@@ -57,12 +57,12 @@ export function SequenceStepForm({ sequenceId }: { sequenceId: string }) {
           <input name="subject" className={input} />
         </label>
         <label className="flex items-center gap-2 pb-2 text-sm text-gray-700">
-          <input type="checkbox" name="high_risk" className="h-4 w-4 rounded border-gray-300" />
+          <input type="checkbox" name="high_risk" className="h-4 w-4 rounded border-white/40" />
           Needs approval
         </label>
       </div>
       <textarea name="body" rows={3} placeholder="Message… ({{first_name}}, {{company_name}})" className={`${input} font-mono text-xs`} />
-      <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Add step</button>
+      <button className="rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/70">Add step</button>
       {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
     </form>
   );

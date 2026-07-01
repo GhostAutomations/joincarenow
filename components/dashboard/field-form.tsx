@@ -22,7 +22,7 @@ const TYPES: { value: string; label: string }[] = [
 const CHOICE = ["dropdown", "radio", "checkboxes"];
 
 const cls =
-  "mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-md border border-white/40 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 export type FieldDefaults = {
   id: string;
@@ -189,7 +189,7 @@ export function FieldForm({
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="mt-1 block h-9 w-16 rounded-md border border-gray-300"
+                className="mt-1 block h-9 w-16 rounded-md border border-white/40"
               />
             </label>
           </div>
@@ -210,7 +210,7 @@ export function FieldForm({
               type="checkbox"
               checked={required}
               onChange={(e) => setRequired(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+              className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
             />
             Required
           </label>
@@ -259,7 +259,7 @@ function OptionsEditor({
               }
               onFocus={(e) => e.currentTarget.select()}
               placeholder={`Option ${i + 1}`}
-              className="flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="flex-1 rounded-md border border-white/40 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
             <button
               type="button"
@@ -267,7 +267,7 @@ function OptionsEditor({
                 setOptions((arr) => (arr.length > 1 ? arr.filter((_, idx) => idx !== i) : arr))
               }
               aria-label="Remove option"
-              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-600"
+              className="rounded p-1 text-gray-400 hover:bg-white/70 hover:text-red-600"
             >
               <X className="h-4 w-4" />
             </button>

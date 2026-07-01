@@ -11,7 +11,7 @@ import { SubmitButton, FormError } from "@/components/ui/form";
 import { COUNTRIES, toE164 } from "@/lib/countries";
 
 const inputClass =
-  "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 export type ApplyDefaults = {
   firstName?: string;
@@ -150,7 +150,7 @@ export function ApplyForm({
   const rightToWork = (
     <label className="flex items-start gap-2 text-sm text-gray-700">
       <input type="checkbox" name="rightToWork"
-        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+        className="mt-0.5 h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500" />
       <span>I confirm I have the right to work in the UK.</span>
     </label>
   );
@@ -175,7 +175,7 @@ export function ApplyForm({
           <button
             type="button"
             onClick={() => setPage((p) => Math.max(0, p - 1))}
-            className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-lg border border-white/40 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-white/70"
           >
             Back
           </button>
@@ -497,7 +497,7 @@ function SignatureField({
         {required && <span className="ml-0.5 text-red-500">*</span>}
       </span>
       {help && <span className="mt-0.5 block text-xs text-gray-500">{help}</span>}
-      <div className="mt-1 inline-block rounded-md border border-gray-300 bg-white">
+      <div className="mt-1 inline-block rounded-md border border-white/40 bg-white">
         <canvas
           ref={paintInitial}
           width={400}

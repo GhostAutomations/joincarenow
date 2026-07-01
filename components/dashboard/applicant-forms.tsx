@@ -180,7 +180,7 @@ export function ApplicantForms({
           <select
             value={sendId}
             onChange={(e) => setSendId(e.target.value)}
-            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="min-w-0 flex-1 rounded-lg border border-white/40 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           >
             <option value="">Send a form…</option>
             {sendableForms.map((f) => (
@@ -193,7 +193,7 @@ export function ApplicantForms({
             value={notify}
             onChange={(e) => setNotify(e.target.value as "email" | "sms" | "both" | "none")}
             title="Notify the applicant"
-            className="shrink-0 rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="shrink-0 rounded-lg border border-white/40 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           >
             <option value="email">Email</option>
             <option value="sms">SMS</option>
@@ -240,7 +240,7 @@ function Row({
       <button
         onClick={onOpen}
         disabled={loading}
-        className="flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-left text-sm hover:bg-gray-50 disabled:opacity-60"
+        className="flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-left text-sm hover:bg-white/60 disabled:opacity-60"
       >
         <Icon className={`h-4 w-4 shrink-0 ${s.iconColor}`} />
         <span className="text-brand-700 underline-offset-2 hover:underline">{title}</span>

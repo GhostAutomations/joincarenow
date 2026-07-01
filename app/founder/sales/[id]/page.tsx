@@ -11,7 +11,7 @@ import { ProspectComposer } from "@/components/dashboard/prospect-composer";
 import { ProspectDemo } from "@/components/dashboard/prospect-demo";
 import { ProspectEnrol } from "@/components/dashboard/prospect-enrol";
 
-const input = "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+const input = "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 export default async function ProspectRecordPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -118,7 +118,7 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
               <input name="email" type="email" placeholder="Email" className={input} />
               <input name="phone" placeholder="Phone" className={input} />
               <input name="role" placeholder="Role" className={input} />
-              <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Add contact</button>
+              <button className="rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/70">Add contact</button>
             </form>
           </section>
 
@@ -131,7 +131,7 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
                     <input type="hidden" name="taskId" value={t.id} />
                     <input type="hidden" name="id" value={id} />
                     <input type="hidden" name="done" value={(!t.done).toString()} />
-                    <button className={`h-4 w-4 rounded border ${t.done ? "border-green-500 bg-green-500" : "border-gray-300"}`} aria-label="toggle" />
+                    <button className={`h-4 w-4 rounded border ${t.done ? "border-green-500 bg-green-500" : "border-white/40"}`} aria-label="toggle" />
                   </form>
                   <span className={t.done ? "text-gray-400 line-through" : "text-gray-800"}>
                     {t.title}
@@ -144,8 +144,8 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
             <form action={addTask} className="mt-3 flex flex-wrap items-end gap-2 border-t border-gray-100 pt-3">
               <input type="hidden" name="id" value={id} />
               <input name="title" placeholder="Follow up…" className={`${input} flex-1`} />
-              <input name="due_date" type="date" className="rounded-lg border border-gray-300 px-2 py-2 text-sm" />
-              <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Add</button>
+              <input name="due_date" type="date" className="rounded-lg border border-white/40 px-2 py-2 text-sm" />
+              <button className="rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/70">Add</button>
             </form>
           </section>
 
@@ -164,7 +164,7 @@ export default async function ProspectRecordPage({ params }: { params: Promise<{
                     <form action={stopEnrolment}>
                       <input type="hidden" name="enrolId" value={en.id} />
                       <input type="hidden" name="companyId" value={id} />
-                      <button className="rounded border border-gray-300 px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-100">Stop</button>
+                      <button className="rounded-lg border border-white/40 bg-white/60 px-2 py-0.5 text-xs text-gray-600 hover:bg-white/70">Stop</button>
                     </form>
                   )}
                 </li>

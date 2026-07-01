@@ -27,7 +27,7 @@ export function DemoScheduleModal({ prospectId, name, onClose }: { prospectId: s
   }, [state, onClose, router]);
 
   const emailable = (contacts ?? []).filter((c) => c.email);
-  const field = "rounded-lg border border-gray-300 px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  const field = "rounded-lg border border-white/40 px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Book a demo">
@@ -68,7 +68,7 @@ export function DemoScheduleModal({ prospectId, name, onClose }: { prospectId: s
             </label>
             {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
             <div className="flex justify-end gap-2 pt-1">
-              <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+              <button type="button" onClick={onClose} className="rounded-lg border border-white/40 bg-white/60 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white/60">Cancel</button>
               <button type="submit" disabled={pending} className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-70">
                 <CalendarClock className="h-4 w-4" /> {pending ? "Booking…" : "Book & send invite"}
               </button>

@@ -36,7 +36,7 @@ export function DocsManager({ kind, items }: { kind: Kind; items: DocItem[] }) {
               <div className="flex items-center gap-1">
                 <Link
                   href={`/settings/documents/${kind}/${d.id}`}
-                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                  className="rounded p-1 text-gray-400 hover:bg-white/70 hover:text-gray-700"
                   aria-label="Edit"
                 >
                   <Pencil className="h-4 w-4" />

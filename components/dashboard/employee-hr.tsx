@@ -18,7 +18,7 @@ import { getCvUrl } from "@/modules/applications/actions";
 import { getFormSubmissionView, type FormView } from "@/modules/onboarding/actions";
 
 const cls =
-  "mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-md border border-white/40 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 const lbl = "text-xs font-medium text-gray-600";
 
 export type Absence = {
@@ -151,7 +151,7 @@ function Absences({ employeeId, items }: { employeeId: string; items: Absence[] 
         </>
       )}
 
-      <form ref={ref} action={action} className="mt-4 rounded-lg border border-dashed border-gray-300 p-3">
+      <form ref={ref} action={action} className="mt-4 rounded-lg border border-dashed border-white/40 p-3">
         <input type="hidden" name="employeeId" value={employeeId} />
         {state?.error && <p className="mb-2 text-xs text-red-600">{state.error}</p>}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -226,7 +226,7 @@ function Warnings({ employeeId, items }: { employeeId: string; items: Warning[] 
         </ul>
       )}
 
-      <form ref={ref} action={action} className="mt-4 rounded-lg border border-dashed border-gray-300 p-3">
+      <form ref={ref} action={action} className="mt-4 rounded-lg border border-dashed border-white/40 p-3">
         <input type="hidden" name="employeeId" value={employeeId} />
         {state?.error && <p className="mb-2 text-xs text-red-600">{state.error}</p>}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -337,7 +337,7 @@ function Forms({ items }: { items: FormDoc[] }) {
             <div className="rounded-2xl bg-white shadow-xl">
               <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <h2 className="text-base font-semibold text-gray-900">{view.name}</h2>
-                <button onClick={() => setView(null)} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                <button onClick={() => setView(null)} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-white/70 hover:text-gray-600">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -421,7 +421,7 @@ function Uploads({ employeeId, items }: { employeeId: string; items: HrDoc[] }) 
         </ul>
       )}
 
-      <form ref={ref} action={action} className="mt-4 rounded-lg border border-dashed border-gray-300 p-3">
+      <form ref={ref} action={action} className="mt-4 rounded-lg border border-dashed border-white/40 p-3">
         <input type="hidden" name="employeeId" value={employeeId} />
         {state?.error && <p className="mb-2 text-xs text-red-600">{state.error}</p>}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

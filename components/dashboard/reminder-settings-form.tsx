@@ -85,7 +85,7 @@ export function ReminderSettingsForm({
                     type="checkbox"
                     name={`${r.key}_enabled`}
                     defaultChecked={enabled}
-                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600"
+                    className="mt-0.5 h-4 w-4 rounded border-white/40 text-brand-600"
                   />
                   <span className="text-sm text-gray-700">
                     <span className="font-medium text-gray-900">{r.label}</span>
@@ -98,7 +98,7 @@ export function ReminderSettingsForm({
                   <select
                     name={`${r.key}_channel`}
                     defaultValue={channel}
-                    className="ml-2 rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="ml-2 rounded-md border border-white/40 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   >
                     <option value="email">Email</option>
                     <option value="sms">SMS</option>
@@ -118,7 +118,7 @@ export function ReminderSettingsForm({
                         defaultValue={current}
                         min={inp.min}
                         max={inp.max}
-                        className="w-16 rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-16 rounded-md border border-white/40 px-2 py-1 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                       />
                       <span className="text-gray-400">{inp.unit}</span>
                     </label>

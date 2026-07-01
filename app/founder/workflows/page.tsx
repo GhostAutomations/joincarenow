@@ -94,7 +94,7 @@ export default async function FounderWorkflowsPage() {
                     <form action={setStoreWorkflowPublished}>
                       <input type="hidden" name="workflowId" value={wf.id} />
                       <input type="hidden" name="publish" value={(!wf.published).toString()} />
-                      <button className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white/70 px-3 py-1.5 text-sm text-gray-700 hover:bg-white">
+                      <button className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/70 px-3 py-1.5 text-sm text-gray-700 hover:bg-white">
                         {wf.published ? <><EyeOff className="h-4 w-4" /> Unpublish</> : <><Eye className="h-4 w-4" /> Publish</>}
                       </button>
                     </form>
@@ -124,7 +124,7 @@ export default async function FounderWorkflowsPage() {
           </div>
         )}
 
-        <div className="mt-4 rounded-lg border border-dashed border-gray-300 p-4">
+        <div className="mt-4 rounded-lg border border-dashed border-white/40 p-4">
           <p className="mb-3 text-sm font-medium text-gray-700">Add a workflow</p>
           <AddTemplateTask
             forms={(forms ?? []) as { id: string; name: string }[]}
@@ -152,7 +152,7 @@ export default async function FounderWorkflowsPage() {
                       <div className="mb-2 flex items-center justify-end">
                         <form action={unarchiveStoreWorkflow}>
                           <input type="hidden" name="workflowId" value={wf.id} />
-                          <button className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white/70 px-3 py-1.5 text-sm text-gray-700 hover:bg-white">
+                          <button className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/70 px-3 py-1.5 text-sm text-gray-700 hover:bg-white">
                             <RotateCcw className="h-4 w-4" /> Restore
                           </button>
                         </form>

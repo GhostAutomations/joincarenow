@@ -454,7 +454,7 @@ export function PipelineBoard({
             </thead>
             <tbody className="divide-y divide-gray-100">
               {apps.map((a) => (
-                <tr key={a.id} className="hover:bg-gray-50">
+                <tr key={a.id} className="hover:bg-white/60">
                   <td className="px-4 py-3">
                     <button
                       onClick={() => setSelectedId(a.id)}
@@ -615,7 +615,7 @@ function HireConfirm({
         <div className="flex items-center justify-end gap-2 border-t border-gray-200 px-5 py-3">
           <button
             onClick={onCancel}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+            className="rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70"
           >
             Cancel
           </button>
@@ -643,7 +643,7 @@ function StageSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-lg border border-gray-300 px-2 py-1 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+      className="rounded-lg border border-white/40 px-2 py-1 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
     >
       {STAGES.map((s) => (
         <option key={s.key} value={s.key}>
@@ -722,7 +722,7 @@ function ApplicantPanel({
             </div>
             <button
               onClick={onClose}
-              className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="rounded-md p-1 text-gray-400 hover:bg-white/70 hover:text-gray-600"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
@@ -865,7 +865,7 @@ function ApplicantPanel({
                           <button
                             onClick={() => openDoc(d.id)}
                             disabled={docBusy === d.id}
-                            className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                            className="rounded-lg border border-white/40 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-white/70 disabled:opacity-60"
                           >
                             {docBusy === d.id ? "Opening…" : "View"}
                           </button>
@@ -965,7 +965,7 @@ function OfferSection({ applicationId, onSend }: { applicationId: string; onSend
           )}
           <button
             onClick={onSend}
-            className="mt-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+            className="mt-2 rounded-lg border border-white/40 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/70"
           >
             {offer.status === "sent" ? "Resend / edit offer" : "Reissue offer"}
           </button>
@@ -1103,7 +1103,7 @@ function InterviewSection({
               </button>
               <button
                 onClick={() => setEditing(true)}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                className="rounded-lg border border-white/40 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/70"
               >
                 Propose new time
               </button>
@@ -1134,7 +1134,7 @@ function InterviewSection({
               name="interviewerId"
               value={interviewerId}
               onChange={(e) => setInterviewerId(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-white/40 px-2 py-1.5 text-sm"
             >
               <option value="">Choose a team member…</option>
               {staff.map((s) => (
@@ -1154,7 +1154,7 @@ function InterviewSection({
                 defaultValue={defaultDt}
               />
             ) : (
-              <p className="rounded-md border border-dashed border-gray-300 px-3 py-2 text-xs text-gray-500">
+              <p className="rounded-md border border-dashed border-white/40 px-3 py-2 text-xs text-gray-500">
                 Choose who the interview is with above to see their availability.
               </p>
             )}
@@ -1165,7 +1165,7 @@ function InterviewSection({
             <select
               name="durationMinutes"
               defaultValue={String(iv?.duration_minutes ?? 30)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-white/40 px-2 py-1.5 text-sm"
             >
               {[15, 30, 45, 60, 75, 90, 120].map((m) => (
                 <option key={m} value={m}>
@@ -1183,7 +1183,7 @@ function InterviewSection({
               name="mode"
               value={type}
               onChange={(e) => onTypeChange(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-white/40 px-2 py-1.5 text-sm"
             >
               <option value="in_person">In person</option>
               <option value="phone">Phone</option>
@@ -1208,7 +1208,7 @@ function InterviewSection({
                     ? "Phone number to call"
                     : "Video meeting link"
               }
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-full rounded-md border border-white/40 px-2 py-1.5 text-sm"
             />
           </label>
 
@@ -1241,7 +1241,7 @@ function InterviewSection({
               <button
                 type="button"
                 onClick={() => setEditing(false)}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                className="rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70"
               >
                 Cancel
               </button>

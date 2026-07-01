@@ -25,12 +25,12 @@ export function ProspectAiDraft({ companyId, contacts }: { companyId: string; co
       <select
         onChange={(e) => setChannel(e.target.value as "email" | "sms")}
         value={channel}
-        className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+        className="rounded-lg border border-white/40 px-2 py-1.5 text-sm"
       >
         <option value="email">Email</option>
         <option value="sms">SMS</option>
       </select>
-      <select name="contactId" defaultValue="" className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm">
+      <select name="contactId" defaultValue="" className="rounded-lg border border-white/40 px-2 py-1.5 text-sm">
         <option value="" disabled>Contact…</option>
         {reachable.map((c) => (
           <option key={c.id} value={c.id}>{c.name || (channel === "email" ? c.email : c.phone)}</option>

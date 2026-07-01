@@ -192,7 +192,7 @@ export function JobPromote(props: JobPromoteProps) {
   }
 
   const btn =
-    "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 shrink-0";
+    "inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/60 shrink-0";
 
   return (
     <div className="mt-6 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-5">
@@ -209,7 +209,7 @@ export function JobPromote(props: JobPromoteProps) {
             readOnly
             value={jobUrl}
             onFocus={(e) => e.currentTarget.select()}
-            className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800"
+            className="min-w-0 flex-1 rounded-lg border border-white/40 bg-white px-3 py-2 text-sm text-gray-800"
           />
           <button type="button" onClick={() => copy("link", jobUrl)} className={btn}>
             {copied === "link" ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
@@ -319,7 +319,7 @@ function PostBlock({
         <button
           type="button"
           onClick={onCopy}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-white/60"
         >
           {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
           {copied ? "Copied" : "Copy"}
@@ -330,7 +330,7 @@ function PostBlock({
         rows={rows}
         value={text}
         onFocus={(e) => e.currentTarget.select()}
-        className="mt-1.5 w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800"
+        className="mt-1.5 w-full resize-none rounded-lg border border-white/40 bg-white px-3 py-2 text-sm text-gray-800"
       />
     </div>
   );

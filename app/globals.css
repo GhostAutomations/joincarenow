@@ -83,21 +83,73 @@ body {
    text over the gradient — leave those alone or the white text disappears. */
 :where(.bg-white,
   [class*="bg-white/55"], [class*="bg-white/60"], [class*="bg-white/70"],
-  [class*="bg-white/80"], [class*="bg-white/90"], [class*="bg-white/95"]) {
+  [class*="bg-white/80"], [class*="bg-white/90"], [class*="bg-white/95"]):not(select, textarea, input) {
   background-color: rgb(255 255 255 / 0.55) !important;
   -webkit-backdrop-filter: blur(18px) saturate(160%);
   backdrop-filter: blur(18px) saturate(160%);
   border-color: rgb(255 255 255 / 0.55) !important;
 }
-/* Native controls that render white with no bg utility (selects, text inputs,
-   textareas) — same glass, dark readable text. */
+
+/* ----------------------------------------------------------------
+   ONE CANONICAL FORM CONTROL. Every select, text input and textarea in the
+   app — staff, portal, careers, marketing — gets the exact same surface:
+   glass background, white rim, 0.5rem radius, dark text, brand focus ring.
+   Un-layered rules beat Tailwind utilities, so stray per-file classes
+   (border-gray-300, rounded-md, focus:ring-*) can no longer fragment the
+   look. Red/amber validation borders are explicitly allowed to win.
+   ---------------------------------------------------------------- */
 :where(select, textarea,
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"])):not([class*="bg-"]) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="hidden"])) {
   background-color: rgb(255 255 255 / 0.6);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
   backdrop-filter: blur(18px) saturate(160%);
   color: #111827; /* gray-900 — readable */
+  border-radius: 0.5rem;
+  color-scheme: light; /* native date/time pickers stay light */
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
 }
+:where(select, textarea,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="hidden"])):not([class*="border-red"], [class*="border-amber"], [class*="border-orange"]) {
+  border-color: rgb(255 255 255 / 0.5);
+}
+:where(select, textarea, input):hover:not(:focus):not([class*="border-red"], [class*="border-amber"], [class*="border-orange"]) {
+  border-color: rgb(255 255 255 / 0.75);
+}
+:where(select, textarea, input):focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--brand-primary) 60%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 22%, transparent);
+}
+::placeholder { color: #6b7280; } /* one placeholder grey everywhere */
+
+/* Selects: replace the browser-default arrow with one consistent chevron. */
+:where(select:not([multiple]):not([size])) {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  background-size: 1rem;
+  padding-right: 2.25rem;
+}
+option { color: #111827; background-color: #ffffff; }
+
+/* Checkboxes, radios and range sliders follow the company brand colour
+   instead of browser-default blue. */
+:where(input[type="checkbox"], input[type="radio"], input[type="range"], progress) {
+  accent-color: var(--brand-primary);
+}
+
+/* Buttons: one hover/focus feel everywhere. */
+:where(button, [role="button"]) {
+  transition: background-color 150ms ease, border-color 150ms ease,
+    color 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+}
+:where(button, [role="button"]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 30%, transparent);
+}
+:where(button):disabled { cursor: not-allowed; }
 
 @keyframes jcn-float {
   0%, 100% { transform: translate(0, 0) scale(1); }

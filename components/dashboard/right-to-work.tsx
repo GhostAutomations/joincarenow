@@ -13,7 +13,7 @@ export type RtwInfo = {
 };
 
 const inputClass =
-  "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 export function RightToWork({ applicationId, rtw }: { applicationId: string; rtw: RtwInfo }) {
   const router = useRouter();
@@ -84,7 +84,7 @@ export function RightToWork({ applicationId, rtw }: { applicationId: string; rtw
             {rtw.hasDoc && (
               <button
                 onClick={viewDoc}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/70"
               >
                 <FileText className="h-3.5 w-3.5" /> View document
               </button>
@@ -119,7 +119,7 @@ export function RightToWork({ applicationId, rtw }: { applicationId: string; rtw
             />
           </label>
           <label className="flex items-start gap-2 text-sm text-gray-700">
-            <input type="checkbox" name="declaration" required className="mt-0.5 h-4 w-4 rounded border-gray-300" />
+            <input type="checkbox" name="declaration" required className="mt-0.5 h-4 w-4 rounded border-white/40" />
             <span>
               I confirm I have checked the original Right to Work document and that it is a true
               likeness of the applicant.
@@ -137,7 +137,7 @@ export function RightToWork({ applicationId, rtw }: { applicationId: string; rtw
               <button
                 type="button"
                 onClick={() => setEditing(false)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                className="rounded-lg border border-white/40 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white/70"
               >
                 Cancel
               </button>

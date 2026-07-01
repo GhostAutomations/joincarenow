@@ -29,11 +29,11 @@ export function AgreementSign({ title, bodyText }: { title: string; bodyText: st
             name="signer_name"
             autoComplete="name"
             placeholder="e.g. Jane Smith"
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </label>
         <label className="flex items-start gap-2 text-sm text-gray-700">
-          <input type="checkbox" name="agree" className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+          <input type="checkbox" name="agree" className="mt-0.5 h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500" />
           <span>I have read and agree to the terms above, and I have authority to accept them on behalf of my organisation.</span>
         </label>
         {state?.error && <p className="text-sm text-red-600">{state.error}</p>}

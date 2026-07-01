@@ -32,7 +32,7 @@ export function NotificationPrefsForm({ prefs }: { prefs: NotificationPrefs }) {
                 type="checkbox"
                 name={`${r.key}_inApp`}
                 defaultChecked={p.inApp}
-                className="h-4 w-4 rounded border-gray-300 text-brand-600"
+                className="h-4 w-4 rounded border-white/40 text-brand-600"
               />
             </div>
             <div className="w-16 text-center">
@@ -40,7 +40,7 @@ export function NotificationPrefsForm({ prefs }: { prefs: NotificationPrefs }) {
                 type="checkbox"
                 name={`${r.key}_email`}
                 defaultChecked={p.email}
-                className="h-4 w-4 rounded border-gray-300 text-brand-600"
+                className="h-4 w-4 rounded border-white/40 text-brand-600"
               />
             </div>
           </div>

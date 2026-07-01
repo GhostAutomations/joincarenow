@@ -183,7 +183,7 @@ export function StoreBrowser({
             {selected.size} form{selected.size === 1 ? "" : "s"} selected
           </span>
           <div className="flex items-center gap-2">
-            <button onClick={() => setSelected(new Set())} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
+            <button onClick={() => setSelected(new Set())} className="rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70">
               Clear
             </button>
             <button
@@ -220,7 +220,7 @@ export function StoreBrowser({
                     type="checkbox"
                     checked={selected.has(f.id)}
                     onChange={() => toggle(f.id)}
-                    className="absolute right-3 top-3 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                    className="absolute right-3 top-3 h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
                     aria-label={`Select ${f.name}`}
                   />
                 )}
@@ -310,7 +310,7 @@ export function StoreBrowser({
               <span>Your saved card will be <strong>charged {formatPrice(buying.pricePence)} now</strong>. The form is then yours to keep and edit.</span>
             </div>
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" disabled={pending} onClick={() => setBuying(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+              <button type="button" disabled={pending} onClick={() => setBuying(null)} className="rounded-lg border border-white/40 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white/60 disabled:opacity-50">
                 Cancel
               </button>
               <button

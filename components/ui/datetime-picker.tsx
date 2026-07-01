@@ -7,7 +7,7 @@ const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
 const MINUTES = ["00", "15", "30", "45"];
 
 const fieldClass =
-  "rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "rounded-md border border-white/40 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 /** Date picker + time selection, emitting "YYYY-MM-DDTHH:MM" in a hidden input.
  *  If `openingHours` are provided, only open days/times can be chosen. */

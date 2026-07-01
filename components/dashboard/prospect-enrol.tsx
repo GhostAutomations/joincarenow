@@ -26,11 +26,11 @@ export function ProspectEnrol({
   return (
     <form action={action} className="flex flex-wrap items-end gap-2">
       <input type="hidden" name="companyId" value={companyId} />
-      <select name="sequenceId" defaultValue="" className="rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm">
+      <select name="sequenceId" defaultValue="" className="rounded-lg border border-white/40 px-2.5 py-1.5 text-sm">
         <option value="" disabled>Sequence…</option>
         {sequences.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
       </select>
-      <select name="contactId" defaultValue="" className="rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm">
+      <select name="contactId" defaultValue="" className="rounded-lg border border-white/40 px-2.5 py-1.5 text-sm">
         <option value="" disabled>Contact…</option>
         {contacts.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
       </select>

@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { updateEmployee, type EmployeeState } from "@/modules/employees/actions";
 
 const cls =
-  "mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-md border border-white/40 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 export type EmployeeFields = {
   id: string;

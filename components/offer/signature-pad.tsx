@@ -83,7 +83,7 @@ export function SignaturePad({
           onPointerMove={move}
           onPointerUp={end}
           onPointerLeave={end}
-          className="h-32 w-full touch-none rounded-lg border border-gray-300 bg-white"
+          className="h-32 w-full touch-none rounded-lg border border-white/40 bg-white"
         />
         {!hasInk && (
           <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-gray-300">

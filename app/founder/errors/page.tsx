@@ -76,7 +76,7 @@ export default async function AdminErrorsPage({
               <span className="ml-auto">{new Date(e.created_at).toLocaleString("en-GB")}</span>
               <form action={dismissError}>
                 <input type="hidden" name="id" value={e.id} />
-                <button aria-label="Dismiss" className="rounded-md px-2 py-0.5 font-medium text-gray-400 hover:bg-gray-100 hover:text-gray-700">
+                <button aria-label="Dismiss" className="rounded-md px-2 py-0.5 font-medium text-gray-400 hover:bg-white/70 hover:text-gray-700">
                   Dismiss
                 </button>
               </form>

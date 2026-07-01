@@ -8,7 +8,7 @@ import { savePoppySettings } from "@/modules/poppy/actions";
 import { POPPY_FOCUS_OPTIONS, type PoppyConfig } from "@/lib/poppy/config";
 
 const cls =
-  "block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "block w-full rounded-lg border border-white/40 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 /** Company-default configuration for the Poppy screening agent. Admin-only. */
 export function PoppySettingsForm({

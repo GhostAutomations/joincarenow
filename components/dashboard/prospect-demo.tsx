@@ -18,7 +18,7 @@ export function ProspectDemo({
 }) {
   const [state, action] = useActionState<ProspectState, FormData>(scheduleDemo, undefined);
   const emailable = contacts.filter((c) => c.email);
-  const sel = "rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  const sel = "rounded-lg border border-white/40 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
   return (
     <section className="mt-6 rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm backdrop-blur">

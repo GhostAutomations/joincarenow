@@ -37,7 +37,7 @@ export function CvRequest({ applicationId }: { applicationId: string }) {
       <button
         onClick={() => setOpen(true)}
         disabled={sent}
-        className="mt-2 inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+        className="mt-2 inline-flex items-center gap-2 rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70 disabled:opacity-60"
       >
         <Upload className="h-4 w-4" />
         {sent ? "CV requested" : "Request CV"}
@@ -52,7 +52,7 @@ export function CvRequest({ applicationId }: { applicationId: string }) {
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close"
-                className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                className="rounded-md p-1 text-gray-400 hover:bg-white/70 hover:text-gray-600"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -66,14 +66,14 @@ export function CvRequest({ applicationId }: { applicationId: string }) {
                 onChange={(e) => setMessage(e.target.value)}
                 rows={4}
                 placeholder="e.g. Please upload an up-to-date CV so we can progress your application."
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
               <label className="mt-3 block">
                 <span className="text-xs font-medium text-gray-600">Notify the applicant by</span>
                 <select
                   value={notify}
                   onChange={(e) => setNotify(e.target.value as "email" | "sms" | "none")}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 >
                   <option value="email">Email</option>
                   <option value="sms">SMS</option>
@@ -86,7 +86,7 @@ export function CvRequest({ applicationId }: { applicationId: string }) {
             <div className="flex items-center justify-end gap-2 border-t border-gray-200 bg-gray-50/70 px-5 py-3">
               <button
                 onClick={() => setOpen(false)}
-                className="rounded-lg border border-gray-300 px-3.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                className="rounded-lg border border-white/40 px-3.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/70"
               >
                 Cancel
               </button>

@@ -60,7 +60,7 @@ export function RefereeForm({
       )}
 
       <label className="flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
-        <input type="checkbox" name="declaration" required className="mt-0.5 h-4 w-4 rounded border-gray-300" />
+        <input type="checkbox" name="declaration" required className="mt-0.5 h-4 w-4 rounded border-white/40" />
         <span>
           I confirm that the information I have provided is accurate and given in good faith, and
           that I am happy to be contacted about this reference if needed.

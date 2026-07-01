@@ -70,7 +70,7 @@ function ResignCard({ doc, defaultName }: { doc: ResignDoc; defaultName: string 
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your full name"
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         )}
       </div>

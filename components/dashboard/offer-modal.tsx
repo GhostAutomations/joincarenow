@@ -7,7 +7,7 @@ import { sendOffer, getOffer, getOfferDocOptions, type OfferInfo, type OfferDocO
 import { EMPLOYMENT_TYPES } from "@/lib/hr";
 
 const input =
-  "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 /** Capture offer details and send the applicant an accept/decline link. */
 export function OfferModal({
@@ -68,7 +68,7 @@ export function OfferModal({
       <div className="relative flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
           <h2 className="text-base font-semibold text-gray-900">{reissue ? "Reissue offer" : "Make an offer"}</h2>
-          <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+          <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-white/70 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -129,7 +129,7 @@ export function OfferModal({
                 name="conditional"
                 checked={conditional}
                 onChange={(e) => setConditional(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-gray-300"
+                className="mt-0.5 h-4 w-4 rounded border-white/40"
               />
               <span>This is a conditional offer (subject to checks)</span>
             </label>
@@ -183,7 +183,7 @@ export function OfferModal({
                                   : prevIds.filter((id) => id !== pol.id)
                               )
                             }
-                            className="h-4 w-4 rounded border-gray-300"
+                            className="h-4 w-4 rounded border-white/40"
                           />
                           {pol.name}
                         </label>
@@ -200,7 +200,7 @@ export function OfferModal({
             {error && <p className="text-sm text-red-600">{error}</p>}
 
             <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
-              <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+              <button type="button" onClick={onClose} className="rounded-lg border border-white/40 bg-white/60 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-white/70">
                 Cancel
               </button>
               <button

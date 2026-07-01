@@ -137,14 +137,14 @@ export default async function EditJobPage({
               <Link
                 href={careersUrl}
                 target="_blank"
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                className="rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70"
               >
                 View / share public page
               </Link>
               <form action={setJobStatus}>
                 <input type="hidden" name="id" value={job.id} />
                 <input type="hidden" name="status" value="closed" />
-                <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
+                <button className="rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70">
                   Close job
                 </button>
               </form>
@@ -154,7 +154,7 @@ export default async function EditJobPage({
             <form action={setJobStatus}>
               <input type="hidden" name="id" value={job.id} />
               <input type="hidden" name="status" value="published" />
-              <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100">
+              <button className="rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70">
                 Re-open
               </button>
             </form>

@@ -37,7 +37,7 @@ export function ArchiveJobButton({ id }: { id: string }) {
             setConfirming(true);
             setError(null);
           }}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70"
         >
           <Archive className="h-4 w-4" aria-hidden />
           Archive job
@@ -59,7 +59,7 @@ export function ArchiveJobButton({ id }: { id: string }) {
             </button>
             <button
               onClick={() => setConfirming(false)}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+              className="rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70"
             >
               Cancel
             </button>

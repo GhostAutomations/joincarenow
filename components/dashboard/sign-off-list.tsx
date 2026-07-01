@@ -90,7 +90,7 @@ function ReviewModal({ doc, onClose }: { doc: SignOffDoc; onClose: () => void })
               <h2 className="truncate text-base font-semibold text-gray-900">{doc.title}</h2>
               <p className="text-xs text-gray-500">{doc.applicantName} · {doc.docType}</p>
             </div>
-            <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+            <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-white/70 hover:text-gray-600">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -107,7 +107,7 @@ function ReviewModal({ doc, onClose }: { doc: SignOffDoc; onClose: () => void })
               <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Signature</p>
               {doc.signatureMethod === "draw" && doc.signatureImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={doc.signatureImage} alt="Signature" className="mt-2 max-h-28 border-b border-gray-300" />
+                <img src={doc.signatureImage} alt="Signature" className="mt-2 max-h-28 border-b border-white/40" />
               ) : (
                 <p className="mt-2 font-[cursive] text-3xl text-gray-900">{doc.signerName}</p>
               )}
@@ -132,7 +132,7 @@ function ReviewModal({ doc, onClose }: { doc: SignOffDoc; onClose: () => void })
                     onChange={(e) => setReason(e.target.value)}
                     rows={3}
                     placeholder="e.g. The signature isn't a readable name — please sign with your full name."
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                 </label>
               </div>
@@ -146,7 +146,7 @@ function ReviewModal({ doc, onClose }: { doc: SignOffDoc; onClose: () => void })
               <>
                 <button
                   onClick={() => setRejecting(true)}
-                  className="rounded-lg border border-gray-300 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  className="rounded-lg border border-white/40 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-white/70"
                 >
                   Reject
                 </button>
@@ -162,7 +162,7 @@ function ReviewModal({ doc, onClose }: { doc: SignOffDoc; onClose: () => void })
               <>
                 <button
                   onClick={() => setRejecting(false)}
-                  className="rounded-lg border border-gray-300 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  className="rounded-lg border border-white/40 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-white/70"
                 >
                   Back
                 </button>

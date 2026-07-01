@@ -85,7 +85,7 @@ export function CarerAcademySync({
         <input type="hidden" name="id" value={employeeId} />
         <button
           disabled={pending}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/60 disabled:opacity-60"
         >
           <RefreshCw className={`h-4 w-4 ${pending ? "animate-spin" : ""}`} />
           {status === "synced" ? "Resend" : "Send to Carer.Academy"}

@@ -131,7 +131,7 @@ export default async function PortalPage({
         <div className="flex items-center gap-4">
           <span className="hidden text-sm text-gray-700 sm:inline">{user.email}</span>
           <form action={signOut}>
-            <button className="rounded-lg border border-gray-300 bg-white/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-white">
+            <button className="rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-white">
               Sign out
             </button>
           </form>

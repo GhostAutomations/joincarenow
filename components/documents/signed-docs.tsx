@@ -86,7 +86,7 @@ export function SignedDocs({ docs }: { docs: SignedDoc[] }) {
             </div>
             <button
               onClick={() => setView(d)}
-              className="shrink-0 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+              className="shrink-0 rounded-lg border border-white/40 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/70"
             >
               View
             </button>
@@ -192,18 +192,18 @@ function DocViewer({ doc, onClose }: { doc: SignedDoc; onClose: () => void }) {
             <div className="flex items-center gap-1">
               <button
                 onClick={printDoc}
-                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white/70"
               >
                 <Printer className="h-4 w-4" /> Print
               </button>
               <button
                 onClick={downloadPdf}
                 disabled={pdfBusy}
-                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white/70 disabled:opacity-60"
               >
                 <Download className="h-4 w-4" /> {pdfBusy ? "Preparing…" : "PDF"}
               </button>
-              <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+              <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-gray-400 hover:bg-white/70 hover:text-gray-600">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -214,7 +214,7 @@ function DocViewer({ doc, onClose }: { doc: SignedDoc; onClose: () => void }) {
 
             <div className="mt-6 border-t border-gray-200 pt-4">
               {doc.signatureMethod === "draw" && doc.signatureImage ? (
-                <img src={doc.signatureImage} alt="Signature" className="max-h-24 border-b border-gray-300" />
+                <img src={doc.signatureImage} alt="Signature" className="max-h-24 border-b border-white/40" />
               ) : (
                 <p className="font-[cursive] text-2xl text-gray-900">{doc.signerName}</p>
               )}

@@ -79,7 +79,7 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
   }, [state, onClose, router]);
 
   const emailable = (contacts ?? []).filter((c) => c.email);
-  const field = "rounded-lg border border-gray-300 px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  const field = "rounded-lg border border-white/40 px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Create a proposal">
@@ -130,7 +130,7 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
                     className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
                       offer.trim() === p
                         ? "border-brand-500 bg-brand-50 text-brand-700"
-                        : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                        : "border-gray-200 bg-white text-gray-600 hover:bg-white/60"
                     }`}
                   >
                     {p}
@@ -163,7 +163,7 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
             )}
             {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
             <div className="flex justify-end gap-2 pt-1">
-              <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+              <button type="button" onClick={onClose} className="rounded-lg border border-white/40 bg-white/60 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white/60">Cancel</button>
               <button type="submit" disabled={pending} className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-70">
                 <Send className="h-4 w-4" /> {pending ? "Sending…" : "Send proposal"}
               </button>

@@ -47,7 +47,7 @@ export function ApplicantInterviewQuestions({ applicationId }: { applicationId: 
         <button
           onClick={regenerate}
           disabled={busy}
-          className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+          className="inline-flex items-center gap-1 rounded-lg border border-white/40 bg-white/60 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-white/60 disabled:opacity-60"
         >
           <RefreshCw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} /> {busy ? "Working…" : "Regenerate"}
         </button>
@@ -90,7 +90,7 @@ export function ApplicantInterviewQuestions({ applicationId }: { applicationId: 
         <button
           onClick={regenerate}
           disabled={busy}
-          className="mt-2 inline-flex items-center gap-1 rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+          className="mt-2 inline-flex items-center gap-1 rounded-lg border border-white/40 bg-white/60 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-white/60 disabled:opacity-60"
         >
           <RefreshCw className="h-3 w-3" /> Try again
         </button>

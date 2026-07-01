@@ -72,7 +72,7 @@ export default async function AdminAuditPage({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {logs.map((l) => (
-              <tr key={l.id} className="hover:bg-gray-50">
+              <tr key={l.id} className="hover:bg-white/60">
                 <td className="whitespace-nowrap px-4 py-3 text-gray-500">
                   {new Date(l.created_at).toLocaleString("en-GB")}
                 </td>

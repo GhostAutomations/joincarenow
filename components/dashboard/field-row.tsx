@@ -66,7 +66,7 @@ export function FieldRow({
           <input type="hidden" name="direction" value="up" />
           <button
             disabled={isFirst}
-            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-30"
+            className="rounded p-1 text-gray-400 hover:bg-white/70 hover:text-gray-700 disabled:opacity-30"
             aria-label="Move up"
           >
             <ChevronUp className="h-4 w-4" />
@@ -78,7 +78,7 @@ export function FieldRow({
           <input type="hidden" name="direction" value="down" />
           <button
             disabled={isLast}
-            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-30"
+            className="rounded p-1 text-gray-400 hover:bg-white/70 hover:text-gray-700 disabled:opacity-30"
             aria-label="Move down"
           >
             <ChevronDown className="h-4 w-4" />
@@ -86,7 +86,7 @@ export function FieldRow({
         </form>
         <button
           onClick={() => setEditing(true)}
-          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+          className="rounded p-1 text-gray-400 hover:bg-white/70 hover:text-gray-700"
           aria-label="Edit"
         >
           <Pencil className="h-4 w-4" />

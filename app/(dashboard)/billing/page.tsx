@@ -217,7 +217,7 @@ export default async function BillingPage() {
                         href={inv.invoice_pdf}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/60"
                       >
                         <Download className="h-3.5 w-3.5" /> Download
                       </a>
@@ -277,7 +277,7 @@ export default async function BillingPage() {
                     <form action={startCheckout}>
                       <input type="hidden" name="tier" value="core" />
                       <input type="hidden" name="interval" value="month" />
-                      <button className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50">
+                      <button className="rounded-xl border border-white/40 bg-white/60 px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-white/60">
                         Subscribe monthly
                       </button>
                     </form>
@@ -317,7 +317,7 @@ export default async function BillingPage() {
                           <form action={startCheckout}>
                             <input type="hidden" name="tier" value="poppy" />
                             <input type="hidden" name="interval" value="month" />
-                            <button className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-gray-50">
+                            <button className="rounded-lg border border-white/40 bg-white/60 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-white/60">
                               Poppy monthly
                             </button>
                           </form>
@@ -365,7 +365,7 @@ export default async function BillingPage() {
           </div>
           <a
             href="/api/agreement/pdf"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/60"
           >
             <Download className="h-3.5 w-3.5" /> Download PDF
           </a>

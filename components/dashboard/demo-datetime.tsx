@@ -29,14 +29,14 @@ export function DemoDateTime({ name }: { name: string }) {
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
   const value = date && hour && minute ? `${date}T${hour}:${minute}` : "";
-  const selStyle = "rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  const selStyle = "rounded-lg border border-white/40 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
   return (
     <div className="rounded-xl border border-gray-200 p-3">
       <div className="flex items-center justify-between">
-        <button type="button" onClick={() => setView(new Date(year, month - 1, 1))} className="grid h-7 w-7 place-items-center rounded hover:bg-gray-100"><ChevronLeft className="h-4 w-4" /></button>
+        <button type="button" onClick={() => setView(new Date(year, month - 1, 1))} className="grid h-7 w-7 place-items-center rounded hover:bg-white/70"><ChevronLeft className="h-4 w-4" /></button>
         <span className="text-sm font-semibold text-gray-900">{view.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</span>
-        <button type="button" onClick={() => setView(new Date(year, month + 1, 1))} className="grid h-7 w-7 place-items-center rounded hover:bg-gray-100"><ChevronRight className="h-4 w-4" /></button>
+        <button type="button" onClick={() => setView(new Date(year, month + 1, 1))} className="grid h-7 w-7 place-items-center rounded hover:bg-white/70"><ChevronRight className="h-4 w-4" /></button>
       </div>
       <div className="mt-2 grid grid-cols-7 text-center text-[10px] font-medium uppercase text-gray-400">
         {WEEK.map((w) => <div key={w}>{w}</div>)}

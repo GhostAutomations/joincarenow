@@ -62,7 +62,7 @@ export function FounderDocsManager({
                 <FileText className="h-4 w-4 text-gray-400" /> {d.name}
               </button>
               <div className="flex items-center gap-1">
-                <button type="button" onClick={() => setEditing(d)} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700" aria-label="Edit">
+                <button type="button" onClick={() => setEditing(d)} className="rounded p-1 text-gray-400 hover:bg-white/70 hover:text-gray-700" aria-label="Edit">
                   <Pencil className="h-4 w-4" />
                 </button>
                 <button type="button" onClick={() => onDelete(d.id)} className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" aria-label="Delete">

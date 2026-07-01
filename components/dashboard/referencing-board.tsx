@@ -148,7 +148,7 @@ export function ReferencingBoard({
                   <button
                     onClick={() => open(c.id)}
                     disabled={busyId === c.id}
-                    className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                    className="inline-flex items-center gap-1 rounded-lg border border-white/40 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/60 disabled:opacity-60"
                   >
                     <Eye className="h-3.5 w-3.5" /> View
                   </button>
@@ -260,7 +260,7 @@ function Card({
           <button
             onClick={onOpen}
             disabled={busy}
-            className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+            className="inline-flex items-center gap-1 rounded-lg border border-white/40 bg-white/60 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/60 disabled:opacity-60"
           >
             <Eye className="h-3.5 w-3.5" /> {card.status === "approved" ? "View" : "Review"}
           </button>

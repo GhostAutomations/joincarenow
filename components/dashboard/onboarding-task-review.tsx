@@ -55,7 +55,7 @@ export function OnboardingTaskReview({ task }: { task: OnbTask }) {
           {task.task_type === "document" && task.doc_path && (
             <button
               onClick={openDoc}
-              className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-100"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/60 px-2.5 py-1 text-xs text-gray-700 hover:bg-white/70"
             >
               <FileText className="h-3.5 w-3.5" /> View document
             </button>

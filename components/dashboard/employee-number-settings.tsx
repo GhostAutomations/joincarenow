@@ -35,7 +35,7 @@ export function EmployeeNumberSettings({
           type="checkbox"
           checked={manual}
           onChange={(e) => setManual(e.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600"
+          className="mt-0.5 h-4 w-4 rounded border-white/40 text-brand-600"
         />
         <span className="text-sm text-gray-700">
           <span className="font-medium text-gray-900">Enter employee numbers manually</span>
@@ -53,7 +53,7 @@ export function EmployeeNumberSettings({
             name="prefix"
             defaultValue={initialPrefix || "EMP-"}
             placeholder="EMP-"
-            className="mt-1 block w-40 rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="mt-1 block w-40 rounded-md border border-white/40 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
           <span className="mt-1 block font-normal text-gray-400">
             New hires become {(initialPrefix || "EMP-")}0001, {(initialPrefix || "EMP-")}0002…

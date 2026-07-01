@@ -41,7 +41,7 @@ export function StorePublishBar({ formId, published }: { formId: string; publish
           {/* Save the form's name/category/plan (the settings form lives above). */}
           <button
             form="store-settings-form"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-white/60"
           >
             <Save className="h-4 w-4" /> Save
           </button>
@@ -83,7 +83,7 @@ export function StorePublishBar({ formId, published }: { formId: string; publish
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
             placeholder="Describe the form you want instead…"
-            className="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="mt-2 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
           <div className="mt-2 flex items-center gap-3">
             <RegenSubmit disabled={brief.trim().length < 3} />

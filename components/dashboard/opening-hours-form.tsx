@@ -43,7 +43,7 @@ export function OpeningHoursForm({
               name={`open_${d.iso}`}
               checked={d.open}
               onChange={(e) => update(d.iso, { open: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300 text-brand-600"
+              className="h-4 w-4 rounded border-white/40 text-brand-600"
             />
             {d.label}
           </label>
@@ -55,7 +55,7 @@ export function OpeningHoursForm({
                 step={900}
                 value={d.from}
                 onChange={(e) => update(d.iso, { from: e.target.value })}
-                className="rounded-md border border-gray-300 px-2 py-1 text-sm"
+                className="rounded-md border border-white/40 px-2 py-1 text-sm"
               />
               <span>to</span>
               <input
@@ -64,7 +64,7 @@ export function OpeningHoursForm({
                 step={900}
                 value={d.to}
                 onChange={(e) => update(d.iso, { to: e.target.value })}
-                className="rounded-md border border-gray-300 px-2 py-1 text-sm"
+                className="rounded-md border border-white/40 px-2 py-1 text-sm"
               />
             </div>
           ) : (

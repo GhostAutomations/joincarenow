@@ -34,7 +34,7 @@ export function BuildTabs({
           <button
             type="button"
             onClick={() => setMode("import")}
-            className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-lg border border-white/40 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-white/70"
           >
             Generate with AI / import
           </button>

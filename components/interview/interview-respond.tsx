@@ -110,7 +110,7 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
                   type="checkbox"
                   checked={rtwAck}
                   onChange={(e) => setRtwAck(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600"
+                  className="mt-0.5 h-4 w-4 rounded border-white/40 text-brand-600"
                 />
                 <span>I understand I must bring proof of my Right to Work in the UK to the interview.</span>
               </label>
@@ -154,13 +154,13 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
                       min={todayStr}
                       value={reqDate}
                       onChange={(e) => { setReqDate(e.target.value); setReqSlot(""); }}
-                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="rounded-lg border border-white/40 px-3 py-2 text-sm"
                     />
                     <select
                       value={reqSlot}
                       onChange={(e) => setReqSlot(e.target.value)}
                       disabled={!reqDate || closedDay}
-                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="rounded-lg border border-white/40 px-3 py-2 text-sm"
                     >
                       <option value="">{reqDate ? "Pick a time" : "Pick a date"}</option>
                       {slots.map((s) => (<option key={s} value={s}>{s}</option>))}
@@ -177,7 +177,7 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
                   type="datetime-local"
                   value={requestedTime}
                   onChange={(e) => setRequestedTime(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm"
                 />
               )}
             </div>
@@ -186,7 +186,7 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
               onChange={(e) => setNote(e.target.value)}
               rows={3}
               placeholder="Anything else we should know? (optional)"
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="block w-full rounded-lg border border-white/40 px-3 py-2 text-sm"
             />
             <div className="flex gap-2">
               <button
@@ -199,7 +199,7 @@ export function InterviewRespond({ interview }: { interview: TokenInterview }) {
               <button
                 onClick={() => setView("buttons")}
                 disabled={busy}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="rounded-lg border border-white/40 px-4 py-2 text-sm text-gray-700 hover:bg-white/70"
               >
                 Back
               </button>

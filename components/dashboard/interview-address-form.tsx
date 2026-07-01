@@ -30,7 +30,7 @@ export function InterviewAddressForm({
         rows={3}
         defaultValue={defaultValue}
         placeholder="e.g. Thistle Care, 12 High Street, Cardiff, CF10 1AB"
-        className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        className="block w-full rounded-lg border border-white/40 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       />
       <div className="flex items-center gap-3">
         <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">

@@ -50,7 +50,7 @@ export function DeleteCompany({ companyId, companyName }: { companyId: string; c
         <button
           type="button"
           onClick={() => { setOpen(false); setName(""); }}
-          className="shrink-0 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+          className="shrink-0 rounded-lg border border-white/40 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/70"
         >
           Cancel
         </button>

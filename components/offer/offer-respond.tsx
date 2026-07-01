@@ -205,7 +205,7 @@ export function OfferRespond({
                         type="checkbox"
                         checked={s.agreed}
                         onChange={(e) => updateDoc(i, { agreed: e.target.checked })}
-                        className="mt-0.5 h-4 w-4 rounded border-gray-300"
+                        className="mt-0.5 h-4 w-4 rounded border-white/40"
                       />
                       <span>
                         {d.docType === "contract"
@@ -224,7 +224,7 @@ export function OfferRespond({
                             value={s.name}
                             onChange={(e) => updateDoc(i, { name: e.target.value })}
                             placeholder="e.g. Jane Smith"
-                            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                            className="mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                           />
                         </label>
                       )}
@@ -246,7 +246,7 @@ export function OfferRespond({
             <button
               onClick={() => setSigning(false)}
               disabled={busy !== null}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-white/70 disabled:opacity-60"
             >
               Back
             </button>
@@ -263,14 +263,14 @@ export function OfferRespond({
             onChange={(e) => setReason(e.target.value)}
             rows={3}
             placeholder="e.g. accepted another role, pay, location, timing…"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
           <label className="flex items-start gap-2 text-sm text-gray-700">
             <input
               type="checkbox"
               checked={talentPool}
               onChange={(e) => setTalentPool(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300"
+              className="mt-0.5 h-4 w-4 rounded border-white/40"
             />
             <span>
               Keep my details on file so {offer.companyName} can contact me about future roles
@@ -288,7 +288,7 @@ export function OfferRespond({
             <button
               onClick={() => setDeclining(false)}
               disabled={busy !== null}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-white/70 disabled:opacity-60"
             >
               Back
             </button>
@@ -309,7 +309,7 @@ export function OfferRespond({
             <button
               onClick={() => setDeclining(true)}
               disabled={busy !== null}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-white/70 disabled:opacity-60"
             >
               <X className="h-4 w-4" /> Decline
             </button>

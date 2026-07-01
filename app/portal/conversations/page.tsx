@@ -57,7 +57,7 @@ export default async function PortalConversationsPage() {
           <ul className="mt-4 space-y-2">
             {convos.map((c) => (
               <li key={c.id}>
-                <Link href={`/portal/conversations/${c.id}`} className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm hover:bg-gray-50">
+                <Link href={`/portal/conversations/${c.id}`} className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm hover:bg-white/60">
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
                     {c.company.slice(0, 1).toUpperCase()}
                   </div>

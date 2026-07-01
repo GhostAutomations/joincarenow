@@ -129,7 +129,7 @@ export function FounderSetupWizard({
               </div>
               <button
                 onClick={closeModal}
-                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-white/70 hover:text-gray-700"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -143,7 +143,7 @@ export function FounderSetupWizard({
                 <>
                   <button
                     onClick={closeModal}
-                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="rounded-lg border border-white/40 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white/60"
                   >
                     Cancel
                   </button>
@@ -158,7 +158,7 @@ export function FounderSetupWizard({
               ) : (
                 <button
                   onClick={closeModal}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="rounded-lg border border-white/40 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white/60"
                 >
                   Close
                 </button>

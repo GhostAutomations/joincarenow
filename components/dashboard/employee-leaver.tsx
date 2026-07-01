@@ -33,7 +33,7 @@ export function EmployeeStatusCard({
     if (state?.ok) { setOpen(false); router.refresh(); }
   }, [state, router]);
 
-  const field = "rounded-lg border border-gray-300 px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  const field = "rounded-lg border border-white/40 px-2.5 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
   const left = status === "left";
 
   return (
@@ -75,7 +75,7 @@ export function EmployeeStatusCard({
           </div>
           <form action={async (fd) => { await reinstateEmployee(fd); router.refresh(); }}>
             <input type="hidden" name="employeeId" value={employeeId} />
-            <button className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <button className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/60">
               <RotateCcw className="h-4 w-4" /> Reinstate
             </button>
           </form>
@@ -125,7 +125,7 @@ export function EmployeeStatusCard({
               {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
               {state?.ok && <p className="text-sm text-green-700">Saved.</p>}
               <div className="flex justify-end gap-2 pt-1">
-                <button type="button" onClick={() => setOpen(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="button" onClick={() => setOpen(false)} className="rounded-lg border border-white/40 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white/60">Cancel</button>
                 <button type="submit" disabled={pending} className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-70">
                   <UserMinus className="h-4 w-4" /> {pending ? "Saving…" : "Confirm leaver"}
                 </button>

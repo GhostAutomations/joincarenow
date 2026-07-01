@@ -191,7 +191,7 @@ export function DocEditorForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={kind === "contract" ? "e.g. Care Assistant — Permanent Contract" : kind === "policy" ? "e.g. Data Protection (GDPR) Policy" : "e.g. Care Worker"}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </label>
 
@@ -226,7 +226,7 @@ export function DocEditorForm({
                     ? "e.g. covers social media, refer to disciplinary procedure…"
                     : "e.g. driver role, evenings & weekends, medication trained…"
               }
-              className="min-w-0 flex-1 rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm focus:border-violet-400 focus:outline-none focus:ring-1 focus:ring-violet-400"
+              className="min-w-0 flex-1 rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm focus:border-violet-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
             <button
               type="button"
@@ -267,7 +267,7 @@ export function DocEditorForm({
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-white/60"
           >
             <Upload className="h-4 w-4" /> Upload a document
           </button>
@@ -290,7 +290,7 @@ export function DocEditorForm({
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder={`Write the ${noun} here. Use the merge fields above where you want details filled in, e.g. "This contract is between {{company_name}} and {{first_name}} {{last_name}} for the role of {{role}}, starting {{start_date}}."`}
-            className="mt-1 h-[55vh] min-h-[320px] w-full resize-y rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm leading-relaxed focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="mt-1 h-[55vh] min-h-[320px] w-full resize-y rounded-lg border border-white/40 px-3 py-2 font-mono text-sm leading-relaxed focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </label>
 
@@ -337,14 +337,14 @@ export function DocEditorForm({
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-lg border border-gray-300 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              className="rounded-lg border border-white/40 bg-white/60 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-white/70"
             >
               Cancel
             </button>
           ) : (
             <Link
               href={BACK}
-              className="rounded-lg border border-gray-300 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              className="rounded-lg border border-white/40 px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-white/70"
             >
               Cancel
             </Link>

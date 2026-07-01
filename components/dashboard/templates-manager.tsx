@@ -14,7 +14,7 @@ export type Template = {
 };
 
 const cls =
-  "mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-md border border-white/40 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 const MERGE_FIELDS = [
   "first_name", "last_name", "job_title", "company_name", "recruiter_name", "portal_link",
@@ -107,7 +107,7 @@ export function TemplatesManager({ templates }: { templates: Template[] }) {
               <button
                 type="button"
                 onClick={() => { setEditing(null); setChannel("email"); formRef.current?.reset(); }}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                className="rounded-lg border border-white/40 px-3 py-1.5 text-sm text-gray-700 hover:bg-white/70"
               >
                 Cancel
               </button>
@@ -148,7 +148,7 @@ function TemplateList({
                 <p className="mt-1 line-clamp-2 text-xs text-gray-500">{t.body}</p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <button onClick={() => onEdit(t)} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700" aria-label="Edit">
+                <button onClick={() => onEdit(t)} className="rounded p-1 text-gray-400 hover:bg-white/70 hover:text-gray-700" aria-label="Edit">
                   <Pencil className="h-4 w-4" />
                 </button>
                 <form action={deleteTemplate}>

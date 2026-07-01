@@ -13,7 +13,7 @@ import { cleanMessageBody } from "@/lib/comms/clean";
 import { createClient } from "@/lib/supabase/client";
 
 const cls =
-  "block w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "block w-full rounded-md border border-white/40 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 type Channel = "email" | "sms" | "note";
 type Filter = "all" | "email" | "sms" | "portal";
@@ -153,13 +153,13 @@ export function ApplicantComms({
         <p className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
           <MessagesSquare className="h-4 w-4 text-gray-400" /> Conversation
         </p>
-        <div className="inline-flex rounded-md border border-gray-300 p-0.5 text-xs">
+        <div className="inline-flex rounded-md border border-white/40 p-0.5 text-xs">
           {FILTERS.map((f) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
               className={`rounded px-2.5 py-1 font-medium ${
-                filter === f.key ? "bg-brand-600 text-white" : "text-gray-600 hover:bg-gray-100"
+                filter === f.key ? "bg-brand-600 text-white" : "text-gray-600 hover:bg-white/70"
               }`}
             >
               {f.label}
@@ -210,13 +210,13 @@ export function ApplicantComms({
 
       {/* Composer (pinned at bottom) */}
       <div className="shrink-0 space-y-2 border-t border-gray-200 bg-gray-50/60 px-4 py-3">
-        <div className="inline-flex rounded-md border border-gray-300 bg-white p-0.5 text-xs">
+        <div className="inline-flex rounded-md border border-white/40 bg-white p-0.5 text-xs">
           {(["email", "sms", "note"] as Channel[]).map((c) => (
             <button
               key={c}
               onClick={() => setChannel(c)}
               className={`flex items-center gap-1 rounded px-2 py-1 capitalize ${
-                channel === c ? "bg-brand-600 text-white" : "text-gray-600 hover:bg-gray-100"
+                channel === c ? "bg-brand-600 text-white" : "text-gray-600 hover:bg-white/70"
               }`}
             >
               {CH_ICON[c]} {c}

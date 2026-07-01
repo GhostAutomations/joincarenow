@@ -63,7 +63,7 @@ export function ConversationThread({
           name="body"
           rows={1}
           placeholder="Type a message…"
-          className="max-h-32 min-h-[40px] flex-1 resize-none rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="max-h-32 min-h-[40px] flex-1 resize-none rounded-xl border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         />
         <button type="submit" disabled={pending} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-60">
           <Send className="h-4 w-4" />

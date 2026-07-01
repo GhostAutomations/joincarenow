@@ -338,7 +338,7 @@ export function JcnFormBuilder({
         type="button"
         onClick={saveNow}
         className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium ${
-          saved ? "bg-green-600 text-white hover:bg-green-700" : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+          saved ? "bg-green-600 text-white hover:bg-green-700" : "border border-white/40 bg-white text-gray-700 hover:bg-white/60"
         }`}
       >
         {saved ? "Saved" : "Save"}
@@ -346,7 +346,7 @@ export function JcnFormBuilder({
       <button
         type="button"
         onClick={() => setShowPreview(true)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/70"
       >
         <Eye className="h-4 w-4" /> Preview form
       </button>
@@ -360,7 +360,7 @@ export function JcnFormBuilder({
         <p className="mb-2 text-xs font-medium text-gray-900">Content</p>
         <button
           onClick={() => setSelected("title")}
-          className="block w-full rounded-md px-2 py-1.5 text-left text-xs text-gray-500 hover:bg-gray-100"
+          className="block w-full rounded-md px-2 py-1.5 text-left text-xs text-gray-500 hover:bg-white/70"
         >
           Welcome / title
         </button>
@@ -370,7 +370,7 @@ export function JcnFormBuilder({
             key={f.id}
             onClick={() => setSelected(f.id)}
             className={`mt-1 block w-full truncate rounded-md px-2 py-1.5 text-left text-xs ${
-              selected === f.id ? "bg-brand-50 text-brand-700" : "text-gray-600 hover:bg-gray-100"
+              selected === f.id ? "bg-brand-50 text-brand-700" : "text-gray-600 hover:bg-white/70"
             }`}
           >
             {f.field_type === "body_text"
@@ -401,7 +401,7 @@ export function JcnFormBuilder({
           onFocus={() => setSelected("title")}
           placeholder="Edit Form Title"
           style={{ color: tColor }}
-          className={`mt-1 block w-full rounded-lg border border-dashed border-gray-300 bg-white/50 px-3 py-2 font-bold placeholder-gray-400 hover:border-brand-300 focus:border-brand-500 focus:outline-none focus:ring-0 ${SIZE_CLASS[tSize]} ${alignCls(tAlign)}`}
+          className={`mt-1 block w-full rounded-lg border border-dashed border-white/40 bg-white/50 px-3 py-2 font-bold placeholder-gray-400 hover:border-brand-300 focus:border-brand-500 focus:outline-none focus:ring-0 ${SIZE_CLASS[tSize]} ${alignCls(tAlign)}`}
         />
 
         {/* description — labelled + bordered so it's clearly editable */}
@@ -413,7 +413,7 @@ export function JcnFormBuilder({
           rows={2}
           placeholder="Edit Form Description"
           style={{ color: dColor }}
-          className={`mt-1 block w-full resize-none rounded-lg border border-dashed border-gray-300 bg-white/50 px-3 py-2 placeholder-gray-400 hover:border-brand-300 focus:border-brand-500 focus:outline-none focus:ring-0 ${SIZE_CLASS[dSize]} ${alignCls(dAlign)}`}
+          className={`mt-1 block w-full resize-none rounded-lg border border-dashed border-white/40 bg-white/50 px-3 py-2 placeholder-gray-400 hover:border-brand-300 focus:border-brand-500 focus:outline-none focus:ring-0 ${SIZE_CLASS[dSize]} ${alignCls(dAlign)}`}
         />
 
         <div className="my-4 h-px bg-gray-100" />
@@ -509,7 +509,7 @@ export function JcnFormBuilder({
                     <button
                       type="button"
                       onClick={() => removeField(f.id)}
-                      className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-red-50 hover:text-red-600"
+                      className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-white/40 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-red-50 hover:text-red-600"
                     >
                       <Trash2 className="h-3.5 w-3.5" /> Delete
                     </button>
@@ -560,7 +560,7 @@ export function JcnFormBuilder({
             type="button"
             onClick={saveNow}
             className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium ${
-              saved ? "bg-green-600 text-white hover:bg-green-700" : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              saved ? "bg-green-600 text-white hover:bg-green-700" : "border border-white/40 bg-white text-gray-700 hover:bg-white/60"
             }`}
           >
             {saved ? "Saved" : "Save"}
@@ -568,7 +568,7 @@ export function JcnFormBuilder({
           <button
             type="button"
             onClick={() => setShowPreview(true)}
-            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-white/40 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/70"
           >
             <Eye className="h-4 w-4" /> Preview form
           </button>
@@ -581,9 +581,9 @@ export function JcnFormBuilder({
           ) : selected === "description" ? (
             <Toolbar sizes={DESC_SIZES} size={dSize} setSize={setDSize} color={dColor} setColor={setDColor} align={dAlign} setAlign={setDAlign} />
           ) : selected === "logo" ? (
-            <div className="flex overflow-hidden rounded border border-gray-300">
+            <div className="flex overflow-hidden rounded border border-white/40">
               {([["left", AlignLeft], ["center", AlignCenter], ["right", AlignRight]] as const).map(([a, Icon]) => (
-                <button key={a} onClick={() => setLogoAlign(a)} className={`p-1.5 ${logoAlign === a ? "bg-brand-100 text-brand-700" : "bg-white text-gray-500 hover:bg-gray-100"}`} aria-label={`Align logo ${a}`}>
+                <button key={a} onClick={() => setLogoAlign(a)} className={`p-1.5 ${logoAlign === a ? "bg-brand-100 text-brand-700" : "bg-white text-gray-500 hover:bg-white/70"}`} aria-label={`Align logo ${a}`}>
                   <Icon className="h-3.5 w-3.5" />
                 </button>
               ))}
@@ -633,7 +633,7 @@ function PlusRow({
         <button
           onClick={onToggle}
           aria-label="Add a field here"
-          className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:border-brand-400 hover:text-brand-600"
+          className="flex h-7 w-7 items-center justify-center rounded-full border border-white/40 bg-white text-gray-500 hover:border-brand-400 hover:text-brand-600"
         >
           <Plus className="h-4 w-4" />
         </button>
@@ -702,7 +702,7 @@ function LogicPanel({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+        className="inline-flex items-center gap-1.5 rounded-md border border-white/40 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/70"
       >
         <GitBranch className="h-3.5 w-3.5" /> Logic
       </button>
@@ -713,7 +713,7 @@ function LogicPanel({
             <select
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="rounded border border-gray-300 px-1.5 py-1 text-xs"
+              className="rounded border border-white/40 px-1.5 py-1 text-xs"
             >
               {options.map((o) => (
                 <option key={o} value={o}>{o}</option>
@@ -750,13 +750,13 @@ function Toolbar({
 }) {
   return (
     <div className="mt-1 flex flex-wrap items-center gap-2 rounded-md bg-gray-50 p-1.5">
-      <select value={size} onChange={(e) => setSize(e.target.value)} className="h-7 rounded border border-gray-300 px-1 text-xs" aria-label="Font size">
+      <select value={size} onChange={(e) => setSize(e.target.value)} className="h-7 rounded border border-white/40 px-1 text-xs" aria-label="Font size">
         {sizes.map((s) => <option key={s} value={s}>{s.toUpperCase()}</option>)}
       </select>
-      <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-7 w-8 rounded border border-gray-300" aria-label="Colour" />
-      <div className="flex overflow-hidden rounded border border-gray-300">
+      <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-7 w-8 rounded border border-white/40" aria-label="Colour" />
+      <div className="flex overflow-hidden rounded border border-white/40">
         {([["left", AlignLeft], ["center", AlignCenter], ["right", AlignRight]] as const).map(([a, Icon]) => (
-          <button key={a} onClick={() => setAlign(a)} className={`p-1.5 ${align === a ? "bg-brand-100 text-brand-700" : "bg-white text-gray-500 hover:bg-gray-100"}`} aria-label={`Align ${a}`}>
+          <button key={a} onClick={() => setAlign(a)} className={`p-1.5 ${align === a ? "bg-brand-100 text-brand-700" : "bg-white text-gray-500 hover:bg-white/70"}`} aria-label={`Align ${a}`}>
             <Icon className="h-3.5 w-3.5" />
           </button>
         ))}

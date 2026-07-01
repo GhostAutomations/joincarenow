@@ -20,7 +20,7 @@ export function SidebarToggle({
           type="checkbox"
           name="showSidebar"
           defaultChecked={show}
-          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600"
+          className="mt-0.5 h-4 w-4 rounded border-white/40 text-brand-600"
         />
         <span>
           <span className="font-medium text-gray-900">Show the left sidebar</span>

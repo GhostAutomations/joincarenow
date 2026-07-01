@@ -84,7 +84,7 @@ export function ProposalRespond({
           <button
             onClick={() => respond("declined")}
             disabled={pending}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-70"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/40 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-white/60 disabled:opacity-70"
           >
             <X className="h-4 w-4" /> Decline
           </button>

@@ -122,7 +122,7 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
                   <p className="text-xs text-gray-500">{date(new Date(inv.created * 1000).toISOString())} · {money(inv.total)}</p>
                 </div>
                 {inv.invoice_pdf && (
-                  <a href={inv.invoice_pdf} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
+                  <a href={inv.invoice_pdf} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/60">
                     <Download className="h-3.5 w-3.5" /> Download
                   </a>
                 )}

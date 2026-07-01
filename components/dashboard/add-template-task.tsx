@@ -263,12 +263,12 @@ export function AddTemplateTask({
                 Forms Poppy reviews
                 <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 backdrop-blur-sm p-2">
                   {/* CV is reviewable like a form (counts toward 'complete' once uploaded). */}
-                  <label className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
+                  <label className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
                     <input
                       type="checkbox"
                       checked={b.poppyIncludeCv}
                       onChange={() => updateBox(i, { poppyIncludeCv: !b.poppyIncludeCv })}
-                      className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                      className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
                     />
                     CV (uploaded)
                   </label>
@@ -276,12 +276,12 @@ export function AddTemplateTask({
                     <p className="px-1 font-normal text-gray-400">No forms yet — create one in Forms first.</p>
                   ) : (
                     forms.map((f) => (
-                      <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
+                      <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
                         <input
                           type="checkbox"
                           checked={b.poppyFormIds.includes(f.id)}
                           onChange={() => togglePoppyForm(i, f.id)}
-                          className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                          className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
                         />
                         {f.name}
                       </label>
@@ -305,12 +305,12 @@ export function AddTemplateTask({
               ) : (
                 <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 backdrop-blur-sm p-2">
                   {forms.map((f) => (
-                    <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-gray-50">
+                    <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
                       <input
                         type="checkbox"
                         checked={b.formIds.includes(f.id)}
                         onChange={() => toggleForm(i, f.id)}
-                        className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                        className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
                       />
                       {f.name}
                     </label>
@@ -342,7 +342,7 @@ export function AddTemplateTask({
                   type="checkbox"
                   checked={b.required}
                   onChange={(e) => updateBox(i, { required: e.target.checked })}
-                  className="h-4 w-4 rounded border-gray-300 text-brand-600"
+                  className="h-4 w-4 rounded border-white/40 text-brand-600"
                 />
                 Required
               </label>

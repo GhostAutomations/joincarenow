@@ -27,7 +27,7 @@ export function BrandingForm({ companyId, brand, submitLabel = "Save branding" }
 
   const swatch = (name: string, label: string, value?: string) => (
     <label className="flex items-center gap-2 text-xs font-medium text-gray-600">
-      <input type="color" name={name} defaultValue={value || "#4f46e5"} className="h-9 w-12 cursor-pointer rounded border border-gray-300 bg-white p-0.5" />
+      <input type="color" name={name} defaultValue={value || "#4f46e5"} className="h-9 w-12 cursor-pointer rounded border border-white/40 bg-white p-0.5" />
       {label}
     </label>
   );

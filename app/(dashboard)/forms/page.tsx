@@ -52,7 +52,7 @@ export default async function FormsPage() {
 
       <div className="mt-6 space-y-3">
         {rows.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
+          <div className="rounded-xl border border-dashed border-white/40 bg-white p-10 text-center">
             <p className="text-sm font-medium text-gray-900">No forms yet</p>
             <p className="mt-1 text-sm text-gray-500">
               Create your first form, then add fields to it.

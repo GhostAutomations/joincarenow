@@ -48,7 +48,7 @@ export function FounderBillingControls({
         {/* Reset stale Stripe link */}
         <form action={founderResetBilling} onSubmit={confirmSubmit("Clear this company's Stripe link and reset its billing to 'none'? Use this if the Stripe customer was deleted. They'll need to re-subscribe.")}>
           <input type="hidden" name="id" value={companyId} />
-          <button className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <button className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/60">
             <RotateCcw className="h-4 w-4" /> Reset Stripe link
           </button>
         </form>

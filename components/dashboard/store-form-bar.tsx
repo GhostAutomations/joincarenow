@@ -20,7 +20,7 @@ const CATEGORIES: { value: string; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 const cls =
-  "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 export function StoreFormBar({
   formId,
@@ -142,7 +142,7 @@ export function StoreFormBar({
               className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium ${
                 saved
                   ? "bg-green-600 text-white hover:bg-green-700"
-                  : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  : "border border-white/40 bg-white text-gray-700 hover:bg-white/60"
               }`}
             >
               {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
@@ -186,7 +186,7 @@ export function StoreFormBar({
               value={brief}
               onChange={(e) => setBrief(e.target.value)}
               placeholder="Describe the form you want instead…"
-              className="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="mt-2 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
             <div className="mt-2 flex items-center gap-3">
               <RegenSubmit disabled={brief.trim().length < 3} />

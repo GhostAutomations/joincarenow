@@ -75,7 +75,7 @@ export default async function AdminUsersPage({
               const email = r.profiles?.email ?? "—";
               const dup = email !== "—" && (emailCount.get(email.toLowerCase()) ?? 0) > 1;
               return (
-                <tr key={r.id} className="hover:bg-gray-50">
+                <tr key={r.id} className="hover:bg-white/60">
                   <td className="px-4 py-3 font-medium text-gray-900">{r.profiles?.full_name || "—"}</td>
                   <td className="px-4 py-3 text-gray-600">
                     {email}

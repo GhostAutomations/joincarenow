@@ -111,7 +111,7 @@ export function FormHeaderEditor({
       <select
         value={size}
         onChange={(e) => setSize(e.target.value)}
-        className="rounded-md border border-gray-300 px-1.5 py-1 text-xs"
+        className="rounded-md border border-white/40 px-1.5 py-1 text-xs"
         aria-label="Font size"
       >
         {sizes.map((s) => (
@@ -124,10 +124,10 @@ export function FormHeaderEditor({
         type="color"
         value={color}
         onChange={(e) => setColor(e.target.value)}
-        className="h-7 w-8 rounded border border-gray-300"
+        className="h-7 w-8 rounded border border-white/40"
         aria-label="Text colour"
       />
-      <div className="flex rounded-md border border-gray-300">
+      <div className="flex rounded-md border border-white/40">
         {([
           ["left", AlignLeft],
           ["center", AlignCenter],
@@ -137,7 +137,7 @@ export function FormHeaderEditor({
             key={a}
             type="button"
             onClick={() => setAlign(a)}
-            className={`p-1.5 ${align === a ? "bg-brand-100 text-brand-700" : "text-gray-500 hover:bg-gray-100"}`}
+            className={`p-1.5 ${align === a ? "bg-brand-100 text-brand-700" : "text-gray-500 hover:bg-white/70"}`}
             aria-label={`Align ${a}`}
           >
             <Icon className="h-3.5 w-3.5" />

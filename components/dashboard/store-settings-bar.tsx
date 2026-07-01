@@ -13,7 +13,7 @@ const CATEGORIES: { value: string; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 const cls =
-  "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 export function StoreSettingsBar({
   formId,

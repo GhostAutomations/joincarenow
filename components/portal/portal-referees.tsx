@@ -62,7 +62,7 @@ export function PortalReferees({
               </div>
               <button
                 onClick={() => setOpenFor(openFor === app.application_id ? null : app.application_id)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/70"
               >
                 <Plus className="h-4 w-4" /> Add referee
               </button>
@@ -116,7 +116,7 @@ export function PortalReferees({
 }
 
 const input =
-  "mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 function AddForm({ applicationId, onDone }: { applicationId: string; onDone: () => void }) {
   const [busy, setBusy] = useState(false);

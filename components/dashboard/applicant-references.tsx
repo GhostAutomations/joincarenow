@@ -109,7 +109,7 @@ export function ApplicantReferences({ applicationId }: { applicationId: string }
                   <button
                     onClick={() => send(r.id)}
                     disabled={busyId === r.id}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/40 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-white/60 disabled:opacity-60"
                   >
                     <Send className="h-3 w-3" /> {r.status === "pending" ? "Send" : "Resend"}
                   </button>
@@ -118,7 +118,7 @@ export function ApplicantReferences({ applicationId }: { applicationId: string }
                   <button
                     onClick={() => open(r.id)}
                     disabled={busyId === r.id}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/40 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-white/60 disabled:opacity-60"
                   >
                     <Eye className="h-3 w-3" /> {r.status === "approved" ? "View" : "Review"}
                   </button>

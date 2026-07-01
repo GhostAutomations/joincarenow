@@ -25,7 +25,7 @@ export function RequestDecide({ id }: { id: string }) {
       <button
         name="decision"
         value="declined"
-        className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+        className="rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white/70"
       >
         Decline
       </button>

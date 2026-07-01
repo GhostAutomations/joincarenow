@@ -186,7 +186,7 @@ export default async function AdminStatisticsPage({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {companyRows.map((c) => (
-              <tr key={c.id} className="hover:bg-gray-50">
+              <tr key={c.id} className="hover:bg-white/60">
                 <td className="px-4 py-2.5">
                   <Link href={`/founder/companies/${c.id}`} className="font-medium text-gray-900 hover:text-brand-600 hover:underline">{c.name}</Link>
                 </td>

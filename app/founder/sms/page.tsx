@@ -54,7 +54,7 @@ export default async function SmsUsagePage() {
               <tr><td colSpan={3} className="px-4 py-6 text-center text-gray-500">No companies yet.</td></tr>
             ) : (
               rows.map((r) => (
-                <tr key={r.company_id} className="hover:bg-gray-50">
+                <tr key={r.company_id} className="hover:bg-white/60">
                   <td className="px-4 py-3 font-medium text-gray-900">{r.company_name}</td>
                   <td className="px-4 py-3 text-right text-gray-700">{Number(r.sms_this_month).toLocaleString()}</td>
                   <td className="px-4 py-3 text-right text-gray-500">{Number(r.sms_total).toLocaleString()}</td>

@@ -58,8 +58,8 @@ function WorkflowRow({
           <p className="text-[11px] text-gray-400">Tick one or more. Leave all unticked to apply to everyone.</p>
           <div className="mt-1.5 max-h-44 space-y-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2">
             {roles.map((r) => (
-              <label key={r.id} className="flex items-center gap-2 rounded px-1 py-1 text-sm text-gray-700 hover:bg-gray-50">
-                <input type="checkbox" name="roleId" value={r.id} className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+              <label key={r.id} className="flex items-center gap-2 rounded px-1 py-1 text-sm text-gray-700 hover:bg-white/60">
+                <input type="checkbox" name="roleId" value={r.id} className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500" />
                 {r.name}
               </label>
             ))}

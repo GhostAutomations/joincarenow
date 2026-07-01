@@ -256,7 +256,7 @@ function Report({
 
       {r.questions.length > 0 && (
         <div className="mt-3 rounded-xl border border-white/50 p-3 shadow-sm">
-          <p className="text-xs font-semibold text-gray-500">
+          <p className="text-xs font-semibold text-amber-700">
             {complete ? "Screening Q&A" : "Screening questions"}
           </p>
           <div className="mt-1.5 gap-x-5 sm:columns-2">

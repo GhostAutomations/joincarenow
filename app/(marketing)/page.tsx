@@ -121,6 +121,7 @@ export default function LandingPage() {
           </span>
           <nav className="flex items-center gap-4 sm:gap-7">
             <a href="#pricing" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Pricing</a>
+            <a href="#poppy" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Poppy</a>
             <a href="#features" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Features</a>
             <Link href="/sign-in" className="text-base font-medium text-white/90 hover:text-white">Account Sign In</Link>
             <a href="#demo" className="rounded-lg bg-white px-5 py-2.5 text-base font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">Book a demo</a>
@@ -280,6 +281,47 @@ export default function LandingPage() {
               <p className="mt-2 text-sm text-gray-600">{f.proof}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Meet Poppy */}
+      <section id="poppy" className="mx-auto max-w-6xl px-6 pb-4 pt-8">
+        <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-600 via-violet-600 to-brand-600 p-8 text-white shadow-lg sm:p-12">
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider backdrop-blur">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden /> Meet Poppy
+              </span>
+              <h2 className="mt-4 text-2xl font-bold sm:text-3xl">Your AI recruitment assistant</h2>
+              <p className="mt-3 text-white/90">
+                Poppy does your first-round screening for you. She reviews each applicant against the
+                role, asks them a few friendly follow-up questions, and hands your team a clear report
+                with a hire recommendation — so you spend your time on the candidates worth meeting,
+                not on phone tag.
+              </p>
+              <p className="mt-4 text-sm text-white/80">
+                Included on the <span className="font-semibold text-white">Core + Poppy</span> plan (and
+                Diamond): 40 applicants screened each month, then just 75p each.
+              </p>
+              <a href="#demo" className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
+                See Poppy in a demo <ArrowRight className="h-4 w-4" aria-hidden />
+              </a>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {[
+                { icon: FileCheck2, title: "1. Reviews the application", body: "Reads the form, CV, your job description and policies to spot gaps and strengths." },
+                { icon: MessageSquare, title: "2. Asks the candidate", body: "Holds a short, friendly follow-up conversation — with the applicant's consent." },
+                { icon: Sparkles, title: "3. Writes it up", body: "Turns their answers into a clear, fair screening report your team can read in seconds." },
+                { icon: UserCheck, title: "4. Recommends", body: "Gives a plain hire recommendation — proceed, proceed with caution, or not a fit." },
+              ].map((s) => (
+                <div key={s.title} className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur">
+                  <s.icon className="h-6 w-6" aria-hidden />
+                  <h3 className="mt-3 text-sm font-semibold">{s.title}</h3>
+                  <p className="mt-1 text-sm text-white/85">{s.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -475,6 +517,7 @@ export default function LandingPage() {
             </span>
             <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
               <a href="#features" className="hover:text-gray-900">Features</a>
+              <a href="#poppy" className="hover:text-gray-900">Poppy</a>
               <a href="#pricing" className="hover:text-gray-900">Pricing</a>
               <a href="#demo" className="hover:text-gray-900">Book a demo</a>
               <Link href="/privacy" className="hover:text-gray-900">Privacy</Link>

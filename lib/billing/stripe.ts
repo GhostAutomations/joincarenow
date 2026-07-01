@@ -197,9 +197,10 @@ export async function createCheckoutSession(opts: {
   const aiPrice = isYear ? PRICES.aiYear : PRICES.ai;
   if (smsPrice) lineItems.push({ price: smsPrice });
   if (aiPrice) lineItems.push({ price: aiPrice });
-  // Tier 2 attaches the Poppy applicant overage meter (75p; first 40/month are
-  // included and suppressed in-app). Never on Diamond (metered-only).
-  if (tier === "poppy" && !opts.meteredOnly) {
+  // Poppy applicant meter (75p; first 40/month — 480/year — free via the price's
+  // graduated tiers). Attached on Tier 2, AND on Diamond (usage-only) — Diamond
+  // includes Poppy and simply pays per applicant beyond the allowance.
+  if (tier === "poppy" || opts.meteredOnly) {
     const poppyPrice = isYear ? PRICES.poppyYear : PRICES.poppy;
     if (poppyPrice) lineItems.push({ price: poppyPrice });
   }

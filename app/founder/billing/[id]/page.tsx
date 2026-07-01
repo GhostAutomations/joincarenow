@@ -16,7 +16,7 @@ function UsageStatCard({
   href: string;
   icon: LucideIcon;
   label: string;
-  stats: { mtd: number; qtd: number; ytd: number };
+  stats: { period: number; qtd: number; ytd: number };
 }) {
   return (
     <Link
@@ -28,7 +28,7 @@ function UsageStatCard({
         <span className="text-[11px] font-medium text-brand-600 opacity-0 transition group-hover:opacity-100">Details →</span>
       </p>
       <div className="mt-2 grid grid-cols-3 gap-1 text-center">
-        {([["MTD", stats.mtd], ["QTD", stats.qtd], ["YTD", stats.ytd]] as const).map(([k, v]) => (
+        {([["Period", stats.period], ["QTD", stats.qtd], ["YTD", stats.ytd]] as const).map(([k, v]) => (
           <div key={k}>
             <p className="text-xl font-bold text-gray-900">{v}</p>
             <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">{k}</p>
@@ -64,6 +64,17 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
   const yearStart = new Date(now.getFullYear(), 0, 1);
+  // "Period" = the current BILLING period (since the last renewal), NOT the
+  // calendar month — this matches what the customer is actually being invoiced
+  // for now. Falls back to the calendar month if there's no subscription.
+  const periodStart = (() => {
+    const end = company.current_period_end as string | null;
+    if (!end) return monthStart;
+    const d = new Date(end);
+    if (company.billing_interval === "year") d.setFullYear(d.getFullYear() - 1);
+    else d.setMonth(d.getMonth() - 1);
+    return d;
+  })();
 
   const [{ data: usage }, { data: poppyCredits }, { data: branches }] = await Promise.all([
     db.from("usage_events").select("kind, quantity, created_at").eq("company_id", id).gte("created_at", yearStart.toISOString()),
@@ -76,9 +87,9 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
       .reduce((s, u) => s + ((u.quantity as number) ?? 0), 0);
   const countPoppy = (since: Date) =>
     (poppyCredits ?? []).filter((c) => new Date(c.consumed_at as string) >= since).length;
-  const smsStats = { mtd: sumUsage("sms", monthStart), qtd: sumUsage("sms", quarterStart), ytd: sumUsage("sms", yearStart) };
-  const aiStats = { mtd: sumUsage("ai", monthStart), qtd: sumUsage("ai", quarterStart), ytd: sumUsage("ai", yearStart) };
-  const poppyStats = { mtd: countPoppy(monthStart), qtd: countPoppy(quarterStart), ytd: countPoppy(yearStart) };
+  const smsStats = { period: sumUsage("sms", periodStart), qtd: sumUsage("sms", quarterStart), ytd: sumUsage("sms", yearStart) };
+  const aiStats = { period: sumUsage("ai", periodStart), qtd: sumUsage("ai", quarterStart), ytd: sumUsage("ai", yearStart) };
+  const poppyStats = { period: countPoppy(periodStart), qtd: countPoppy(quarterStart), ytd: countPoppy(yearStart) };
 
   const customerId = company.stripe_customer_id as string | null;
   const invoices = customerId ? await listInvoices(customerId) : [];

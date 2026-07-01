@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Gift, XCircle, RotateCcw, Sparkles, Clock } from "lucide-react";
 import {
   founderCompToggle,
@@ -25,6 +27,16 @@ export function FounderBillingControls({
   /** Whether a Poppy offer has been sent and is awaiting the admin's acceptance. */
   offerPending: boolean;
 }) {
+  const router = useRouter();
+
+  // While a Poppy offer is pending, poll so this control flips to "Remove Poppy"
+  // the moment the company admin accepts — without the founder refreshing.
+  useEffect(() => {
+    if (!offerPending) return;
+    const t = setInterval(() => router.refresh(), 5000);
+    return () => clearInterval(t);
+  }, [offerPending, router]);
+
   const confirmSubmit = (msg: string) => (e: React.FormEvent<HTMLFormElement>) => {
     if (!confirm(msg)) e.preventDefault();
   };

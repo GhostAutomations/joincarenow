@@ -73,7 +73,7 @@ ${candidateBlock(inputs)}
 
 Return ONLY a JSON object (no prose, no markdown):
 {
-  "summary": string[],      // 1-3 short bullet points: who they are vs the role
+  "summary": string[],      // 1-3 SHORT, SHARP bullet points — a few words each (max ~10), not sentences: who they are vs the role
   "concerns": string[],     // 0-5 short points: gaps/risks vs the JD to probe
   "questions": [ { "question": string, "rationale": string } ]  // the follow-ups to ASK the candidate
 }
@@ -127,11 +127,14 @@ ${transcript || "(no answers)"}
 
 Return ONLY a JSON object:
 {
-  "summary": string[],       // 3-6 concise bullet points: the key findings on the candidate vs the role, updated by their answers
+  "summary": string[],       // 3-6 SHORT, SHARP bullet points — a few words each (max ~10), NOT full sentences: the key findings on the candidate vs the role
   "recommendation": string   // one line: "Proceed to interview" / "Interview with caution" / "Likely not a fit" + why, informed by the answers
 }
 
-${FAIRNESS}`;
+Rules:
+- Each summary bullet is a punchy phrase, not a sentence (e.g. "3 years care experience", "Refuses to transport service users", "Weak safeguarding judgement"). No trailing full stops.
+- The detail lives in the Q&A and the recommendation — the summary is just the headlines.
+- ${FAIRNESS}`;
 
   const o = await askClaude(inputs, prompt);
   return {

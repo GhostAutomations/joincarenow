@@ -242,7 +242,7 @@ function Report({
       )}
 
       {r.concerns.length > 0 && (
-        <div className="mt-3">
+        <div className="mt-3 rounded-xl border border-white/50 p-3 shadow-sm">
           <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
             <AlertTriangle className="h-3.5 w-3.5" /> {complete ? "Concerns raised" : "Worth checking"}
           </p>
@@ -255,7 +255,7 @@ function Report({
       )}
 
       {r.questions.length > 0 && (
-        <div className="mt-3">
+        <div className="mt-3 rounded-xl border border-white/50 p-3 shadow-sm">
           <p className="text-xs font-semibold text-gray-500">
             {complete ? "Screening questions & answers" : "Screening questions"}
           </p>

@@ -8,7 +8,7 @@ import {
   generateInterviewQuestions,
   type InterviewQuestionGroup,
 } from "@/lib/ai/generate-interview-questions";
-import { generatePoppyAnalysis, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
+import { generatePoppyAnalysis, synthesizePoppyReport, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
 import { startPoppyConversation } from "@/lib/poppy/conversation";
 
 export type InterviewQuestionsResult = {
@@ -268,6 +268,43 @@ export async function runPoppyForApplication(
   const app = appRaw as unknown as ManualAppRow | null;
   if (!app) return { error: "Application not found." };
 
+  // Is there already a report? A re-run must NOT re-contact the applicant.
+  const { data: existing } = await admin
+    .from("poppy_reports")
+    .select("phase, report")
+    .eq("application_id", app.id)
+    .eq("company_id", current.company_id)
+    .maybeSingle();
+
+  // Re-run on a COMPLETED screening → just refresh the verdict from the existing
+  // answers (don't re-analyse or re-message).
+  if (existing && existing.phase === "complete") {
+    const data = (existing.report as PoppyReportData) ?? { summary: "", concerns: [], questions: [] };
+    if (data.questions?.some((q) => q.answer)) {
+      try {
+        const synth = await synthesizePoppyReport(
+          {
+            jobTitle: app.jobs?.title ?? "Care role",
+            jobDescription: app.jobs?.description ?? "",
+            applicantName: [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ") || "the candidate",
+            coverMessage: app.cover_message,
+            answersText: [await gatherFormsText(app.id), formatAnswers(app.answers)].filter(Boolean).join("\n\n") || null,
+            cvBase64Pdf: null,
+          },
+          data.concerns ?? [],
+          data.questions ?? []
+        );
+        data.summary = synth.summary || data.summary;
+        data.recommendation = synth.recommendation;
+        await admin.from("poppy_reports").update({ report: data, generated_at: new Date().toISOString() }).eq("application_id", app.id);
+        await recordUsage(current.company_id, "ai");
+        return { ok: true };
+      } catch (e) {
+        return { error: e instanceof Error ? e.message : "Poppy couldn't refresh the report." };
+      }
+    }
+  }
+
   // Find an applicable Poppy step (for its selected forms + CV choice).
   const { data: stepsRaw } = await admin
     .from("onboarding_templates")
@@ -329,8 +366,11 @@ export async function runPoppyForApplication(
     { onConflict: "application_id" }
   );
   await recordUsage(current.company_id, "ai");
-  // Start the screening conversation (consent message + nudge SMS to the applicant).
-  await startPoppyConversation(admin, app.id);
+  // Only start the screening conversation (consent message + nudge SMS) on the
+  // FIRST run — a re-run must never re-contact the applicant.
+  if (!existing) {
+    await startPoppyConversation(admin, app.id);
+  }
   return { ok: true };
 }
 

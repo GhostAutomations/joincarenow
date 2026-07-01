@@ -141,27 +141,9 @@ function answersText(app: ConvApp): string | null {
 }
 
 async function finish(db: Admin, app: ConvApp, data: PoppyReportData): Promise<void> {
-  try {
-    const synth = await synthesizePoppyReport(
-      {
-        jobTitle: app.jobs?.title ?? "Care role",
-        jobDescription: app.jobs?.description ?? "",
-        applicantName: [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ") || "the candidate",
-        coverMessage: app.cover_message,
-        answersText: answersText(app),
-        cvBase64Pdf: null,
-      },
-      data.concerns,
-      data.questions
-    );
-    data.summary = synth.summary || data.summary;
-    data.recommendation = synth.recommendation;
-    await recordUsage(app.company_id, "ai");
-  } catch {
-    // Still complete the conversation even if synthesis fails — the Q&A stands.
-    data.recommendation = data.recommendation ?? "";
-  }
-
+  // Finalise the report with the Q&A FIRST (fast) so it ALWAYS completes on the
+  // last answer, even if the synthesis AI call below is slow or the request
+  // times out. The recommendation is a best-effort follow-up.
   await db
     .from("poppy_reports")
     .update({ phase: "complete", report: data, generated_at: new Date().toISOString() })
@@ -183,6 +165,29 @@ async function finish(db: Admin, app: ConvApp, data: PoppyReportData): Promise<v
       ctaUrl: `${BASE_URL}/pipeline`,
     },
   });
+
+  // Recommendation + refreshed summary — best-effort; the report is already
+  // complete with the concerns + Q&A if this is slow or fails.
+  try {
+    const synth = await synthesizePoppyReport(
+      {
+        jobTitle: app.jobs?.title ?? "Care role",
+        jobDescription: app.jobs?.description ?? "",
+        applicantName: [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ") || "the candidate",
+        coverMessage: app.cover_message,
+        answersText: answersText(app),
+        cvBase64Pdf: null,
+      },
+      data.concerns,
+      data.questions
+    );
+    data.summary = synth.summary || data.summary;
+    data.recommendation = synth.recommendation;
+    await recordUsage(app.company_id, "ai");
+    await db.from("poppy_reports").update({ report: data }).eq("application_id", app.id);
+  } catch {
+    /* report already complete with the Q&A */
+  }
 }
 
 /**

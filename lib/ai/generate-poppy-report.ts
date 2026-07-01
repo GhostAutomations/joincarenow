@@ -10,7 +10,7 @@ export type PoppyQ = { question: string; rationale: string; answer?: string };
  *  - after the conversation: questions gain answers
  *  - after synthesis: recommendation (and a refined summary) */
 export type PoppyReportData = {
-  summary: string;
+  summary: string[]; // key findings as bullet points
   concerns: string[];
   recommendation?: string;
   questions: PoppyQ[];
@@ -66,14 +66,14 @@ const FAIRNESS = "Be fair and non-discriminatory: never reference age, race, rel
  */
 export async function generatePoppyAnalysis(
   inputs: InterviewInputs
-): Promise<{ summary: string; concerns: string[]; questions: { question: string; rationale: string }[] }> {
+): Promise<{ summary: string[]; concerns: string[]; questions: { question: string; rationale: string }[] }> {
   const prompt = `You are Poppy, screening a candidate for a UK care-sector recruiter. Compare their application (and CV, if attached) against the job description.
 
 ${candidateBlock(inputs)}
 
 Return ONLY a JSON object (no prose, no markdown):
 {
-  "summary": string,        // 1-2 sentences: who they are vs the role
+  "summary": string[],      // 1-3 short bullet points: who they are vs the role
   "concerns": string[],     // 0-5 short points: gaps/risks vs the JD to probe
   "questions": [ { "question": string, "rationale": string } ]  // the follow-ups to ASK the candidate
 }
@@ -96,7 +96,7 @@ Rules:
     });
   }
   return {
-    summary: typeof o.summary === "string" ? o.summary.trim().slice(0, 800) : "",
+    summary: asStrings(o.summary, 4),
     concerns: asStrings(o.concerns),
     questions: questions.slice(0, 6),
   };
@@ -110,7 +110,7 @@ export async function synthesizePoppyReport(
   inputs: InterviewInputs,
   concerns: string[],
   qa: PoppyQ[]
-): Promise<{ summary: string; recommendation: string }> {
+): Promise<{ summary: string[]; recommendation: string }> {
   const transcript = qa
     .map((q, i) => `Q${i + 1}: ${q.question}\nA${i + 1}: ${q.answer?.trim() || "(no answer)"}`)
     .join("\n\n");
@@ -127,7 +127,7 @@ ${transcript || "(no answers)"}
 
 Return ONLY a JSON object:
 {
-  "summary": string,         // 2-3 sentences: candidate vs role, updated by their answers
+  "summary": string[],       // 3-6 concise bullet points: the key findings on the candidate vs the role, updated by their answers
   "recommendation": string   // one line: "Proceed to interview" / "Interview with caution" / "Likely not a fit" + why, informed by the answers
 }
 
@@ -135,7 +135,7 @@ ${FAIRNESS}`;
 
   const o = await askClaude(inputs, prompt);
   return {
-    summary: typeof o.summary === "string" ? o.summary.trim().slice(0, 1000) : "",
+    summary: asStrings(o.summary, 8),
     recommendation: typeof o.recommendation === "string" ? o.recommendation.trim().slice(0, 400) : "",
   };
 }

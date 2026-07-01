@@ -294,7 +294,7 @@ export async function runPoppyForApplication(
           data.concerns ?? [],
           data.questions ?? []
         );
-        data.summary = synth.summary || data.summary;
+        if (synth.summary.length) data.summary = synth.summary;
         data.recommendation = synth.recommendation;
         await admin.from("poppy_reports").update({ report: data, generated_at: new Date().toISOString() }).eq("application_id", app.id);
         await recordUsage(current.company_id, "ai");
@@ -338,7 +338,7 @@ export async function runPoppyForApplication(
   }
   const name = [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ").trim() || "the candidate";
 
-  let analysis: { summary: string; concerns: string[]; questions: { question: string; rationale: string }[] };
+  let analysis: { summary: string[]; concerns: string[]; questions: { question: string; rationale: string }[] };
   try {
     analysis = await generatePoppyAnalysis({
       jobTitle: app.jobs?.title ?? "Care role",

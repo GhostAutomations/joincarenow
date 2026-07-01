@@ -204,6 +204,12 @@ function Report({
   generatedAt: string | null;
 }) {
   const complete = phase === "complete";
+  // Tolerate legacy reports whose summary was a single string, not an array.
+  const summaryList: string[] = Array.isArray(r.summary)
+    ? r.summary
+    : (r.summary as unknown)
+      ? [r.summary as unknown as string]
+      : [];
   const phaseNote =
     phase === "analysed"
       ? "Concerns and screening questions ready — Poppy will ask the applicant next."
@@ -215,7 +221,13 @@ function Report({
 
   return (
     <div>
-      {r.summary && <p className="text-sm text-gray-800">{r.summary}</p>}
+      {summaryList.length > 0 && (
+        <div className="gap-x-5 text-sm text-gray-800 sm:columns-2 lg:columns-3">
+          {summaryList.map((s, i) => (
+            <p key={i} className="mb-1 break-inside-avoid pl-4 -indent-4">• {s}</p>
+          ))}
+        </div>
+      )}
 
       {complete && r.recommendation && (
         <p className={`mt-2 inline-flex items-start gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium ${TONE[verdictTone(r.recommendation)]}`}>
@@ -234,9 +246,9 @@ function Report({
           <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
             <AlertTriangle className="h-3.5 w-3.5" /> {complete ? "Concerns raised" : "Worth checking"}
           </p>
-          <div className="mt-1 gap-x-5 text-sm text-gray-700 sm:columns-2 lg:columns-3">
+          <div className="mt-1 space-y-1 text-sm text-gray-700">
             {r.concerns.map((c, i) => (
-              <p key={i} className="mb-1 break-inside-avoid pl-4 -indent-4">• {c}</p>
+              <p key={i}>{c}</p>
             ))}
           </div>
         </div>

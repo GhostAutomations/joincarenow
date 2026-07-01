@@ -71,12 +71,21 @@ export function poppyReportPdf(JsPDF: JsPdfCtor, report: PoppyReportData, applic
 
   line(`Poppy screening — ${applicantName}`, 16, "bold");
   y += 6;
-  if (report.summary) { line(report.summary, 11, "normal"); y += 6; }
   if (report.recommendation) { line(`Recommendation: ${report.recommendation}`, 11, "bold"); y += 8; }
+  const summaryList: string[] = Array.isArray(report.summary)
+    ? report.summary
+    : (report.summary as unknown)
+      ? [report.summary as unknown as string]
+      : [];
+  if (summaryList.length) {
+    line("Summary", 12, "bold", 60);
+    for (const s of summaryList) line(`- ${s}`, 11, "normal");
+    y += 8;
+  }
 
   if (report.concerns.length) {
-    line("Worth checking", 12, "bold", 150);
-    for (const c of report.concerns) line(`- ${c}`, 11, "normal");
+    line("Concerns raised", 12, "bold", 150);
+    for (const c of report.concerns) line(c, 11, "normal");
     y += 8;
   }
 

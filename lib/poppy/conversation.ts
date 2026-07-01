@@ -181,7 +181,7 @@ async function finish(db: Admin, app: ConvApp, data: PoppyReportData): Promise<v
       data.concerns,
       data.questions
     );
-    data.summary = synth.summary || data.summary;
+    if (synth.summary.length) data.summary = synth.summary;
     data.recommendation = synth.recommendation;
     await recordUsage(app.company_id, "ai");
     await db.from("poppy_reports").update({ report: data }).eq("application_id", app.id);

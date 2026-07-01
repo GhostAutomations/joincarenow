@@ -138,19 +138,31 @@ export async function POST(req: Request) {
     .eq("application_id", app.id)
     .maybeSingle();
   if (pr?.phase === "conversing") {
-    const link = `${BASE_URL}/portal/conversations/${app.id}`;
-    const nudge = `Thanks! To make sure I record your answer, please reply in your portal: ${link}`;
-    const r = await sendCompanySms(app.company_id, { to: from, body: nudge });
-    await admin.from("messages").insert({
-      company_id: app.company_id,
-      application_id: app.id,
-      applicant_id: applicant.id,
-      channel: "sms",
-      direction: "outbound",
-      from_poppy: true,
-      body: nudge,
-      status: r.ok ? "sent" : "failed",
-    });
+    // Rate-limit: at most one nudge SMS per 30 min, so repeated texts don't spam.
+    const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const { count: recentNudges } = await admin
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("application_id", app.id)
+      .eq("from_poppy", true)
+      .eq("channel", "sms")
+      .eq("direction", "outbound")
+      .gte("created_at", since);
+    if (!recentNudges) {
+      const link = `${BASE_URL}/portal/conversations/${app.id}`;
+      const nudge = `Thanks! To make sure I record your answer, please reply in your portal: ${link}`;
+      const r = await sendCompanySms(app.company_id, { to: from, body: nudge });
+      await admin.from("messages").insert({
+        company_id: app.company_id,
+        application_id: app.id,
+        applicant_id: applicant.id,
+        channel: "sms",
+        direction: "outbound",
+        from_poppy: true,
+        body: nudge,
+        status: r.ok ? "sent" : "failed",
+      });
+    }
     return xml(200);
   }
 

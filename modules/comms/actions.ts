@@ -8,13 +8,14 @@ import { sendCompanySms } from "@/lib/billing/usage";
 
 export type Msg = {
   id: string;
-  channel: "email" | "sms" | "note";
+  channel: "email" | "sms" | "note" | "portal";
   direction: string;
   subject: string | null;
   body: string;
   status: string;
   error: string | null;
   created_at: string;
+  from_poppy?: boolean;
 };
 
 export type ThreadTemplate = {
@@ -33,7 +34,7 @@ export async function getApplicantThread(
   const [{ data: messages }, { data: templates }] = await Promise.all([
     supabase
       .from("messages")
-      .select("id, channel, direction, subject, body, status, error, created_at")
+      .select("id, channel, direction, subject, body, status, error, created_at, from_poppy")
       .eq("application_id", applicationId)
       // Oldest first so the newest message is at the bottom (chat style).
       .order("created_at", { ascending: true }),

@@ -222,7 +222,7 @@ function Report({
   return (
     <div>
       {summaryList.length > 0 && (
-        <div className="gap-x-5 text-sm text-gray-800 sm:columns-2 lg:columns-3">
+        <div className="gap-x-5 rounded-xl border border-white/50 p-3 text-sm text-gray-800 shadow-sm sm:columns-2 lg:columns-3">
           {summaryList.map((s, i) => (
             <p key={i} className="mb-1 break-inside-avoid pl-4 -indent-4">• {s}</p>
           ))}

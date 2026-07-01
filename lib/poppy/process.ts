@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { recordUsage } from "@/lib/billing/usage";
+import { recordPoppyApplicant } from "@/lib/billing/poppy-credits";
 import { generatePoppyAnalysis, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
 import { startPoppyConversation } from "@/lib/poppy/conversation";
 import { loadPoppyRuntimeConfig } from "@/lib/poppy/config";
@@ -220,7 +220,9 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
           },
           { onConflict: "application_id" }
         );
-        await recordUsage(companyId, "ai");
+        // Poppy is billed per applicant (40 included/month, then 75p) — NOT via
+        // the generic 10p AI meter. One credit per applicant, deduped.
+        await recordPoppyApplicant(companyId, app.id);
         // Kick off the screening conversation (consent message + nudge SMS).
         await startPoppyConversation(db, app.id);
         res.generated++;

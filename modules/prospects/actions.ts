@@ -129,7 +129,7 @@ export async function sendProposal(_prev: ProspectState, formData: FormData): Pr
   const message = (formData.get("message")?.toString() ?? "").trim();
   const planRaw = formData.get("plan")?.toString();
   const plan = ["monthly", "commit", "annual", "diamond"].includes(planRaw ?? "") ? planRaw! : null;
-  const planLabel = plan === "annual" ? "Annual (£550/yr)" : plan === "commit" ? "12-month (£55/mo)" : plan === "monthly" ? "Monthly (£55/mo)" : plan === "diamond" ? "Diamond (usage only)" : null;
+  const planLabel = plan === "annual" ? "Annual (£490/yr)" : plan === "commit" ? "12-month (£49/mo)" : plan === "monthly" ? "Monthly (£49/mo)" : plan === "diamond" ? "Diamond (usage only)" : null;
   const offer = (formData.get("offer")?.toString() ?? "").trim().slice(0, 200) || null;
   if (!prospectId || !contactId) return { error: "Pick a contact." };
   if (message.length < 10) return { error: "Write the proposal message first." };

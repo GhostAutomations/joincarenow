@@ -2,10 +2,12 @@ import { redirect } from "next/navigation";
 import { CreditCard, Check, MessageSquareText, Sparkles, Building2, ShieldCheck, CalendarClock, Download } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { requireCompany } from "@/modules/auth/queries";
-import { startCheckout, openBillingPortal } from "@/modules/billing/actions";
+import { startCheckout, openBillingPortal, upgradeToPoppy } from "@/modules/billing/actions";
 import { BranchBilling } from "@/components/dashboard/branch-billing";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
+import { PoppyUpgradeButton } from "@/components/dashboard/poppy-upgrade-button";
 import { listInvoices } from "@/lib/billing/stripe";
+import { poppyAllowanceUsed } from "@/lib/billing/poppy-credits";
 
 const INCLUDED = [
   "Every feature — recruitment, onboarding & employee records",
@@ -35,18 +37,33 @@ export default async function BillingPage() {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id, commitment_until, billing_comped, sms_bonus, agreed_plan")
+    .select("billing_status, billing_interval, current_period_end, extra_branches, stripe_customer_id, commitment_until, billing_comped, sms_bonus, agreed_plan, plan_tier")
     .eq("id", current.company_id)
     .single();
 
   const status = (company?.billing_status as string) ?? "none";
   const interval = company?.billing_interval as string | null;
   const diamond = company?.agreed_plan === "diamond";
+  const isPoppy = company?.plan_tier === "poppy";
+  const poppyUsage = isPoppy ? await poppyAllowanceUsed(current.company_id) : null;
   const periodEnd = company?.current_period_end as string | null;
   const comped = company?.billing_comped === true;
   const active = status === "active" || status === "trialing" || comped;
   const commitmentUntil = company?.commitment_until as string | null;
   const committed = commitmentUntil ? new Date(commitmentUntil) > new Date() : false;
+  const basePriceLabel = comped
+    ? "Complimentary access"
+    : diamond
+      ? "Usage only — no subscription fee"
+      : isPoppy
+        ? interval === "year"
+          ? "£790 / year"
+          : committed
+            ? "£79 / month"
+            : "£89 / month"
+        : interval === "year"
+          ? "£490 / year"
+          : "£49 / month";
 
   const { data: usage } = await supabase
     .from("usage_events")
@@ -85,8 +102,8 @@ export default async function BillingPage() {
                 <span className="h-1.5 w-1.5 rounded-full bg-green-300" />
                 {comped ? "Complimentary" : diamond ? "Diamond" : status === "trialing" ? "Trialing" : "Active"}
               </span>
-              <span className="font-semibold">Join Care Now</span>
-              <span className="text-white/90">{comped ? "Complimentary access" : diamond ? "Usage only — no subscription fee" : interval === "year" ? "£550 / year" : "£55 / month"}</span>
+              <span className="font-semibold">Join Care Now{isPoppy ? " + Poppy" : ""}</span>
+              <span className="text-white/90">{basePriceLabel}</span>
               {!comped && periodEnd && (
                 <span className="inline-flex items-center gap-1 text-sm text-white/70">
                   <CalendarClock className="h-3.5 w-3.5" />
@@ -137,7 +154,34 @@ export default async function BillingPage() {
               <p className="mt-1 text-3xl font-bold text-gray-900">{1 + (company?.extra_branches ?? 0)}</p>
               <p className="mt-1.5 text-xs text-gray-400">{diamond ? "unlimited — free on Diamond" : "1 included, then £7.50/mo"}</p>
             </div>
+            {isPoppy && poppyUsage && (
+              <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
+                <p className="flex items-center gap-2 text-sm text-gray-500"><Sparkles className="h-4 w-4 text-brand-600" /> Poppy screens</p>
+                <p className="mt-1 text-3xl font-bold text-gray-900">
+                  {poppyUsage.used}<span className="text-sm font-normal text-gray-400"> / {poppyUsage.included}</span>
+                </p>
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-full rounded-full bg-brand-500" style={{ width: `${Math.min(100, Math.round((poppyUsage.used / poppyUsage.included) * 100))}%` }} />
+                </div>
+                <p className="mt-1.5 text-xs text-gray-400">
+                  {poppyUsage.used > poppyUsage.included ? `${poppyUsage.used - poppyUsage.included} over — 75p each` : `${poppyUsage.included} included/month, then 75p`}
+                </p>
+              </div>
+            )}
           </div>
+
+          {!isPoppy && !diamond && !comped && isAdmin && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-4 shadow-sm">
+              <div className="flex items-start gap-2.5">
+                <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Add Poppy — your AI recruitment assistant</p>
+                  <p className="text-xs text-gray-600">Screens applicants for you: reviews forms &amp; CV, asks follow-ups, writes a recommendation. 40 applicants/month included, then 75p each.</p>
+                </div>
+              </div>
+              <PoppyUpgradeButton />
+            </div>
+          )}
 
           <CollapsibleSection title="Branches" count={branches?.length ?? 0} defaultOpen={false}>
             <BranchBilling
@@ -199,10 +243,10 @@ export default async function BillingPage() {
               <div className="jcn-blob pointer-events-none absolute -left-16 -bottom-16 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
               <p className="relative text-xs font-semibold uppercase tracking-wider text-white/80">Join Care Now</p>
               <p className="relative mt-3 flex items-baseline gap-1">
-                <span className="text-5xl font-bold">£55</span>
+                <span className="text-5xl font-bold">£49</span>
                 <span className="text-white/80">/ month</span>
               </p>
-              <p className="relative mt-2 text-sm text-white/90">or <span className="font-semibold">£550 / year</span> — 2 months free</p>
+              <p className="relative mt-2 text-sm text-white/90">or <span className="font-semibold">£490 / year</span> — 2 months free</p>
               <p className="relative mt-4 text-sm text-white/75">
                 £150 one-off setup on monthly — <span className="font-medium text-white">waived</span> on a 12-month term.
               </p>
@@ -224,12 +268,14 @@ export default async function BillingPage() {
                 <div className="mt-6 space-y-2.5">
                   <div className="flex flex-wrap gap-2.5">
                     <form action={startCheckout}>
+                      <input type="hidden" name="tier" value="core" />
                       <input type="hidden" name="interval" value="year" />
                       <button className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700">
                         Subscribe annually <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">2 months free</span>
                       </button>
                     </form>
                     <form action={startCheckout}>
+                      <input type="hidden" name="tier" value="core" />
                       <input type="hidden" name="interval" value="month" />
                       <button className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50">
                         Subscribe monthly
@@ -237,17 +283,56 @@ export default async function BillingPage() {
                     </form>
                   </div>
                   <form action={startCheckout} className="rounded-xl border border-brand-200 bg-brand-50 p-3">
+                    <input type="hidden" name="tier" value="core" />
                     <input type="hidden" name="interval" value="month" />
                     <input type="hidden" name="commit" value="true" />
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-sm text-gray-700">
-                        <span className="font-semibold text-gray-900">£55/month, 12‑month commitment</span> — no £150 setup fee. Can&apos;t be cancelled before the term ends.
+                        <span className="font-semibold text-gray-900">£49/month, 12‑month commitment</span> — no £150 setup fee. Can&apos;t be cancelled before the term ends.
                       </p>
                       <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700">
                         Commit to 12 months
                       </button>
                     </div>
                   </form>
+
+                  {/* Tier 2 — add Poppy */}
+                  <div className="rounded-xl border border-brand-300 bg-white/70 p-3.5 shadow-sm">
+                    <div className="flex items-start gap-2">
+                      <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900">Add Poppy — AI recruitment assistant</p>
+                        <p className="mt-0.5 text-xs text-gray-600">
+                          Everything above plus Poppy: automated applicant screening with a written recommendation. 40 applicants/month included, then 75p each.
+                          <span className="font-medium text-gray-900"> £89/mo</span> · <span className="font-medium text-gray-900">£790/yr</span> · <span className="font-medium text-gray-900">£79/mo</span> on a 12‑month term.
+                        </p>
+                        <div className="mt-2.5 flex flex-wrap gap-2">
+                          <form action={startCheckout}>
+                            <input type="hidden" name="tier" value="poppy" />
+                            <input type="hidden" name="interval" value="year" />
+                            <button className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700">
+                              Poppy annually <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">2 months free</span>
+                            </button>
+                          </form>
+                          <form action={startCheckout}>
+                            <input type="hidden" name="tier" value="poppy" />
+                            <input type="hidden" name="interval" value="month" />
+                            <button className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-gray-50">
+                              Poppy monthly
+                            </button>
+                          </form>
+                          <form action={startCheckout}>
+                            <input type="hidden" name="tier" value="poppy" />
+                            <input type="hidden" name="interval" value="month" />
+                            <input type="hidden" name="commit" value="true" />
+                            <button className="rounded-lg border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50">
+                              Poppy, 12‑month
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <p className="mt-6 text-sm text-gray-500">Ask a company admin to set up billing.</p>

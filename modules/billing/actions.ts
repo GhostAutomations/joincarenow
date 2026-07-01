@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import { requireCompany } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ensureCustomer, createCheckoutSession, createPortalSession, BASE_URL } from "@/lib/billing/stripe";
+import { revalidatePath } from "next/cache";
+import { ensureCustomer, createCheckoutSession, createPortalSession, setSubscriptionTier, BASE_URL } from "@/lib/billing/stripe";
 import { parseConcession } from "@/lib/billing/concession";
 
 type AgreedPlan = "monthly" | "commit" | "annual" | "diamond";
@@ -23,7 +24,7 @@ export async function startActivationCheckout(): Promise<void> {
   const db = createAdminClient();
   const { data: company } = await db
     .from("companies")
-    .select("name, stripe_customer_id, agreed_plan, agreed_offer")
+    .select("name, stripe_customer_id, agreed_plan, agreed_offer, agreed_tier")
     .eq("id", current.company_id)
     .single();
 
@@ -41,9 +42,11 @@ export async function startActivationCheckout(): Promise<void> {
   if (Object.keys(update).length) await db.from("companies").update(update).eq("id", current.company_id);
 
   const { interval, commit, meteredOnly } = planToCheckout((company?.agreed_plan as AgreedPlan) ?? null);
+  const tier = company?.agreed_tier === "poppy" ? "poppy" : "core";
   const url = await createCheckoutSession({
     customerId,
     companyId: current.company_id,
+    tier,
     interval,
     commit,
     meteredOnly,
@@ -62,6 +65,7 @@ export async function startCheckout(formData: FormData): Promise<void> {
   if (current.role !== "admin") return;
   const interval = formData.get("interval") === "year" ? "year" : "month";
   const commit = formData.get("commit") === "true";
+  const tier = formData.get("tier") === "poppy" ? "poppy" : "core";
 
   const db = createAdminClient();
   const { data: company } = await db
@@ -80,8 +84,40 @@ export async function startCheckout(formData: FormData): Promise<void> {
     await db.from("companies").update({ stripe_customer_id: customerId }).eq("id", current.company_id);
   }
 
-  const url = await createCheckoutSession({ customerId, companyId: current.company_id, interval, commit });
+  const url = await createCheckoutSession({ customerId, companyId: current.company_id, tier, interval, commit });
   redirect(url);
+}
+
+/** Company admin adds Poppy to an ACTIVE subscription (Core → Tier 2). Swaps the
+ *  base price to Tier 2 and attaches the Poppy meter; turns Poppy on immediately.
+ *  The webhook also confirms the tier. */
+export async function upgradeToPoppy(): Promise<{ ok?: boolean; error?: string }> {
+  const { current } = await requireCompany();
+  if (current.role !== "admin") return { error: "Only admins can change the plan." };
+  const db = createAdminClient();
+  const { data: company } = await db
+    .from("companies")
+    .select("stripe_subscription_id, billing_status, commitment_until, plan_tier")
+    .eq("id", current.company_id)
+    .single();
+  if (company?.plan_tier === "poppy") return { ok: true };
+  const subId = company?.stripe_subscription_id as string | null;
+  if (!subId || company?.billing_status !== "active") {
+    return { error: "Add Poppy from an active subscription, or pick Tier 2 at checkout." };
+  }
+  const committed = company?.commitment_until ? new Date(company.commitment_until as string) > new Date() : false;
+  try {
+    await setSubscriptionTier(subId, "poppy", committed);
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Couldn't update the subscription." };
+  }
+  await db
+    .from("companies")
+    .update({ plan_tier: "poppy", agreed_tier: "poppy", poppy_enabled: true })
+    .eq("id", current.company_id);
+  revalidatePath("/billing");
+  revalidatePath("/settings");
+  return { ok: true };
 }
 
 /** Company admin opens the Stripe Customer Portal to manage their subscription. */

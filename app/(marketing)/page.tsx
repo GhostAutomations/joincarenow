@@ -19,7 +19,7 @@ import { BoardMockup, OnboardingMockup } from "@/components/marketing/mockups";
 export const metadata: Metadata = {
   title: "Care recruitment & onboarding software | Join Care Now",
   description:
-    "Hire compliant care staff faster, without the chaos of spreadsheets. Branded careers pages, applicant tracking and full onboarding (Right to Work, DBS, references, contracts) in one calm system, kept inspection-ready. Built for UK care providers, from £55/month.",
+    "Hire compliant care staff faster, without the chaos of spreadsheets. Branded careers pages, applicant tracking and full onboarding (Right to Work, DBS, references, contracts) in one calm system, kept inspection-ready. Built for UK care providers, from £49/month.",
   alternates: { canonical: "https://www.joincarenow.com" },
   openGraph: {
     title: "Care recruitment & onboarding software | Join Care Now",
@@ -232,7 +232,7 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-4xl px-6 py-16 text-center">
           <h2 className="text-2xl font-bold sm:text-3xl">It pays for itself in time alone</h2>
           <p className="mx-auto mt-4 max-w-2xl text-white/90">
-            At £55 a month, Join Care Now costs less than a couple of hours of admin. It&apos;s
+            At £49 a month, Join Care Now costs less than a couple of hours of admin. It&apos;s
             built to give you those hours back, and then some, every single week. One vacancy
             filled sooner, one fewer compliance scramble before an inspection, and it&apos;s
             already more than paid for.
@@ -292,21 +292,24 @@ export default function LandingPage() {
             <div className="jcn-app-bg flex flex-col justify-center p-8 text-white">
               <p className="text-xs font-semibold uppercase tracking-wider text-white/80">Join Care Now</p>
               <p className="mt-3 flex items-baseline gap-1">
-                <span className="text-5xl font-bold">£55</span>
+                <span className="text-5xl font-bold">£49</span>
                 <span className="text-lg text-white/80">/ month</span>
               </p>
               <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-white/70">Three ways to pay</p>
               <ul className="mt-2 space-y-2 text-sm">
                 <li className="rounded-lg bg-white/10 px-3 py-2">
-                  <span className="font-semibold">Monthly:</span> £55/mo, cancel anytime. <span className="text-white/70">£150 one-off setup.</span>
+                  <span className="font-semibold">Monthly:</span> £49/mo, cancel anytime. <span className="text-white/70">£150 one-off setup.</span>
                 </li>
                 <li className="rounded-lg bg-white/10 px-3 py-2">
-                  <span className="font-semibold">12-month plan:</span> £55/mo, <span className="text-white/90">no setup fee</span>. Committed for 12 months.
+                  <span className="font-semibold">12-month plan:</span> £49/mo, <span className="text-white/90">no setup fee</span>. Committed for 12 months.
                 </li>
                 <li className="rounded-lg bg-white/10 px-3 py-2">
-                  <span className="font-semibold">Annual:</span> £550/year (<span className="text-white/90">2 months free</span>), no setup fee.
+                  <span className="font-semibold">Annual:</span> £490/year (<span className="text-white/90">2 months free</span>), no setup fee.
                 </li>
               </ul>
+              <p className="mt-4 rounded-lg bg-white/10 px-3 py-2 text-sm">
+                <span className="font-semibold">Add Poppy</span> — AI recruitment assistant. From <span className="font-semibold">£79/mo</span> (£89 monthly · £790/year). 40 applicants/month included, then 75p each.
+              </p>
               <a href="#demo" className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
                 Book a demo
               </a>

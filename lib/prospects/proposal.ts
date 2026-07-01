@@ -17,9 +17,9 @@ export async function sendProposalEmail(db: SupabaseClient, prospectId: string):
     `Hi ${firstName},\n\n` +
     `Thanks for taking the time to look at Join Care Now. Here's a simple proposal for ${(company?.name as string) ?? "your service"}.\n\n` +
     `One plan, everything included — recruitment, onboarding and compliance in one place. Three ways to pay:\n\n` +
-    `• Monthly — £55/month, cancel anytime (£150 one-off setup)\n` +
-    `• 12-month plan — £55/month, no setup fee\n` +
-    `• Annual — £550/year (2 months free), no setup fee\n\n` +
+    `• Monthly — £49/month, cancel anytime (£150 one-off setup)\n` +
+    `• 12-month plan — £49/month, no setup fee\n` +
+    `• Annual — £490/year (2 months free), no setup fee\n\n` +
     `Included on every plan: every feature, core compliance (Right to Work, DBS, references), 1 branch and 100 SMS a month. ` +
     `Add-ons as you grow: extra branches £7.50/mo, SMS 8p after your 100, AI actions 10p each.\n\n` +
     `Happy to answer anything or get you started — just reply to this email.\n\nThe Join Care Now team`;

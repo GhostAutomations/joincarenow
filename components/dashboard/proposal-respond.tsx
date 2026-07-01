@@ -5,9 +5,9 @@ import { Check, X } from "lucide-react";
 import { recordProposalResponse } from "@/modules/prospects/actions";
 
 const PLAN_TEXT: Record<string, string> = {
-  monthly: "Monthly — £55/month, cancel anytime (£150 one-off setup)",
-  commit: "12-month plan — £55/month, no setup fee",
-  annual: "Annual — £550/year (2 months free), no setup fee",
+  monthly: "Monthly — £49/month, cancel anytime (£150 one-off setup)",
+  commit: "12-month plan — £49/month, no setup fee",
+  annual: "Annual — £490/year (2 months free), no setup fee",
   diamond: "Diamond — free subscription & setup; you pay only for SMS and AI usage",
 };
 

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireCompany, requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { recordUsage } from "@/lib/billing/usage";
+import { recordPoppyApplicant } from "@/lib/billing/poppy-credits";
 import {
   generateInterviewQuestions,
   type InterviewQuestionGroup,
@@ -302,7 +303,8 @@ export async function runPoppyForApplication(
         if (synth.summary.length) data.summary = synth.summary;
         data.recommendation = synth.recommendation;
         await admin.from("poppy_reports").update({ report: data, generated_at: new Date().toISOString() }).eq("application_id", app.id);
-        await recordUsage(current.company_id, "ai");
+        // Re-run on an existing applicant → credit already claimed; idempotent.
+        await recordPoppyApplicant(current.company_id, app.id);
         return { ok: true };
       } catch (e) {
         return { error: e instanceof Error ? e.message : "Poppy couldn't refresh the report." };
@@ -375,7 +377,9 @@ export async function runPoppyForApplication(
     },
     { onConflict: "application_id" }
   );
-  await recordUsage(current.company_id, "ai");
+  // Poppy is billed per applicant (40 included/month, then 75p), NOT via the 10p
+  // AI meter. One credit per applicant, deduped by application_id.
+  await recordPoppyApplicant(current.company_id, app.id);
   // Only start the screening conversation (consent message + nudge SMS) on the
   // FIRST run — a re-run must never re-contact the applicant.
   if (!existing) {

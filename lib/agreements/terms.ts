@@ -17,7 +17,7 @@ type PlanCopy = {
 const PLAN_COPY: Record<AgreementPlan, PlanCopy> = {
   monthly: {
     label: "Monthly (rolling)",
-    price: "£55 per month, billed monthly in advance",
+    price: "£49 per month, billed monthly in advance",
     term: "a rolling monthly term that continues until cancelled",
     setup: "a one-off set-up fee of £150 applies",
     cancellation:
@@ -25,7 +25,7 @@ const PLAN_COPY: Record<AgreementPlan, PlanCopy> = {
   },
   commit: {
     label: "12-month plan",
-    price: "£55 per month, billed monthly in advance",
+    price: "£49 per month, billed monthly in advance",
     term: "a minimum committed term of 12 months from the start date",
     setup: "no set-up fee applies",
     cancellation:
@@ -33,7 +33,7 @@ const PLAN_COPY: Record<AgreementPlan, PlanCopy> = {
   },
   annual: {
     label: "Annual plan",
-    price: "£550 per year (equivalent to two months free), billed annually in advance",
+    price: "£490 per year (equivalent to two months free), billed annually in advance",
     term: "a committed term of 12 months from the start date",
     setup: "no set-up fee applies",
     cancellation:

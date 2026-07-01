@@ -10,16 +10,16 @@ type Contact = { id: string; name: string | null; email: string | null };
 type Plan = "monthly" | "commit" | "annual" | "diamond";
 
 const PLAN_OPTIONS: { value: Plan; label: string }[] = [
-  { value: "monthly", label: "Monthly — £55/mo, cancel anytime (£150 setup)" },
-  { value: "commit", label: "12-month plan — £55/mo, no setup fee" },
-  { value: "annual", label: "Annual — £550/year (2 months free), no setup" },
+  { value: "monthly", label: "Monthly — £49/mo, cancel anytime (£150 setup)" },
+  { value: "commit", label: "12-month plan — £49/mo, no setup fee" },
+  { value: "annual", label: "Annual — £490/year (2 months free), no setup" },
   { value: "diamond", label: "Diamond — free subscription & setup, pay only for SMS & AI" },
 ];
 
 const PLAN_LINE: Record<Plan, string> = {
-  monthly: "the Monthly plan — £55 a month, cancel anytime, with a one-off £150 setup fee.",
-  commit: "the 12-month plan — £55 a month on a 12-month term, with no setup fee.",
-  annual: "the Annual plan — £550 for the year (two months free), with no setup fee.",
+  monthly: "the Monthly plan — £49 a month, cancel anytime, with a one-off £150 setup fee.",
+  commit: "the 12-month plan — £49 a month on a 12-month term, with no setup fee.",
+  annual: "the Annual plan — £490 for the year (two months free), with no setup fee.",
   diamond: "our Diamond plan — no subscription fee and no set-up fee; you pay only for the SMS and AI actions you use.",
 };
 

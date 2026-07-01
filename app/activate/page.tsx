@@ -4,9 +4,9 @@ import { parseConcession, describeConcession } from "@/lib/billing/concession";
 import { ActivatePay } from "@/components/billing/activate-pay";
 
 const PLAN_LABEL: Record<string, string> = {
-  monthly: "Monthly — £55/month (£150 one-off set-up)",
-  commit: "12-month plan — £55/month, no set-up fee",
-  annual: "Annual — £550/year (2 months free), no set-up fee",
+  monthly: "Monthly — £49/month (£150 one-off set-up)",
+  commit: "12-month plan — £49/month, no set-up fee",
+  annual: "Annual — £490/year (2 months free), no set-up fee",
   diamond: "Diamond — free subscription & set-up; pay only for SMS & AI usage",
 };
 

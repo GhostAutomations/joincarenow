@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { verifyStripeSignature } from "@/lib/billing/stripe";
+import { verifyStripeSignature, PRICES } from "@/lib/billing/stripe";
 import { isProduction } from "@/lib/security/prod";
 import { sendBrandedEmail } from "@/lib/comms/branded";
 import { syncExtraBranches } from "@/lib/billing/branches";
@@ -59,6 +59,24 @@ export async function POST(req: Request) {
       if (id) {
         const status = obj.status as string; // active, past_due, canceled, etc.
         const interval = obj?.items?.data?.[0]?.price?.recurring?.interval as string | undefined;
+
+        // Keep plan_tier + poppy_enabled in sync with what they're actually
+        // paying for. Only override when the subscription contains a recognised
+        // base price — an unrecognised sub (Diamond metered-only, or a
+        // founder-comped Poppy with no Tier 2 price) leaves the tier untouched.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const priceIds: string[] = (obj?.items?.data ?? []).map((it: any) => it?.price?.id).filter(Boolean);
+        const t2Ids = [PRICES.t2Monthly, PRICES.t2MonthlyCommit, PRICES.t2Annual].filter(Boolean) as string[];
+        const coreIds = [PRICES.monthly, PRICES.annual].filter(Boolean) as string[];
+        const tierUpdate: Record<string, unknown> =
+          event.type === "customer.subscription.deleted"
+            ? { plan_tier: "core", poppy_enabled: false }
+            : priceIds.some((p) => t2Ids.includes(p))
+              ? { plan_tier: "poppy", poppy_enabled: true }
+              : priceIds.some((p) => coreIds.includes(p))
+                ? { plan_tier: "core", poppy_enabled: false }
+                : {};
+
         await db
           .from("companies")
           .update({
@@ -67,6 +85,7 @@ export async function POST(req: Request) {
             billing_interval: interval === "year" || interval === "month" ? interval : null,
             current_period_end: periodEnd(obj),
             setup_fee_paid: interval === "year" ? true : undefined,
+            ...tierUpdate,
           })
           .eq("id", id);
       }

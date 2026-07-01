@@ -51,10 +51,10 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
     : status !== "active" && status !== "trialing"
     ? "—"
     : interval === "year"
-    ? "£550 / year"
+    ? "£490 / year"
     : committed
-    ? "£55 / month · 12-month commitment"
-    : "£55 / month";
+    ? "£49 / month · 12-month commitment"
+    : "£49 / month";
   const date = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
   const money = (pence: number) => "£" + (pence / 100).toFixed(2);
 

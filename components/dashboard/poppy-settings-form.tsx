@@ -14,10 +14,13 @@ const cls =
 export function PoppySettingsForm({
   documents,
   config,
+  usage,
 }: {
   /** Selectable reference documents (policies + contracts). */
   documents: { value: string; label: string }[];
   config: PoppyConfig;
+  /** This month's Poppy screen usage against the included allowance. */
+  usage?: { used: number; included: number } | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -53,6 +56,16 @@ export function PoppySettingsForm({
 
   return (
     <div className="mt-4 space-y-5">
+      {usage && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-white/50 bg-white/60 px-3.5 py-2.5 backdrop-blur-sm">
+          <span className="text-xs font-medium text-gray-600">Screens this month</span>
+          <span className="text-sm font-semibold text-gray-900">
+            {usage.used} <span className="font-normal text-gray-400">/ {usage.included} included</span>
+            {usage.used > usage.included && <span className="ml-1 text-gray-500">· {usage.used - usage.included} at 75p</span>}
+          </span>
+        </div>
+      )}
+
       <div>
         <label className="block text-xs font-medium text-gray-600">Reference documents</label>
         <p className="mb-1.5 mt-0.5 text-xs text-gray-500">

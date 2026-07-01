@@ -15,6 +15,7 @@ import { CareersContentForm } from "@/components/dashboard/careers-content-form"
 import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard/reminder-settings-form";
 import { PoppySettingsForm } from "@/components/dashboard/poppy-settings-form";
 import { readPoppyConfig } from "@/lib/poppy/config";
+import { poppyAllowanceUsed } from "@/lib/billing/poppy-credits";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SettingsHub, type SettingsSection } from "@/components/dashboard/settings-hub";
 import type { OpeningHours } from "@/lib/opening-hours";
@@ -68,6 +69,7 @@ export default async function SettingsPage() {
     ((companyRow?.settings as { reminders?: ReminderPrefs } | null)?.reminders) ?? {};
   const poppyEnabled = companyRow?.poppy_enabled === true;
   const poppyConfig = readPoppyConfig(companyRow?.settings);
+  const poppyUsage = poppyEnabled ? await poppyAllowanceUsed(current.company_id) : null;
   const poppyDocOptions = [
     ...(policyDocs ?? []).map((d) => ({ value: d.id as string, label: `${d.name} · Policy` })),
     ...(contractDocs ?? []).map((d) => ({ value: d.id as string, label: `${d.name} · Contract` })),
@@ -243,7 +245,7 @@ export default async function SettingsPage() {
               label: "Poppy",
               description:
                 "Configure your AI recruitment agent — the documents it compares against, what to focus on, and how many questions it asks.",
-              content: <PoppySettingsForm documents={poppyDocOptions} config={poppyConfig} />,
+              content: <PoppySettingsForm documents={poppyDocOptions} config={poppyConfig} usage={poppyUsage} />,
             },
           ]
         : []),

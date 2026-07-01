@@ -69,9 +69,9 @@ export function CompanyForm() {
               className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
             >
               <option value="" disabled>Select plan…</option>
-              <option value="monthly">Monthly — £55/mo (+£150 set-up)</option>
-              <option value="commit">12-month commit — £55/mo, no set-up</option>
-              <option value="annual">Annual — £550/yr (2 months free), no set-up</option>
+              <option value="monthly">Monthly — £49/mo (+£150 set-up)</option>
+              <option value="commit">12-month commit — £49/mo, no set-up</option>
+              <option value="annual">Annual — £490/yr (2 months free), no set-up</option>
               <option value="diamond">Diamond — comped subscription &amp; set-up (pay usage only)</option>
             </select>
           </label>

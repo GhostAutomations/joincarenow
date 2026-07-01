@@ -3,9 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
-import { setCompanyPoppyEnabled } from "@/modules/poppy/actions";
+import { founderSetTier } from "@/modules/billing/admin-actions";
 
-/** Founder control: turn the Poppy AI assistant on/off for a company. */
+/** Founder control: put a company on Tier 2 (Poppy) or Tier 1 (Core). Also moves
+ *  an active Stripe subscription onto the matching price + Poppy meter. */
 export function PoppyToggle({ companyId, enabled }: { companyId: string; enabled: boolean }) {
   const router = useRouter();
   const [on, setOn] = useState(enabled);
@@ -15,7 +16,10 @@ export function PoppyToggle({ companyId, enabled }: { companyId: string; enabled
     const next = !on;
     setOn(next); // optimistic
     start(async () => {
-      await setCompanyPoppyEnabled(companyId, next);
+      const fd = new FormData();
+      fd.set("id", companyId);
+      fd.set("tier", next ? "poppy" : "core");
+      await founderSetTier(fd);
       router.refresh();
     });
   }
@@ -27,11 +31,11 @@ export function PoppyToggle({ companyId, enabled }: { companyId: string; enabled
           <Sparkles className="h-5 w-5" />
         </span>
         <div>
-          <p className="text-sm font-semibold text-gray-900">Poppy — AI assistant</p>
+          <p className="text-sm font-semibold text-gray-900">Poppy — Tier 2</p>
           <p className="text-xs text-gray-500">
             {on
-              ? "On — Poppy drafts interview questions from each applicant's CV + application vs the job description."
-              : "Off — enable to give this company the Poppy AI assistant."}
+              ? "On (Tier 2) — Poppy screens applicants; 40/month included, then 75p. An active subscription moves to the Tier 2 price."
+              : "Off (Tier 1) — enable to put this company on Tier 2 with the Poppy assistant."}
           </p>
         </div>
       </div>

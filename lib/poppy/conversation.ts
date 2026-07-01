@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendCompanySms, recordUsage } from "@/lib/billing/usage";
+import { sendCompanySms } from "@/lib/billing/usage";
+import { recordPoppyApplicant } from "@/lib/billing/poppy-credits";
 import { synthesizePoppyReport, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
 import { loadPoppyRuntimeConfig } from "@/lib/poppy/config";
 import { notifyJobOwner } from "@/lib/comms/notify-owner";
@@ -188,7 +189,9 @@ async function finish(db: Admin, app: ConvApp, data: PoppyReportData): Promise<v
     );
     if (synth.summary.length) data.summary = synth.summary;
     data.recommendation = synth.recommendation;
-    await recordUsage(app.company_id, "ai");
+    // Ensure the applicant credit exists (idempotent — usually already claimed at
+    // analysis). Poppy never trips the generic 10p AI meter.
+    await recordPoppyApplicant(app.company_id, app.id);
     await db.from("poppy_reports").update({ report: data }).eq("application_id", app.id);
   } catch {
     /* report already complete with the Q&A */

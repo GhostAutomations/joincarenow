@@ -222,7 +222,7 @@ function Report({
   return (
     <div>
       {summaryList.length > 0 && (
-        <div className="gap-x-5 rounded-xl border border-white/50 p-3 text-sm text-gray-800 shadow-sm sm:columns-2 lg:columns-3">
+        <div className="gap-x-5 rounded-xl border border-white/50 p-3 text-sm text-black shadow-sm sm:columns-2 lg:columns-3">
           {summaryList.map((s, i) => (
             <p key={i} className="mb-1 break-inside-avoid pl-4 -indent-4">• {s}</p>
           ))}
@@ -246,7 +246,7 @@ function Report({
           <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
             <AlertTriangle className="h-3.5 w-3.5" /> {complete ? "Concerns raised" : "Worth checking"}
           </p>
-          <div className="mt-1 space-y-1 text-sm text-gray-700">
+          <div className="mt-1 space-y-1 text-sm text-black">
             {r.concerns.map((c, i) => (
               <p key={i}>{c}</p>
             ))}
@@ -257,14 +257,14 @@ function Report({
       {r.questions.length > 0 && (
         <div className="mt-3 rounded-xl border border-white/50 p-3 shadow-sm">
           <p className="text-xs font-semibold text-gray-500">
-            {complete ? "Screening questions & answers" : "Screening questions"}
+            {complete ? "Screening Q&A" : "Screening questions"}
           </p>
           <div className="mt-1.5 gap-x-5 sm:columns-2">
             {r.questions.map((q, i) => (
               <div key={i} className="mb-2.5 break-inside-avoid text-sm">
-                <p className="text-gray-900">{q.question}</p>
+                <p className="text-black">{q.question}</p>
                 {q.answer ? (
-                  <p className="mt-0.5 rounded-md bg-gray-100 px-2 py-1 font-semibold text-gray-900">{q.answer}</p>
+                  <p className="mt-0.5 rounded-md bg-gray-100 px-2 py-1 font-semibold text-black">{q.answer}</p>
                 ) : (
                   q.rationale && <p className="mt-0.5 text-xs text-gray-500">{q.rationale}</p>
                 )}

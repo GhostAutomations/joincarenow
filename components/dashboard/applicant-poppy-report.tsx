@@ -256,7 +256,7 @@ function Report({
 
       {r.questions.length > 0 && (
         <div className="mt-3 rounded-xl border border-white/50 bg-white/60 p-3 backdrop-blur-sm">
-          <p className="text-xs font-semibold text-brand-700">
+          <p className="text-xs font-semibold text-gray-500">
             {complete ? "Screening questions & answers" : "Screening questions"}
           </p>
           <div className="mt-1.5 gap-x-5 sm:columns-2">
@@ -264,7 +264,7 @@ function Report({
               <div key={i} className="mb-2.5 break-inside-avoid text-sm">
                 <p className="text-gray-900">{q.question}</p>
                 {q.answer ? (
-                  <p className="mt-0.5 rounded-md bg-brand-50/60 px-2 py-1 text-gray-800">{q.answer}</p>
+                  <p className="mt-0.5 rounded-md bg-gray-100 px-2 py-1 font-semibold text-gray-900">{q.answer}</p>
                 ) : (
                   q.rationale && <p className="mt-0.5 text-xs text-gray-500">{q.rationale}</p>
                 )}

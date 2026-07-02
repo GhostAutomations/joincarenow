@@ -61,8 +61,8 @@ export function PoppyAttributesForm({ config }: { config: PoppyConfig }) {
           <p className="text-sm font-medium text-gray-800">Use attributes when screening</p>
           <p className="mt-0.5 text-xs text-gray-500">
             {enabled
-              ? "On — Poppy assesses every candidate against the attributes below."
-              : "Off — Poppy ignores these attributes and screens on the role and your instructions only."}
+              ? "On — Poppy assesses every candidate against the attributes below and the workflow instructions."
+              : "Off — Poppy ignores these attributes and screens on the role and your instructions only from the workflow."}
           </p>
         </div>
         <button

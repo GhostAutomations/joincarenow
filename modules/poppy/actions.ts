@@ -378,7 +378,7 @@ export async function runPoppyForApplication(
     return { error: e instanceof Error ? e.message : "Poppy couldn't analyse the application." };
   }
 
-  const report: PoppyReportData = { summary: analysis.summary, concerns: analysis.concerns, agenda: analysis.questions, questions: [] };
+  const report: PoppyReportData = { summary: analysis.summary, concerns: analysis.concerns, questions: analysis.questions };
   await admin.from("poppy_reports").upsert(
     {
       company_id: current.company_id,

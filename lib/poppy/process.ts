@@ -218,10 +218,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
         const report: PoppyReportData = {
           summary: analysis.summary,
           concerns: analysis.concerns,
-          // The analysis questions seed the agent's agenda; the actual asked
-          // questions are built live as the conversation unfolds.
-          agenda: analysis.questions,
-          questions: [],
+          questions: analysis.questions,
         };
 
         // Insert-if-absent (never overwrite an existing report). If a concurrent

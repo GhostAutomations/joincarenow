@@ -102,7 +102,7 @@ export default async function OnboardingBoardPage() {
   const roleOptions = (roles ?? []).map((r) => ({ value: String(r.id), label: String(r.name) }));
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Workflow"
         subtitle="Build a checklist of tasks and forms, and choose the point in the pipeline each one is sent to the applicant."
@@ -147,7 +147,6 @@ export default async function OnboardingBoardPage() {
             <WorkflowBuilder
               forms={(forms ?? []) as { id: string; name: string }[]}
               docs={builderDocs}
-              poppyDocs={poppyDocs}
               poppyEnabled={poppyEnabled}
               roleOptions={roleOptions}
             />

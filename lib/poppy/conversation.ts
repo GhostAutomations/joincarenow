@@ -198,7 +198,8 @@ async function finish(db: Admin, app: ConvApp, data: PoppyReportData): Promise<v
         referenceDocs: cfg.referenceDocs,
         focus: cfg.focus,
         instructions: cfg.instructions,
-        attributes: cfg.attributes,
+        requiredAttributes: cfg.requiredAttributes,
+        desiredAttributes: cfg.desiredAttributes,
       },
       data.concerns,
       data.questions
@@ -286,7 +287,8 @@ export async function handlePoppyReply(db: Admin, applicationId: string, replyTe
           referenceDocs: cfg.referenceDocs,
           focus: cfg.focus,
           instructions: cfg.instructions,
-          attributes: cfg.attributes,
+          requiredAttributes: cfg.requiredAttributes,
+          desiredAttributes: cfg.desiredAttributes,
         },
         data.questions
       );

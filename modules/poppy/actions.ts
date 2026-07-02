@@ -10,7 +10,7 @@ import {
 } from "@/lib/ai/generate-interview-questions";
 import { generatePoppyAnalysis, synthesizePoppyReport, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
 import { startPoppyConversation } from "@/lib/poppy/conversation";
-import { loadPoppyRuntimeConfig, readPoppyConfig, type PoppyConfig } from "@/lib/poppy/config";
+import { loadPoppyRuntimeConfig, readPoppyConfig, type PoppyConfig, type PoppyAttrGroup } from "@/lib/poppy/config";
 
 export type InterviewQuestionsResult = {
   entitled: boolean; // company has Poppy
@@ -373,7 +373,8 @@ export async function runPoppyForApplication(
       focus: cfg.focus,
       instructions: cfg.instructions,
       questionCount: cfg.questionCount,
-      attributes: cfg.attributes,
+      requiredAttributes: cfg.requiredAttributes,
+      desiredAttributes: cfg.desiredAttributes,
     });
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Poppy couldn't analyse the application." };
@@ -411,33 +412,72 @@ export async function setCompanyPoppyEnabled(companyId: string, enabled: boolean
   return { ok: true };
 }
 
-/** Save the company's Poppy Settings config (admin-only) into companies.settings.poppy. */
+const cleanAttrList = (v: unknown): string[] =>
+  Array.isArray(v)
+    ? [...new Set(v.filter((x): x is string => typeof x === "string" && !!x.trim()).map((x) => x.trim().slice(0, 120)))].slice(0, 100)
+    : [];
+
+/** Save the tuning half of Poppy Settings (focus / instructions / question count
+ *  / follow-ups). Merges over the saved config so the Attributes screen's data
+ *  is preserved. Admin-only. */
 export async function savePoppySettings(
-  input: PoppyConfig
+  input: { focus?: string[]; instructions?: string; questionCount?: number; followUps?: boolean }
 ): Promise<{ ok?: boolean; error?: string }> {
-  const { supabase, current } = await requireCompany();
+  const { current } = await requireCompany();
   if (current.role !== "admin") return { error: "Only admins can change Poppy settings." };
 
   const admin = createAdminClient();
   const { data: co } = await admin.from("companies").select("poppy_enabled, settings").eq("id", current.company_id).single();
   if (co?.poppy_enabled !== true) return { error: "Poppy isn't enabled for this company." };
 
-  const clean: PoppyConfig = {
-    documentIds: Array.isArray(input.documentIds) ? input.documentIds.filter((x) => typeof x === "string").slice(0, 50) : [],
-    focus: Array.isArray(input.focus) ? input.focus.filter((x) => typeof x === "string").slice(0, 20) : [],
-    instructions: typeof input.instructions === "string" ? input.instructions.slice(0, 2000) : "",
+  const existing = readPoppyConfig(co.settings);
+  const merged: PoppyConfig = {
+    ...existing,
+    focus: Array.isArray(input.focus) ? input.focus.filter((x) => typeof x === "string").slice(0, 20) : existing.focus,
+    instructions: typeof input.instructions === "string" ? input.instructions.slice(0, 2000) : existing.instructions,
     questionCount: Math.min(20, Math.max(1, Math.round(Number(input.questionCount) || 8))),
     followUps: input.followUps === true,
-    attributes: Array.isArray(input.attributes)
-      ? input.attributes.filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim().slice(0, 120)).slice(0, 60)
-      : [],
   };
 
-  const settings = { ...(co.settings && typeof co.settings === "object" ? (co.settings as Record<string, unknown>) : {}), poppy: clean };
+  const settings = { ...(co.settings && typeof co.settings === "object" ? (co.settings as Record<string, unknown>) : {}), poppy: merged };
   const { error } = await admin.from("companies").update({ settings }).eq("id", current.company_id);
   if (error) return { error: "Couldn't save Poppy settings." };
 
-  void supabase; // tenant already resolved via requireCompany
+  revalidatePath("/settings");
+  return { ok: true };
+}
+
+/** Save the company's Poppy Attributes (its own Settings screen): the master
+ *  on/off switch plus the professional & personal required/desired lists.
+ *  Merges over the saved config so the tuning half is preserved. Admin-only. */
+export async function savePoppyAttributes(
+  input: { enabled: boolean; professional: PoppyAttrGroup; personal: PoppyAttrGroup }
+): Promise<{ ok?: boolean; error?: string }> {
+  const { current } = await requireCompany();
+  if (current.role !== "admin") return { error: "Only admins can change Poppy settings." };
+
+  const admin = createAdminClient();
+  const { data: co } = await admin.from("companies").select("poppy_enabled, settings").eq("id", current.company_id).single();
+  if (co?.poppy_enabled !== true) return { error: "Poppy isn't enabled for this company." };
+
+  const group = (g: PoppyAttrGroup | undefined): PoppyAttrGroup => ({
+    required: cleanAttrList(g?.required),
+    desired: cleanAttrList(g?.desired),
+    custom: cleanAttrList(g?.custom),
+  });
+
+  const existing = readPoppyConfig(co.settings);
+  const merged: PoppyConfig = {
+    ...existing,
+    attributesEnabled: input.enabled === true,
+    professional: group(input.professional),
+    personal: group(input.personal),
+  };
+
+  const settings = { ...(co.settings && typeof co.settings === "object" ? (co.settings as Record<string, unknown>) : {}), poppy: merged };
+  const { error } = await admin.from("companies").update({ settings }).eq("id", current.company_id);
+  if (error) return { error: "Couldn't save Poppy attributes." };
+
   revalidatePath("/settings");
   return { ok: true };
 }

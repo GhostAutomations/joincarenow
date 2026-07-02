@@ -214,7 +214,8 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
           focus: cfg.focus,
           instructions: cfg.instructions,
           questionCount: cfg.questionCount,
-          attributes: cfg.attributes,
+          requiredAttributes: cfg.requiredAttributes,
+          desiredAttributes: cfg.desiredAttributes,
         });
         const report: PoppyReportData = {
           summary: analysis.summary,

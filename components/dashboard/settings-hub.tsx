@@ -17,6 +17,7 @@ import {
   MessageSquare,
   FileText,
   Sparkles,
+  ListChecks,
   ChevronLeft,
   type LucideIcon,
 } from "lucide-react";
@@ -41,6 +42,7 @@ const ICONS: Record<string, LucideIcon> = {
   hours: Clock,
   communication: MessageSquare,
   poppy: Sparkles,
+  attributes: ListChecks,
   team: Users,
   workflows: ClipboardCheck,
 };
@@ -58,6 +60,7 @@ const TILE_TINT: Record<string, string> = {
   hours: "from-cyan-500 to-cyan-600",
   communication: "from-orange-500 to-orange-600",
   poppy: "from-pink-500 to-fuchsia-600",
+  attributes: "from-fuchsia-500 to-pink-600",
   team: "from-blue-500 to-blue-600",
   workflows: "from-emerald-400 to-emerald-600",
 };

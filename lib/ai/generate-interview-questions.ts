@@ -18,8 +18,11 @@ export type InterviewInputs = {
   focus?: string[];
   instructions?: string | null;
   questionCount?: number;
-  /** The required attributes Poppy assesses every candidate against. */
-  attributes?: string[];
+  /** Must-have attributes Poppy assesses every candidate against. */
+  requiredAttributes?: string[];
+  /** Desirable (nice-to-have) attributes — note them, but their absence isn't
+   *  disqualifying. */
+  desiredAttributes?: string[];
 };
 
 const ALLOWED_CATEGORIES = [

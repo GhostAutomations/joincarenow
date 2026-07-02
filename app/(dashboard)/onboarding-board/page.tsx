@@ -10,7 +10,7 @@ import {
   addTasksToWorkflow,
 } from "@/modules/onboarding/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { AddTemplateTask } from "@/components/dashboard/add-template-task";
+import { WorkflowBuilder } from "@/components/dashboard/workflow-builder";
 import { WorkflowCard, type WorkflowTask } from "@/components/dashboard/workflow-card";
 
 export default async function OnboardingBoardPage() {
@@ -31,19 +31,23 @@ export default async function OnboardingBoardPage() {
   ]);
   const poppyEnabled = company?.poppy_enabled === true;
 
-  // Documents Poppy can compare against (policies + contracts), for the "what to
-  // compare to" picker on a Poppy step. Only loaded when Poppy is enabled.
-  let poppyDocs: { id: string; name: string }[] = [];
-  if (poppyEnabled) {
-    const [{ data: pol }, { data: con }] = await Promise.all([
-      supabase.from("policy_documents").select("id, name").eq("company_id", current.company_id).order("name"),
-      supabase.from("contract_templates").select("id, name").eq("company_id", current.company_id).order("name"),
-    ]);
-    poppyDocs = [
-      ...(pol ?? []).map((d) => ({ id: d.id as string, name: `${d.name as string} · Policy` })),
-      ...(con ?? []).map((d) => ({ id: d.id as string, name: `${d.name as string} · Contract` })),
-    ];
-  }
+  // Company documents (policies + contracts). Used both by the workflow builder
+  // (drop a document in as a read-&-confirm task) and by the Poppy "what to
+  // compare to" picker (which shows the type suffix).
+  const [{ data: pol }, { data: con }] = await Promise.all([
+    supabase.from("policy_documents").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("contract_templates").select("id, name").eq("company_id", current.company_id).order("name"),
+  ]);
+  // Clean names for the builder's Contracts & Policies box.
+  const builderDocs: { id: string; name: string }[] = [
+    ...(pol ?? []).map((d) => ({ id: d.id as string, name: d.name as string })),
+    ...(con ?? []).map((d) => ({ id: d.id as string, name: d.name as string })),
+  ];
+  // Type-suffixed names for the Poppy comparison picker.
+  const poppyDocs: { id: string; name: string }[] = [
+    ...(pol ?? []).map((d) => ({ id: d.id as string, name: `${d.name as string} · Policy` })),
+    ...(con ?? []).map((d) => ({ id: d.id as string, name: `${d.name as string} · Contract` })),
+  ];
 
   // Group template tasks into their workflows.
   type Tpl = {
@@ -139,9 +143,12 @@ export default async function OnboardingBoardPage() {
             </div>
           )}
 
-          <div className="mt-4 rounded-2xl border border-white/50 bg-white/70 backdrop-blur-md p-5 shadow-sm">
-            <p className="mb-3 text-sm font-semibold text-gray-900">Add a workflow</p>
-            <AddTemplateTask forms={forms ?? []} poppyDocs={poppyDocs} roleOptions={roleOptions} poppyEnabled={poppyEnabled} />
+          <div className="mt-4">
+            <WorkflowBuilder
+              forms={(forms ?? []) as { id: string; name: string }[]}
+              docs={builderDocs}
+              roleOptions={roleOptions}
+            />
           </div>
         </section>
       )}

@@ -8,7 +8,7 @@ import type { TaskDraft } from "@/modules/onboarding/actions";
 
 export type ApplyState = { error?: string; ok?: boolean; applied?: string } | undefined;
 
-const STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
+const STAGES = ["on_application", "reviewing", "interview", "right_to_work", "offer", "hired"];
 
 /** Founder: save one or more store-workflow tasks (same builder as the company
  *  workflow board, in store mode). Store rows have company_id NULL, is_store
@@ -18,7 +18,7 @@ export async function addStoreWorkflowTasks(
 ): Promise<{ ok?: boolean; error?: string }> {
   if (!Array.isArray(drafts) || drafts.length === 0) return { error: "Nothing to add" };
   for (const d of drafts) {
-    if ((d.title ?? "").trim().length < 2) return { error: "Give the workflow a title" };
+    if (((d.workflowTitle ?? d.title) ?? "").trim().length < 2) return { error: "Give the workflow a title" };
     if (!["form", "document", "acknowledge", "poppy"].includes(d.taskType)) return { error: "Pick a type for each task" };
     if (d.taskType === "poppy") {
       if (!["all_forms", "as_forms", "stage"].includes(d.poppyEngage ?? "")) return { error: "Choose when Poppy should engage" };
@@ -58,7 +58,7 @@ export async function addStoreWorkflowTasks(
   }
 
   const workflowId = crypto.randomUUID();
-  const workflowName = (drafts[0]?.title ?? "Workflow").trim();
+  const workflowName = (drafts[0]?.workflowTitle ?? drafts[0]?.title ?? "Workflow").trim();
   // Workflow-level role association — founder store uses standard role NAMES,
   // mapped to a company's matching roles on apply. Empty = all roles.
   const roleNames = [...new Set((drafts[0]?.roleValues ?? []).filter(Boolean))];

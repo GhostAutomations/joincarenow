@@ -31,9 +31,15 @@ export type TaskDraft = {
   poppyQuestionCount?: number | string;
   /** Documents (policy/contract ids) Poppy compares against for this step. */
   poppyDocumentIds?: string[];
+  /** The workflow's own name, decoupled from a task's own title so the
+   *  drag-built builder can give each task its own title (e.g. the document
+   *  name) while all tasks share one workflow name. Falls back to `title`. */
+  workflowTitle?: string;
 };
 
-const WORKFLOW_STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
+// Right to work is a real pipeline stage the applicant reaches, so tasks can
+// trigger there too (application stage-changes fire create_stage_tasks for it).
+const WORKFLOW_STAGES = ["on_application", "reviewing", "interview", "right_to_work", "offer", "hired"];
 
 /** Build onboarding_templates rows from task drafts, attaching them to a
  *  workflow (id + name + roles) from `startPos`. Shared by create + append so
@@ -110,7 +116,7 @@ export async function addTemplateTasks(
 ): Promise<{ ok?: boolean; error?: string }> {
   if (!Array.isArray(drafts) || drafts.length === 0) return { error: "Nothing to add" };
 
-  const STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
+  const STAGES = ["on_application", "reviewing", "interview", "right_to_work", "offer", "hired"];
   for (const d of drafts) {
     if ((d.title ?? "").trim().length < 2) return { error: "Give each task a title" };
     if (!["form", "document", "acknowledge", "poppy"].includes(d.taskType)) {
@@ -162,7 +168,7 @@ export async function addTemplateTasks(
 
   // One workflow id/name shared by every task created in this submission.
   const workflowId = crypto.randomUUID();
-  const workflowName = (drafts[0]?.title ?? "Workflow").trim();
+  const workflowName = (drafts[0]?.workflowTitle ?? drafts[0]?.title ?? "Workflow").trim();
   // Workflow-level role association (company role UUIDs). Empty = all roles.
   const roleIds = [...new Set((drafts[0]?.roleValues ?? []).filter(Boolean))];
   const role_ids = roleIds.length ? roleIds : null;

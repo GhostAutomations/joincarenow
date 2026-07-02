@@ -1,6 +1,6 @@
 import { Eye, EyeOff, RotateCcw } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
-import { AddTemplateTask } from "@/components/dashboard/add-template-task";
+import { WorkflowBuilder } from "@/components/dashboard/workflow-builder";
 import { WorkflowCard } from "@/components/dashboard/workflow-card";
 import { ArchiveWorkflowButton } from "@/components/founder/archive-workflow-button";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
@@ -126,14 +126,12 @@ export default async function FounderWorkflowsPage() {
           </div>
         )}
 
-        <div className="mt-4 rounded-lg border border-dashed border-white/40 p-4">
-          <p className="mb-3 text-sm font-medium text-gray-700">Add a workflow</p>
-          <AddTemplateTask
+        <div className="mt-4">
+          <WorkflowBuilder
             forms={(forms ?? []) as { id: string; name: string }[]}
             roleOptions={STANDARD_ROLE_OPTIONS}
             roleLabel="Applies to roles (standard)"
             saveAction={addStoreWorkflowTasks}
-            poppyEnabled
           />
         </div>
       </section>

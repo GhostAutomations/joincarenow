@@ -274,11 +274,10 @@ function Report({
         </div>
       )}
 
-      {generatedAt && (
-        <p className="mt-2 text-[11px] text-gray-400">
-          Poppy · {new Date(generatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}. Review before use.
-        </p>
-      )}
+      <p className="mt-2 text-[11px] text-gray-400">
+        {generatedAt && `Poppy · ${new Date(generatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}. `}
+        Poppy&apos;s assessment is advisory — a person makes the final hiring decision.
+      </p>
     </div>
   );
 }

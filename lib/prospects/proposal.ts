@@ -22,6 +22,7 @@ export async function sendProposalEmail(db: SupabaseClient, prospectId: string):
     `• Annual — £490/year (2 months free), no setup fee\n\n` +
     `Included on every plan: every feature, core compliance (Right to Work, DBS, references), 1 branch and 100 SMS a month. ` +
     `Add-ons as you grow: extra branches £7.50/mo, SMS 8p after your 100, AI actions 10p each.\n\n` +
+    `Want AI to do your first-round screening? Add Poppy, our AI recruitment assistant — from £79/month (£89 monthly, £790/year). Poppy reviews each applicant and gives your team an advisory hire recommendation; 40 applicants a month included, then 75p each.\n\n` +
     `Happy to answer anything or get you started — just reply to this email.\n\nThe Join Care Now team`;
 
   const res = await sendBrandedEmail(db, null, {

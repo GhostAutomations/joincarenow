@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Trash2, Pencil, Check, X, ArrowUp, ArrowDown } from "lucide-react";
 import { MultiSelect } from "@/components/dashboard/multi-select";
+import { POPPY_FOCUS_OPTIONS } from "@/lib/poppy/config";
 
 export type WorkflowTask = {
   id: string;
@@ -17,6 +18,9 @@ export type WorkflowTask = {
   poppy_engage?: string | null;
   poppy_form_ids?: string[] | null;
   poppy_include_cv?: boolean | null;
+  poppy_focus?: string[] | null;
+  poppy_instructions?: string | null;
+  poppy_question_count?: number | null;
 };
 
 type EditInput = {
@@ -31,6 +35,9 @@ type EditInput = {
   poppyEngage: string;
   poppyFormIds: string[];
   poppyIncludeCv: boolean;
+  poppyFocus: string[];
+  poppyInstructions: string;
+  poppyQuestionCount: string;
 };
 
 const POPPY_STAGE_OPTIONS: [string, string][] = [
@@ -150,6 +157,9 @@ export function WorkflowCard({
       poppyEngage: t.poppy_engage ?? "",
       poppyFormIds: t.poppy_form_ids ?? [],
       poppyIncludeCv: t.poppy_include_cv === true,
+      poppyFocus: t.poppy_focus ?? [],
+      poppyInstructions: t.poppy_instructions ?? "",
+      poppyQuestionCount: t.poppy_question_count != null ? String(t.poppy_question_count) : "",
     });
   }
 
@@ -329,6 +339,34 @@ export function WorkflowCard({
                               ))
                             )}
                           </div>
+                        </div>
+
+                        {/* Overrides — leave blank to use the company Settings defaults. */}
+                        <div className="mt-3 rounded-md border border-white/60 bg-white/50 p-2">
+                          <p className="text-xs font-semibold text-gray-700">Override for this step <span className="font-normal text-gray-400">(optional — blank = company default)</span></p>
+                          <div className="mt-2 text-xs font-medium text-gray-600">Focus areas
+                            <div className="mt-1 flex flex-wrap gap-1.5">
+                              {POPPY_FOCUS_OPTIONS.map((f) => {
+                                const on = edit.poppyFocus.includes(f);
+                                return (
+                                  <button
+                                    key={f}
+                                    type="button"
+                                    onClick={() => setEdit({ ...edit, poppyFocus: on ? edit.poppyFocus.filter((x) => x !== f) : [...edit.poppyFocus, f] })}
+                                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${on ? "border-brand-600 bg-brand-600 text-white" : "border-white/60 bg-white/70 text-gray-700 hover:bg-white/90"}`}
+                                  >
+                                    {f}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <label className="mt-2 block text-xs font-medium text-gray-600">Custom instructions
+                            <textarea rows={2} value={edit.poppyInstructions} onChange={(e) => setEdit({ ...edit, poppyInstructions: e.target.value })} placeholder="Specific to this step — e.g. confirm driving licence for this role." className={fieldCls} />
+                          </label>
+                          <label className="mt-2 block text-xs font-medium text-gray-600">Number of questions
+                            <input type="number" min="1" max="20" value={edit.poppyQuestionCount} onChange={(e) => setEdit({ ...edit, poppyQuestionCount: e.target.value })} placeholder="default" className={`${fieldCls} w-28`} />
+                          </label>
                         </div>
                       </>
                     ) : (

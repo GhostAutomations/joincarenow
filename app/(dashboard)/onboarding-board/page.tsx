@@ -21,7 +21,7 @@ export default async function OnboardingBoardPage() {
   const [{ data: templates }, { data: forms }, { data: roles }, { data: company }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, role_ids, workflow_id, workflow_name, position, poppy_engage, poppy_form_ids, poppy_include_cv")
+      .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, role_ids, workflow_id, workflow_name, position, poppy_engage, poppy_form_ids, poppy_include_cv, poppy_focus, poppy_instructions, poppy_question_count")
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
@@ -50,11 +50,15 @@ export default async function OnboardingBoardPage() {
     poppy_engage: string | null;
     poppy_form_ids: string[] | null;
     poppy_include_cv: boolean | null;
+    poppy_focus: string[] | null;
+    poppy_instructions: string | null;
+    poppy_question_count: number | null;
   };
   const toTasks = (ts: Tpl[]): WorkflowTask[] => ts.map((t) => ({
     id: t.id, title: t.title, task_type: t.task_type, trigger_stage: t.trigger_stage,
     due_days: t.due_days, required: t.required, body: t.body, form_id: t.form_id,
     poppy_engage: t.poppy_engage, poppy_form_ids: t.poppy_form_ids, poppy_include_cv: t.poppy_include_cv,
+    poppy_focus: t.poppy_focus, poppy_instructions: t.poppy_instructions, poppy_question_count: t.poppy_question_count,
   }));
   const wfMap = new Map<
     string,

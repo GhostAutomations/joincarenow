@@ -21,12 +21,13 @@ export default async function AgreementPage() {
   if (existing && existing.length > 0) redirect("/dashboard");
 
   const { data: company } = await supabase
-    .from("companies").select("name, agreed_plan, agreed_offer").eq("id", current.company_id).single();
+    .from("companies").select("name, agreed_plan, agreed_offer, agreed_tier").eq("id", current.company_id).single();
 
   const terms = buildSubscriptionTerms({
     companyName: (company?.name as string) ?? current.companies.name,
     plan: (company?.agreed_plan as AgreementPlan) ?? null,
     offer: (company?.agreed_offer as string) ?? null,
+    tier: company?.agreed_tier === "poppy" ? "poppy" : "core",
   });
 
   return (

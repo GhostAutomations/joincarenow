@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normPoppyCount } from "@/lib/poppy/config";
 import type { TaskDraft } from "@/modules/onboarding/actions";
 
 export type ApplyState = { error?: string; ok?: boolean; applied?: string } | undefined;
@@ -90,6 +91,9 @@ export async function addStoreWorkflowTasks(
         poppy_engage: d.poppyEngage,
         poppy_form_ids: d.poppyFormIds ?? [],
         poppy_include_cv: d.poppyIncludeCv === true,
+        poppy_focus: d.poppyFocus?.length ? d.poppyFocus : null,
+        poppy_instructions: d.poppyInstructions?.trim() || null,
+        poppy_question_count: normPoppyCount(d.poppyQuestionCount),
         position: pos++,
       });
     } else if (d.taskType === "form") {
@@ -186,6 +190,9 @@ export type EditStoreStepInput = {
   poppyEngage?: string;
   poppyFormIds?: string[];
   poppyIncludeCv?: boolean;
+  poppyFocus?: string[];
+  poppyInstructions?: string;
+  poppyQuestionCount?: number | string;
 };
 
 /** Founder: edit a single store-workflow step. */
@@ -206,6 +213,9 @@ export async function updateStoreWorkflowStep(input: EditStoreStepInput): Promis
         poppy_engage: input.poppyEngage,
         poppy_form_ids: input.poppyFormIds ?? [],
         poppy_include_cv: input.poppyIncludeCv === true,
+        poppy_focus: input.poppyFocus?.length ? input.poppyFocus : null,
+        poppy_instructions: input.poppyInstructions?.trim() || null,
+        poppy_question_count: normPoppyCount(input.poppyQuestionCount),
         trigger_stage: input.poppyEngage === "stage" ? input.triggerStage : null,
         body: input.body.trim() || null,
         title: input.title.trim() || "Poppy screening",
@@ -324,7 +334,7 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
 
   const { data: steps } = await db
     .from("onboarding_templates")
-    .select("title, task_type, form_id, body, required, due_days, trigger_stage, position, workflow_name, role_names, poppy_engage, poppy_form_ids, poppy_include_cv")
+    .select("title, task_type, form_id, body, required, due_days, trigger_stage, position, workflow_name, role_names, poppy_engage, poppy_form_ids, poppy_include_cv, poppy_focus, poppy_instructions, poppy_question_count")
     .eq("is_store", true)
     .eq("workflow_id", workflowId)
     .order("position", { ascending: true });
@@ -439,6 +449,7 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
       title: string; task_type: string; form_id: string | null; body: string | null;
       required: boolean; due_days: number | null; trigger_stage: string | null;
       poppy_engage: string | null; poppy_form_ids: string[] | null; poppy_include_cv: boolean | null;
+      poppy_focus: string[] | null; poppy_instructions: string | null; poppy_question_count: number | null;
     };
     return {
       company_id: companyId,
@@ -454,6 +465,9 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
       poppy_engage: step.poppy_engage,
       poppy_form_ids: (step.poppy_form_ids ?? []).map((fid) => formMap.get(fid)).filter(Boolean),
       poppy_include_cv: step.poppy_include_cv ?? false,
+      poppy_focus: step.poppy_focus,
+      poppy_instructions: step.poppy_instructions,
+      poppy_question_count: step.poppy_question_count,
       role_id: null,
       role_ids,
       workflow_id: newWorkflowId,

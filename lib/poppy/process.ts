@@ -70,6 +70,9 @@ type PoppyStep = {
   poppy_include_cv: boolean | null;
   trigger_stage: string | null;
   role_ids: string[] | null;
+  poppy_focus: string[] | null;
+  poppy_instructions: string | null;
+  poppy_question_count: number | null;
 };
 type AppRow = {
   id: string;
@@ -138,7 +141,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
 
     const { data: stepsRaw } = await db
       .from("onboarding_templates")
-      .select("poppy_engage, poppy_form_ids, poppy_include_cv, trigger_stage, role_ids")
+      .select("poppy_engage, poppy_form_ids, poppy_include_cv, trigger_stage, role_ids, poppy_focus, poppy_instructions, poppy_question_count")
       .eq("company_id", companyId)
       .eq("is_store", false)
       .eq("task_type", "poppy");
@@ -189,7 +192,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
 
         // Phase 1 — analyse into concerns + questions. The conversation (Slice B)
         // asks the questions; the final report is written once they're answered.
-        const cfg = await loadPoppyRuntimeConfig(companyId);
+        const cfg = await loadPoppyRuntimeConfig(companyId, chosen);
         const analysis = await generatePoppyAnalysis({
           jobTitle: app.jobs?.title ?? "Care role",
           jobDescription: app.jobs?.description ?? "",

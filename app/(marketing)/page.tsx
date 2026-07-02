@@ -303,6 +303,9 @@ export default function LandingPage() {
                 Included on the <span className="font-semibold text-white">Core + Poppy</span> plan (and
                 Diamond): 40 applicants screened each month, then just 75p each.
               </p>
+              <p className="mt-2 text-xs text-white/60">
+                Poppy&apos;s assessment is advisory — your team always makes the final hiring decision.
+              </p>
               <a href="#demo" className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
                 See Poppy in a demo <ArrowRight className="h-4 w-4" aria-hidden />
               </a>

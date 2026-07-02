@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireCompany, requireUser } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normPoppyCount } from "@/lib/poppy/config";
 import { notifyApplicant } from "@/modules/comms/actions";
 
 export type OnbState = { error?: string; ok?: boolean } | undefined;
@@ -24,6 +25,10 @@ export type TaskDraft = {
   poppyEngage?: string;
   poppyFormIds?: string[];
   poppyIncludeCv?: boolean;
+  /** Poppy step overrides of the company-default tuning (empty = use default). */
+  poppyFocus?: string[];
+  poppyInstructions?: string;
+  poppyQuestionCount?: number | string;
 };
 
 /** Add one or more workflow tasks at once. Each form task expands to one task
@@ -108,6 +113,9 @@ export async function addTemplateTasks(
         poppy_engage: d.poppyEngage,
         poppy_form_ids: d.poppyFormIds ?? [],
         poppy_include_cv: d.poppyIncludeCv === true,
+        poppy_focus: d.poppyFocus?.length ? d.poppyFocus : null,
+        poppy_instructions: d.poppyInstructions?.trim() || null,
+        poppy_question_count: normPoppyCount(d.poppyQuestionCount),
         role_id: null,
         role_ids,
         workflow_id: workflowId,
@@ -290,6 +298,9 @@ export type EditTaskInput = {
   poppyEngage?: string;
   poppyFormIds?: string[];
   poppyIncludeCv?: boolean;
+  poppyFocus?: string[];
+  poppyInstructions?: string;
+  poppyQuestionCount?: number | string;
 };
 
 const WF_STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
@@ -317,6 +328,9 @@ export async function updateTemplateTask(input: EditTaskInput): Promise<{ ok?: b
         poppy_engage: input.poppyEngage,
         poppy_form_ids: input.poppyFormIds ?? [],
         poppy_include_cv: input.poppyIncludeCv === true,
+        poppy_focus: input.poppyFocus?.length ? input.poppyFocus : null,
+        poppy_instructions: input.poppyInstructions?.trim() || null,
+        poppy_question_count: normPoppyCount(input.poppyQuestionCount),
         trigger_stage: input.poppyEngage === "stage" ? input.triggerStage : null,
         body: input.body.trim() || null,
         title: input.title.trim() || "Poppy screening",

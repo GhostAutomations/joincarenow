@@ -52,13 +52,32 @@ const PLAN_COPY: Record<AgreementPlan, PlanCopy> = {
 /** Build the subscription agreement the customer signs. `plan` defaults to
  *  monthly if none was recorded. `offer` is the optional sweetener agreed on the
  *  sales call (e.g. "3 months free", "+100 SMS/mo", "£45/mo"). */
+/** Tier 2 (Core + Poppy) base prices, by plan. Diamond keeps its usage-only
+ *  price and just gains the Poppy applicant charge (covered in the Poppy clause). */
+const POPPY_PRICE: Partial<Record<AgreementPlan, string>> = {
+  monthly: "£89 per month, billed monthly in advance",
+  commit: "£79 per month, billed monthly in advance",
+  annual: "£790 per year (equivalent to two months free), billed annually in advance",
+};
+
 export function buildSubscriptionTerms(opts: {
   companyName: string;
   plan: AgreementPlan | null;
   offer: string | null;
+  tier?: "core" | "poppy";
 }): { version: number; title: string; bodyText: string } {
   const plan = (opts.plan ?? "monthly") as AgreementPlan;
-  const p = PLAN_COPY[plan];
+  const isPoppy = opts.tier === "poppy";
+  const base = PLAN_COPY[plan];
+  const p =
+    isPoppy && POPPY_PRICE[plan]
+      ? { ...base, label: `${base.label} + Poppy`, price: POPPY_PRICE[plan] as string }
+      : isPoppy
+        ? { ...base, label: `${base.label} + Poppy` }
+        : base;
+  const poppyClause = isPoppy
+    ? ` Your plan also includes Poppy, our AI recruitment assistant. Poppy reviews applicants and produces an advisory screening report — a person always makes the final hiring decision. 40 applicant screens are included each month; additional screens are charged at 75p each.`
+    : "";
   const company = opts.companyName?.trim() || "the Customer";
   const offerClause = opts.offer?.trim()
     ? `\n\nAgreed concession\nAs agreed during onboarding, the following has been applied to your account: ${opts.offer.trim()}. Where a concession changes the price or allowances above, the concession takes precedence for the period it applies.`
@@ -84,7 +103,8 @@ export function buildSubscriptionTerms(opts: {
 
     `3. What's included\n` +
     `Your plan includes every Join Care Now feature — recruitment, onboarding and compliance (including Right to Work, DBS and references) — together with one branch and 100 SMS messages per month. ` +
-    `Additional usage is charged as you grow at: extra branches £7.50 per branch per month; SMS at 8p each after your monthly 100; and AI actions at 10p each. ` +
+    `Additional usage is charged as you grow at: extra branches £7.50 per branch per month; SMS at 8p each after your monthly 100; and AI actions at 10p each.` +
+    poppyClause + ` ` +
     `Add-on rates may change on at least 30 days' notice.` +
     offerClause + `\n\n` +
 

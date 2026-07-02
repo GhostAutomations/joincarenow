@@ -17,6 +17,13 @@ export const POPPY_FOCUS_OPTIONS = [
 
 const DEFAULT: PoppyConfig = { documentIds: [], focus: [], instructions: "", questionCount: 8 };
 
+/** Normalise a Poppy step question-count override (1-20, or null = use company default). */
+export function normPoppyCount(v: number | string | null | undefined): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) && n > 0 ? Math.min(20, Math.max(1, n)) : null;
+}
+
 /** Read a company's Poppy Settings config from companies.settings.poppy. */
 export function readPoppyConfig(settings: unknown): PoppyConfig {
   const p = (settings as { poppy?: Partial<PoppyConfig> } | null)?.poppy ?? {};
@@ -28,17 +35,38 @@ export function readPoppyConfig(settings: unknown): PoppyConfig {
   };
 }
 
+/** Per-step overrides of the agent tuning (from a Poppy workflow step). Any set
+ *  field replaces the company default; unset fields fall through. */
+export type PoppyStepOverride = {
+  poppy_focus?: string[] | null;
+  poppy_instructions?: string | null;
+  poppy_question_count?: number | null;
+};
+
 /**
  * Load a company's Poppy config plus the bodies of the selected reference
  * documents (policies + contracts). Job descriptions are NOT included here —
  * Poppy always uses the applicant's own role JD automatically.
+ *
+ * If a `step` is passed, its focus / instructions / question-count OVERRIDE the
+ * company defaults (Settings = default; a workflow step can override).
  */
 export async function loadPoppyRuntimeConfig(
-  companyId: string
+  companyId: string,
+  step?: PoppyStepOverride | null
 ): Promise<{ referenceDocs: { name: string; body: string }[]; focus: string[]; instructions: string; questionCount: number }> {
   const db = createAdminClient();
   const { data: co } = await db.from("companies").select("settings").eq("id", companyId).single();
   const cfg = readPoppyConfig(co?.settings);
+
+  // Step overrides win over the company defaults where set.
+  if (step) {
+    if (Array.isArray(step.poppy_focus) && step.poppy_focus.length) cfg.focus = step.poppy_focus;
+    if (typeof step.poppy_instructions === "string" && step.poppy_instructions.trim()) cfg.instructions = step.poppy_instructions;
+    if (typeof step.poppy_question_count === "number" && step.poppy_question_count > 0) {
+      cfg.questionCount = Math.min(20, Math.max(1, Math.round(step.poppy_question_count)));
+    }
+  }
 
   let referenceDocs: { name: string; body: string }[] = [];
   if (cfg.documentIds.length) {

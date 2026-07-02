@@ -314,11 +314,18 @@ export async function runPoppyForApplication(
   // Find an applicable Poppy step (for its selected forms + CV choice).
   const { data: stepsRaw } = await admin
     .from("onboarding_templates")
-    .select("poppy_form_ids, poppy_include_cv, role_ids")
+    .select("poppy_form_ids, poppy_include_cv, role_ids, poppy_focus, poppy_instructions, poppy_question_count")
     .eq("company_id", current.company_id)
     .eq("is_store", false)
     .eq("task_type", "poppy");
-  const steps = (stepsRaw ?? []) as { poppy_form_ids: string[] | null; poppy_include_cv: boolean | null; role_ids: string[] | null }[];
+  const steps = (stepsRaw ?? []) as {
+    poppy_form_ids: string[] | null;
+    poppy_include_cv: boolean | null;
+    role_ids: string[] | null;
+    poppy_focus: string[] | null;
+    poppy_instructions: string | null;
+    poppy_question_count: number | null;
+  }[];
   const roleId = app.jobs?.role_id ?? null;
   const step = steps.find((s) => !s.role_ids || s.role_ids.length === 0 || (!!roleId && s.role_ids.includes(roleId))) ?? null;
 
@@ -344,7 +351,7 @@ export async function runPoppyForApplication(
   }
   const name = [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ").trim() || "the candidate";
 
-  const cfg = await loadPoppyRuntimeConfig(current.company_id);
+  const cfg = await loadPoppyRuntimeConfig(current.company_id, step);
   let analysis: { summary: string[]; concerns: string[]; questions: { question: string; rationale: string }[] };
   try {
     analysis = await generatePoppyAnalysis({

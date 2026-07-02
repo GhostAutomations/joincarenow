@@ -26,7 +26,7 @@ export default async function FounderWorkflowsPage() {
   const [{ data: rows }, { data: forms }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, form_id, body, trigger_stage, required, due_days, position, workflow_id, workflow_name, store_published, store_archived, store_folder, role_names, poppy_engage, poppy_form_ids, poppy_include_cv")
+      .select("id, title, task_type, form_id, body, trigger_stage, required, due_days, position, workflow_id, workflow_name, store_published, store_archived, store_folder, role_names, poppy_engage, poppy_form_ids, poppy_include_cv, poppy_focus, poppy_instructions, poppy_question_count")
       .eq("is_store", true)
       .order("workflow_id", { ascending: true })
       .order("position", { ascending: true }),
@@ -40,11 +40,13 @@ export default async function FounderWorkflowsPage() {
     store_published: boolean; store_archived: boolean; store_folder: string | null;
     role_names: string[] | null;
     poppy_engage: string | null; poppy_form_ids: string[] | null; poppy_include_cv: boolean | null;
+    poppy_focus: string[] | null; poppy_instructions: string | null; poppy_question_count: number | null;
   };
   const toTasks = (rs: Row[]): WorkflowTask[] => rs.map((t) => ({
     id: t.id, title: t.title, task_type: t.task_type, trigger_stage: t.trigger_stage,
     due_days: t.due_days, required: t.required, body: t.body, form_id: t.form_id,
     poppy_engage: t.poppy_engage, poppy_form_ids: t.poppy_form_ids, poppy_include_cv: t.poppy_include_cv,
+    poppy_focus: t.poppy_focus, poppy_instructions: t.poppy_instructions, poppy_question_count: t.poppy_question_count,
   }));
   type Wf = { id: string; name: string; published: boolean; archived: boolean; folder: string | null; roleNames: string[]; items: Row[] };
   const map = new Map<string, Wf>();

@@ -142,19 +142,16 @@ export default async function DashboardPage() {
         {/* Founder has offered Poppy — admins can accept/decline right here */}
         {isAdmin && poppyOfferPending && <PoppyOfferBanner diamond={isDiamond} variant="dark" />}
 
-        {/* stat cards — square, all on one line on large screens */}
-        <div
-          className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:[grid-template-columns:repeat(var(--stat-cols),minmax(0,1fr))]"
-          style={{ "--stat-cols": stats.length } as React.CSSProperties}
-        >
+        {/* stat cards — small squares, wrap to one line */}
+        <div className="mt-6 flex flex-wrap gap-3">
           {stats.map((s) => (
             <Link
               key={s.label}
               href={s.href}
-              className="flex aspect-square flex-col justify-between rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/25"
+              className="flex h-28 w-28 shrink-0 flex-col justify-between rounded-2xl border border-white/25 bg-white/15 p-3 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/25"
             >
-              <p className="text-sm text-white/70">{s.label}</p>
-              <p className="text-3xl font-semibold">{s.value}</p>
+              <p className="text-xs leading-tight text-white/70">{s.label}</p>
+              <p className="text-2xl font-semibold">{s.value}</p>
             </Link>
           ))}
         </div>

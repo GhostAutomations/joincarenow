@@ -56,9 +56,9 @@ export function MultiSelect({
                     key={o.value}
                     type="button"
                     onClick={() => toggle(o.value)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-white/70/60"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-brand-50"
                   >
-                    <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${on ? "border-brand-600 bg-brand-600 text-white" : "border-white/40"}`}>
+                    <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${on ? "border-brand-600 bg-brand-600 text-white" : "border-gray-400 bg-white"}`}>
                       {on && <Check className="h-3 w-3" />}
                     </span>
                     {o.label}

@@ -6,6 +6,10 @@ import { cleanMessageBody } from "@/lib/comms/clean";
 import { ConversationThread, type ChatMessage } from "@/components/portal/conversation-thread";
 import { PortalLive } from "@/components/portal/portal-live";
 
+// Poppy replies to an applicant after a ~15s human-feel gap, posted via `after`.
+// Keep the function alive long enough for that deferred work to run.
+export const maxDuration = 60;
+
 type MyApp = { application_id: string; job_title: string; company_name: string };
 
 export default async function PortalConversationPage({

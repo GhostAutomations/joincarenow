@@ -1,10 +1,14 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireApplicant } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyJobOwner } from "@/lib/comms/notify-owner";
-import { handlePoppyReply } from "@/lib/poppy/conversation";
+import { handlePoppyReply, isPoppyConversing } from "@/lib/poppy/conversation";
+
+/** Gap before Poppy replies, so the conversation feels human rather than instant. */
+const POPPY_REPLY_DELAY_MS = 15_000;
 
 export type PortalReplyState = { error?: string; ok?: boolean } | undefined;
 
@@ -39,9 +43,15 @@ export async function postApplicantReply(_prev: PortalReplyState, formData: Form
   // If Poppy is mid-screening with this applicant, let Poppy handle the reply
   // (record the answer, ask the next question). Skip the human owner notification
   // in that case — the owner is alerted when the screening completes/declines.
+  // Poppy's reply is posted after a short gap (via `after`, so this action still
+  // returns immediately and the applicant's own message shows straight away) so
+  // the conversation feels human rather than instant.
   const admin = createAdminClient();
-  const handledByPoppy = await handlePoppyReply(admin, app.id, body);
-  if (handledByPoppy) {
+  if (await isPoppyConversing(admin, app.id)) {
+    after(async () => {
+      await new Promise((r) => setTimeout(r, POPPY_REPLY_DELAY_MS));
+      await handlePoppyReply(createAdminClient(), app.id, body);
+    });
     revalidatePath(`/portal/conversations/${applicationId}`);
     revalidatePath("/portal/conversations");
     return { ok: true };

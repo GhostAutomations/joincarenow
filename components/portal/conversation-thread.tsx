@@ -30,6 +30,13 @@ export function ConversationThread({
     if (state?.ok) { formRef.current?.reset(); router.refresh(); }
   }, [state, router]);
 
+  // Poll so delayed / incoming messages (e.g. Poppy's reply, which is posted a
+  // few seconds after the applicant's) appear without a manual refresh.
+  useEffect(() => {
+    const t = setInterval(() => router.refresh(), 6000);
+    return () => clearInterval(t);
+  }, [router]);
+
   // Always show the latest message — jump the chat container to the bottom.
   useEffect(() => {
     const el = scrollRef.current;

@@ -200,6 +200,12 @@ async function finish(db: Admin, app: ConvApp, data: PoppyReportData): Promise<v
   }
 }
 
+/** Is Poppy mid-screening with this applicant (so their next reply is for Poppy)? */
+export async function isPoppyConversing(db: Admin, applicationId: string): Promise<boolean> {
+  const { data } = await db.from("poppy_reports").select("phase").eq("application_id", applicationId).maybeSingle();
+  return data?.phase === "conversing";
+}
+
 /**
  * Handle an applicant's portal reply as part of a Poppy screening conversation.
  * No-op unless that application has an active conversation (phase 'conversing').

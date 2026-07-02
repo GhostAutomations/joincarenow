@@ -38,10 +38,10 @@ export default async function OnboardingBoardPage() {
     supabase.from("policy_documents").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("contract_templates").select("id, name").eq("company_id", current.company_id).order("name"),
   ]);
-  // Clean names for the builder's Contracts & Policies box.
-  const builderDocs: { id: string; name: string }[] = [
-    ...(pol ?? []).map((d) => ({ id: d.id as string, name: d.name as string })),
-    ...(con ?? []).map((d) => ({ id: d.id as string, name: d.name as string })),
+  // Clean names + kind for the builder's Contracts & Policies box.
+  const builderDocs: { id: string; name: string; kind: "contract" | "policy" }[] = [
+    ...(pol ?? []).map((d) => ({ id: d.id as string, name: d.name as string, kind: "policy" as const })),
+    ...(con ?? []).map((d) => ({ id: d.id as string, name: d.name as string, kind: "contract" as const })),
   ];
   // Type-suffixed names for the Poppy comparison picker.
   const poppyDocs: { id: string; name: string }[] = [
@@ -147,6 +147,8 @@ export default async function OnboardingBoardPage() {
             <WorkflowBuilder
               forms={(forms ?? []) as { id: string; name: string }[]}
               docs={builderDocs}
+              poppyDocs={poppyDocs}
+              poppyEnabled={poppyEnabled}
               roleOptions={roleOptions}
             />
           </div>

@@ -35,6 +35,9 @@ export type TaskDraft = {
    *  drag-built builder can give each task its own title (e.g. the document
    *  name) while all tasks share one workflow name. Falls back to `title`. */
   workflowTitle?: string;
+  /** A read-&-sign task links a specific contract/policy the applicant signs. */
+  documentId?: string;
+  documentKind?: "contract" | "policy";
 };
 
 // Right to work is a real pipeline stage the applicant reaches, so tasks can
@@ -102,6 +105,9 @@ function buildTemplateRows(opts: {
         required: d.required,
         due_days: dueDays,
         trigger_stage: d.triggerStage,
+        // Read-&-sign: link the specific contract/policy the applicant signs.
+        document_id: d.documentId ?? null,
+        document_kind: d.documentKind ?? null,
         position: pos++,
       });
     }
@@ -856,6 +862,48 @@ export async function acknowledgeTask(formData: FormData) {
   const { supabase } = await requireUser();
   await supabase.rpc("acknowledge_onboarding", { p_task_id: id });
   revalidatePath("/portal");
+}
+
+/** Applicant reads the contract/policy linked to a read-&-sign task. Returns the
+ *  merge-filled body (RLS-safe via SECURITY DEFINER RPC, guarded by ownership). */
+export async function loadOnboardingDocument(taskId: string): Promise<
+  { title: string; body: string; kind: string; alreadySigned: boolean } | { error: string }
+> {
+  if (!taskId) return { error: "Missing task" };
+  const { supabase } = await requireUser();
+  const { data, error } = await supabase.rpc("get_onboarding_document", { p_task_id: taskId });
+  if (error) return { error: "This document isn't available." };
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return { error: "This document isn't available." };
+  return {
+    title: String(row.title ?? ""),
+    body: String(row.body ?? ""),
+    kind: String(row.kind ?? "policy"),
+    alreadySigned: row.already_signed === true,
+  };
+}
+
+/** Applicant signs the linked document (type name, or a drawn signature image).
+ *  Snapshots the exact text into signed_documents and completes the task. */
+export async function signOnboardingDocument(
+  taskId: string,
+  signerName: string,
+  signatureImage: string | null
+): Promise<{ ok?: boolean; error?: string }> {
+  if (!taskId) return { error: "Missing task" };
+  const name = (signerName ?? "").trim();
+  const drawn = !!signatureImage && signatureImage.trim() !== "";
+  if (!drawn && name.length < 2) return { error: "Please type your full name to sign." };
+
+  const { supabase } = await requireUser();
+  const { error } = await supabase.rpc("sign_onboarding_document", {
+    p_task_id: taskId,
+    p_signer_name: name || "Signature",
+    p_signature_image: drawn ? signatureImage : null,
+  });
+  if (error) return { error: "Could not submit your signature. Please try again." };
+  revalidatePath("/portal");
+  return { ok: true };
 }
 
 export async function uploadOnboardingDoc(

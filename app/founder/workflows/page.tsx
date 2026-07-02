@@ -132,6 +132,7 @@ export default async function FounderWorkflowsPage() {
             roleOptions={STANDARD_ROLE_OPTIONS}
             roleLabel="Applies to roles (standard)"
             saveAction={addStoreWorkflowTasks}
+            poppyEnabled
           />
         </div>
       </section>

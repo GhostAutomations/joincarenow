@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X, GripVertical, FileText, ScrollText, Sparkles, CheckCircle2 } from "lucide-react";
+import { Plus, X, GripVertical, FileText, ScrollText, Sparkles, CheckCircle2, Settings2 } from "lucide-react";
 import { addTemplateTasks, type TaskDraft } from "@/modules/onboarding/actions";
 import { MultiSelect } from "@/components/dashboard/multi-select";
+import { POPPY_FOCUS_OPTIONS } from "@/lib/poppy/config";
 
 const cls =
   "mt-1 block w-full rounded-md border border-white/60 bg-white/70 backdrop-blur-sm shadow-sm px-2 py-1.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-brand-500 focus:bg-white/90 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -21,8 +22,26 @@ const STAGES: { key: string; label: string }[] = [
   { key: "hired", label: "Hired" },
 ];
 
-type Lib = { source: "form" | "doc"; refId: string; name: string };
-type Placed = Lib & { key: string };
+type Lib = { source: "form" | "doc" | "poppy"; refId: string; name: string; kind?: "contract" | "policy" };
+type PoppyCfg = {
+  engage: "stage" | "all_forms" | "as_forms";
+  formIds: string[];
+  includeCv: boolean;
+  focus: string[];
+  instructions: string;
+  questionCount: string;
+  documentIds: string[];
+};
+const blankPoppy = (): PoppyCfg => ({
+  engage: "stage",
+  formIds: [],
+  includeCv: true,
+  focus: [],
+  instructions: "",
+  questionCount: "",
+  documentIds: [],
+});
+type Placed = Lib & { key: string; poppy?: PoppyCfg };
 
 /**
  * The drag-and-drop workflow builder. Collapsed to an "Add workflow" button;
@@ -34,18 +53,24 @@ type Placed = Lib & { key: string };
 export function WorkflowBuilder({
   forms,
   docs = [],
+  poppyDocs = [],
   roleOptions = [],
   showRole = true,
   roleLabel = "Applies to roles",
+  poppyEnabled = false,
   saveAction = addTemplateTasks,
 }: {
   forms: { id: string; name: string }[];
-  /** Contracts + policies. Dropped in as a read-&-confirm task. */
-  docs?: { id: string; name: string }[];
+  /** Contracts + policies. Dropped in as a read-&-sign task. */
+  docs?: { id: string; name: string; kind: "contract" | "policy" }[];
+  /** Company documents (type-suffixed) Poppy can compare a candidate against. */
+  poppyDocs?: { id: string; name: string }[];
   /** Company: value = role UUID. Founder store: value = standard role name. */
   roleOptions?: { value: string; label: string }[];
   showRole?: boolean;
   roleLabel?: string;
+  /** Show the draggable Poppy AI screening step (company has Poppy). */
+  poppyEnabled?: boolean;
   saveAction?: (drafts: TaskDraft[]) => Promise<{ ok?: boolean; error?: string }>;
 }) {
   const router = useRouter();
@@ -55,6 +80,7 @@ export function WorkflowBuilder({
   const [placed, setPlaced] = useState<Record<string, Placed[]>>({});
   const [armed, setArmed] = useState<Lib | null>(null); // tap-to-place fallback
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null); // poppy item key being configured
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [created, setCreated] = useState(false);
@@ -64,19 +90,46 @@ export function WorkflowBuilder({
     setRoleValues([]);
     setPlaced({});
     setArmed(null);
+    setEditing(null);
     setError(null);
     setCreated(false);
   }
 
   function place(stageKey: string, item: Lib) {
-    setPlaced((p) => ({
-      ...p,
-      [stageKey]: [...(p[stageKey] ?? []), { ...item, key: crypto.randomUUID() }],
-    }));
+    const key = crypto.randomUUID();
+    const withCfg: Placed =
+      item.source === "poppy" ? { ...item, key, poppy: blankPoppy() } : { ...item, key };
+    setPlaced((p) => ({ ...p, [stageKey]: [...(p[stageKey] ?? []), withCfg] }));
     setArmed(null);
+    if (item.source === "poppy") setEditing(key); // open config on drop
   }
   function removePlaced(stageKey: string, key: string) {
     setPlaced((p) => ({ ...p, [stageKey]: (p[stageKey] ?? []).filter((x) => x.key !== key) }));
+    setEditing((e) => (e === key ? null : e));
+  }
+
+  /** Find a placed poppy item + its stage by key. */
+  function findPoppy(key: string): { stageKey: string; item: Placed } | null {
+    for (const [stageKey, list] of Object.entries(placed)) {
+      const item = list.find((x) => x.key === key);
+      if (item) return { stageKey, item };
+    }
+    return null;
+  }
+  function updatePoppy(key: string, patch: Partial<PoppyCfg>) {
+    setPlaced((p) => {
+      const next: Record<string, Placed[]> = {};
+      for (const [sk, list] of Object.entries(p)) {
+        next[sk] = list.map((x) => (x.key === key && x.poppy ? { ...x, poppy: { ...x.poppy, ...patch } } : x));
+      }
+      return next;
+    });
+  }
+  function togglePoppyId(key: string, field: "formIds" | "documentIds", id: string) {
+    const found = findPoppy(key);
+    if (!found?.item.poppy) return;
+    const cur = found.item.poppy[field];
+    updatePoppy(key, { [field]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] } as Partial<PoppyCfg>);
   }
   function onStageClick(stageKey: string) {
     if (armed) place(stageKey, armed);
@@ -114,6 +167,30 @@ export function WorkflowBuilder({
             triggerStage: stage.key,
             roleValues,
           });
+        } else if (item.source === "poppy") {
+          const cfg = item.poppy ?? blankPoppy();
+          if (cfg.formIds.length === 0 && !cfg.includeCv) {
+            setError("Poppy needs at least one form (or the CV) to review — open its settings.");
+            return;
+          }
+          drafts.push({
+            title: "Poppy screening",
+            workflowTitle: title.trim(),
+            taskType: "poppy",
+            formIds: [],
+            dueDays: "",
+            required: true,
+            body: "",
+            triggerStage: stage.key,
+            roleValues,
+            poppyEngage: cfg.engage,
+            poppyFormIds: cfg.formIds,
+            poppyIncludeCv: cfg.includeCv,
+            poppyFocus: cfg.focus,
+            poppyInstructions: cfg.instructions,
+            poppyQuestionCount: cfg.questionCount,
+            poppyDocumentIds: cfg.documentIds,
+          });
         } else {
           drafts.push({
             title: item.name,
@@ -122,15 +199,17 @@ export function WorkflowBuilder({
             formIds: [],
             dueDays: "",
             required: true,
-            body: `Please read and confirm you have read "${item.name}".`,
+            body: `Please read and sign "${item.name}".`,
             triggerStage: stage.key,
             roleValues,
+            documentId: item.refId,
+            documentKind: item.kind,
           });
         }
       }
     }
     if (drafts.length === 0) {
-      setError("Drag at least one form or document onto a stage.");
+      setError("Drag at least one form, document or Poppy step onto a stage.");
       return;
     }
     setSaving(true);
@@ -315,14 +394,33 @@ export function WorkflowBuilder({
                   items.map((it) => (
                     <div
                       key={it.key}
-                      className="group flex items-center gap-1 rounded-md border border-white/70 bg-white/90 px-1.5 py-1 text-[11px] font-medium text-gray-800 shadow-sm"
+                      className={`group flex items-center gap-1 rounded-md border px-1.5 py-1 text-[11px] font-medium shadow-sm ${
+                        it.source === "poppy"
+                          ? "border-brand-300 bg-brand-50 text-brand-800"
+                          : "border-white/70 bg-white/90 text-gray-800"
+                      }`}
                     >
                       {it.source === "form" ? (
                         <FileText className="h-3 w-3 shrink-0 text-brand-500" />
+                      ) : it.source === "poppy" ? (
+                        <Sparkles className="h-3 w-3 shrink-0 text-brand-500" />
                       ) : (
                         <ScrollText className="h-3 w-3 shrink-0 text-brand-500" />
                       )}
-                      <span className="truncate">{it.name}</span>
+                      <span className="truncate">{it.source === "poppy" ? "Poppy" : it.name}</span>
+                      {it.source === "poppy" && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditing(it.key);
+                          }}
+                          aria-label="Configure Poppy"
+                          className="rounded p-0.5 text-brand-400 hover:bg-brand-100 hover:text-brand-700"
+                        >
+                          <Settings2 className="h-3 w-3" />
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={(e) => {
@@ -330,7 +428,7 @@ export function WorkflowBuilder({
                           removePlaced(stage.key, it.key);
                         }}
                         aria-label="Remove"
-                        className="ml-auto rounded p-0.5 text-gray-300 hover:bg-red-50 hover:text-red-600"
+                        className={`rounded p-0.5 text-gray-300 hover:bg-red-50 hover:text-red-600 ${it.source === "poppy" ? "" : "ml-auto"}`}
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -343,12 +441,164 @@ export function WorkflowBuilder({
         })}
       </div>
 
-      {/* Poppy placeholder — built next */}
-      <div className="flex items-center gap-2 rounded-xl border border-dashed border-brand-300/70 bg-brand-50/40 px-3 py-2.5 text-xs text-brand-700/80 backdrop-blur-sm">
-        <Sparkles className="h-4 w-4 text-brand-500" />
-        <span className="font-medium">Poppy AI screening</span>
-        <span className="text-brand-600/60">— coming next</span>
-      </div>
+      {/* Poppy — draggable AI screening step (drop onto the stage it runs at). */}
+      {poppyEnabled && (
+        <div className="rounded-xl border border-brand-200 bg-brand-50/50 p-3 backdrop-blur-sm">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-brand-800">
+            <Sparkles className="h-4 w-4 text-brand-500" /> Poppy AI screening
+          </p>
+          <LibChip
+            item={{ source: "poppy", refId: "poppy", name: "Poppy screening" }}
+            icon={<Sparkles className="h-3.5 w-3.5 shrink-0 text-brand-500" />}
+          />
+          <p className="mt-2 text-[11px] text-brand-700/70">
+            Drop onto the stage Poppy should run at, then set which forms it reviews.
+          </p>
+        </div>
+      )}
+
+      {/* Poppy config panel — appears when a placed Poppy step is being edited. */}
+      {editing &&
+        (() => {
+          const found = findPoppy(editing);
+          const cfg = found?.item.poppy;
+          if (!found || !cfg) return null;
+          const stageLabel = STAGES.find((s) => s.key === found.stageKey)?.label ?? found.stageKey;
+          return (
+            <div className="space-y-3 rounded-xl border border-brand-300 bg-white/80 p-4 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-brand-800">
+                  <Sparkles className="h-4 w-4 text-brand-500" /> Poppy settings · {stageLabel}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setEditing(null)}
+                  className="rounded-lg bg-brand-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-700"
+                >
+                  Done
+                </button>
+              </div>
+
+              <label className="block text-xs font-medium text-gray-600">
+                When should Poppy engage?
+                <select
+                  value={cfg.engage}
+                  onChange={(e) => updatePoppy(editing, { engage: e.target.value as PoppyCfg["engage"] })}
+                  className={cls}
+                >
+                  <option value="stage">When they reach {stageLabel}</option>
+                  <option value="all_forms">When the selected forms are complete</option>
+                  <option value="as_forms">As the selected forms come in</option>
+                </select>
+              </label>
+
+              <div className="text-xs font-medium text-gray-600">
+                Forms Poppy reviews
+                <div className="mt-1 max-h-36 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/70 p-2">
+                  <label className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
+                    <input
+                      type="checkbox"
+                      checked={cfg.includeCv}
+                      onChange={() => updatePoppy(editing, { includeCv: !cfg.includeCv })}
+                      className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
+                    />
+                    CV (uploaded)
+                  </label>
+                  {forms.length === 0 ? (
+                    <p className="px-1 font-normal text-gray-400">No forms yet.</p>
+                  ) : (
+                    forms.map((f) => (
+                      <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
+                        <input
+                          type="checkbox"
+                          checked={cfg.formIds.includes(f.id)}
+                          onChange={() => togglePoppyId(editing, "formIds", f.id)}
+                          className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
+                        />
+                        {f.name}
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="text-xs font-medium text-gray-600">
+                Focus on (optional)
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {POPPY_FOCUS_OPTIONS.map((f) => {
+                    const on = cfg.focus.includes(f);
+                    return (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() =>
+                          updatePoppy(editing!, {
+                            focus: on ? cfg.focus.filter((x) => x !== f) : [...cfg.focus, f],
+                          })
+                        }
+                        className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                          on ? "border-brand-500 bg-brand-100 text-brand-800" : "border-white/60 bg-white/70 text-gray-600 hover:border-brand-300"
+                        }`}
+                      >
+                        {f}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label className="text-xs font-medium text-gray-600">
+                  Number of questions (optional)
+                  <input
+                    value={cfg.questionCount}
+                    onChange={(e) => updatePoppy(editing!, { questionCount: e.target.value })}
+                    type="number"
+                    min="1"
+                    max="20"
+                    placeholder="Default"
+                    className={cls}
+                  />
+                </label>
+              </div>
+
+              <label className="block text-xs font-medium text-gray-600">
+                Instructions for Poppy (optional)
+                <textarea
+                  value={cfg.instructions}
+                  onChange={(e) => updatePoppy(editing!, { instructions: e.target.value })}
+                  rows={2}
+                  placeholder="e.g. Probe any gaps in employment history."
+                  className={cls}
+                />
+              </label>
+
+              <div className="text-xs font-medium text-gray-600">
+                What to compare to (optional)
+                {poppyDocs.length === 0 ? (
+                  <p className="mt-1 font-normal text-gray-400">No policies or contracts to compare against yet.</p>
+                ) : (
+                  <div className="mt-1 max-h-36 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/70 p-2">
+                    {poppyDocs.map((d) => (
+                      <label key={d.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
+                        <input
+                          type="checkbox"
+                          checked={cfg.documentIds.includes(d.id)}
+                          onChange={() => togglePoppyId(editing!, "documentIds", d.id)}
+                          className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
+                        />
+                        {d.name}
+                      </label>
+                    ))}
+                  </div>
+                )}
+                <span className="mt-1 block text-[11px] font-normal text-gray-400">
+                  The role&apos;s job description is always compared. Leave blank to use your Settings default.
+                </span>
+              </div>
+            </div>
+          );
+        })()}
 
       <div className="flex justify-end gap-2">
         <button

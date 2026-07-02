@@ -17,6 +17,8 @@ export type PortalTask = {
   form_id: string | null;
   due_date: string | null;
   note: string | null;
+  document_id: string | null;
+  document_kind: string | null;
 };
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -49,7 +51,16 @@ export function OnboardingTaskItem({ task }: { task: PortalTask }) {
 
       {needsAction && (
         <div className="mt-3">
-          {task.task_type === "acknowledge" && (
+          {task.task_type === "acknowledge" && task.document_id && (
+            <Link
+              href={`/portal/onboarding/${task.task_id}/sign`}
+              className="inline-block rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              Read &amp; sign
+            </Link>
+          )}
+
+          {task.task_type === "acknowledge" && !task.document_id && (
             <form action={acknowledgeTask}>
               <input type="hidden" name="id" value={task.task_id} />
               <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">

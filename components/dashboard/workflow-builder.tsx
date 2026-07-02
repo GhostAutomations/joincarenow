@@ -29,6 +29,11 @@ const ENGAGE: { key: Engage; label: string }[] = [
   { key: "stage", label: "When they reach a stage in the pipeline" },
 ];
 
+// Temporarily hidden (kept in code): the Pipeline library box and the
+// "when they reach a stage" Poppy engage option. Flip to true to bring back.
+const SHOW_PIPELINE = false;
+const ENGAGE_VISIBLE = SHOW_PIPELINE ? ENGAGE : ENGAGE.filter((m) => m.key !== "stage");
+
 type Lib = { source: "form" | "doc" | "stage"; refId: string; name: string; kind?: "contract" | "policy" };
 type Placed = Lib & { key: string };
 const sameItem = (a: Lib, b: Lib) => a.source === b.source && a.refId === b.refId;
@@ -366,8 +371,8 @@ export function WorkflowBuilder({
         )}
       </div>
 
-      {/* Libraries: Forms, Contracts & policies, Pipeline */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {/* Libraries: Forms, Contracts & policies (Pipeline hidden for now) */}
+      <div className={`grid grid-cols-1 gap-3 ${SHOW_PIPELINE ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         <div className="rounded-xl border border-white/60 bg-white/50 p-3 backdrop-blur-sm">
           <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
             <FileText className="h-4 w-4 text-brand-600" /> Forms
@@ -392,16 +397,18 @@ export function WorkflowBuilder({
             )}
           </div>
         </div>
-        <div className="rounded-xl border border-white/60 bg-white/50 p-3 backdrop-blur-sm">
-          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
-            <GitBranch className="h-4 w-4 text-brand-600" /> Pipeline
-          </p>
-          <div className="max-h-40 space-y-1.5 overflow-y-auto pr-1">
-            {STAGES.map((s) => (
-              <LibChip key={s.key} item={{ source: "stage", refId: s.key, name: s.label }} icon={<GitBranch className="h-3.5 w-3.5 shrink-0 text-brand-500" />} />
-            ))}
+        {SHOW_PIPELINE && (
+          <div className="rounded-xl border border-white/60 bg-white/50 p-3 backdrop-blur-sm">
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+              <GitBranch className="h-4 w-4 text-brand-600" /> Pipeline
+            </p>
+            <div className="max-h-40 space-y-1.5 overflow-y-auto pr-1">
+              {STAGES.map((s) => (
+                <LibChip key={s.key} item={{ source: "stage", refId: s.key, name: s.label }} icon={<GitBranch className="h-3.5 w-3.5 shrink-0 text-brand-500" />} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <p className="text-[11px] text-gray-500">
@@ -456,12 +463,12 @@ export function WorkflowBuilder({
           </p>
           <p className="text-xs font-medium text-gray-700">When should Poppy engage?</p>
           <p className="text-[11px] text-gray-500">
-            Drop the forms Poppy reviews (and any policies/contracts to compare against) into one box. For the
-            third box, also drop a pipeline stage.
+            Drop the forms Poppy reviews (and any policies/contracts to compare against) into one box.
+            {SHOW_PIPELINE && " For the third box, also drop a pipeline stage."}
           </p>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {ENGAGE.map((mode) => {
+          <div className={`grid grid-cols-1 gap-3 ${ENGAGE_VISIBLE.length >= 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+            {ENGAGE_VISIBLE.map((mode) => {
               const isActive = poppyEngage === mode.key;
               return (
                 <div

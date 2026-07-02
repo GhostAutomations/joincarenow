@@ -31,6 +31,73 @@ export type TaskDraft = {
   poppyQuestionCount?: number | string;
 };
 
+const WORKFLOW_STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
+
+/** Build onboarding_templates rows from task drafts, attaching them to a
+ *  workflow (id + name + roles) from `startPos`. Shared by create + append so
+ *  the two paths never drift. `formNames` disambiguates a form task's title. */
+function buildTemplateRows(opts: {
+  companyId: string;
+  drafts: TaskDraft[];
+  workflowId: string;
+  workflowName: string;
+  role_ids: string[] | null;
+  startPos: number;
+  formNames: Map<string, string>;
+}): Record<string, unknown>[] {
+  const { companyId, drafts, workflowId, workflowName, role_ids, formNames } = opts;
+  let pos = opts.startPos;
+  const rows: Record<string, unknown>[] = [];
+  for (const d of drafts) {
+    const dueDays = d.dueDays === "" ? null : Math.max(0, parseInt(d.dueDays, 10) || 0);
+    const body = (d.body ?? "").trim() || null;
+    const shared = { company_id: companyId, body, role_id: null, role_ids, workflow_id: workflowId, workflow_name: workflowName };
+    if (d.taskType === "poppy") {
+      rows.push({
+        ...shared,
+        title: d.title.trim() || "Poppy screening",
+        task_type: "poppy",
+        form_id: null,
+        required: d.required,
+        due_days: dueDays,
+        trigger_stage: d.poppyEngage === "stage" ? d.triggerStage : null,
+        poppy_engage: d.poppyEngage,
+        poppy_form_ids: d.poppyFormIds ?? [],
+        poppy_include_cv: d.poppyIncludeCv === true,
+        poppy_focus: d.poppyFocus?.length ? d.poppyFocus : null,
+        poppy_instructions: d.poppyInstructions?.trim() || null,
+        poppy_question_count: normPoppyCount(d.poppyQuestionCount),
+        position: pos++,
+      });
+    } else if (d.taskType === "form") {
+      for (const fid of d.formIds) {
+        rows.push({
+          ...shared,
+          title: formNames.get(fid) ?? d.title.trim(),
+          task_type: "form",
+          form_id: fid,
+          required: d.required,
+          due_days: dueDays,
+          trigger_stage: d.triggerStage,
+          position: pos++,
+        });
+      }
+    } else {
+      rows.push({
+        ...shared,
+        title: d.title.trim(),
+        task_type: d.taskType,
+        form_id: null,
+        required: d.required,
+        due_days: dueDays,
+        trigger_stage: d.triggerStage,
+        position: pos++,
+      });
+    }
+  }
+  return rows;
+}
+
 /** Add one or more workflow tasks at once. Each form task expands to one task
  *  per selected form. */
 export async function addTemplateTasks(
@@ -95,72 +162,67 @@ export async function addTemplateTasks(
   const roleIds = [...new Set((drafts[0]?.roleValues ?? []).filter(Boolean))];
   const role_ids = roleIds.length ? roleIds : null;
 
-  const rows: Record<string, unknown>[] = [];
-  for (const d of drafts) {
-    const dueDays = d.dueDays === "" ? null : Math.max(0, parseInt(d.dueDays, 10) || 0);
-    const body = (d.body ?? "").trim() || null;
-    if (d.taskType === "poppy") {
-      rows.push({
-        company_id: current.company_id,
-        title: d.title.trim(),
-        task_type: "poppy",
-        form_id: null,
-        body,
-        required: d.required,
-        due_days: dueDays,
-        // Only meaningful when Poppy engages at a pipeline stage.
-        trigger_stage: d.poppyEngage === "stage" ? d.triggerStage : null,
-        poppy_engage: d.poppyEngage,
-        poppy_form_ids: d.poppyFormIds ?? [],
-        poppy_include_cv: d.poppyIncludeCv === true,
-        poppy_focus: d.poppyFocus?.length ? d.poppyFocus : null,
-        poppy_instructions: d.poppyInstructions?.trim() || null,
-        poppy_question_count: normPoppyCount(d.poppyQuestionCount),
-        role_id: null,
-        role_ids,
-        workflow_id: workflowId,
-        workflow_name: workflowName,
-        position: pos++,
-      });
-    } else if (d.taskType === "form") {
-      for (const fid of d.formIds) {
-        rows.push({
-          company_id: current.company_id,
-          title: names.get(fid) ?? d.title.trim(),
-          task_type: "form",
-          form_id: fid,
-          body,
-          required: d.required,
-          due_days: dueDays,
-          trigger_stage: d.triggerStage,
-          role_id: null,
-          role_ids,
-          workflow_id: workflowId,
-          workflow_name: workflowName,
-          position: pos++,
-        });
-      }
-    } else {
-      rows.push({
-        company_id: current.company_id,
-        title: d.title.trim(),
-        task_type: d.taskType,
-        form_id: null,
-        body,
-        required: d.required,
-        due_days: dueDays,
-        trigger_stage: d.triggerStage,
-        role_id: null,
-        role_ids,
-        workflow_id: workflowId,
-        workflow_name: workflowName,
-        position: pos++,
-      });
-    }
-  }
+  const rows = buildTemplateRows({
+    companyId: current.company_id,
+    drafts,
+    workflowId,
+    workflowName,
+    role_ids,
+    startPos: pos,
+    formNames: names,
+  });
 
   const { error } = await supabase.from("onboarding_templates").insert(rows);
   if (error) return { error: `Could not save: ${error.message}` };
+  revalidatePath("/onboarding-board");
+  return { ok: true };
+}
+
+/** Append one or more tasks to an EXISTING company workflow — same workflow_id,
+ *  name and roles — so a workflow can be added to rather than recreated. */
+export async function addTasksToWorkflow(
+  workflowId: string,
+  drafts: TaskDraft[]
+): Promise<{ ok?: boolean; error?: string }> {
+  if (!workflowId || !Array.isArray(drafts) || drafts.length === 0) return { error: "Nothing to add" };
+  const { supabase, current } = await requireCompany();
+  if (current.role !== "admin") return { error: "Only admins can edit workflows." };
+
+  for (const d of drafts) {
+    if (!["form", "document", "acknowledge", "poppy"].includes(d.taskType)) return { error: "Pick a type for each task" };
+    if (d.taskType === "poppy") {
+      if (!["all_forms", "as_forms", "stage"].includes(d.poppyEngage ?? "")) return { error: "Choose when Poppy should engage" };
+      if (d.poppyEngage === "stage" && ![...WORKFLOW_STAGES, "right_to_work"].includes(d.triggerStage)) return { error: "Choose which stage Poppy engages at" };
+      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv) return { error: "Choose at least one form (or the CV) for Poppy to review" };
+    } else if (d.taskType === "form" && (!d.formIds || d.formIds.length === 0)) {
+      return { error: "Choose at least one form for each form task" };
+    } else if (d.taskType !== "poppy" && !WORKFLOW_STAGES.includes(d.triggerStage)) {
+      return { error: "Choose when to send each task" };
+    }
+  }
+
+  // Existing workflow's name + roles + current max position.
+  const { data: existing } = await supabase
+    .from("onboarding_templates")
+    .select("workflow_name, role_ids, position")
+    .eq("company_id", current.company_id)
+    .eq("workflow_id", workflowId)
+    .order("position", { ascending: false });
+  if (!existing || existing.length === 0) return { error: "Workflow not found." };
+  const workflowName = (existing[0].workflow_name as string) ?? "Workflow";
+  const role_ids = (existing[0].role_ids as string[] | null) ?? null;
+  const startPos = ((existing[0].position as number) ?? -1) + 1;
+
+  const allFormIds = [...new Set(drafts.flatMap((d) => d.formIds ?? []))];
+  let names = new Map<string, string>();
+  if (allFormIds.length) {
+    const { data: fs } = await supabase.from("forms").select("id, name").in("id", allFormIds).eq("company_id", current.company_id);
+    names = new Map((fs ?? []).map((f) => [f.id as string, f.name as string]));
+  }
+
+  const rows = buildTemplateRows({ companyId: current.company_id, drafts, workflowId, workflowName, role_ids, startPos, formNames: names });
+  const { error } = await supabase.from("onboarding_templates").insert(rows);
+  if (error) return { error: `Could not add: ${error.message}` };
   revalidatePath("/onboarding-board");
   return { ok: true };
 }

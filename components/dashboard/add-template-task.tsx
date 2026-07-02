@@ -38,6 +38,7 @@ export function AddTemplateTask({
   showRole = true,
   roleLabel = "Applies to roles",
   poppyEnabled = false,
+  appendMode = false,
 }: {
   forms: { id: string; name: string }[];
   /** Company: value = role UUID. Founder store: value = standard role name. */
@@ -49,7 +50,11 @@ export function AddTemplateTask({
   roleLabel?: string;
   /** Show the Poppy AI screening step type (company has Poppy). */
   poppyEnabled?: boolean;
+  /** Appending to an existing workflow — hide the workflow-level role field and
+   *  relabel the title/CTA (name + roles come from the existing workflow). */
+  appendMode?: boolean;
 }) {
+  const roleVisible = showRole && !appendMode;
   const router = useRouter();
   // Workflow-level (shared across all tasks in this workflow).
   const [title, setTitle] = useState("");
@@ -132,14 +137,14 @@ export function AddTemplateTask({
     return (
       <div className="flex items-center justify-between gap-3 rounded-xl border border-green-300 bg-green-50 px-4 py-3">
         <span className="inline-flex items-center gap-2 text-sm font-medium text-green-800">
-          <CheckCircle2 className="h-5 w-5" /> Workflow created
+          <CheckCircle2 className="h-5 w-5" /> {appendMode ? "Added to workflow" : "Workflow created"}
         </span>
         <button
           type="button"
           onClick={reset}
           className="inline-flex items-center gap-1.5 rounded-lg border border-green-300 bg-white/80 backdrop-blur-sm px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100"
         >
-          <Plus className="h-4 w-4" /> Create another workflow
+          <Plus className="h-4 w-4" /> {appendMode ? "Add another task" : "Create another workflow"}
         </button>
       </div>
     );
@@ -152,17 +157,17 @@ export function AddTemplateTask({
       )}
 
       {/* Workflow-level: title + role (once for the whole workflow). */}
-      <div className={`grid grid-cols-1 gap-3 ${showRole ? "sm:grid-cols-2" : ""}`}>
+      <div className={`grid grid-cols-1 gap-3 ${roleVisible ? "sm:grid-cols-2" : ""}`}>
         <label className="text-xs font-medium text-gray-600">
-          Workflow title
+          {appendMode ? "Task title" : "Workflow title"}
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. New starter onboarding"
+            placeholder={appendMode ? "e.g. Upload passport" : "e.g. New starter onboarding"}
             className={cls}
           />
         </label>
-        {showRole && (
+        {roleVisible && (
           <div className="text-xs font-medium text-gray-600">
             {roleLabel}
             <MultiSelect
@@ -374,7 +379,7 @@ export function AddTemplateTask({
         disabled={saving}
         className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
       >
-        {saving ? "Creating…" : "Create Workflow"}
+        {saving ? (appendMode ? "Adding…" : "Creating…") : appendMode ? "Add to workflow" : "Create Workflow"}
       </button>
     </div>
   );

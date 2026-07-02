@@ -7,6 +7,7 @@ import {
   renameWorkflow,
   reorderTemplateTasks,
   setWorkflowRoles,
+  addTasksToWorkflow,
 } from "@/modules/onboarding/actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AddTemplateTask } from "@/components/dashboard/add-template-task";
@@ -29,8 +30,6 @@ export default async function OnboardingBoardPage() {
     supabase.from("companies").select("poppy_enabled").eq("id", current.company_id).single(),
   ]);
   const poppyEnabled = company?.poppy_enabled === true;
-
-  const roleName = new Map((roles ?? []).map((r) => [r.id as string, r.name as string]));
 
   // Group template tasks into their workflows.
   type Tpl = {
@@ -81,8 +80,6 @@ export default async function OnboardingBoardPage() {
   }
   const workflows = [...wfMap.values()];
   const roleOptions = (roles ?? []).map((r) => ({ value: String(r.id), label: String(r.name) }));
-  const rolesLabel = (ids: string[]) =>
-    ids.map((id) => roleName.get(id) ?? "role").join(", ");
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -104,7 +101,7 @@ export default async function OnboardingBoardPage() {
                 <WorkflowCard
                   key={gi}
                   name={wf.name}
-                  subtitle={`${wf.roleIds.length ? `${rolesLabel(wf.roleIds)} · ` : ""}${wf.items.length} task${wf.items.length === 1 ? "" : "s"}`}
+                  subtitle={`${wf.roleIds.length ? `${wf.roleIds.length} role${wf.roleIds.length === 1 ? "" : "s"}` : "All roles"} · ${wf.items.length} task${wf.items.length === 1 ? "" : "s"}`}
                   workflowId={wf.id}
                   items={toTasks(wf.items)}
                   forms={(forms ?? []) as { id: string; name: string }[]}
@@ -119,6 +116,7 @@ export default async function OnboardingBoardPage() {
                     selected: wf.roleIds,
                     save: setWorkflowRoles,
                   } : undefined}
+                  addTasks={addTasksToWorkflow}
                 />
               ))}
             </div>

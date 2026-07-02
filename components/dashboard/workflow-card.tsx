@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Trash2, Pencil, Check, X, ArrowUp, ArrowDown } from "lucide-react";
+import { ChevronDown, Trash2, Pencil, Check, X, ArrowUp, ArrowDown, Plus } from "lucide-react";
 import { MultiSelect } from "@/components/dashboard/multi-select";
 import { POPPY_FOCUS_OPTIONS } from "@/lib/poppy/config";
+import { AddTemplateTask } from "@/components/dashboard/add-template-task";
+import type { TaskDraft } from "@/modules/onboarding/actions";
 
 export type WorkflowTask = {
   id: string;
@@ -91,6 +93,7 @@ export function WorkflowCard({
   reorderTasks,
   roleControl,
   poppyEnabled = false,
+  addTasks,
 }: {
   name: string;
   subtitle: string;
@@ -111,9 +114,12 @@ export function WorkflowCard({
     save: (workflowId: string, values: string[]) => Promise<{ ok?: boolean; error?: string }>;
     label?: string;
   };
+  /** Company only: append tasks to this existing workflow. */
+  addTasks?: (workflowId: string, drafts: TaskDraft[]) => Promise<{ ok?: boolean; error?: string }>;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameV, setNameV] = useState(name);
   const [edit, setEdit] = useState<EditInput | null>(null);
@@ -409,6 +415,32 @@ export function WorkflowCard({
               </li>
             ))}
           </ul>
+
+          {workflowId && addTasks && (
+            <div className="border-t border-white/50 px-3 py-3">
+              {adding ? (
+                <div className="rounded-lg border border-dashed border-white/50 p-3">
+                  <AddTemplateTask
+                    forms={forms}
+                    poppyEnabled={poppyEnabled}
+                    appendMode
+                    saveAction={(drafts) => addTasks(workflowId, drafts)}
+                  />
+                  <button type="button" onClick={() => setAdding(false)} className="mt-2 text-xs text-gray-500 hover:text-gray-700">
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAdding(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/60 bg-white/70 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/90"
+                >
+                  <Plus className="h-4 w-4" /> Add task
+                </button>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

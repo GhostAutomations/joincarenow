@@ -205,7 +205,7 @@ export function WorkflowCard({
   }
 
   return (
-    <div className="rounded-lg border border-white/50 bg-white/50 backdrop-blur-sm shadow-sm">
+    <div className="rounded-2xl border border-white/50 bg-white/70 backdrop-blur-md shadow-sm">
       <div className="flex items-center justify-between gap-3 px-3 py-2.5">
         {editingName ? (
           <div className="flex flex-1 items-center gap-1.5">

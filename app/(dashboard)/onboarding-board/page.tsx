@@ -105,9 +105,9 @@ export default async function OnboardingBoardPage() {
       />
 
       {isAdmin && (
-        <section className="mt-6 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md shadow-sm p-6">
-          <h2 className="text-base font-medium text-gray-900">Workflow checklist</h2>
-          <p className="mt-1 text-sm text-gray-500">
+        <section className="mt-6">
+          <h2 className="text-base font-semibold text-white drop-shadow-sm">Workflow checklist</h2>
+          <p className="mt-1 text-sm text-white/80">
             Each task is sent automatically when an applicant reaches its trigger point.
           </p>
 
@@ -139,7 +139,8 @@ export default async function OnboardingBoardPage() {
             </div>
           )}
 
-          <div className="mt-4 rounded-lg border border-dashed border-white/40 p-4">
+          <div className="mt-4 rounded-2xl border border-white/50 bg-white/70 backdrop-blur-md p-5 shadow-sm">
+            <p className="mb-3 text-sm font-semibold text-gray-900">Add a workflow</p>
             <AddTemplateTask forms={forms ?? []} poppyDocs={poppyDocs} roleOptions={roleOptions} poppyEnabled={poppyEnabled} />
           </div>
         </section>

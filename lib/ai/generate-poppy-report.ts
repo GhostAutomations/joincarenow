@@ -83,7 +83,9 @@ Return ONLY a JSON object (no prose, no markdown):
 }
 
 Rules:
-- Produce EXACTLY ${Math.min(20, Math.max(1, Math.round(inputs.questionCount || 8)))} questions — the most useful follow-ups to put to the candidate themselves (verify claimed experience, fill gaps vs the JD, clarify ambiguities). Phrase each as you would ask the candidate directly, warm and plain.
+- Produce EXACTLY ${Math.min(20, Math.max(1, Math.round(inputs.questionCount || 8)))} questions. PRIORITISE what most affects the hiring decision, in this order: (1) unexplained GAPS or inconsistent/overlapping DATES in their employment history — ask about the specific period directly, naming the dates; (2) required information that is missing, vague or contradictory; (3) claimed experience or qualifications that need verifying against the job description; (4) any safeguarding or compliance concern (Right to Work, DBS, registration).
+- Go DEEP on what matters rather than spreading one shallow question across every topic — it is better to properly probe a real gap than to ask a generic question about something already clear.
+- Phrase each as you would ask the candidate directly, warm and plain.
 - "rationale" is one short internal note for the recruiter on why it's worth asking.
 - ${FAIRNESS}`;
 
@@ -134,7 +136,7 @@ Return ONLY a JSON object (no prose, no markdown):
 }
 
 Rules:
-- Only include a follow-up where an answer genuinely needs clarifying — do NOT pad. Return an empty array if the answers are clear enough.
+- Include a follow-up where an answer is vague, evasive, incomplete, or leaves a gap, inconsistency or unexplained period still unaccounted for. Keep pushing on an unexplained employment gap or a contradiction until it is actually explained — don't accept a non-answer. Return an empty array ONLY if the answers are genuinely clear and complete.
 - At most ${max} follow-ups. Phrase each warmly and plainly, as you'd ask the candidate directly.
 - "rationale" is one short internal note for the recruiter on why it's worth asking.
 - ${FAIRNESS}`;

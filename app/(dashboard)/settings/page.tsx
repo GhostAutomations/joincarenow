@@ -13,8 +13,7 @@ import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
 import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
 import { CareersContentForm } from "@/components/dashboard/careers-content-form";
 import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard/reminder-settings-form";
-import { PoppySettingsForm } from "@/components/dashboard/poppy-settings-form";
-import { PoppyAttributesForm } from "@/components/dashboard/poppy-attributes-form";
+import { PoppyPanel } from "@/components/dashboard/poppy-panel";
 import { readPoppyConfig } from "@/lib/poppy/config";
 import { poppyAllowanceUsed } from "@/lib/billing/poppy-credits";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -241,15 +240,8 @@ export default async function SettingsPage() {
               key: "poppy",
               label: "Poppy",
               description:
-                "Configure your AI recruitment agent — what to focus on, custom instructions, and how many questions it asks.",
-              content: <PoppySettingsForm config={poppyConfig} usage={poppyUsage} />,
-            },
-            {
-              key: "attributes",
-              label: "Attributes",
-              description:
-                "The professional and personal attributes Poppy assesses every candidate against — split into required and desirable.",
-              content: <PoppyAttributesForm config={poppyConfig} />,
+                "Configure your AI recruitment agent — attributes, focus, custom instructions, and how many questions it asks.",
+              content: <PoppyPanel config={poppyConfig} usage={poppyUsage} />,
             },
           ]
         : []),

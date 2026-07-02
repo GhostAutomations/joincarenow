@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireCompany } from "@/modules/auth/queries";
+import { poppyAllowanceUsed } from "@/lib/billing/poppy-credits";
 import { londonToUtcIso } from "@/lib/time";
 import { AppGrid } from "@/components/dashboard/app-grid";
 import { SignoffLive } from "@/components/dashboard/signoff-live";
@@ -40,15 +41,11 @@ export default async function DashboardPage() {
   const isAdmin = current.role === "admin";
   const poppyEnabled = companyRow?.poppy_enabled === true;
 
-  // Poppy screens this month (admins with Poppy) — for the dashboard stat card.
+  // Poppy screens this month (admins with Poppy) — same source as the "Screens
+  // this month" figure in Poppy Settings, so the two always match.
   let poppyScreens = 0;
   if (isAdmin && poppyEnabled) {
-    const { count: pc } = await supabase
-      .from("poppy_reports")
-      .select("id", { count: "exact", head: true })
-      .eq("company_id", cid)
-      .gte("generated_at", monthStart);
-    poppyScreens = pc ?? 0;
+    poppyScreens = (await poppyAllowanceUsed(cid)).used;
   }
   const poppyOfferPending =
     companyRow?.plan_tier !== "poppy" &&

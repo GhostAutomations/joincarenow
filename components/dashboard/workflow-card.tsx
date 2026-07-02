@@ -23,6 +23,7 @@ export type WorkflowTask = {
   poppy_focus?: string[] | null;
   poppy_instructions?: string | null;
   poppy_question_count?: number | null;
+  poppy_document_ids?: string[] | null;
 };
 
 type EditInput = {
@@ -40,6 +41,7 @@ type EditInput = {
   poppyFocus: string[];
   poppyInstructions: string;
   poppyQuestionCount: string;
+  poppyDocumentIds: string[];
 };
 
 const POPPY_STAGE_OPTIONS: [string, string][] = [
@@ -86,6 +88,7 @@ export function WorkflowCard({
   workflowId,
   items,
   forms = [],
+  poppyDocs = [],
   deleteWorkflow,
   deleteTask,
   updateTask,
@@ -100,6 +103,7 @@ export function WorkflowCard({
   workflowId: string | null;
   items: WorkflowTask[];
   forms?: { id: string; name: string }[];
+  poppyDocs?: { id: string; name: string }[];
   poppyEnabled?: boolean;
   deleteWorkflow: (formData: FormData) => void | Promise<void>;
   deleteTask: (formData: FormData) => void | Promise<void>;
@@ -166,6 +170,7 @@ export function WorkflowCard({
       poppyFocus: t.poppy_focus ?? [],
       poppyInstructions: t.poppy_instructions ?? "",
       poppyQuestionCount: t.poppy_question_count != null ? String(t.poppy_question_count) : "",
+      poppyDocumentIds: t.poppy_document_ids ?? [],
     });
   }
 
@@ -373,6 +378,29 @@ export function WorkflowCard({
                           <label className="mt-2 block text-xs font-medium text-gray-600">Number of questions
                             <input type="number" min="1" max="20" value={edit.poppyQuestionCount} onChange={(e) => setEdit({ ...edit, poppyQuestionCount: e.target.value })} placeholder="default" className={`${fieldCls} w-28`} />
                           </label>
+                          <div className="mt-2 text-xs font-medium text-gray-600">What to compare to
+                            {poppyDocs.length === 0 ? (
+                              <p className="mt-1 font-normal text-gray-400">No policies or contracts yet.</p>
+                            ) : (
+                              <div className="mt-1 max-h-36 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 p-2">
+                                {poppyDocs.map((d) => {
+                                  const on = edit.poppyDocumentIds.includes(d.id);
+                                  return (
+                                    <label key={d.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
+                                      <input
+                                        type="checkbox"
+                                        checked={on}
+                                        onChange={() => setEdit({ ...edit, poppyDocumentIds: on ? edit.poppyDocumentIds.filter((x) => x !== d.id) : [...edit.poppyDocumentIds, d.id] })}
+                                        className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
+                                      />
+                                      {d.name}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            <span className="mt-1 block text-[11px] font-normal text-gray-400">Blank = company default. The role&apos;s job description is always compared.</span>
+                          </div>
                         </div>
                       </>
                     ) : (
@@ -422,6 +450,7 @@ export function WorkflowCard({
                 <div className="rounded-lg border border-dashed border-white/50 p-3">
                   <AddTemplateTask
                     forms={forms}
+                    poppyDocs={poppyDocs}
                     poppyEnabled={poppyEnabled}
                     appendMode
                     saveAction={(drafts) => addTasks(workflowId, drafts)}

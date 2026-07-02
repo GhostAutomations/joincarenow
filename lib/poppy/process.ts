@@ -73,6 +73,7 @@ type PoppyStep = {
   poppy_focus: string[] | null;
   poppy_instructions: string | null;
   poppy_question_count: number | null;
+  poppy_document_ids: string[] | null;
 };
 type AppRow = {
   id: string;
@@ -141,7 +142,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
 
     const { data: stepsRaw } = await db
       .from("onboarding_templates")
-      .select("poppy_engage, poppy_form_ids, poppy_include_cv, trigger_stage, role_ids, poppy_focus, poppy_instructions, poppy_question_count")
+      .select("poppy_engage, poppy_form_ids, poppy_include_cv, trigger_stage, role_ids, poppy_focus, poppy_instructions, poppy_question_count, poppy_document_ids")
       .eq("company_id", companyId)
       .eq("is_store", false)
       .eq("task_type", "poppy");

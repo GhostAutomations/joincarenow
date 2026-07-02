@@ -45,6 +45,9 @@ export type PoppyStepOverride = {
   poppy_focus?: string[] | null;
   poppy_instructions?: string | null;
   poppy_question_count?: number | null;
+  /** Documents (policy/contract ids) to compare against — overrides the company
+   *  default reference documents for this step. */
+  poppy_document_ids?: string[] | null;
 };
 
 /**
@@ -70,6 +73,7 @@ export async function loadPoppyRuntimeConfig(
     if (typeof step.poppy_question_count === "number" && step.poppy_question_count > 0) {
       cfg.questionCount = Math.min(20, Math.max(1, Math.round(step.poppy_question_count)));
     }
+    if (Array.isArray(step.poppy_document_ids) && step.poppy_document_ids.length) cfg.documentIds = step.poppy_document_ids;
   }
 
   let referenceDocs: { name: string; body: string }[] = [];

@@ -29,6 +29,8 @@ export type TaskDraft = {
   poppyFocus?: string[];
   poppyInstructions?: string;
   poppyQuestionCount?: number | string;
+  /** Documents (policy/contract ids) Poppy compares against for this step. */
+  poppyDocumentIds?: string[];
 };
 
 const WORKFLOW_STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
@@ -67,6 +69,7 @@ function buildTemplateRows(opts: {
         poppy_focus: d.poppyFocus?.length ? d.poppyFocus : null,
         poppy_instructions: d.poppyInstructions?.trim() || null,
         poppy_question_count: normPoppyCount(d.poppyQuestionCount),
+        poppy_document_ids: d.poppyDocumentIds?.length ? d.poppyDocumentIds : null,
         position: pos++,
       });
     } else if (d.taskType === "form") {
@@ -363,6 +366,7 @@ export type EditTaskInput = {
   poppyFocus?: string[];
   poppyInstructions?: string;
   poppyQuestionCount?: number | string;
+  poppyDocumentIds?: string[];
 };
 
 const WF_STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
@@ -393,6 +397,7 @@ export async function updateTemplateTask(input: EditTaskInput): Promise<{ ok?: b
         poppy_focus: input.poppyFocus?.length ? input.poppyFocus : null,
         poppy_instructions: input.poppyInstructions?.trim() || null,
         poppy_question_count: normPoppyCount(input.poppyQuestionCount),
+        poppy_document_ids: input.poppyDocumentIds?.length ? input.poppyDocumentIds : null,
         trigger_stage: input.poppyEngage === "stage" ? input.triggerStage : null,
         body: input.body.trim() || null,
         title: input.title.trim() || "Poppy screening",

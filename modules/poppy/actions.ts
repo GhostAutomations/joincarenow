@@ -314,7 +314,7 @@ export async function runPoppyForApplication(
   // Find an applicable Poppy step (for its selected forms + CV choice).
   const { data: stepsRaw } = await admin
     .from("onboarding_templates")
-    .select("poppy_form_ids, poppy_include_cv, role_ids, poppy_focus, poppy_instructions, poppy_question_count")
+    .select("poppy_form_ids, poppy_include_cv, role_ids, poppy_focus, poppy_instructions, poppy_question_count, poppy_document_ids")
     .eq("company_id", current.company_id)
     .eq("is_store", false)
     .eq("task_type", "poppy");
@@ -325,6 +325,7 @@ export async function runPoppyForApplication(
     poppy_focus: string[] | null;
     poppy_instructions: string | null;
     poppy_question_count: number | null;
+    poppy_document_ids: string[] | null;
   }[];
   const roleId = app.jobs?.role_id ?? null;
   const step = steps.find((s) => !s.role_ids || s.role_ids.length === 0 || (!!roleId && s.role_ids.includes(roleId))) ?? null;

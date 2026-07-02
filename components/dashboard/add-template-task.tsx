@@ -18,6 +18,7 @@ type Box = {
   poppyEngage: string;
   poppyFormIds: string[];
   poppyIncludeCv: boolean;
+  poppyDocumentIds: string[];
 };
 
 const blankBox = (): Box => ({
@@ -29,10 +30,12 @@ const blankBox = (): Box => ({
   poppyEngage: "",
   poppyFormIds: [],
   poppyIncludeCv: false,
+  poppyDocumentIds: [],
 });
 
 export function AddTemplateTask({
   forms,
+  poppyDocs = [],
   roleOptions = [],
   saveAction = addTemplateTasks,
   showRole = true,
@@ -41,6 +44,8 @@ export function AddTemplateTask({
   appendMode = false,
 }: {
   forms: { id: string; name: string }[];
+  /** Company documents (policies + contracts) Poppy can compare against. */
+  poppyDocs?: { id: string; name: string }[];
   /** Company: value = role UUID. Founder store: value = standard role name. */
   roleOptions?: { value: string; label: string }[];
   /** Server action that saves the drafts. Defaults to the company workflow
@@ -92,6 +97,20 @@ export function AddTemplateTask({
       )
     );
   }
+  function togglePoppyDoc(i: number, id: string) {
+    setBoxes((bs) =>
+      bs.map((b, idx) =>
+        idx === i
+          ? {
+              ...b,
+              poppyDocumentIds: b.poppyDocumentIds.includes(id)
+                ? b.poppyDocumentIds.filter((x) => x !== id)
+                : [...b.poppyDocumentIds, id],
+            }
+          : b
+      )
+    );
+  }
   function togglePoppyForm(i: number, id: string) {
     setBoxes((bs) =>
       bs.map((b, idx) =>
@@ -121,6 +140,7 @@ export function AddTemplateTask({
       poppyEngage: b.poppyEngage,
       poppyFormIds: b.poppyFormIds,
       poppyIncludeCv: b.poppyIncludeCv,
+      poppyDocumentIds: b.poppyDocumentIds,
     }));
     setSaving(true);
     const res = await saveAction(drafts);
@@ -295,6 +315,33 @@ export function AddTemplateTask({
                 </div>
                 <span className="mt-1 block text-[11px] font-normal text-gray-400">
                   Poppy compares these against the job description to build screening questions.
+                </span>
+              </div>
+
+              {/* What to compare to — documents (policies/contracts) for this step.
+                  Blank = the company default from Settings. The role's own job
+                  description is always compared automatically. */}
+              <div className="text-xs font-medium text-gray-600">
+                What to compare to
+                {poppyDocs.length === 0 ? (
+                  <p className="mt-1 font-normal text-gray-400">No policies or contracts yet — add them in Settings first.</p>
+                ) : (
+                  <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 backdrop-blur-sm p-2">
+                    {poppyDocs.map((d) => (
+                      <label key={d.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
+                        <input
+                          type="checkbox"
+                          checked={b.poppyDocumentIds.includes(d.id)}
+                          onChange={() => togglePoppyDoc(i, d.id)}
+                          className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
+                        />
+                        {d.name}
+                      </label>
+                    ))}
+                  </div>
+                )}
+                <span className="mt-1 block text-[11px] font-normal text-gray-400">
+                  Policies / contracts to judge the candidate against. Leave blank to use your Settings default. The role&apos;s job description is always compared.
                 </span>
               </div>
             </>

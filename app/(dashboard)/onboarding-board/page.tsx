@@ -22,7 +22,7 @@ export default async function OnboardingBoardPage() {
   const [{ data: templates }, { data: forms }, { data: roles }, { data: company }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, role_ids, workflow_id, workflow_name, position, poppy_engage, poppy_form_ids, poppy_include_cv, poppy_focus, poppy_instructions, poppy_question_count")
+      .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, role_ids, workflow_id, workflow_name, position, poppy_engage, poppy_form_ids, poppy_include_cv, poppy_focus, poppy_instructions, poppy_question_count, poppy_document_ids")
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
@@ -30,6 +30,20 @@ export default async function OnboardingBoardPage() {
     supabase.from("companies").select("poppy_enabled").eq("id", current.company_id).single(),
   ]);
   const poppyEnabled = company?.poppy_enabled === true;
+
+  // Documents Poppy can compare against (policies + contracts), for the "what to
+  // compare to" picker on a Poppy step. Only loaded when Poppy is enabled.
+  let poppyDocs: { id: string; name: string }[] = [];
+  if (poppyEnabled) {
+    const [{ data: pol }, { data: con }] = await Promise.all([
+      supabase.from("policy_documents").select("id, name").eq("company_id", current.company_id).order("name"),
+      supabase.from("contract_templates").select("id, name").eq("company_id", current.company_id).order("name"),
+    ]);
+    poppyDocs = [
+      ...(pol ?? []).map((d) => ({ id: d.id as string, name: `${d.name as string} · Policy` })),
+      ...(con ?? []).map((d) => ({ id: d.id as string, name: `${d.name as string} · Contract` })),
+    ];
+  }
 
   // Group template tasks into their workflows.
   type Tpl = {
@@ -52,12 +66,14 @@ export default async function OnboardingBoardPage() {
     poppy_focus: string[] | null;
     poppy_instructions: string | null;
     poppy_question_count: number | null;
+    poppy_document_ids: string[] | null;
   };
   const toTasks = (ts: Tpl[]): WorkflowTask[] => ts.map((t) => ({
     id: t.id, title: t.title, task_type: t.task_type, trigger_stage: t.trigger_stage,
     due_days: t.due_days, required: t.required, body: t.body, form_id: t.form_id,
     poppy_engage: t.poppy_engage, poppy_form_ids: t.poppy_form_ids, poppy_include_cv: t.poppy_include_cv,
     poppy_focus: t.poppy_focus, poppy_instructions: t.poppy_instructions, poppy_question_count: t.poppy_question_count,
+    poppy_document_ids: t.poppy_document_ids,
   }));
   const wfMap = new Map<
     string,
@@ -105,6 +121,7 @@ export default async function OnboardingBoardPage() {
                   workflowId={wf.id}
                   items={toTasks(wf.items)}
                   forms={(forms ?? []) as { id: string; name: string }[]}
+                  poppyDocs={poppyDocs}
                   poppyEnabled={poppyEnabled}
                   deleteWorkflow={deleteWorkflow}
                   deleteTask={deleteTemplateTask}
@@ -123,7 +140,7 @@ export default async function OnboardingBoardPage() {
           )}
 
           <div className="mt-4 rounded-lg border border-dashed border-white/40 p-4">
-            <AddTemplateTask forms={forms ?? []} roleOptions={roleOptions} poppyEnabled={poppyEnabled} />
+            <AddTemplateTask forms={forms ?? []} poppyDocs={poppyDocs} roleOptions={roleOptions} poppyEnabled={poppyEnabled} />
           </div>
         </section>
       )}

@@ -2,8 +2,9 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { InterviewInputs } from "@/lib/ai/generate-interview-questions";
 
 /** One screening question, optionally with the applicant's answer (filled during
- *  the conversation). */
-export type PoppyQ = { question: string; rationale: string; answer?: string };
+ *  the conversation). `followUp` marks a question Poppy asked after reviewing the
+ *  applicant's earlier answers. */
+export type PoppyQ = { question: string; rationale: string; answer?: string; followUp?: boolean };
 
 /** The progressively-filled Poppy report stored on poppy_reports.report:
  *  - after analysis: summary + concerns + questions (no answers/recommendation)
@@ -14,6 +15,8 @@ export type PoppyReportData = {
   concerns: string[];
   recommendation?: string;
   questions: PoppyQ[];
+  /** Set once Poppy has generated its one round of follow-up questions. */
+  followUpsAdded?: boolean;
 };
 
 const MODEL = () => process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
@@ -102,6 +105,53 @@ Rules:
     concerns: asStrings(o.concerns),
     questions: questions.slice(0, QCOUNT),
   };
+}
+
+/**
+ * FOLLOW-UPS — after the applicant has answered the screening questions, review
+ * their answers and produce up to `max` follow-up questions worth clarifying
+ * (vague, concerning or incomplete answers). Returns [] if nothing needs probing.
+ */
+export async function generatePoppyFollowUps(
+  inputs: InterviewInputs,
+  qa: PoppyQ[],
+  max = 3
+): Promise<{ question: string; rationale: string }[]> {
+  const answered = qa.filter((q) => q.answer && q.answer.trim());
+  if (!answered.length) return [];
+  const transcript = answered.map((q, i) => `Q${i + 1}: ${q.question}\nA${i + 1}: ${q.answer}`).join("\n\n");
+
+  const prompt = `You are Poppy, screening a candidate for a UK care-sector recruiter. You already asked screening questions; the candidate's answers are below. Review them and decide whether any FOLLOW-UP questions are worth asking to clarify a vague, incomplete or concerning answer.
+
+${candidateBlock(inputs)}
+
+ANSWERS SO FAR:
+${transcript}
+
+Return ONLY a JSON object (no prose, no markdown):
+{
+  "questions": [ { "question": string, "rationale": string } ]
+}
+
+Rules:
+- Only include a follow-up where an answer genuinely needs clarifying — do NOT pad. Return an empty array if the answers are clear enough.
+- At most ${max} follow-ups. Phrase each warmly and plainly, as you'd ask the candidate directly.
+- "rationale" is one short internal note for the recruiter on why it's worth asking.
+- ${FAIRNESS}`;
+
+  const o = await askClaude({ ...inputs, cvBase64Pdf: null }, prompt);
+  const out: { question: string; rationale: string }[] = [];
+  for (const q of Array.isArray(o.questions) ? o.questions : []) {
+    if (!q || typeof q !== "object") continue;
+    const qo = q as Record<string, unknown>;
+    const question = typeof qo.question === "string" ? qo.question.trim() : "";
+    if (!question) continue;
+    out.push({
+      question: question.slice(0, 400),
+      rationale: typeof qo.rationale === "string" ? qo.rationale.trim().slice(0, 300) : "",
+    });
+  }
+  return out.slice(0, max);
 }
 
 /**

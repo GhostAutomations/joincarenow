@@ -28,6 +28,7 @@ export function PoppySettingsForm({
   const [focus, setFocus] = useState<string[]>(config.focus);
   const [instructions, setInstructions] = useState(config.instructions);
   const [questionCount, setQuestionCount] = useState(String(config.questionCount || 8));
+  const [followUps, setFollowUps] = useState(config.followUps === true);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +45,7 @@ export function PoppySettingsForm({
         focus,
         instructions,
         questionCount: Math.min(20, Math.max(1, Math.round(Number(questionCount) || 8))),
+        followUps,
       });
       if (res.error) setError(res.error);
       else {
@@ -133,6 +135,24 @@ export function PoppySettingsForm({
           />
         </label>
         <p className="mt-1 text-xs text-gray-500">Between 1 and 20. Default is 8.</p>
+      </div>
+
+      <div>
+        <label className="flex items-start gap-2.5">
+          <input
+            type="checkbox"
+            checked={followUps}
+            onChange={(e) => setFollowUps(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-white/60 text-brand-600 focus:ring-brand-500"
+          />
+          <span>
+            <span className="block text-sm font-medium text-gray-700">Follow-up questions</span>
+            <span className="block text-xs text-gray-500">
+              After the applicant answers, Poppy reviews their responses and asks any follow-up
+              questions worth clarifying. Follow-ups are added to the report.
+            </span>
+          </span>
+        </label>
       </div>
 
       <div className="flex items-center gap-3">

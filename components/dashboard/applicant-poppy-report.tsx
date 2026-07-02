@@ -262,7 +262,12 @@ function Report({
           <div className="mt-1.5 gap-x-5 sm:columns-2">
             {r.questions.map((q, i) => (
               <div key={i} className="mb-2.5 break-inside-avoid text-sm">
-                <p className="text-black">{q.question}</p>
+                <p className="text-black">
+                  {q.followUp && (
+                    <span className="mr-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">Follow-up</span>
+                  )}
+                  {q.question}
+                </p>
                 {q.answer ? (
                   <p className="mt-0.5 rounded-md bg-gray-100 px-2 py-1 font-semibold text-black">{q.answer}</p>
                 ) : (

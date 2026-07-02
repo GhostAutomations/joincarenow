@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendCompanySms } from "@/lib/billing/usage";
 import { recordPoppyApplicant } from "@/lib/billing/poppy-credits";
-import { synthesizePoppyReport, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
+import { synthesizePoppyReport, generatePoppyFollowUps, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
 import { loadPoppyRuntimeConfig } from "@/lib/poppy/config";
 import { notifyJobOwner } from "@/lib/comms/notify-owner";
 import { BASE_URL } from "@/lib/billing/stripe";
@@ -253,8 +253,40 @@ export async function handlePoppyReply(db: Admin, applicationId: string, replyTe
 
   if (next < data.questions.length) {
     await askQuestion(db, app, data, next, "Thanks. ");
-  } else {
-    await finish(db, app, data);
+    return true;
   }
+
+  // All current questions answered. If follow-ups are enabled, review the answers
+  // once and ask any worth clarifying before finishing.
+  const cfg = await loadPoppyRuntimeConfig(app.company_id);
+  if (cfg.followUps && !data.followUpsAdded && data.questions.some((q) => q.answer)) {
+    try {
+      const follow = await generatePoppyFollowUps(
+        {
+          jobTitle: app.jobs?.title ?? "Care role",
+          jobDescription: app.jobs?.description ?? "",
+          applicantName: [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ") || "the candidate",
+          coverMessage: app.cover_message,
+          answersText: answersText(app),
+          cvBase64Pdf: null,
+          referenceDocs: cfg.referenceDocs,
+          focus: cfg.focus,
+          instructions: cfg.instructions,
+        },
+        data.questions
+      );
+      data.followUpsAdded = true;
+      if (follow.length) {
+        for (const f of follow) data.questions.push({ question: f.question, rationale: f.rationale, followUp: true });
+        await db.from("poppy_reports").update({ report: data, current_q: next }).eq("application_id", applicationId);
+        await askQuestion(db, app, data, next, "Thanks — just a couple of quick follow-ups. ");
+        return true;
+      }
+      await db.from("poppy_reports").update({ report: data }).eq("application_id", applicationId);
+    } catch {
+      data.followUpsAdded = true; // never loop on an AI error — just finish
+    }
+  }
+  await finish(db, app, data);
   return true;
 }

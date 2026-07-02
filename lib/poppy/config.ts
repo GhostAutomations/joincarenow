@@ -5,6 +5,9 @@ export type PoppyConfig = {
   focus: string[];
   instructions: string;
   questionCount: number;
+  /** If true, Poppy reviews the applicant's answers and asks follow-up questions
+   *  before finishing (added to the report). */
+  followUps: boolean;
 };
 
 export const POPPY_FOCUS_OPTIONS = [
@@ -15,7 +18,7 @@ export const POPPY_FOCUS_OPTIONS = [
   "Communication",
 ];
 
-const DEFAULT: PoppyConfig = { documentIds: [], focus: [], instructions: "", questionCount: 8 };
+const DEFAULT: PoppyConfig = { documentIds: [], focus: [], instructions: "", questionCount: 8, followUps: false };
 
 /** Normalise a Poppy step question-count override (1-20, or null = use company default). */
 export function normPoppyCount(v: number | string | null | undefined): number | null {
@@ -32,6 +35,7 @@ export function readPoppyConfig(settings: unknown): PoppyConfig {
     focus: Array.isArray(p.focus) ? p.focus.filter((x): x is string => typeof x === "string") : [],
     instructions: typeof p.instructions === "string" ? p.instructions : "",
     questionCount: typeof p.questionCount === "number" ? Math.min(20, Math.max(1, Math.round(p.questionCount))) : 8,
+    followUps: p.followUps === true,
   };
 }
 
@@ -54,7 +58,7 @@ export type PoppyStepOverride = {
 export async function loadPoppyRuntimeConfig(
   companyId: string,
   step?: PoppyStepOverride | null
-): Promise<{ referenceDocs: { name: string; body: string }[]; focus: string[]; instructions: string; questionCount: number }> {
+): Promise<{ referenceDocs: { name: string; body: string }[]; focus: string[]; instructions: string; questionCount: number; followUps: boolean }> {
   const db = createAdminClient();
   const { data: co } = await db.from("companies").select("settings").eq("id", companyId).single();
   const cfg = readPoppyConfig(co?.settings);
@@ -79,7 +83,7 @@ export async function loadPoppyRuntimeConfig(
       body: (d.body as string) ?? "",
     }));
   }
-  return { referenceDocs, focus: cfg.focus, instructions: cfg.instructions, questionCount: cfg.questionCount };
+  return { referenceDocs, focus: cfg.focus, instructions: cfg.instructions, questionCount: cfg.questionCount, followUps: cfg.followUps };
 }
 
 export { DEFAULT as DEFAULT_POPPY_CONFIG };

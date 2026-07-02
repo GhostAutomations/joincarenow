@@ -418,6 +418,7 @@ export async function savePoppySettings(
     focus: Array.isArray(input.focus) ? input.focus.filter((x) => typeof x === "string").slice(0, 20) : [],
     instructions: typeof input.instructions === "string" ? input.instructions.slice(0, 2000) : "",
     questionCount: Math.min(20, Math.max(1, Math.round(Number(input.questionCount) || 8))),
+    followUps: input.followUps === true,
   };
 
   const settings = { ...(co.settings && typeof co.settings === "object" ? (co.settings as Record<string, unknown>) : {}), poppy: clean };

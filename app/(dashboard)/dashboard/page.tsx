@@ -143,7 +143,7 @@ export default async function DashboardPage() {
         {isAdmin && poppyOfferPending && <PoppyOfferBanner diamond={isDiamond} variant="dark" />}
 
         {/* stat cards — small squares, wrap to one line */}
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           {stats.map((s) => (
             <Link
               key={s.label}

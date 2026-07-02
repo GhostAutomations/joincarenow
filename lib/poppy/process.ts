@@ -183,6 +183,15 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
         continue;
       }
 
+      // Re-check right before the expensive AI call: a manual "Run Poppy" (or a
+      // prior run) may have created the report since we built `haveReport`, so we
+      // don't clobber it, waste an AI call, or double-message the applicant.
+      const { data: fresh } = await db.from("poppy_reports").select("id").eq("application_id", app.id).maybeSingle();
+      if (fresh) {
+        res.skipped++;
+        continue;
+      }
+
       try {
         // Only read the CV if this step's reviewer list includes it.
         const cvBase64Pdf = chosen.poppy_include_cv === true ? await downloadCvPdf(db, app.cv_path) : null;
@@ -212,18 +221,29 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
           questions: analysis.questions,
         };
 
-        await db.from("poppy_reports").upsert(
-          {
-            company_id: companyId,
-            application_id: app.id,
-            status: "ready",
-            phase: "analysed",
-            report,
-            model,
-            generated_at: new Date().toISOString(),
-          },
-          { onConflict: "application_id" }
-        );
+        // Insert-if-absent (never overwrite an existing report). If a concurrent
+        // run created one in the meantime, `ins` is empty and we bail — no
+        // clobber, no second conversation.
+        const { data: ins } = await db
+          .from("poppy_reports")
+          .upsert(
+            {
+              company_id: companyId,
+              application_id: app.id,
+              status: "ready",
+              phase: "analysed",
+              report,
+              model,
+              generated_at: new Date().toISOString(),
+            },
+            { onConflict: "application_id", ignoreDuplicates: true }
+          )
+          .select("id")
+          .maybeSingle();
+        if (!ins) {
+          res.skipped++;
+          continue;
+        }
         // Poppy is billed per applicant (40 included/month, then 75p) — NOT via
         // the generic 10p AI meter. One credit per applicant, deduped.
         await recordPoppyApplicant(companyId, app.id);

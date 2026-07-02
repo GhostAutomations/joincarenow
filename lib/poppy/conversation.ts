@@ -65,12 +65,25 @@ export async function startPoppyConversation(db: Admin, applicationId: string): 
 
   // Nothing to ask → no conversation needed; mark complete.
   if (!data.questions?.length) {
-    await db.from("poppy_reports").update({ phase: "complete" }).eq("application_id", applicationId);
+    await db.from("poppy_reports").update({ phase: "complete" }).eq("application_id", applicationId).eq("phase", "analysed");
     return;
   }
 
   const name = firstName(app);
   const co = companyName(app);
+
+  // Atomically CLAIM the analysed → conversing transition BEFORE sending anything.
+  // If two runs race (e.g. the cron and a manual "Run Poppy" at the same moment),
+  // only one wins this conditional update; the loser matches 0 rows and bails, so
+  // the consent message + nudge SMS are sent exactly once.
+  const { data: claimed } = await db
+    .from("poppy_reports")
+    .update({ phase: "conversing", consent: "asked", current_q: 0, sms_sent_at: new Date().toISOString() })
+    .eq("application_id", applicationId)
+    .eq("phase", "analysed")
+    .select("application_id")
+    .maybeSingle();
+  if (!claimed) return;
 
   await postPoppyMessage(
     db,

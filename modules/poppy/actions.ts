@@ -311,6 +311,13 @@ export async function runPoppyForApplication(
     }
   }
 
+  // A screening already in progress (analysed / mid-conversation) — don't
+  // re-analyse (it would clobber the questions and conversation state) or
+  // re-contact the applicant.
+  if (existing && (existing.phase === "analysed" || existing.phase === "conversing")) {
+    return { error: "Poppy is already screening this applicant — please wait for it to finish." };
+  }
+
   // Find an applicable Poppy step (for its selected forms + CV choice).
   const { data: stepsRaw } = await admin
     .from("onboarding_templates")

@@ -35,9 +35,21 @@ export default async function DashboardPage() {
   };
 
   const { data: companyRow } = await supabase
-    .from("companies").select("created_at, settings, plan_tier, agreed_plan").eq("id", cid).single();
+    .from("companies").select("created_at, settings, plan_tier, agreed_plan, poppy_enabled").eq("id", cid).single();
   const fbOpen = feedbackOpen(companyRow?.created_at as string | undefined);
   const isAdmin = current.role === "admin";
+  const poppyEnabled = companyRow?.poppy_enabled === true;
+
+  // Poppy screens this month (admins with Poppy) — for the dashboard stat card.
+  let poppyScreens = 0;
+  if (isAdmin && poppyEnabled) {
+    const { count: pc } = await supabase
+      .from("poppy_reports")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", cid)
+      .gte("generated_at", monthStart);
+    poppyScreens = pc ?? 0;
+  }
   const poppyOfferPending =
     companyRow?.plan_tier !== "poppy" &&
     ((companyRow?.settings as { poppy_offer?: { status?: string } } | null)?.poppy_offer?.status === "pending");
@@ -109,6 +121,10 @@ export default async function DashboardPage() {
     { label: "Sign Off", value: count(signoff), href: "/sign-off" },
     { label: "Messages", value: count(unreadMsgs), href: "/messages" },
     { label: "SMS this month", value: count(sms), href: "/templates" },
+    // Poppy screens — admins on the Poppy plan only.
+    ...(isAdmin && poppyEnabled
+      ? [{ label: "Poppy screens", value: poppyScreens, href: "/settings?s=poppy" }]
+      : []),
   ];
 
   return (
@@ -126,16 +142,19 @@ export default async function DashboardPage() {
         {/* Founder has offered Poppy — admins can accept/decline right here */}
         {isAdmin && poppyOfferPending && <PoppyOfferBanner diamond={isDiamond} variant="dark" />}
 
-        {/* stat cards */}
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        {/* stat cards — square, all on one line on large screens */}
+        <div
+          className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:[grid-template-columns:repeat(var(--stat-cols),minmax(0,1fr))]"
+          style={{ "--stat-cols": stats.length } as React.CSSProperties}
+        >
           {stats.map((s) => (
             <Link
               key={s.label}
               href={s.href}
-              className="rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/25"
+              className="flex aspect-square flex-col justify-between rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/25"
             >
               <p className="text-sm text-white/70">{s.label}</p>
-              <p className="mt-1 text-3xl font-semibold">{s.value}</p>
+              <p className="text-3xl font-semibold">{s.value}</p>
             </Link>
           ))}
         </div>

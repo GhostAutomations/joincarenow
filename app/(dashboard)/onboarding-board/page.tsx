@@ -31,6 +31,17 @@ export default async function OnboardingBoardPage() {
   ]);
   const poppyEnabled = company?.poppy_enabled === true;
 
+  // The application form is tied to the job advert (applicants complete it when
+  // they apply) — it must NOT be reissued as a workflow task, so hide any form
+  // used as a job's application form from the builder's Forms box.
+  const { data: appForms } = await supabase
+    .from("jobs")
+    .select("application_form_id")
+    .eq("company_id", current.company_id)
+    .not("application_form_id", "is", null);
+  const applicationFormIds = new Set((appForms ?? []).map((j) => j.application_form_id as string));
+  const builderForms = ((forms ?? []) as { id: string; name: string }[]).filter((f) => !applicationFormIds.has(f.id));
+
   // Company documents (policies + contracts). Used both by the workflow builder
   // (drop a document in as a read-&-confirm task) and by the Poppy "what to
   // compare to" picker (which shows the type suffix).
@@ -145,7 +156,7 @@ export default async function OnboardingBoardPage() {
 
           <div className="mt-4">
             <WorkflowBuilder
-              forms={(forms ?? []) as { id: string; name: string }[]}
+              forms={builderForms}
               docs={builderDocs}
               poppyEnabled={poppyEnabled}
               roleOptions={roleOptions}

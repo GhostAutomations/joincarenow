@@ -76,48 +76,6 @@ export const STARTER_FORMS: StarterForm[] = [
       },
     ],
   },
-  {
-    key: "emergency_contact",
-    name: "Emergency Contact & Next of Kin",
-    purpose: "onboarding",
-    category: "onboarding",
-    description: "",
-    fields: [
-      { label: "Contact full name", field_type: "short_text", required: true },
-      { label: "Relationship to you", field_type: "short_text", required: true },
-      { label: "Contact phone number", field_type: "short_text", required: true },
-      { label: "Alternative phone number", field_type: "short_text" },
-      { label: "Contact address", field_type: "address" },
-    ],
-  },
-  {
-    key: "availability",
-    name: "Availability & Working Preferences",
-    purpose: "onboarding",
-    category: "onboarding",
-    description: "",
-    fields: [
-      {
-        label: "Hours you're looking for",
-        field_type: "dropdown",
-        options: ["Full time", "Part time", "Bank / as-and-when"],
-        required: true,
-      },
-      {
-        label: "Days you can usually work",
-        field_type: "checkboxes",
-        options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-        required: true,
-      },
-      {
-        label: "Times you can work",
-        field_type: "checkboxes",
-        options: ["Mornings", "Afternoons", "Evenings", "Nights", "Sleep-ins"],
-      },
-      { label: "Earliest start date", field_type: "date", required: true },
-      { label: "Notice period with current employer (if any)", field_type: "short_text" },
-    ],
-  },
 ];
 
 // ---- Onboarding workflow -----------------------------------
@@ -151,20 +109,6 @@ export const STARTER_ONBOARDING: StarterOnboardingTask[] = [
     title: "Proof of address",
     task_type: "document",
     body: "Upload a recent utility bill, bank statement or council tax letter (within the last 3 months).",
-    required: true,
-    due_days: 3,
-  },
-  {
-    title: "Emergency contact details",
-    task_type: "form",
-    formKey: "emergency_contact",
-    required: true,
-    due_days: 3,
-  },
-  {
-    title: "Availability & working preferences",
-    task_type: "form",
-    formKey: "availability",
     required: true,
     due_days: 3,
   },

@@ -62,7 +62,9 @@ function buildTemplateRows(opts: {
         form_id: null,
         required: d.required,
         due_days: dueDays,
-        trigger_stage: d.poppyEngage === "stage" ? d.triggerStage : null,
+        // Poppy uses poppy_engage; trigger_stage is inert unless engage='stage'.
+        // trigger_stage is NOT NULL, so use a harmless valid default otherwise.
+        trigger_stage: d.poppyEngage === "stage" ? d.triggerStage : "on_application",
         poppy_engage: d.poppyEngage,
         poppy_form_ids: d.poppyFormIds ?? [],
         poppy_include_cv: d.poppyIncludeCv === true,
@@ -398,7 +400,7 @@ export async function updateTemplateTask(input: EditTaskInput): Promise<{ ok?: b
         poppy_instructions: input.poppyInstructions?.trim() || null,
         poppy_question_count: normPoppyCount(input.poppyQuestionCount),
         poppy_document_ids: input.poppyDocumentIds?.length ? input.poppyDocumentIds : null,
-        trigger_stage: input.poppyEngage === "stage" ? input.triggerStage : null,
+        trigger_stage: input.poppyEngage === "stage" ? input.triggerStage : "on_application",
         body: input.body.trim() || null,
         title: input.title.trim() || "Poppy screening",
         form_id: null,

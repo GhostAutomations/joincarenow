@@ -419,8 +419,8 @@ export function WorkflowBuilder({
         )}
       </p>
 
-      {/* Pipeline stage columns (form / document tasks) */}
-      <div className="flex gap-2.5 overflow-x-auto pb-1">
+      {/* Pipeline stage columns (form / document tasks) — fill the full width */}
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
         {STAGES.map((stage) => {
           const items = placed[stage.key] ?? [];
           const active = dropTarget === stage.key || (!!armed && armed.source !== "stage");
@@ -434,7 +434,7 @@ export function WorkflowBuilder({
               }}
               onDragLeave={() => setDropTarget((t) => (t === stage.key ? null : t))}
               onDrop={(e) => onStageDrop(stage.key, e)}
-              className={`flex min-h-[7rem] w-40 shrink-0 flex-col rounded-xl border p-2 transition ${
+              className={`flex min-h-[7rem] flex-col rounded-xl border p-2 transition ${
                 dropTarget === stage.key
                   ? "border-brand-400 bg-brand-50/70 ring-1 ring-brand-300"
                   : active

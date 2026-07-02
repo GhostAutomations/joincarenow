@@ -14,8 +14,13 @@ export type PoppyReportData = {
   summary: string[]; // key findings as bullet points
   concerns: string[];
   recommendation?: string;
+  /** The questions Poppy actually asked, with answers — built live as the
+   *  agent conversation unfolds. */
   questions: PoppyQ[];
-  /** Set once Poppy has generated its one round of follow-up questions. */
+  /** Suggested opening topics from the analysis — a guide the agent draws on and
+   *  adapts, not a fixed script. */
+  agenda?: { question: string; rationale: string }[];
+  /** Legacy: set once the old fixed follow-up round ran. Unused by the agent. */
   followUpsAdded?: boolean;
 };
 
@@ -154,6 +159,66 @@ Rules:
     });
   }
   return out.slice(0, max);
+}
+
+/**
+ * AGENT TURN — the heart of the conversational agent. Given the full transcript
+ * so far, the concerns to resolve and the suggested agenda, decide the SINGLE
+ * next move: ask another question (adapting to the candidate's last answer) or
+ * conclude the screening. This is what lets Poppy probe dynamically — challenge
+ * a contradiction, dig into a vague answer, chase an unexplained gap — rather
+ * than reading a fixed list.
+ */
+export async function poppyDecideNextTurn(
+  inputs: InterviewInputs,
+  agenda: string[],
+  concerns: string[],
+  qa: PoppyQ[],
+  opts: { target: number; hardCap: number; adaptive: boolean }
+): Promise<{ action: "ask" | "conclude"; question: string; rationale: string }> {
+  const asked = qa.length;
+  const transcript = qa
+    .map((q, i) => `Q${i + 1}: ${q.question}\nA${i + 1}: ${q.answer?.trim() || "(no answer)"}`)
+    .join("\n\n");
+
+  const prompt = `You are Poppy, screening a candidate for a UK care-sector recruiter in a live back-and-forth conversation. Decide your single NEXT move.
+
+${candidateBlock(inputs)}
+
+INITIAL CONCERNS TO RESOLVE:
+${concerns.length ? concerns.map((c) => `- ${c}`).join("\n") : "(none)"}
+
+TOPICS WORTH COVERING (a guide, not a script):
+${agenda.length ? agenda.map((a) => `- ${a}`).join("\n") : "(use your judgement)"}
+
+CONVERSATION SO FAR (${asked} question${asked === 1 ? "" : "s"} asked):
+${transcript || "(none yet)"}
+
+${
+  opts.adaptive
+    ? `Aim for around ${opts.target} questions, but ask fewer if you already have what you need, or more (never exceed ${opts.hardCap}) if important gaps or inconsistencies remain unresolved.`
+    : `Cover the topics above then conclude. Do not exceed ${opts.hardCap} questions.`
+}
+
+Return ONLY a JSON object (no prose, no markdown):
+{
+  "action": "ask" | "conclude",
+  "question": string,   // the next question to put to the candidate (required when action = "ask"), warm and direct
+  "rationale": string   // one short internal note for the recruiter on why you asked it
+}
+
+Rules:
+- ADAPT to their last answer: if it was vague or evasive, probe it; if it contradicts their forms, challenge it directly and specifically; if a topic is already covered, move on.
+- Prioritise unexplained employment gaps, inconsistent dates, missing required information, and any safeguarding or compliance concern.
+- Ask ONE question at a time. Conclude only when you could confidently write a hire recommendation — don't pad.
+- ${FAIRNESS}`;
+
+  const o = await askClaude({ ...inputs, cvBase64Pdf: null }, prompt);
+  const action = o.action === "conclude" ? "conclude" : "ask";
+  const question = typeof o.question === "string" ? o.question.trim().slice(0, 400) : "";
+  const rationale = typeof o.rationale === "string" ? o.rationale.trim().slice(0, 300) : "";
+  if (action === "ask" && !question) return { action: "conclude", question: "", rationale };
+  return { action, question, rationale };
 }
 
 /**

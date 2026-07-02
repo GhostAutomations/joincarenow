@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendCompanySms } from "@/lib/billing/usage";
 import { recordPoppyApplicant } from "@/lib/billing/poppy-credits";
-import { synthesizePoppyReport, generatePoppyFollowUps, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
+import { synthesizePoppyReport, poppyDecideNextTurn, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
 import { loadPoppyRuntimeConfig } from "@/lib/poppy/config";
 import { notifyJobOwner } from "@/lib/comms/notify-owner";
 import { BASE_URL } from "@/lib/billing/stripe";
@@ -63,8 +63,8 @@ export async function startPoppyConversation(db: Admin, applicationId: string): 
   const app = await loadConvApp(db, applicationId);
   if (!app) return;
 
-  // Nothing to ask → no conversation needed; mark complete.
-  if (!data.questions?.length) {
+  // Nothing to screen (no agenda and no concerns) → no conversation needed.
+  if (!(data.agenda?.length ?? 0) && !(data.concerns?.length ?? 0)) {
     await db.from("poppy_reports").update({ phase: "complete" }).eq("application_id", applicationId).eq("phase", "analysed");
     return;
   }
@@ -146,6 +146,36 @@ async function decline(db: Admin, app: ConvApp, ownerNote: string): Promise<void
       ctaUrl: `${BASE_URL}/pipeline`,
     },
   });
+}
+
+type RuntimeCfg = {
+  referenceDocs: { name: string; body: string }[];
+  focus: string[];
+  instructions: string;
+  questionCount: number;
+  followUps: boolean;
+};
+
+/** Candidate context passed to the agent each turn. */
+function agentInputs(app: ConvApp, cfg: RuntimeCfg) {
+  return {
+    jobTitle: app.jobs?.title ?? "Care role",
+    jobDescription: app.jobs?.description ?? "",
+    applicantName: [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ") || "the candidate",
+    coverMessage: app.cover_message,
+    answersText: answersText(app),
+    cvBase64Pdf: null as string | null,
+    referenceDocs: cfg.referenceDocs,
+    focus: cfg.focus,
+    instructions: cfg.instructions,
+  };
+}
+
+/** Hard cap on questions so the conversation always terminates. Follow-ups ON
+ *  lets the agent probe a few beyond the target; OFF keeps it to the target. */
+function hardCap(cfg: RuntimeCfg): number {
+  const q = Math.min(20, Math.max(1, Math.round(cfg.questionCount || 8)));
+  return cfg.followUps ? Math.min(20, q + 6) : q;
 }
 
 /** Build a light synthesis input (the Q&A + concerns carry the weight). */
@@ -244,62 +274,75 @@ export async function handlePoppyReply(db: Admin, applicationId: string, replyTe
     return true;
   }
 
-  // Consent step.
+  // Consent step → ask the opening question (from the analysis agenda, or the
+  // agent if there's no agenda) and hand over to the agent loop.
   if (rep.consent === "asked") {
     if (isNegative(text) && !isAffirmative(text)) {
       await decline(db, app, "The applicant declined to answer screening questions.");
       return true;
     }
-    await db.from("poppy_reports").update({ consent: "yes" }).eq("application_id", applicationId);
+    let opener = data.agenda?.[0] ?? null;
+    if (!opener) {
+      const cfg0 = await loadPoppyRuntimeConfig(app.company_id);
+      try {
+        const d = await poppyDecideNextTurn(agentInputs(app, cfg0), [], data.concerns, [], {
+          target: cfg0.questionCount,
+          hardCap: hardCap(cfg0),
+          adaptive: cfg0.followUps,
+        });
+        if (d.action === "ask" && d.question) opener = { question: d.question, rationale: d.rationale };
+      } catch {
+        /* fall through to finish */
+      }
+    }
+    if (!opener) {
+      await db.from("poppy_reports").update({ consent: "yes" }).eq("application_id", applicationId);
+      await finish(db, app, data);
+      return true;
+    }
+    data.questions.push({ question: opener.question, rationale: opener.rationale });
+    await db.from("poppy_reports").update({ consent: "yes", report: data, current_q: 0 }).eq("application_id", applicationId);
     await askQuestion(db, app, data, 0, "Great, thank you! ");
     return true;
   }
 
-  // Answer step — record the answer to the current question, then advance.
+  // Answer step — record the answer, then let the AGENT decide the next move:
+  // ask an adaptive follow-up/next question, or conclude and write the verdict.
   const idx = rep.current_q ?? 0;
   if (data.questions[idx]) data.questions[idx].answer = text.slice(0, 2000);
-  const next = idx + 1;
+  // Persist the answer FIRST so it's saved even if the agent call is slow/fails.
   await db
     .from("poppy_reports")
-    .update({ report: data, current_q: next, last_applicant_reply_at: new Date().toISOString() })
+    .update({ report: data, current_q: idx, last_applicant_reply_at: new Date().toISOString() })
     .eq("application_id", applicationId);
 
-  if (next < data.questions.length) {
+  const cfg = await loadPoppyRuntimeConfig(app.company_id);
+  const cap = hardCap(cfg);
+  let decision: { action: "ask" | "conclude"; question: string; rationale: string };
+  try {
+    decision = await poppyDecideNextTurn(
+      agentInputs(app, cfg),
+      (data.agenda ?? []).map((a) => a.question),
+      data.concerns,
+      data.questions,
+      { target: cfg.questionCount, hardCap: cap, adaptive: cfg.followUps }
+    );
+  } catch {
+    decision = { action: "conclude", question: "", rationale: "" };
+  }
+
+  if (data.questions.length < cap && decision.action === "ask" && decision.question) {
+    const next = data.questions.length;
+    data.questions.push({
+      question: decision.question,
+      rationale: decision.rationale,
+      followUp: next >= (data.agenda?.length ?? 0),
+    });
+    await db.from("poppy_reports").update({ report: data, current_q: next }).eq("application_id", applicationId);
     await askQuestion(db, app, data, next, "Thanks. ");
     return true;
   }
 
-  // All current questions answered. If follow-ups are enabled, review the answers
-  // once and ask any worth clarifying before finishing.
-  const cfg = await loadPoppyRuntimeConfig(app.company_id);
-  if (cfg.followUps && !data.followUpsAdded && data.questions.some((q) => q.answer)) {
-    try {
-      const follow = await generatePoppyFollowUps(
-        {
-          jobTitle: app.jobs?.title ?? "Care role",
-          jobDescription: app.jobs?.description ?? "",
-          applicantName: [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ") || "the candidate",
-          coverMessage: app.cover_message,
-          answersText: answersText(app),
-          cvBase64Pdf: null,
-          referenceDocs: cfg.referenceDocs,
-          focus: cfg.focus,
-          instructions: cfg.instructions,
-        },
-        data.questions
-      );
-      data.followUpsAdded = true;
-      if (follow.length) {
-        for (const f of follow) data.questions.push({ question: f.question, rationale: f.rationale, followUp: true });
-        await db.from("poppy_reports").update({ report: data, current_q: next }).eq("application_id", applicationId);
-        await askQuestion(db, app, data, next, "Thanks — just a couple of quick follow-ups. ");
-        return true;
-      }
-      await db.from("poppy_reports").update({ report: data }).eq("application_id", applicationId);
-    } catch {
-      data.followUpsAdded = true; // never loop on an AI error — just finish
-    }
-  }
   await finish(db, app, data);
   return true;
 }

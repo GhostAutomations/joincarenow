@@ -60,7 +60,7 @@ ${i.jobDescription || "(no description provided)"}
 
 CANDIDATE: ${i.applicantName}
 ${i.coverMessage ? `COVER MESSAGE:\n${i.coverMessage}\n` : ""}${i.answersText ? `APPLICATION & FORM RESPONSES:\n${i.answersText}\n` : ""}${i.cvBase64Pdf ? "The candidate's CV is attached as a PDF." : "No CV was provided."}
-${i.referenceDocs?.length ? `\nCOMPANY REFERENCE DOCUMENTS (judge the candidate against these where relevant):\n${i.referenceDocs.map((d) => `--- ${d.name} ---\n${(d.body || "").slice(0, 4000)}`).join("\n\n")}\n` : ""}${i.focus?.length ? `\nFOCUS PARTICULARLY ON: ${i.focus.join(", ")}.` : ""}${i.instructions ? `\nCOMPANY INSTRUCTIONS (follow these): ${i.instructions}` : ""}`;
+${i.referenceDocs?.length ? `\nCOMPANY REFERENCE DOCUMENTS (judge the candidate against these where relevant):\n${i.referenceDocs.map((d) => `--- ${d.name} ---\n${(d.body || "").slice(0, 4000)}`).join("\n\n")}\n` : ""}${i.attributes?.length ? `\nREQUIRED ATTRIBUTES (assess the candidate against every one of these; treat any that is missing, unmet or unclear as a gap worth probing):\n${i.attributes.map((a) => `- ${a}`).join("\n")}\n` : ""}${i.focus?.length ? `\nFOCUS PARTICULARLY ON: ${i.focus.join(", ")}.` : ""}${i.instructions ? `\nCOMPANY INSTRUCTIONS (follow these): ${i.instructions}` : ""}`;
 
 const FAIRNESS = "Be fair and non-discriminatory: never reference age, race, religion, sex, disability, pregnancy, marital status or other protected characteristics. Focus on ability to do the job.";
 

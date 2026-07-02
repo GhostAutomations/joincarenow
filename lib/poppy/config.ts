@@ -8,6 +8,9 @@ export type PoppyConfig = {
   /** If true, Poppy reviews the applicant's answers and asks follow-up questions
    *  before finishing (added to the report). */
   followUps: boolean;
+  /** The attributes Poppy must assess every candidate against when comparing
+   *  applicants. Defaults to the full standard list (all selected). */
+  attributes: string[];
 };
 
 export const POPPY_FOCUS_OPTIONS = [
@@ -18,7 +21,39 @@ export const POPPY_FOCUS_OPTIONS = [
   "Communication",
 ];
 
-const DEFAULT: PoppyConfig = { documentIds: [], focus: [], instructions: "", questionCount: 8, followUps: false };
+/** The standard required attributes for UK care-sector screening. Poppy assesses
+ *  every candidate against the selected ones. All are selected by default. */
+export const POPPY_ATTRIBUTE_OPTIONS = [
+  "Right to Work in the UK",
+  "Enhanced DBS check",
+  "Two satisfactory references",
+  "Relevant care experience",
+  "Health & social care qualification (e.g. NVQ / QCF Diploma)",
+  "Fully explained employment history (no unexplained gaps)",
+  "Availability & flexibility (shifts, weekends, nights)",
+  "Driving licence & access to a vehicle",
+  "Safeguarding awareness",
+  "Medication administration competence",
+  "Moving & handling training",
+  "Spoken & written English proficiency",
+  "Reliability & good attendance record",
+  "Compassion & person-centred values",
+  "Physical fitness for the role",
+  "Professional registration (Social Care Wales / SSSC / NMC where applicable)",
+  "First aid / basic life support",
+  "Confidentiality & GDPR awareness",
+  "Infection prevention & control awareness",
+  "Willingness to complete required training",
+];
+
+const DEFAULT: PoppyConfig = {
+  documentIds: [],
+  focus: [],
+  instructions: "",
+  questionCount: 8,
+  followUps: false,
+  attributes: [...POPPY_ATTRIBUTE_OPTIONS],
+};
 
 /** Normalise a Poppy step question-count override (1-20, or null = use company default). */
 export function normPoppyCount(v: number | string | null | undefined): number | null {
@@ -36,6 +71,10 @@ export function readPoppyConfig(settings: unknown): PoppyConfig {
     instructions: typeof p.instructions === "string" ? p.instructions : "",
     questionCount: typeof p.questionCount === "number" ? Math.min(20, Math.max(1, Math.round(p.questionCount))) : 8,
     followUps: p.followUps === true,
+    // No saved `attributes` key = never configured → default to all selected.
+    attributes: Array.isArray(p.attributes)
+      ? p.attributes.filter((x): x is string => typeof x === "string")
+      : [...POPPY_ATTRIBUTE_OPTIONS],
   };
 }
 
@@ -61,7 +100,7 @@ export type PoppyStepOverride = {
 export async function loadPoppyRuntimeConfig(
   companyId: string,
   step?: PoppyStepOverride | null
-): Promise<{ referenceDocs: { name: string; body: string }[]; focus: string[]; instructions: string; questionCount: number; followUps: boolean }> {
+): Promise<{ referenceDocs: { name: string; body: string }[]; focus: string[]; instructions: string; questionCount: number; followUps: boolean; attributes: string[] }> {
   const db = createAdminClient();
   const { data: co } = await db.from("companies").select("settings").eq("id", companyId).single();
   const cfg = readPoppyConfig(co?.settings);
@@ -87,7 +126,7 @@ export async function loadPoppyRuntimeConfig(
       body: (d.body as string) ?? "",
     }));
   }
-  return { referenceDocs, focus: cfg.focus, instructions: cfg.instructions, questionCount: cfg.questionCount, followUps: cfg.followUps };
+  return { referenceDocs, focus: cfg.focus, instructions: cfg.instructions, questionCount: cfg.questionCount, followUps: cfg.followUps, attributes: cfg.attributes };
 }
 
 export { DEFAULT as DEFAULT_POPPY_CONFIG };

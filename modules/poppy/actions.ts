@@ -373,6 +373,7 @@ export async function runPoppyForApplication(
       focus: cfg.focus,
       instructions: cfg.instructions,
       questionCount: cfg.questionCount,
+      attributes: cfg.attributes,
     });
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Poppy couldn't analyse the application." };
@@ -427,6 +428,9 @@ export async function savePoppySettings(
     instructions: typeof input.instructions === "string" ? input.instructions.slice(0, 2000) : "",
     questionCount: Math.min(20, Math.max(1, Math.round(Number(input.questionCount) || 8))),
     followUps: input.followUps === true,
+    attributes: Array.isArray(input.attributes)
+      ? input.attributes.filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim().slice(0, 120)).slice(0, 60)
+      : [],
   };
 
   const settings = { ...(co.settings && typeof co.settings === "object" ? (co.settings as Record<string, unknown>) : {}), poppy: clean };

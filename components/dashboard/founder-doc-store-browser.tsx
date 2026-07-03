@@ -3,9 +3,9 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, FileText, Pencil, Trash2, Plus } from "lucide-react";
+import { Search, FileText, Pencil, Trash2 } from "lucide-react";
 import { PriceBadge } from "@/components/dashboard/store-badge";
-import { createBlankStoreDoc, deleteStoreDocsBulk } from "@/modules/contracts/actions";
+import { deleteStoreDocsBulk } from "@/modules/contracts/actions";
 import { docCategoryLabel, sortDocCategories } from "@/lib/doc-categories";
 
 type Kind = "contract" | "policy" | "job_description";
@@ -38,11 +38,6 @@ const NOUN_PLURAL: Record<Kind, string> = {
   contract: "contract templates",
   policy: "policies",
   job_description: "job descriptions",
-};
-const CREATE_LABEL: Record<Kind, string> = {
-  contract: "Create contract",
-  policy: "Create policy",
-  job_description: "Create job description",
 };
 
 /** Founder-side File Store list for one doc kind. Cards open the builder; a
@@ -95,18 +90,11 @@ export function FounderDocStoreBrowser({ kind, docs }: { kind: Kind; docs: Found
 
   return (
     <div className="mx-auto max-w-5xl">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-sm text-white/80">
-          Templates you create here appear in every company&apos;s File Store. Free templates add
-          instantly; priced ones are bought per {kind === "policy" ? "policy" : kind === "contract" ? "contract" : "job description"}.
-        </p>
-        <form action={createBlankStoreDoc}>
-          <input type="hidden" name="kind" value={kind} />
-          <button className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
-            <Plus className="h-4 w-4" aria-hidden /> {CREATE_LABEL[kind]}
-          </button>
-        </form>
-      </div>
+      <p className="mb-4 text-sm text-white/80">
+        Templates you create here appear in every company&apos;s File Store. Free templates add
+        instantly; priced ones are bought per{" "}
+        {kind === "policy" ? "policy" : kind === "contract" ? "contract" : "job description"}.
+      </p>
 
       <div className="rounded-2xl border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-md">
         <div className="relative">

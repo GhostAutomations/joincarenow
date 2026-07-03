@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createBlankStoreForm } from "@/modules/forms/actions";
+import { createBlankStoreDoc } from "@/modules/contracts/actions";
 import { FounderStoreBrowser, type FounderStoreCard } from "@/components/dashboard/founder-store-browser";
 import {
   FounderDocStoreBrowser,
@@ -41,6 +42,11 @@ const DOC_KIND: Record<string, "contract" | "policy" | "job_description"> = {
   contracts: "contract",
   policies: "policy",
   jobdescriptions: "job_description",
+};
+const CREATE_LABEL: Record<string, string> = {
+  contracts: "Create contract",
+  policies: "Create policy",
+  jobdescriptions: "Create job description",
 };
 
 export default async function FounderFileStorePage({
@@ -95,10 +101,17 @@ export default async function FounderFileStorePage({
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-white drop-shadow-sm">File Store</h1>
-        {tab === "forms" && (
+        {tab === "forms" ? (
           <form action={createBlankStoreForm}>
             <button className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand-700">
               <Plus className="h-5 w-5" aria-hidden /> Create form
+            </button>
+          </form>
+        ) : (
+          <form action={createBlankStoreDoc}>
+            <input type="hidden" name="kind" value={DOC_KIND[tab]} />
+            <button className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand-700">
+              <Plus className="h-5 w-5" aria-hidden /> {CREATE_LABEL[tab]}
             </button>
           </form>
         )}

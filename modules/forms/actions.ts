@@ -8,6 +8,7 @@ import { generateFormFields } from "@/lib/ai/generate-form";
 import { recordUsage } from "@/lib/billing/usage";
 import { chargeOneOff } from "@/lib/billing/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { uploadFieldMeta } from "@/lib/forms/upload-field-types";
 
 const FIELD_TYPES = [
   "short_text",
@@ -34,6 +35,15 @@ const FIELD_TYPES = [
   "rating",
   "country",
   "link",
+  // Care-sector document uploads (mirror the Workflow Uploads box).
+  "u_dbs",
+  "u_driving_licence",
+  "u_registration",
+  "u_right_to_work",
+  "u_proof_of_address",
+  "u_qualifications",
+  "u_references",
+  "u_cv",
 ] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
 
@@ -360,6 +370,11 @@ function defaultField(ft: FieldType): FieldData {
   }
   if (ft === "transport") {
     return { label: "Transport", field_type: ft, required: false, options: [], help_text: null, config: {} };
+  }
+  // Document-upload fields (DBS, registration, etc.) — default to their standard label.
+  const um = uploadFieldMeta(ft);
+  if (um) {
+    return { label: um.label.replace(/ \(front & back\)$/, ""), field_type: ft, required: false, options: [], help_text: null, config: {} };
   }
   return {
     label: "",

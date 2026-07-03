@@ -8,6 +8,7 @@ import {
 import {
   addFieldOfType, addFieldFromTemplate, deleteField, reorderFields, updateFormHeader,
 } from "@/modules/forms/actions";
+import { UPLOAD_FIELD_TYPES } from "@/lib/forms/upload-field-types";
 
 export type QuestionBankItem = {
   id: string;
@@ -76,32 +77,94 @@ type FormMeta = {
   };
 };
 
-const PALETTE: { value: string; label: string }[] = [
-  { value: "body_text", label: "Body text / heading" },
-  { value: "short_text", label: "Short text" },
-  { value: "long_text", label: "Long text" },
-  { value: "email", label: "Email address" },
-  { value: "phone", label: "Phone number" },
-  { value: "number", label: "Number" },
-  { value: "date", label: "Date" },
-  { value: "date_range", label: "Date range" },
-  { value: "month", label: "Month & year" },
-  { value: "time", label: "Time" },
-  { value: "dropdown", label: "Dropdown" },
-  { value: "radio", label: "Single select" },
-  { value: "checkboxes", label: "Multi select" },
-  { value: "yes_no", label: "Yes / No" },
-  { value: "rating", label: "Rating (stars)" },
-  { value: "country", label: "Country" },
-  { value: "link", label: "Link / URL" },
-  { value: "branch", label: "Branch (company list)" },
-  { value: "role", label: "Role (company list)" },
-  { value: "transport", label: "Transport (Driver / Walker)" },
-  { value: "file", label: "File upload" },
-  { value: "signature", label: "Signature" },
-  { value: "address", label: "Address" },
-  { value: "page_break", label: "New page" },
+const PALETTE_GROUPS: { label: string; options: { value: string; label: string }[] }[] = [
+  {
+    label: "Text",
+    options: [
+      { value: "short_text", label: "Short text" },
+      { value: "long_text", label: "Long text" },
+      { value: "number", label: "Number" },
+      { value: "date", label: "Date" },
+      { value: "date_range", label: "Date range" },
+      { value: "month", label: "Month & year" },
+      { value: "time", label: "Time" },
+      { value: "yes_no", label: "Yes / No" },
+    ],
+  },
+  {
+    label: "Choice",
+    options: [
+      { value: "dropdown", label: "Dropdown" },
+      { value: "radio", label: "Single select" },
+      { value: "checkboxes", label: "Multi select" },
+      { value: "rating", label: "Rating (stars)" },
+    ],
+  },
+  {
+    label: "Contact & address",
+    options: [
+      { value: "email", label: "Email address" },
+      { value: "phone", label: "Phone number" },
+      { value: "country", label: "Country" },
+      { value: "link", label: "Link / URL" },
+      { value: "address", label: "Address" },
+    ],
+  },
+  {
+    label: "Company lists",
+    options: [
+      { value: "branch", label: "Branch (company list)" },
+      { value: "role", label: "Role (company list)" },
+      { value: "transport", label: "Transport (Driver / Walker)" },
+    ],
+  },
+  {
+    label: "Documents & uploads",
+    options: [
+      { value: "file", label: "File upload" },
+      { value: "signature", label: "Signature" },
+      // Care-sector document uploads (mirror the Workflow Uploads box).
+      ...UPLOAD_FIELD_TYPES.map((u) => ({ value: u.fieldType, label: u.label })),
+    ],
+  },
+  {
+    label: "Layout",
+    options: [
+      { value: "body_text", label: "Body text / heading" },
+      { value: "page_break", label: "New page" },
+    ],
+  },
 ];
+const PALETTE: { value: string; label: string }[] = PALETTE_GROUPS.flatMap((g) => g.options);
+
+/** The categorised field-type picker grid, shared by the add-field popovers. */
+function PaletteButtons({ onPick, exclude }: { onPick: (v: string) => void; exclude?: string[] }) {
+  return (
+    <div className="space-y-2">
+      {PALETTE_GROUPS.map((g) => {
+        const opts = g.options.filter((o) => !exclude?.includes(o.value));
+        if (opts.length === 0) return null;
+        return (
+          <div key={g.label}>
+            <p className="px-1 text-[11px] font-semibold text-gray-500">{g.label}</p>
+            <div className="mt-0.5 grid grid-cols-2 gap-1 sm:grid-cols-3">
+              {opts.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => onPick(t.value)}
+                  className="rounded-md border border-gray-200 px-2 py-1.5 text-left text-xs text-gray-700 hover:border-brand-300 hover:bg-brand-50"
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 const TYPE_LABEL: Record<string, string> = Object.fromEntries(
   PALETTE.map((p) => [p.value, p.label])
 );
@@ -643,17 +706,7 @@ function PlusRow({
           <p className="px-1 pb-1 text-[11px] font-medium uppercase tracking-wide text-gray-400">
             New field
           </p>
-          <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
-            {PALETTE.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => onPick(t.value)}
-                className="rounded-md border border-gray-200 px-2 py-1.5 text-left text-xs text-gray-700 hover:border-brand-300 hover:bg-brand-50"
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <PaletteButtons onPick={onPick} />
 
           {bank.length > 0 && onPickTemplate && (
             <div className="mt-2 border-t border-gray-100 pt-2">
@@ -721,20 +774,14 @@ function LogicPanel({
             </select>
           </div>
           <p className="mt-2 text-xs text-gray-500">Pick the follow-up field type:</p>
-          <div className="mt-1 grid grid-cols-2 gap-1 sm:grid-cols-3">
-            {PALETTE.filter((t) => t.value !== "page_break").map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => {
-                  onAdd(value, t.value);
-                  setOpen(false);
-                }}
-                className="rounded-md border border-gray-200 px-2 py-1.5 text-left text-xs text-gray-700 hover:border-brand-300 hover:bg-brand-50"
-              >
-                {t.label}
-              </button>
-            ))}
+          <div className="mt-1">
+            <PaletteButtons
+              onPick={(t) => {
+                onAdd(value, t);
+                setOpen(false);
+              }}
+              exclude={["page_break"]}
+            />
           </div>
         </div>
       )}

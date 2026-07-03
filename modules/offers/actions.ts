@@ -99,8 +99,8 @@ export async function getOfferDocOptions(applicationId: string): Promise<OfferDo
   const { supabase, current } = await requireCompany();
 
   const [{ data: contracts }, { data: policies }, { data: app }, { data: staffRaw }] = await Promise.all([
-    supabase.from("contract_templates").select("id, name").eq("company_id", current.company_id).order("name"),
-    supabase.from("policy_documents").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("contract_templates").select("id, name, signature_method").eq("company_id", current.company_id).order("name"),
+    supabase.from("policy_documents").select("id, name, signature_method").eq("company_id", current.company_id).order("name"),
     supabase.from("applications").select("job_id").eq("id", applicationId).eq("company_id", current.company_id).maybeSingle(),
     supabase
       .from("company_users")
@@ -126,9 +126,13 @@ export async function getOfferDocOptions(applicationId: string): Promise<OfferDo
     policyIds = (jp ?? []).map((r) => r.policy_id as string);
   }
 
+  // "Not sent out (PDF only)" documents are reference-only — never offered for signing.
+  const sendable = <T extends { signature_method?: string | null }>(rows: T[] | null) =>
+    (rows ?? []).filter((d) => d.signature_method !== "none");
+
   return {
-    contracts: (contracts ?? []) as { id: string; name: string }[],
-    policies: (policies ?? []) as { id: string; name: string }[],
+    contracts: sendable(contracts).map((d) => ({ id: d.id as string, name: d.name as string })),
+    policies: sendable(policies).map((d) => ({ id: d.id as string, name: d.name as string })),
     contractId,
     policyIds,
     managers,

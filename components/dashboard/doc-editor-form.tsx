@@ -336,8 +336,8 @@ export function DocEditorForm({
                 className="mt-0.5"
               />
               <span>
-                <span className="font-medium text-gray-900">Signature not required</span>
-                <span className="block text-xs text-gray-500">Applicant reads &amp; confirms — no signature captured.</span>
+                <span className="font-medium text-gray-900">Not sent out (PDF only)</span>
+                <span className="block text-xs text-gray-500">Reference document — not issued to applicants for signature or confirmation.</span>
               </span>
             </label>
           </div>

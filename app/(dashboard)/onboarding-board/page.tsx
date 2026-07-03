@@ -46,13 +46,15 @@ export default async function OnboardingBoardPage() {
   // (drop a document in as a read-&-confirm task) and by the Poppy "what to
   // compare to" picker (which shows the type suffix).
   const [{ data: pol }, { data: con }] = await Promise.all([
-    supabase.from("policy_documents").select("id, name").eq("company_id", current.company_id).order("name"),
-    supabase.from("contract_templates").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("policy_documents").select("id, name, signature_method").eq("company_id", current.company_id).order("name"),
+    supabase.from("contract_templates").select("id, name, signature_method").eq("company_id", current.company_id).order("name"),
   ]);
-  // Clean names + kind for the builder's Contracts & Policies box.
+  // Clean names + kind for the builder's Contracts & Policies box. Documents set
+  // to "Not sent out (PDF only)" are reference-only, so they're excluded from the
+  // builder (they're never issued to applicants as a task).
   const builderDocs: { id: string; name: string; kind: "contract" | "policy" }[] = [
-    ...(pol ?? []).map((d) => ({ id: d.id as string, name: d.name as string, kind: "policy" as const })),
-    ...(con ?? []).map((d) => ({ id: d.id as string, name: d.name as string, kind: "contract" as const })),
+    ...(pol ?? []).filter((d) => d.signature_method !== "none").map((d) => ({ id: d.id as string, name: d.name as string, kind: "policy" as const })),
+    ...(con ?? []).filter((d) => d.signature_method !== "none").map((d) => ({ id: d.id as string, name: d.name as string, kind: "contract" as const })),
   ];
   // Type-suffixed names for the Poppy comparison picker.
   const poppyDocs: { id: string; name: string }[] = [

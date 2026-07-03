@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FileText, Plus, Pencil, Trash2 } from "lucide-react";
+import { FileText, Plus, Pencil, Trash2, Download } from "lucide-react";
 import { deleteDoc } from "@/modules/contracts/actions";
 
 export type DocItem = { id: string; name: string; body: string; version: number };
@@ -34,6 +34,14 @@ export function DocsManager({ kind, items }: { kind: Kind; items: DocItem[] }) {
                 <span className="text-xs font-normal text-gray-400">v{d.version}</span>
               </Link>
               <div className="flex items-center gap-1">
+                <a
+                  href={`/api/documents/${kind}/${d.id}/pdf`}
+                  className="rounded p-1 text-gray-400 hover:bg-white/70 hover:text-gray-700"
+                  aria-label="Download PDF"
+                  title="Download PDF"
+                >
+                  <Download className="h-4 w-4" />
+                </a>
                 <Link
                   href={`/settings/documents/${kind}/${d.id}`}
                   className="rounded p-1 text-gray-400 hover:bg-white/70 hover:text-gray-700"

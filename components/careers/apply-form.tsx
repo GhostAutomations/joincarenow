@@ -9,6 +9,7 @@ import {
 import { applyToJob } from "@/modules/applicants/actions";
 import { SubmitButton, FormError } from "@/components/ui/form";
 import { COUNTRIES, toE164 } from "@/lib/countries";
+import { isSingleFileField, isTwoSidedField, isRegistrationField } from "@/lib/forms/upload-field-types";
 
 const inputClass =
   "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -330,7 +331,7 @@ export function DynamicField({
       </fieldset>
     );
   }
-  if (field.field_type === "file") {
+  if (field.field_type === "file" || isSingleFileField(field.field_type)) {
     return (
       <label className="block">
         {label}
@@ -338,6 +339,32 @@ export function DynamicField({
         <input type="file" name={name} required={req} className="mt-1 block w-full text-sm" />
       </label>
     );
+  }
+  if (isTwoSidedField(field.field_type)) {
+    return (
+      <fieldset>
+        {label}
+        {help}
+        <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <label className="block text-xs text-gray-600">
+            Front
+            <input type="file" name={name} required={req} className="mt-1 block w-full text-sm" />
+          </label>
+          <label className="block text-xs text-gray-600">
+            Back
+            <input type="file" name={name} required={req} className="mt-1 block w-full text-sm" />
+          </label>
+        </div>
+      </fieldset>
+    );
+  }
+  if (isRegistrationField(field.field_type)) {
+    const dvu: unknown = dv;
+    const regNumber =
+      dvu && typeof dvu === "object" && !Array.isArray(dvu)
+        ? String((dvu as { number?: string }).number ?? "")
+        : dvStr;
+    return <RegistrationField name={name} label={label} help={help} required={req} defaultNumber={regNumber} />;
   }
   if (field.field_type === "address") {
     return (
@@ -521,6 +548,50 @@ function SignatureField({
       </div>
       <input type="hidden" name={name} value={value} />
     </div>
+  );
+}
+
+/** Care worker registration: a number (required) + an optional card/certificate
+ *  photo, with a "number only" tick that hides the upload. */
+function RegistrationField({
+  name,
+  label,
+  help,
+  required,
+  defaultNumber,
+}: {
+  name: string;
+  label: React.ReactNode;
+  help: React.ReactNode;
+  required: boolean;
+  defaultNumber: string;
+}) {
+  const [noCard, setNoCard] = useState(false);
+  return (
+    <fieldset>
+      {label}
+      {help}
+      <div className="mt-1 space-y-2">
+        <input
+          name={name}
+          required={required}
+          defaultValue={defaultNumber}
+          placeholder="Registration number (Social Care Wales / SSSC / NISCC)"
+          className={inputClass}
+        />
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            name={`${name}__nocard`}
+            checked={noCard}
+            onChange={(e) => setNoCard(e.target.checked)}
+            className="h-4 w-4 rounded border-white/40 text-brand-600"
+          />
+          I don&apos;t have a card or certificate to upload — number only
+        </label>
+        {!noCard && <input type="file" name={`${name}__card`} accept="image/*,.pdf" className="block w-full text-sm" />}
+      </div>
+    </fieldset>
   );
 }
 

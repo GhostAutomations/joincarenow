@@ -6,21 +6,44 @@ import { Plus, X } from "lucide-react";
 import { addField, updateField } from "@/modules/forms/actions";
 import { UPLOAD_FIELD_TYPES } from "@/lib/forms/upload-field-types";
 
-const TYPES: { value: string; label: string }[] = [
-  { value: "short_text", label: "Short text" },
-  { value: "long_text", label: "Long text (paragraph)" },
-  { value: "number", label: "Number" },
-  { value: "date", label: "Date" },
-  { value: "dropdown", label: "Dropdown" },
-  { value: "radio", label: "Single select" },
-  { value: "checkboxes", label: "Multi select" },
-  { value: "yes_no", label: "Yes / No" },
-  { value: "file", label: "File upload" },
-  { value: "signature", label: "Signature" },
-  { value: "address", label: "Address" },
-  { value: "body_text", label: "Body text / information" },
-  // Care-sector document uploads (mirror the Workflow Uploads box).
-  ...UPLOAD_FIELD_TYPES.map((u) => ({ value: u.fieldType, label: u.label })),
+const TYPE_GROUPS: { label: string; options: { value: string; label: string }[] }[] = [
+  {
+    label: "Text",
+    options: [
+      { value: "short_text", label: "Short text" },
+      { value: "long_text", label: "Long text (paragraph)" },
+      { value: "number", label: "Number" },
+      { value: "date", label: "Date" },
+      { value: "yes_no", label: "Yes / No" },
+    ],
+  },
+  {
+    label: "Choice",
+    options: [
+      { value: "dropdown", label: "Dropdown" },
+      { value: "radio", label: "Single select" },
+      { value: "checkboxes", label: "Multi select" },
+    ],
+  },
+  {
+    label: "Contact & address",
+    options: [{ value: "address", label: "Address" }],
+  },
+  {
+    label: "Documents & uploads",
+    options: [
+      { value: "file", label: "File upload" },
+      // Care-sector document uploads (mirror the Workflow Uploads box).
+      ...UPLOAD_FIELD_TYPES.map((u) => ({ value: u.fieldType, label: u.label })),
+    ],
+  },
+  {
+    label: "Other",
+    options: [
+      { value: "signature", label: "Signature" },
+      { value: "body_text", label: "Body text / information" },
+    ],
+  },
 ];
 const CHOICE = ["dropdown", "radio", "checkboxes"];
 
@@ -157,8 +180,12 @@ export function FieldForm({
         <label className="text-xs font-medium text-gray-600">
           Field type
           <select value={type} onChange={(e) => setType(e.target.value)} className={cls}>
-            {TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+            {TYPE_GROUPS.map((g) => (
+              <optgroup key={g.label} label={g.label}>
+                {g.options.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </label>

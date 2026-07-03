@@ -1043,15 +1043,61 @@ export async function submitOnboardingForm(
   const taskId = formData.get("taskId");
   if (typeof taskId !== "string") return { error: "Missing task" };
 
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
   const answers: Record<string, unknown> = {};
   const keys = new Set<string>();
   for (const k of formData.keys()) if (k.startsWith("field_")) keys.add(k);
   for (const k of keys) {
     const fid = k.slice("field_".length);
-    const vals = formData.getAll(k).filter((v): v is string => typeof v === "string" && v !== "");
-    if (vals.length === 0) continue;
-    answers[fid] = vals.length === 1 ? vals[0] : vals;
+    const values = formData.getAll(k);
+    const files = values.filter((v): v is File => v instanceof File && v.size > 0);
+    if (files.length > 0) {
+      const paths: string[] = [];
+      for (const f of files) {
+        if (f.size > 5 * 1024 * 1024) return { error: `"${f.name}" is larger than 5MB.` };
+        const safe = f.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${user.id}/onboarding-${Date.now()}-${safe}`;
+        const { error: upErr } = await supabase.storage
+          .from("applications")
+          .upload(path, await f.arrayBuffer(), { contentType: f.type || "application/octet-stream", upsert: false });
+        if (upErr) return { error: "Could not upload an attachment. Please try again." };
+        paths.push(path);
+      }
+      answers[fid] = paths.length === 1 ? paths[0] : paths;
+      continue;
+    }
+    const strs = values.filter((v): v is string => typeof v === "string" && v !== "");
+    if (strs.length === 0) continue;
+    const dataUrl = strs.find((s) => s.startsWith("data:image/"));
+    if (dataUrl) {
+      const m = dataUrl.match(/^data:image\/\w+;base64,(.+)$/);
+      if (m) {
+        const buf = Buffer.from(m[1], "base64");
+        if (buf.byteLength > 0 && buf.byteLength <= 2 * 1024 * 1024) {
+          const path = `${user.id}/signature-${Date.now()}.png`;
+          const { error: sigErr } = await supabase.storage
+            .from("applications")
+            .upload(path, buf, { contentType: "image/png", upsert: false });
+          if (!sigErr) answers[fid] = path;
+        }
+      }
+      continue;
+    }
+    answers[fid] = strs.length === 1 ? strs[0] : strs;
+  }
+
+  // Combine registration companion inputs (number + optional card) into one answer.
+  for (const key of Object.keys(answers)) {
+    if (!key.endsWith("__card") && !key.endsWith("__nocard")) continue;
+    const base = key.replace(/__(card|nocard)$/, "");
+    const cur = answers[base];
+    const obj: { number: string; card?: string } =
+      cur && typeof cur === "object" && !Array.isArray(cur)
+        ? (cur as { number: string; card?: string })
+        : { number: typeof cur === "string" ? cur : "" };
+    if (key.endsWith("__card") && typeof answers[key] === "string") obj.card = answers[key] as string;
+    answers[base] = obj;
+    delete answers[key];
   }
 
   const { error } = await supabase.rpc("submit_onboarding_form", {

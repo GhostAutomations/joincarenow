@@ -181,6 +181,21 @@ export async function applyToJob(
     }
   }
 
+  // Combine a registration field's companion inputs (number + optional card
+  // photo) into one answer, e.g. { number: "W/123", card: "<path>" }.
+  for (const key of Object.keys(formAnswers)) {
+    if (!key.endsWith("__card") && !key.endsWith("__nocard")) continue;
+    const base = key.replace(/__(card|nocard)$/, "");
+    const cur = formAnswers[base];
+    const obj: { number: string; card?: string } =
+      cur && typeof cur === "object" && !Array.isArray(cur)
+        ? (cur as { number: string; card?: string })
+        : { number: typeof cur === "string" ? cur : "" };
+    if (key.endsWith("__card") && typeof formAnswers[key] === "string") obj.card = formAnswers[key] as string;
+    formAnswers[base] = obj;
+    delete formAnswers[key];
+  }
+
   const { data: newAppId, error } = await supabase.rpc("apply_to_job", {
     p_job_id: parsed.data.jobId,
     p_first_name: parsed.data.firstName,

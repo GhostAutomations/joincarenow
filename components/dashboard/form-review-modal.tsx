@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, CheckCircle2 } from "lucide-react";
 import type { FormReview } from "@/modules/onboarding/actions";
+import { isUploadFieldType } from "@/lib/forms/upload-field-types";
 
 const box =
   "mt-1 min-h-[2.25rem] w-full rounded-md border border-white/40 bg-gray-50 px-3 py-2 text-sm text-gray-800";
@@ -26,6 +27,31 @@ function FieldView({
   const label = (
     <span className="block text-sm font-medium text-gray-700">{field.label}</span>
   );
+
+  // Registration field: { number, card? }
+  const vu: unknown = v;
+  if (vu && typeof vu === "object" && !Array.isArray(vu)) {
+    const o = vu as { number?: string; card?: string };
+    return (
+      <div>
+        {label}
+        <div className={box}>
+          {o.number || "—"}
+          {o.card ? " · card / certificate uploaded" : ""}
+        </div>
+      </div>
+    );
+  }
+  // Upload / file fields — show what was provided (files download via the staff file).
+  if (field.field_type === "file" || isUploadFieldType(field.field_type)) {
+    const count = Array.isArray(v) ? v.length : v ? 1 : 0;
+    return (
+      <div>
+        {label}
+        <div className={box}>{count ? `${count} file${count === 1 ? "" : "s"} uploaded` : "—"}</div>
+      </div>
+    );
+  }
 
   if (field.field_type === "signature") {
     return (

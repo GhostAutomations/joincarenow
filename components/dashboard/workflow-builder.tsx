@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X, GripVertical, FileText, ScrollText, Sparkles, CheckCircle2, GitBranch } from "lucide-react";
+import { Plus, X, GripVertical, FileText, ScrollText, Sparkles, CheckCircle2, GitBranch, Check } from "lucide-react";
 import { addTemplateTasks, type TaskDraft } from "@/modules/onboarding/actions";
 import { MultiSelect } from "@/components/dashboard/multi-select";
 import { POPPY_FOCUS_OPTIONS } from "@/lib/poppy/config";
@@ -302,7 +302,16 @@ export function WorkflowBuilder({
 
   const armEq = (l: Lib) => armed && sameItem(armed, l);
 
-  const LibChip = ({ item, icon }: { item: Lib; icon: React.ReactNode }) => (
+  // Which library items are already placed (in a stage or a Poppy box) — their
+  // library chip turns blue so you don't drag the same one again.
+  const usedKeys = new Set<string>();
+  for (const list of Object.values(placed)) for (const it of list) usedKeys.add(`${it.source}:${it.refId}`);
+  for (const it of poppyItems) usedKeys.add(`${it.source}:${it.refId}`);
+  const isUsed = (l: Lib) => usedKeys.has(`${l.source}:${l.refId}`);
+
+  const LibChip = ({ item, icon }: { item: Lib; icon: React.ReactNode }) => {
+    const used = isUsed(item);
+    return (
     <button
       type="button"
       draggable
@@ -311,23 +320,27 @@ export function WorkflowBuilder({
         e.dataTransfer.effectAllowed = "copy";
       }}
       onClick={() => setArmed(armEq(item) ? null : item)}
-      title="Drag it where you want it, or tap it then tap a target"
-      className={`flex w-full cursor-grab items-center gap-1.5 rounded-md border px-2 py-1.5 text-left text-xs font-medium text-gray-800 shadow-sm transition active:cursor-grabbing ${
+      title={used ? "Already added — you can add it again if you want" : "Drag it where you want it, or tap it then tap a target"}
+      className={`flex w-full cursor-grab items-center gap-1.5 rounded-md border px-2 py-1.5 text-left text-xs font-medium shadow-sm transition active:cursor-grabbing ${
         armEq(item)
-          ? "border-brand-500 bg-brand-50 ring-1 ring-brand-400"
-          : "border-white/70 bg-white/80 hover:border-brand-300"
+          ? "border-brand-500 bg-brand-50 text-gray-800 ring-1 ring-brand-400"
+          : used
+            ? "border-blue-400 bg-blue-50 text-blue-700"
+            : "border-white/70 bg-white/80 text-gray-800 hover:border-brand-300"
       }`}
     >
-      <GripVertical className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+      <GripVertical className={`h-3.5 w-3.5 shrink-0 ${used ? "text-blue-400" : "text-gray-400"}`} />
       {icon}
       <span className="truncate">{item.name}</span>
-      {item.poppyOnly && (
+      {used && <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-blue-500" />}
+      {item.poppyOnly && !used && (
         <span className="ml-auto shrink-0 rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand-700">
           Poppy only
         </span>
       )}
     </button>
-  );
+    );
+  };
 
   const ItemChip = ({ item, onRemove }: { item: Lib; onRemove: () => void }) => (
     <div className="group flex items-center gap-1 rounded-md border border-white/70 bg-white/90 px-1.5 py-1 text-[11px] font-medium text-gray-800 shadow-sm">

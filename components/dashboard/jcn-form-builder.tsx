@@ -140,20 +140,20 @@ const PALETTE: { value: string; label: string }[] = PALETTE_GROUPS.flatMap((g) =
 /** The categorised field-type picker grid, shared by the add-field popovers. */
 function PaletteButtons({ onPick, exclude }: { onPick: (v: string) => void; exclude?: string[] }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {PALETTE_GROUPS.map((g) => {
         const opts = g.options.filter((o) => !exclude?.includes(o.value));
         if (opts.length === 0) return null;
         return (
           <div key={g.label}>
-            <p className="px-1 text-[11px] font-semibold text-gray-500">{g.label}</p>
-            <div className="mt-0.5 grid grid-cols-2 gap-1 sm:grid-cols-3">
+            <p className="px-1 pb-1 text-sm font-bold text-gray-800">{g.label}</p>
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
               {opts.map((t) => (
                 <button
                   key={t.value}
                   type="button"
                   onClick={() => onPick(t.value)}
-                  className="rounded-md border border-gray-200 px-2 py-1.5 text-left text-xs text-gray-700 hover:border-brand-300 hover:bg-brand-50"
+                  className="rounded-lg border border-brand-100 bg-brand-50/60 px-2 py-1.5 text-left text-xs font-medium text-gray-700 backdrop-blur-sm transition hover:border-brand-400 hover:bg-brand-100"
                 >
                   {t.label}
                 </button>
@@ -702,21 +702,21 @@ function PlusRow({
         </button>
       </div>
       {open && (
-        <div className="mx-auto mt-2 max-w-md rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
-          <p className="px-1 pb-1 text-[11px] font-medium uppercase tracking-wide text-gray-400">
+        <div className="mx-auto mt-2 max-w-md rounded-xl border border-white/50 bg-white/80 p-3 shadow-md backdrop-blur-md">
+          <p className="px-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
             New field
           </p>
           <PaletteButtons onPick={onPick} />
 
           {bank.length > 0 && onPickTemplate && (
-            <div className="mt-2 border-t border-gray-100 pt-2">
-              <p className="px-1 pb-1 text-[11px] font-medium uppercase tracking-wide text-gray-400">
+            <div className="mt-3 border-t border-gray-100 pt-2.5">
+              <p className="px-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
                 From question bank
               </p>
-              <div className="max-h-56 space-y-2 overflow-y-auto">
+              <div className="max-h-56 space-y-2.5 overflow-y-auto">
                 {[...byCat.entries()].map(([cat, list]) => (
                   <div key={cat}>
-                    <p className="px-1 text-[11px] font-semibold text-gray-500">{cat}</p>
+                    <p className="px-1 pb-0.5 text-sm font-bold text-gray-800">{cat}</p>
                     <div className="mt-0.5 space-y-0.5">
                       {list.map((q) => (
                         <button

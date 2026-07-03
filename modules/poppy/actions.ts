@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireCompany, requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { gatherPoppyUploads } from "@/lib/poppy/uploads";
 import { recordPoppyApplicant } from "@/lib/billing/poppy-credits";
 import {
   generateInterviewQuestions,
@@ -321,7 +322,7 @@ export async function runPoppyForApplication(
   // Find an applicable Poppy step (for its selected forms + CV choice).
   const { data: stepsRaw } = await admin
     .from("onboarding_templates")
-    .select("poppy_form_ids, poppy_include_cv, role_ids, poppy_focus, poppy_instructions, poppy_question_count, poppy_document_ids")
+    .select("poppy_form_ids, poppy_include_cv, role_ids, poppy_focus, poppy_instructions, poppy_question_count, poppy_document_ids, poppy_upload_kinds")
     .eq("company_id", current.company_id)
     .eq("is_store", false)
     .eq("task_type", "poppy");
@@ -333,6 +334,7 @@ export async function runPoppyForApplication(
     poppy_instructions: string | null;
     poppy_question_count: number | null;
     poppy_document_ids: string[] | null;
+    poppy_upload_kinds: string[] | null;
   }[];
   const roleId = app.jobs?.role_id ?? null;
   const step = steps.find((s) => !s.role_ids || s.role_ids.length === 0 || (!!roleId && s.role_ids.includes(roleId))) ?? null;
@@ -354,8 +356,9 @@ export async function runPoppyForApplication(
 
   const formsText = await gatherFormsText(app.id, onlyFormIds);
   const answersText = [formsText, formatAnswers(app.answers)].filter(Boolean).join("\n\n") || null;
-  if (!answersText && !cvBase64Pdf) {
-    return { error: "Nothing to review yet — the applicant hasn't submitted a form or CV." };
+  const attachments = await gatherPoppyUploads(admin, app.id, step?.poppy_upload_kinds);
+  if (!answersText && !cvBase64Pdf && attachments.length === 0) {
+    return { error: "Nothing to review yet — the applicant hasn't submitted a form, CV or upload." };
   }
   const name = [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ").trim() || "the candidate";
 
@@ -375,6 +378,7 @@ export async function runPoppyForApplication(
       questionCount: cfg.questionCount,
       requiredAttributes: cfg.requiredAttributes,
       desiredAttributes: cfg.desiredAttributes,
+      attachments,
     });
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Poppy couldn't analyse the application." };

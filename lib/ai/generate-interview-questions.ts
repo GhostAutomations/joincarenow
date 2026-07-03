@@ -23,6 +23,8 @@ export type InterviewInputs = {
   /** Desirable (nice-to-have) attributes — note them, but their absence isn't
    *  disqualifying. */
   desiredAttributes?: string[];
+  /** Uploaded documents (DBS, proof of address, etc.) attached for Poppy to read. */
+  attachments?: { name: string; base64: string; mediaType: string }[];
 };
 
 const ALLOWED_CATEGORIES = [

@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X, GripVertical, FileText, ScrollText, Sparkles, CheckCircle2, GitBranch, Check } from "lucide-react";
+import { Plus, X, GripVertical, FileText, ScrollText, Sparkles, CheckCircle2, GitBranch, Check, UploadCloud } from "lucide-react";
 import { addTemplateTasks, type TaskDraft } from "@/modules/onboarding/actions";
 import { MultiSelect } from "@/components/dashboard/multi-select";
 import { POPPY_FOCUS_OPTIONS } from "@/lib/poppy/config";
+import { UPLOAD_TYPES } from "@/lib/documents/uploads";
 
 const cls =
   "mt-1 block w-full rounded-md border border-white/60 bg-white/70 backdrop-blur-sm shadow-sm px-2 py-1.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-brand-500 focus:bg-white/90 focus:outline-none focus:ring-1 focus:ring-brand-500";
@@ -35,10 +36,12 @@ const SHOW_PIPELINE = false;
 const ENGAGE_VISIBLE = SHOW_PIPELINE ? ENGAGE : ENGAGE.filter((m) => m.key !== "stage");
 
 type Lib = {
-  source: "form" | "doc" | "stage";
+  source: "form" | "doc" | "stage" | "upload";
   refId: string;
   name: string;
   kind?: "contract" | "policy";
+  /** For an upload item: the body/prompt shown to the applicant on the task. */
+  body?: string;
   /** The job application form — Poppy may review it, but it can't be reissued as
    *  a pipeline task (it's tied to the advert). */
   poppyOnly?: boolean;
@@ -194,6 +197,19 @@ export function WorkflowBuilder({
             triggerStage: stage.key,
             roleValues,
           });
+        } else if (item.source === "upload") {
+          drafts.push({
+            title: item.name,
+            workflowTitle: title.trim(),
+            taskType: "document",
+            formIds: [],
+            dueDays: "",
+            required: true,
+            body: item.body ?? `Please upload your ${item.name}.`,
+            triggerStage: stage.key,
+            roleValues,
+            docKind: item.refId,
+          });
         } else {
           drafts.push({
             title: item.name,
@@ -216,8 +232,11 @@ export function WorkflowBuilder({
     if (poppyEngage) {
       const poppyFormIds = poppyItems.filter((x) => x.source === "form").map((x) => x.refId);
       const poppyDocumentIds = poppyItems.filter((x) => x.source === "doc").map((x) => x.refId);
-      if (poppyFormIds.length === 0 && !poppyIncludeCv) {
-        setError("Poppy needs at least one form (or the CV) to review.");
+      const poppyUploads = poppyItems.filter((x) => x.source === "upload").map((x) => x.refId);
+      const poppyUploadKinds = poppyUploads.filter((k) => k !== "cv");
+      const includeCv = poppyIncludeCv || poppyUploads.includes("cv");
+      if (poppyFormIds.length === 0 && !includeCv && poppyUploadKinds.length === 0) {
+        setError("Give Poppy at least one form, upload or the CV to review.");
         return;
       }
       if (poppyEngage === "stage" && !poppyStage) {
@@ -236,11 +255,12 @@ export function WorkflowBuilder({
         roleValues,
         poppyEngage,
         poppyFormIds,
-        poppyIncludeCv,
+        poppyIncludeCv: includeCv,
         poppyFocus,
         poppyInstructions,
         poppyQuestionCount,
         poppyDocumentIds,
+        poppyUploadKinds,
       });
     }
 
@@ -348,6 +368,8 @@ export function WorkflowBuilder({
         <FileText className="h-3 w-3 shrink-0 text-brand-500" />
       ) : item.source === "stage" ? (
         <GitBranch className="h-3 w-3 shrink-0 text-brand-500" />
+      ) : item.source === "upload" ? (
+        <UploadCloud className="h-3 w-3 shrink-0 text-brand-500" />
       ) : (
         <ScrollText className="h-3 w-3 shrink-0 text-brand-500" />
       )}
@@ -405,8 +427,8 @@ export function WorkflowBuilder({
         )}
       </div>
 
-      {/* Libraries: Forms, Contracts & policies (Pipeline hidden for now) */}
-      <div className={`grid grid-cols-1 gap-3 ${SHOW_PIPELINE ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+      {/* Libraries: Forms, Contracts & policies, Uploads (Pipeline hidden for now) */}
+      <div className={`grid grid-cols-1 gap-3 ${SHOW_PIPELINE ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
         <div className="rounded-xl border border-white/60 bg-white/50 p-3 backdrop-blur-sm">
           <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
             <FileText className="h-4 w-4 text-brand-600" /> Forms
@@ -429,6 +451,16 @@ export function WorkflowBuilder({
             ) : (
               docs.map((d) => <LibChip key={d.id} item={{ source: "doc", refId: d.id, name: d.name, kind: d.kind }} icon={<ScrollText className="h-3.5 w-3.5 shrink-0 text-brand-500" />} />)
             )}
+          </div>
+        </div>
+        <div className="rounded-xl border border-white/60 bg-white/50 p-3 backdrop-blur-sm">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+            <UploadCloud className="h-4 w-4 text-brand-600" /> Uploads
+          </p>
+          <div className="max-h-40 space-y-1.5 overflow-y-auto pr-1">
+            {UPLOAD_TYPES.map((u) => (
+              <LibChip key={u.key} item={{ source: "upload", refId: u.key, name: u.label, body: u.body }} icon={<UploadCloud className="h-3.5 w-3.5 shrink-0 text-brand-500" />} />
+            ))}
           </div>
         </div>
         {SHOW_PIPELINE && (
@@ -497,8 +529,8 @@ export function WorkflowBuilder({
           </p>
           <p className="text-xs font-medium text-gray-700">When should Poppy engage?</p>
           <p className="text-[11px] text-gray-500">
-            Drop the forms Poppy reviews (and any policies/contracts to compare against) into one box.
-            {SHOW_PIPELINE && " For the third box, also drop a pipeline stage."}
+            Drop what Poppy reviews into one box — forms, uploads (DBS, etc.) and any policies/contracts to
+            compare against.{SHOW_PIPELINE && " For the third box, also drop a pipeline stage."}
           </p>
 
           <div className={`grid grid-cols-1 gap-3 ${ENGAGE_VISIBLE.length >= 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>

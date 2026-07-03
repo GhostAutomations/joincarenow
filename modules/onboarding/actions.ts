@@ -31,6 +31,10 @@ export type TaskDraft = {
   poppyQuestionCount?: number | string;
   /** Documents (policy/contract ids) Poppy compares against for this step. */
   poppyDocumentIds?: string[];
+  /** Uploaded document kinds (e.g. 'dbs') Poppy should review for this step. */
+  poppyUploadKinds?: string[];
+  /** For a document-upload task: the standard upload kind requested (e.g. 'dbs'). */
+  docKind?: string;
   /** The workflow's own name, decoupled from a task's own title so the
    *  drag-built builder can give each task its own title (e.g. the document
    *  name) while all tasks share one workflow name. Falls back to `title`. */
@@ -81,6 +85,7 @@ function buildTemplateRows(opts: {
         poppy_instructions: d.poppyInstructions?.trim() || null,
         poppy_question_count: normPoppyCount(d.poppyQuestionCount),
         poppy_document_ids: d.poppyDocumentIds?.length ? d.poppyDocumentIds : null,
+        poppy_upload_kinds: d.poppyUploadKinds?.length ? d.poppyUploadKinds : null,
         position: pos++,
       });
     } else if (d.taskType === "form") {
@@ -108,6 +113,8 @@ function buildTemplateRows(opts: {
         // Read-&-sign: link the specific contract/policy the applicant signs.
         document_id: d.documentId ?? null,
         document_kind: d.documentKind ?? null,
+        // Document-upload task: the standard upload kind requested (e.g. 'dbs').
+        doc_kind: d.docKind ?? null,
         position: pos++,
       });
     }
@@ -137,8 +144,8 @@ export async function addTemplateTasks(
       if (d.poppyEngage === "stage" && ![...STAGES, "right_to_work"].includes(d.triggerStage)) {
         return { error: "Choose which stage Poppy engages at" };
       }
-      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv) {
-        return { error: "Choose at least one form (or the CV) for Poppy to review" };
+      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv && (!d.poppyUploadKinds || d.poppyUploadKinds.length === 0)) {
+        return { error: "Give Poppy at least one form, upload or the CV to review" };
       }
       continue;
     }
@@ -210,7 +217,7 @@ export async function addTasksToWorkflow(
     if (d.taskType === "poppy") {
       if (!["all_forms", "as_forms", "stage"].includes(d.poppyEngage ?? "")) return { error: "Choose when Poppy should engage" };
       if (d.poppyEngage === "stage" && ![...WORKFLOW_STAGES, "right_to_work"].includes(d.triggerStage)) return { error: "Choose which stage Poppy engages at" };
-      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv) return { error: "Choose at least one form (or the CV) for Poppy to review" };
+      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv && (!d.poppyUploadKinds || d.poppyUploadKinds.length === 0)) return { error: "Give Poppy at least one form, upload or the CV to review" };
     } else if (d.taskType === "form" && (!d.formIds || d.formIds.length === 0)) {
       return { error: "Choose at least one form for each form task" };
     } else if (d.taskType !== "poppy" && !WORKFLOW_STAGES.includes(d.triggerStage)) {
@@ -381,6 +388,7 @@ export type EditTaskInput = {
   poppyInstructions?: string;
   poppyQuestionCount?: number | string;
   poppyDocumentIds?: string[];
+  poppyUploadKinds?: string[];
 };
 
 const WF_STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
@@ -398,8 +406,8 @@ export async function updateTemplateTask(input: EditTaskInput): Promise<{ ok?: b
     if (input.poppyEngage === "stage" && ![...WF_STAGES, "right_to_work"].includes(input.triggerStage)) {
       return { error: "Choose which stage Poppy engages at" };
     }
-    if ((!input.poppyFormIds || input.poppyFormIds.length === 0) && !input.poppyIncludeCv) {
-      return { error: "Choose at least one form (or the CV) for Poppy to review" };
+    if ((!input.poppyFormIds || input.poppyFormIds.length === 0) && !input.poppyIncludeCv && (!input.poppyUploadKinds || input.poppyUploadKinds.length === 0)) {
+      return { error: "Give Poppy at least one form, upload or the CV to review" };
     }
     const { error } = await supabase
       .from("onboarding_templates")
@@ -412,6 +420,7 @@ export async function updateTemplateTask(input: EditTaskInput): Promise<{ ok?: b
         poppy_instructions: input.poppyInstructions?.trim() || null,
         poppy_question_count: normPoppyCount(input.poppyQuestionCount),
         poppy_document_ids: input.poppyDocumentIds?.length ? input.poppyDocumentIds : null,
+        poppy_upload_kinds: input.poppyUploadKinds?.length ? input.poppyUploadKinds : null,
         trigger_stage: input.poppyEngage === "stage" ? input.triggerStage : "on_application",
         body: input.body.trim() || null,
         title: input.title.trim() || "Poppy screening",

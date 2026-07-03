@@ -3,6 +3,7 @@ import { recordPoppyApplicant } from "@/lib/billing/poppy-credits";
 import { generatePoppyAnalysis, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
 import { startPoppyConversation } from "@/lib/poppy/conversation";
 import { loadPoppyRuntimeConfig } from "@/lib/poppy/config";
+import { gatherPoppyUploads } from "@/lib/poppy/uploads";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -74,6 +75,7 @@ type PoppyStep = {
   poppy_instructions: string | null;
   poppy_question_count: number | null;
   poppy_document_ids: string[] | null;
+  poppy_upload_kinds: string[] | null;
 };
 type AppRow = {
   id: string;
@@ -142,7 +144,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
 
     const { data: stepsRaw } = await db
       .from("onboarding_templates")
-      .select("poppy_engage, poppy_form_ids, poppy_include_cv, trigger_stage, role_ids, poppy_focus, poppy_instructions, poppy_question_count, poppy_document_ids")
+      .select("poppy_engage, poppy_form_ids, poppy_include_cv, trigger_stage, role_ids, poppy_focus, poppy_instructions, poppy_question_count, poppy_document_ids, poppy_upload_kinds")
       .eq("company_id", companyId)
       .eq("is_store", false)
       .eq("task_type", "poppy");
@@ -203,6 +205,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
         // Phase 1 — analyse into concerns + questions. The conversation (Slice B)
         // asks the questions; the final report is written once they're answered.
         const cfg = await loadPoppyRuntimeConfig(companyId, chosen);
+        const attachments = await gatherPoppyUploads(db, app.id, chosen.poppy_upload_kinds);
         const analysis = await generatePoppyAnalysis({
           jobTitle: app.jobs?.title ?? "Care role",
           jobDescription: app.jobs?.description ?? "",
@@ -216,6 +219,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
           questionCount: cfg.questionCount,
           requiredAttributes: cfg.requiredAttributes,
           desiredAttributes: cfg.desiredAttributes,
+          attachments,
         });
         const report: PoppyReportData = {
           summary: analysis.summary,

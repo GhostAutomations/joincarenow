@@ -23,8 +23,8 @@ export async function addStoreWorkflowTasks(
     if (d.taskType === "poppy") {
       if (!["all_forms", "as_forms", "stage"].includes(d.poppyEngage ?? "")) return { error: "Choose when Poppy should engage" };
       if (d.poppyEngage === "stage" && ![...STAGES, "right_to_work"].includes(d.triggerStage)) return { error: "Choose which stage Poppy engages at" };
-      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv) {
-        return { error: "Choose at least one form (or the CV) for Poppy to review" };
+      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv && (!d.poppyUploadKinds || d.poppyUploadKinds.length === 0)) {
+        return { error: "Give Poppy at least one form, upload or the CV to review" };
       }
       continue;
     }
@@ -94,6 +94,8 @@ export async function addStoreWorkflowTasks(
         poppy_focus: d.poppyFocus?.length ? d.poppyFocus : null,
         poppy_instructions: d.poppyInstructions?.trim() || null,
         poppy_question_count: normPoppyCount(d.poppyQuestionCount),
+        poppy_document_ids: d.poppyDocumentIds?.length ? d.poppyDocumentIds : null,
+        poppy_upload_kinds: d.poppyUploadKinds?.length ? d.poppyUploadKinds : null,
         position: pos++,
       });
     } else if (d.taskType === "form") {
@@ -101,7 +103,7 @@ export async function addStoreWorkflowTasks(
         rows.push({ ...base, title: names.get(fid) ?? d.title.trim(), task_type: "form", form_id: fid, position: pos++ });
       }
     } else {
-      rows.push({ ...base, title: d.title.trim(), task_type: d.taskType, form_id: null, position: pos++ });
+      rows.push({ ...base, title: d.title.trim(), task_type: d.taskType, form_id: null, doc_kind: d.docKind ?? null, position: pos++ });
     }
   }
 

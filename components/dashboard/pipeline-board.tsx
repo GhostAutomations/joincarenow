@@ -173,7 +173,7 @@ function StatusCol({
       <span className="text-[9px] font-semibold text-gray-600">
         {Icon ? <Icon className="h-2.5 w-2.5" aria-hidden /> : title}
       </span>
-      <span className="flex h-3.5 items-center justify-center">{children}</span>
+      <span className="flex h-3.5 w-full min-w-0 items-center justify-center overflow-hidden">{children}</span>
     </div>
   );
 }

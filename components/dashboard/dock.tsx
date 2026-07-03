@@ -22,10 +22,10 @@ const BASE = [
   { href: "/reports", label: "Reports", icon: BarChart3, grad: "from-blue-400 to-blue-600" },
 ];
 
-// Admin-only apps: Workflow builder, Form Store (paid forms), billing, settings/team management.
+// Admin-only apps: Workflow builder, File Store (paid forms), billing, settings/team management.
 const ADMIN_ITEMS = [
   { href: "/onboarding-board", label: "Workflow", icon: ClipboardCheck, grad: "from-emerald-400 to-emerald-600" },
-  { href: "/store", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
+  { href: "/store", label: "File Store", icon: Store, grad: "from-rose-400 to-rose-600" },
   { href: "/billing", label: "Billing", icon: CreditCard, grad: "from-amber-400 to-amber-500" },
   { href: "/settings", label: "Settings", icon: Settings, grad: "from-gray-400 to-gray-600" },
 ];

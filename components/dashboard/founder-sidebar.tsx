@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/founder", label: "Companies", icon: Building2, exact: true },
-  { href: "/founder/forms", label: "Form Store", icon: Store, exact: false },
+  { href: "/founder/forms", label: "File Store", icon: Store, exact: false },
 ];
 
 export function FounderSidebar() {

@@ -85,7 +85,7 @@ const ADD_ONS = [
   { label: "Extra branch", price: "£7.50 / month each" },
   { label: "Extra SMS", price: "8p each after your 100/month" },
   { label: "AI actions", price: "10p per action" },
-  { label: "Forms", price: "from the Form Store, priced per form" },
+  { label: "Forms", price: "from the File Store, priced per form" },
 ];
 
 const POPPY_INCLUDES = [

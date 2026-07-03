@@ -14,7 +14,7 @@ type StoreForm = {
 
 export default async function StorePage() {
   const { supabase, current } = await requireCompany();
-  // Form Store purchases affect billing — admin-only.
+  // File Store purchases affect billing — admin-only.
   if (current.role !== "admin") redirect("/dashboard");
   const isAdmin = true;
 
@@ -60,7 +60,7 @@ export default async function StorePage() {
   return (
     <div>
       <PageHeader
-        title="Form Store"
+        title="File Store"
         subtitle="Ready-made forms. Preview, add to your Forms, or customise before adding."
       />
 

@@ -16,7 +16,7 @@ const ITEMS = [
   { href: "/founder/audit", label: "Audit log", icon: ScrollText, grad: "from-violet-400 to-violet-600" },
   { href: "/founder/integrations", label: "Integrations", icon: Plug, grad: "from-emerald-400 to-emerald-600" },
   { href: "/founder/errors", label: "Errors", icon: TriangleAlert, grad: "from-red-400 to-red-600" },
-  { href: "/founder/forms", label: "Form Store", icon: Store, grad: "from-rose-400 to-rose-600" },
+  { href: "/founder/forms", label: "File Store", icon: Store, grad: "from-rose-400 to-rose-600" },
   { href: "/founder/workflows", label: "Workflows", icon: ClipboardCheck, grad: "from-emerald-400 to-emerald-600" },
   { href: "/founder/questions", label: "Question Bank", icon: ListChecks, grad: "from-amber-400 to-amber-500" },
   { href: "/founder/sms", label: "SMS Usage", icon: MessageSquareText, grad: "from-pink-400 to-pink-600" },

@@ -325,7 +325,7 @@ async function resolveDefaultPaymentMethod(customerId: string): Promise<string |
 }
 
 /** Charge a one-off amount to a customer's saved card immediately (off-session).
- *  Used for Form Store purchases. Resolves the saved card explicitly, creates an
+ *  Used for File Store purchases. Resolves the saved card explicitly, creates an
  *  isolated draft invoice (so it can't sweep up unrelated pending items), pays it
  *  with that card, and voids it if the payment fails so nothing is left to charge
  *  later. Throws if it can't settle, so the caller never grants a purchase unpaid.

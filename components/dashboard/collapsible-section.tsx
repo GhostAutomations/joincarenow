@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 /** A titled, collapsible section. Children are passed in (can be server-rendered).
- *  Used to group forms by category on the Forms and Form Store screens. */
+ *  Used to group forms by category on the Forms and File Store screens. */
 export function CollapsibleSection({
   title,
   count,

@@ -33,7 +33,7 @@ export default async function FounderFormsPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Form Store</h1>
+        <h1 className="text-2xl font-semibold text-white drop-shadow-sm">File Store</h1>
         <form action={createBlankStoreForm}>
           <button className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand-700">
             <Plus className="h-5 w-5" aria-hidden /> Create form
@@ -41,7 +41,7 @@ export default async function FounderFormsPage() {
         </form>
       </div>
       <p className="mt-1 text-sm text-white/80">
-        Templates you create here appear in every company&apos;s Form Store.
+        Templates you create here appear in every company&apos;s File Store.
         Free templates add instantly; priced ones are bought per form.
       </p>
 

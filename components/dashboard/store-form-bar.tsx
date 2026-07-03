@@ -123,7 +123,7 @@ export function StoreFormBar({
           <div className="flex items-center gap-2 text-sm">
             {published ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 font-medium text-green-800">
-                <Globe className="h-3.5 w-3.5" /> Live in the Form Store
+                <Globe className="h-3.5 w-3.5" /> Live in the File Store
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 font-medium text-amber-800">

@@ -745,7 +745,7 @@ export async function saveStoreSettings(
 }
 
 /** Founder: publish or unpublish a store template. Publishing makes it appear in
- *  every company's Form Store; it requires a real name + a category first. */
+ *  every company's File Store; it requires a real name + a category first. */
 export async function setStorePublished(
   _prev: DetailsState,
   formData: FormData
@@ -790,7 +790,7 @@ export async function deleteStoreForm(formData: FormData) {
   redirect("/founder/forms");
 }
 
-/** Founder: delete several store templates at once (from the Form Store list). */
+/** Founder: delete several store templates at once (from the File Store list). */
 export async function deleteStoreFormsBulk(ids: string[]): Promise<{ ok?: boolean; error?: string }> {
   const clean = (ids ?? []).filter((x) => typeof x === "string" && x);
   if (clean.length === 0) return { error: "Nothing selected." };
@@ -849,7 +849,7 @@ async function acquireOne(storeId: string): Promise<AcquireResult> {
         return { error: "Set up billing with a saved card before buying paid forms." };
       }
       try {
-        const r = await chargeOneOff(customerId, price, `Form Store: ${store.name}`);
+        const r = await chargeOneOff(customerId, price, `File Store: ${store.name}`);
         invoiceId = r.invoiceId;
       } catch (e) {
         return { error: e instanceof Error ? e.message : "Payment could not be completed." };

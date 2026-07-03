@@ -80,13 +80,13 @@ export default async function FounderFormSalesPage() {
         <ShoppingBag className="h-6 w-6" aria-hidden /> Form sales
       </h1>
       <p className="text-sm text-white/80">
-        Paid Form Store purchases by form. Each cell shows number sold · revenue, to date (UK calendar).
+        Paid File Store purchases by form. Each cell shows number sold · revenue, to date (UK calendar).
       </p>
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-white/40 bg-white/75 shadow-sm backdrop-blur-md">
         {!hasSales ? (
           <div className="p-10 text-center text-sm text-gray-500">
-            No forms have been purchased yet. Sales appear here once a company buys a paid Form Store form.
+            No forms have been purchased yet. Sales appear here once a company buys a paid File Store form.
           </div>
         ) : (
           <div className="overflow-x-auto">

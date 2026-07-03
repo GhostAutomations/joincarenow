@@ -33,7 +33,7 @@ function gradientFor(cat: string): string {
   return GRADIENTS[h % GRADIENTS.length];
 }
 
-/** Founder-side Form Store — same App Store look as the company store, but the
+/** Founder-side File Store — same App Store look as the company store, but the
  *  cards open the template builder to edit (rather than "Add"). */
 export function FounderStoreBrowser({ forms }: { forms: FounderStoreCard[] }) {
   const router = useRouter();

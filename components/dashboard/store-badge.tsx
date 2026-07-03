@@ -5,12 +5,12 @@ export function formatPrice(pence: number): string {
   return "£" + (pence / 100).toFixed(2);
 }
 
-/** Gold marker (the Form Store app icon, in gold) shown on forms that come
- *  from the Form Store. */
+/** Gold marker (the File Store app icon, in gold) shown on forms that come
+ *  from the File Store. */
 export function StoreBadge() {
   return (
     <span
-      title="From the Form Store"
+      title="From the File Store"
       className="inline-grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-sm ring-1 ring-amber-300"
     >
       <Store className="h-3.5 w-3.5" aria-hidden strokeWidth={2} />

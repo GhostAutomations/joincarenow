@@ -27,13 +27,13 @@ const NAV = [
   { href: "/onboarding-board", label: "Workflow", icon: ClipboardCheck },
   { href: "/employees", label: "Employees", icon: IdCard },
   { href: "/forms", label: "Forms", icon: FileText },
-  { href: "/store", label: "Form Store", icon: Store },
+  { href: "/store", label: "File Store", icon: Store },
   { href: "/templates", label: "Templates", icon: MessageSquareText },
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-// Admin-only destinations (Workflow builder + Form Store + Settings/team management + billing).
+// Admin-only destinations (Workflow builder + File Store + Settings/team management + billing).
 const ADMIN_HREFS = new Set(["/onboarding-board", "/store", "/settings", "/billing"]);
 
 export function Sidebar({

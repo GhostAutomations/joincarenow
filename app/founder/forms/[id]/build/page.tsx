@@ -98,7 +98,7 @@ export default async function FounderFormBuildPage({
           href="/founder/forms"
           className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white"
         >
-          <ArrowLeft className="h-4 w-4" aria-hidden /> Back to Form Store
+          <ArrowLeft className="h-4 w-4" aria-hidden /> Back to File Store
         </Link>
         <DeleteFormButton action={deleteStoreForm} formId={form.id} fieldCount={fields.length} />
       </div>

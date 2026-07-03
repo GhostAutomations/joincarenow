@@ -22,7 +22,7 @@ const ADD_ONS = [
   ["Extra branch", "£7.50 / month each"],
   ["SMS", "100 included, then 8p each"],
   ["AI actions", "10p each"],
-  ["Forms", "from the Form Store, per form"],
+  ["Forms", "from the File Store, per form"],
 ];
 
 function monthStartIso() {

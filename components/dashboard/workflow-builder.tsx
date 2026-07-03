@@ -34,7 +34,15 @@ const ENGAGE: { key: Engage; label: string }[] = [
 const SHOW_PIPELINE = false;
 const ENGAGE_VISIBLE = SHOW_PIPELINE ? ENGAGE : ENGAGE.filter((m) => m.key !== "stage");
 
-type Lib = { source: "form" | "doc" | "stage"; refId: string; name: string; kind?: "contract" | "policy" };
+type Lib = {
+  source: "form" | "doc" | "stage";
+  refId: string;
+  name: string;
+  kind?: "contract" | "policy";
+  /** The job application form — Poppy may review it, but it can't be reissued as
+   *  a pipeline task (it's tied to the advert). */
+  poppyOnly?: boolean;
+};
 type Placed = Lib & { key: string };
 const sameItem = (a: Lib, b: Lib) => a.source === b.source && a.refId === b.refId;
 
@@ -55,7 +63,7 @@ export function WorkflowBuilder({
   poppyEnabled = false,
   saveAction = addTemplateTasks,
 }: {
-  forms: { id: string; name: string }[];
+  forms: { id: string; name: string; poppyOnly?: boolean }[];
   /** Contracts + policies. Dropped on a stage = read-&-sign task; dropped in a
    *  Poppy box = something Poppy compares the candidate against. */
   docs?: { id: string; name: string; kind: "contract" | "policy" }[];
@@ -105,6 +113,14 @@ export function WorkflowBuilder({
   // --- Pipeline columns (form/document tasks) ---
   function place(stageKey: string, item: Lib) {
     if (item.source === "stage") return; // stages aren't tasks
+    if (item.poppyOnly) {
+      // The application form is tied to the advert — Poppy can review it, but it
+      // can't be reissued to the applicant as a pipeline task.
+      setError(`"${item.name}" is the job application form — it can only be given to Poppy, not sent as a task.`);
+      setArmed(null);
+      return;
+    }
+    setError(null);
     setPlaced((p) => ({ ...p, [stageKey]: [...(p[stageKey] ?? []), { ...item, key: crypto.randomUUID() }] }));
     setArmed(null);
   }
@@ -305,6 +321,11 @@ export function WorkflowBuilder({
       <GripVertical className="h-3.5 w-3.5 shrink-0 text-gray-400" />
       {icon}
       <span className="truncate">{item.name}</span>
+      {item.poppyOnly && (
+        <span className="ml-auto shrink-0 rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand-700">
+          Poppy only
+        </span>
+      )}
     </button>
   );
 
@@ -381,7 +402,7 @@ export function WorkflowBuilder({
             {forms.length === 0 ? (
               <p className="text-xs text-gray-400">No forms yet — create one in Forms first.</p>
             ) : (
-              forms.map((f) => <LibChip key={f.id} item={{ source: "form", refId: f.id, name: f.name }} icon={<FileText className="h-3.5 w-3.5 shrink-0 text-brand-500" />} />)
+              forms.map((f) => <LibChip key={f.id} item={{ source: "form", refId: f.id, name: f.name, poppyOnly: f.poppyOnly }} icon={<FileText className="h-3.5 w-3.5 shrink-0 text-brand-500" />} />)
             )}
           </div>
         </div>

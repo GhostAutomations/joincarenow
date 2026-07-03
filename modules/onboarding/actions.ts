@@ -957,6 +957,46 @@ export async function uploadOnboardingDoc(
   return { ok: true };
 }
 
+/** Applicant submits a professional registration: a number (required) plus,
+ *  unless they tick "number only", a photo of their card/certificate. */
+export async function submitRegistration(
+  _prev: OnbState,
+  formData: FormData
+): Promise<OnbState> {
+  const id = formData.get("taskId");
+  const number = (formData.get("reg_number")?.toString() ?? "").trim();
+  const noCard = formData.get("no_card") === "on";
+  const file = formData.get("doc");
+  if (typeof id !== "string") return { error: "Missing task" };
+  if (number.length < 2) return { error: "Enter your registration number." };
+
+  const { supabase, user } = await requireUser();
+
+  let path: string | null = null;
+  if (!noCard) {
+    if (!(file instanceof File) || file.size === 0) {
+      return { error: "Upload a photo of your registration, or tick the box if you don't have one." };
+    }
+    if (file.size > 5 * 1024 * 1024) return { error: "File must be 5MB or smaller" };
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    path = `${user.id}/registration-${Date.now()}-${safe}`;
+    const { error: upErr } = await supabase.storage
+      .from("applications")
+      .upload(path, await file.arrayBuffer(), { contentType: file.type || "application/octet-stream", upsert: false });
+    if (upErr) return { error: "Could not upload. Please try again." };
+  }
+
+  const { error } = await supabase.rpc("set_onboarding_registration", {
+    p_task_id: id,
+    p_number: number,
+    p_path: path,
+  });
+  if (error) return { error: "Could not save. Please try again." };
+
+  revalidatePath("/portal");
+  return { ok: true };
+}
+
 export async function submitOnboardingForm(
   _prev: OnbState,
   formData: FormData

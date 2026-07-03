@@ -1,10 +1,23 @@
 /** Standard care-sector document uploads that can be requested in a workflow.
  *  Dropping one on a pipeline stage creates a document-upload task; dropping one
  *  in a Poppy box tells Poppy to review that uploaded document. */
-export type UploadType = { key: string; label: string; body: string };
+export type UploadType = {
+  key: string;
+  label: string;
+  body: string;
+  /** A professional registration upload — the applicant enters a registration
+   *  number and can optionally upload a photo of their card/certificate. */
+  registration?: boolean;
+};
 
 export const UPLOAD_TYPES: UploadType[] = [
   { key: "dbs", label: "DBS certificate", body: "Please upload your current DBS certificate, or your DBS Update Service details." },
+  {
+    key: "registration",
+    label: "Care worker registration",
+    body: "Enter your registration number (Social Care Wales, SSSC or NISCC) and, if you have one, upload a photo of your registration card or certificate. If you don't have a card or certificate, tick the box and just enter your number.",
+    registration: true,
+  },
   { key: "right_to_work", label: "Right to Work / passport", body: "Please upload proof of your right to work in the UK (passport, or share code + photo ID)." },
   { key: "proof_of_address", label: "Proof of address", body: "Please upload a recent utility bill, bank statement or council tax letter (within the last 3 months)." },
   { key: "qualifications", label: "Qualifications / certificates", body: "Please upload certificates for any relevant qualifications (Care Certificate, NVQ/QCF, moving & handling, etc.)." },

@@ -100,7 +100,7 @@ export default async function ComplianceReportsPage({
             <p className="text-sm font-semibold text-gray-900">Turnover &amp; leavers</p>
             <div className="mt-1 flex gap-1.5">
               {Object.entries(RANGES).map(([key, r]) => (
-                <Link key={key} href={`/reports/compliance?range=${key}`} className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${range === key ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>{r.label}</Link>
+                <Link key={key} href={`/reports/compliance?range=${key}`} className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${range === key ? "bg-brand-600 text-white" : "bg-white/60 text-gray-700 hover:bg-white/80"}`}>{r.label}</Link>
               ))}
             </div>
           </div>

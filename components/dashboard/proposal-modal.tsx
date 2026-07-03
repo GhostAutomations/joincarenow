@@ -87,7 +87,7 @@ export function ProposalModal({ prospectId, name, onClose }: { prospectId: strin
       <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Create a proposal — {name}</h3>
-          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200">
+          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full bg-white/60 text-gray-700 hover:bg-white/80">
             <X className="h-4 w-4" />
           </button>
         </div>

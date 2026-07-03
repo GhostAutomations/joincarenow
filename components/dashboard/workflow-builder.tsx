@@ -399,7 +399,7 @@ export function WorkflowBuilder({
             setOpen(false);
           }}
           aria-label="Close"
-          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+          className="rounded p-1 text-gray-400 hover:bg-white/60 hover:text-gray-700"
         >
           <X className="h-4 w-4" />
         </button>

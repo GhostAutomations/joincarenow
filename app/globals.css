@@ -63,13 +63,17 @@ body {
 }
 
 /* ----------------------------------------------------------------
-   READABLE SECONDARY TEXT. The lightest greys (gray-300/400) were nearly
-   invisible on the frosted-glass surfaces, so bump them a notch site-wide.
-   Only targets the base utilities — placeholder:/hover: variants are separate
-   classes and keep their lighter shade.
+   READABLE SECONDARY TEXT. Light greys (gray-300/400/500) were nearly
+   invisible on the frosted-glass surfaces, so darken them site-wide —
+   graded so hierarchy survives: 500 -> 700, 400/300 -> 600. Slate mirrors
+   gray. Only targets the base utilities — placeholder:/hover: variants are
+   separate classes and keep their lighter shade.
    ---------------------------------------------------------------- */
-.text-gray-400 { color: #4b5563 !important; } /* was gray-400 -> gray-600 */
-.text-gray-300 { color: #6b7280 !important; } /* was gray-300 -> gray-500 */
+.text-gray-500 { color: #374151 !important; }  /* was gray-500 -> gray-700 */
+.text-gray-400 { color: #4b5563 !important; }  /* was gray-400 -> gray-600 */
+.text-gray-300 { color: #4b5563 !important; }  /* was gray-300 -> gray-600 */
+.text-slate-500 { color: #334155 !important; } /* was slate-500 -> slate-700 */
+.text-slate-400 { color: #475569 !important; } /* was slate-400 -> slate-600 */
 
 /* ----------------------------------------------------------------
    GLASS EVERYWHERE (whole site). Standing rule: NO plain white boxes or white
@@ -88,6 +92,50 @@ body {
   -webkit-backdrop-filter: blur(18px) saturate(160%);
   backdrop-filter: blur(18px) saturate(160%);
   border-color: rgb(255 255 255 / 0.55) !important;
+}
+
+/* DENSER FROST FOR FLOATING SURFACES. Modals, slide-overs, dropdown menus and
+   popovers sit on top of busy content, so full glass gets hard to read. Any
+   white surface that floats (fixed/absolute positioned, or anything white
+   inside a fixed overlay) — plus explicit /80,/90,/95 tints — frosts at ~85%:
+   still glassy, but text stays crisp. */
+[class*="bg-white/80"]:not(select):not(textarea):not(input),
+[class*="bg-white/90"]:not(select):not(textarea):not(input),
+[class*="bg-white/95"]:not(select):not(textarea):not(input),
+.fixed.bg-white, .absolute.bg-white,
+.fixed .bg-white:not(select):not(textarea):not(input),
+.fixed [class*="bg-white/55"]:not(select):not(textarea):not(input),
+.fixed [class*="bg-white/60"]:not(select):not(textarea):not(input),
+.fixed [class*="bg-white/70"]:not(select):not(textarea):not(input) {
+  background-color: rgb(255 255 255 / 0.85) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border-color: rgb(255 255 255 / 0.6) !important;
+}
+
+/* ----------------------------------------------------------------
+   NO GREY BOXES. bg-gray-50/100 wells, table headers and chips looked like
+   flat grey slabs on the glass — frost them as a lighter tint of the same
+   glass instead. Neutral status pills (bg-gray-200) deliberately keep their
+   grey so "archived/cancelled/leaver" still reads as inactive.
+   ---------------------------------------------------------------- */
+.bg-gray-50, .bg-gray-100, .bg-slate-50, .bg-slate-100 {
+  background-color: rgb(255 255 255 / 0.4) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+}
+.hover\:bg-gray-50:hover, .hover\:bg-gray-100:hover, .hover\:bg-slate-50:hover {
+  background-color: rgb(255 255 255 / 0.55) !important;
+}
+.hover\:bg-gray-200:hover { background-color: rgb(255 255 255 / 0.7) !important; }
+
+/* Grey borders and row dividers read as dirty lines on glass — use the white
+   rim everywhere instead. */
+.border-gray-100, .border-gray-200, .border-gray-300 {
+  border-color: rgb(255 255 255 / 0.5) !important;
+}
+[class*="divide-gray-"] > * {
+  border-color: rgb(255 255 255 / 0.5) !important;
 }
 
 /* ----------------------------------------------------------------

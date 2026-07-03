@@ -22,3 +22,4 @@ next-env.d.ts
 
 # supabase CLI temp files
 supabase/.temp/
+.fuse_hidden*

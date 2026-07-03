@@ -48,6 +48,16 @@ const CREATE_LABEL: Record<string, string> = {
   policies: "Create policy",
   jobdescriptions: "Create job description",
 };
+const INTRO: Record<string, string> = {
+  forms:
+    "Templates you create here appear in every company's File Store. Free templates add instantly; priced ones are bought per form.",
+  contracts:
+    "Templates you create here appear in every company's File Store. Free templates add instantly; priced ones are bought per contract.",
+  policies:
+    "Templates you create here appear in every company's File Store. Free templates add instantly; priced ones are bought per policy.",
+  jobdescriptions:
+    "Templates you create here appear in every company's File Store. Free templates add instantly; priced ones are bought per job description.",
+};
 
 export default async function FounderFileStorePage({
   searchParams,
@@ -98,19 +108,19 @@ export default async function FounderFileStorePage({
     }`;
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-5xl">
+      <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-white drop-shadow-sm">File Store</h1>
         {tab === "forms" ? (
           <form action={createBlankStoreForm}>
-            <button className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand-700">
+            <button className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand-700">
               <Plus className="h-5 w-5" aria-hidden /> Create form
             </button>
           </form>
         ) : (
           <form action={createBlankStoreDoc}>
             <input type="hidden" name="kind" value={DOC_KIND[tab]} />
-            <button className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand-700">
+            <button className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand-700">
               <Plus className="h-5 w-5" aria-hidden /> {CREATE_LABEL[tab]}
             </button>
           </form>
@@ -125,15 +135,11 @@ export default async function FounderFileStorePage({
         ))}
       </div>
 
+      <p className="mt-4 text-sm text-white/80">{INTRO[tab]}</p>
+
       <div className="mt-6">
         {tab === "forms" ? (
-          <>
-            <p className="mb-4 text-sm text-white/80">
-              Templates you create here appear in every company&apos;s File Store. Free templates add
-              instantly; priced ones are bought per form.
-            </p>
-            <FounderStoreBrowser forms={formCards} />
-          </>
+          <FounderStoreBrowser forms={formCards} />
         ) : (
           <FounderDocStoreBrowser kind={DOC_KIND[tab]} docs={docCards} />
         )}

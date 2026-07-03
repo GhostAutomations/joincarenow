@@ -90,12 +90,6 @@ export function FounderDocStoreBrowser({ kind, docs }: { kind: Kind; docs: Found
 
   return (
     <div className="mx-auto max-w-5xl">
-      <p className="mb-4 text-sm text-white/80">
-        Templates you create here appear in every company&apos;s File Store. Free templates add
-        instantly; priced ones are bought per{" "}
-        {kind === "policy" ? "policy" : kind === "contract" ? "contract" : "job description"}.
-      </p>
-
       <div className="rounded-2xl border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-md">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden />

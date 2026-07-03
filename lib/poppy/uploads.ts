@@ -31,26 +31,30 @@ export async function gatherPoppyUploads(
 
   const { data: tasks } = await db
     .from("onboarding_tasks")
-    .select("doc_kind, doc_path, title")
+    .select("doc_kind, doc_path, doc_path_back, title")
     .eq("application_id", applicationId)
     .in("doc_kind", wanted)
     .not("doc_path", "is", null);
 
   const out: PoppyAttachment[] = [];
-  for (const t of tasks ?? []) {
-    if (out.length >= limit) break;
-    const path = t.doc_path as string | null;
-    if (!path) continue;
+  const add = async (path: string | null, label: string) => {
+    if (!path || out.length >= limit) return;
     const mediaType = mediaTypeFor(path);
-    if (!mediaType) continue; // unsupported file type — skip
+    if (!mediaType) return; // unsupported file type — skip
     try {
       const { data: blob } = await db.storage.from("applications").download(path);
-      if (!blob) continue;
+      if (!blob) return;
       const base64 = Buffer.from(await blob.arrayBuffer()).toString("base64");
-      out.push({ name: (t.title as string) ?? (t.doc_kind as string) ?? "Document", base64, mediaType });
+      out.push({ name: label, base64, mediaType });
     } catch {
       /* skip unreadable file */
     }
+  };
+  for (const t of tasks ?? []) {
+    if (out.length >= limit) break;
+    const name = (t.title as string) ?? (t.doc_kind as string) ?? "Document";
+    await add(t.doc_path as string | null, name);
+    await add(t.doc_path_back as string | null, `${name} (back)`);
   }
   return out;
 }

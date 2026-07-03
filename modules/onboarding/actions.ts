@@ -957,6 +957,45 @@ export async function uploadOnboardingDoc(
   return { ok: true };
 }
 
+/** Applicant uploads a two-sided document (e.g. DBS certificate) — front + back. */
+export async function submitTwoSidedDoc(
+  _prev: OnbState,
+  formData: FormData
+): Promise<OnbState> {
+  const id = formData.get("taskId");
+  const front = formData.get("front");
+  const back = formData.get("back");
+  if (typeof id !== "string") return { error: "Missing task" };
+  if (!(front instanceof File) || front.size === 0) return { error: "Upload the front." };
+  if (!(back instanceof File) || back.size === 0) return { error: "Upload the back." };
+  for (const f of [front, back]) {
+    if (f.size > 5 * 1024 * 1024) return { error: "Each file must be 5MB or smaller" };
+  }
+
+  const { supabase, user } = await requireUser();
+  const put = async (f: File, side: string): Promise<string | null> => {
+    const safe = f.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${user.id}/onboarding-${side}-${Date.now()}-${safe}`;
+    const { error } = await supabase.storage
+      .from("applications")
+      .upload(path, await f.arrayBuffer(), { contentType: f.type || "application/octet-stream", upsert: false });
+    return error ? null : path;
+  };
+  const frontPath = await put(front, "front");
+  const backPath = await put(back, "back");
+  if (!frontPath || !backPath) return { error: "Could not upload. Please try again." };
+
+  const { error } = await supabase.rpc("set_onboarding_doc_two", {
+    p_task_id: id,
+    p_front: frontPath,
+    p_back: backPath,
+  });
+  if (error) return { error: "Could not save. Please try again." };
+
+  revalidatePath("/portal");
+  return { ok: true };
+}
+
 /** Applicant submits a professional registration: a number (required) plus,
  *  unless they tick "number only", a photo of their card/certificate. */
 export async function submitRegistration(

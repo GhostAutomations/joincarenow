@@ -8,10 +8,12 @@ export type UploadType = {
   /** A professional registration upload — the applicant enters a registration
    *  number and can optionally upload a photo of their card/certificate. */
   registration?: boolean;
+  /** Needs a photo of both the front and the back (e.g. a DBS certificate). */
+  twoSided?: boolean;
 };
 
 export const UPLOAD_TYPES: UploadType[] = [
-  { key: "dbs", label: "DBS certificate", body: "Please upload your current DBS certificate, or your DBS Update Service details." },
+  { key: "dbs", label: "DBS certificate", body: "Please upload a clear photo of BOTH the front and the back of your DBS certificate.", twoSided: true },
   {
     key: "registration",
     label: "Care worker registration",
@@ -29,3 +31,5 @@ export const UPLOAD_TYPES: UploadType[] = [
 const BY_KEY = new Map(UPLOAD_TYPES.map((u) => [u.key, u]));
 export const uploadType = (key: string): UploadType | undefined => BY_KEY.get(key);
 export const uploadLabel = (key: string): string => BY_KEY.get(key)?.label ?? key;
+export const isTwoSidedUpload = (key: string | null | undefined): boolean => (key ? BY_KEY.get(key)?.twoSided === true : false);
+export const isRegistrationUpload = (key: string | null | undefined): boolean => (key ? BY_KEY.get(key)?.registration === true : false);

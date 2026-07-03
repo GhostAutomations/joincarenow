@@ -6,8 +6,10 @@ import {
   acknowledgeTask,
   uploadOnboardingDoc,
   submitRegistration,
+  submitTwoSidedDoc,
   type OnbState,
 } from "@/modules/onboarding/actions";
+import { isTwoSidedUpload } from "@/lib/documents/uploads";
 
 export type PortalTask = {
   task_id: string;
@@ -34,9 +36,11 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 export function OnboardingTaskItem({ task }: { task: PortalTask }) {
   const [state, action, pending] = useActionState<OnbState, FormData>(uploadOnboardingDoc, undefined);
   const [regState, regAction, regPending] = useActionState<OnbState, FormData>(submitRegistration, undefined);
+  const [twoState, twoAction, twoPending] = useActionState<OnbState, FormData>(submitTwoSidedDoc, undefined);
   const [noCard, setNoCard] = useState(false);
   const needsAction = task.status === "pending" || task.status === "rejected";
   const isRegistration = task.task_type === "document" && task.doc_kind === "registration";
+  const isTwoSided = task.task_type === "document" && isTwoSidedUpload(task.doc_kind);
   const s = STATUS[task.status] ?? STATUS.pending;
 
   return (
@@ -84,7 +88,43 @@ export function OnboardingTaskItem({ task }: { task: PortalTask }) {
             </Link>
           )}
 
-          {task.task_type === "document" && !isRegistration && (
+          {isTwoSided && (
+            <form action={twoAction} className="space-y-2.5">
+              <input type="hidden" name="taskId" value={task.task_id} />
+              <div>
+                <label className="text-xs font-medium text-gray-600">Front</label>
+                <input
+                  type="file"
+                  name="front"
+                  accept="image/*,.pdf"
+                  required
+                  className="mt-1 block text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600">Back</label>
+                <input
+                  type="file"
+                  name="back"
+                  accept="image/*,.pdf"
+                  required
+                  className="mt-1 block text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={twoPending}
+                  className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+                >
+                  {twoPending ? "Uploading…" : "Upload both"}
+                </button>
+                {twoPending && <span className="text-xs text-gray-500">Please wait…</span>}
+                {twoState?.error && <span className="text-xs text-red-600">{twoState.error}</span>}
+              </div>
+            </form>
+          )}
+
+          {task.task_type === "document" && !isRegistration && !isTwoSided && (
             <form action={action} className="flex flex-wrap items-center gap-2">
               <input type="hidden" name="taskId" value={task.task_id} />
               <input

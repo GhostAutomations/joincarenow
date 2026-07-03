@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { RemoveFromPoolButton } from "@/components/dashboard/remove-from-pool-button";
 
 type Row = {
   applicant_id: string;
@@ -105,6 +106,7 @@ export default async function ApplicantsPage({
                 <th className="px-4 py-3">Contact</th>
                 <th className="px-4 py-3">Applied for</th>
                 <th className="px-4 py-3">Latest</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -125,6 +127,9 @@ export default async function ApplicantsPage({
                   </td>
                   <td className="px-4 py-3 text-gray-600">
                     {new Date(a.latest).toLocaleDateString("en-GB")}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <RemoveFromPoolButton applicantId={a.id} name={a.name} />
                   </td>
                 </tr>
               ))}

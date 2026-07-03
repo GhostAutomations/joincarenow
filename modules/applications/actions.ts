@@ -9,6 +9,24 @@ import { requireCompany } from "@/modules/auth/queries";
 
 const BASE_URL = "https://www.joincarenow.com";
 
+/** Remove an applicant from this company's Talent Pool — deletes all their
+ *  applications (and cascading records) at this company. The shared applicant
+ *  profile is untouched, so they can still apply again. */
+export async function removeFromTalentPool(
+  applicantId: string
+): Promise<{ ok?: boolean; error?: string }> {
+  if (!applicantId) return { error: "Missing applicant" };
+  const { supabase, current } = await requireCompany();
+  const { error } = await supabase.rpc("remove_applicant_from_pool", {
+    p_company_id: current.company_id,
+    p_applicant_id: applicantId,
+  });
+  if (error) return { error: "Could not remove this applicant. Please try again." };
+  revalidatePath("/applicants");
+  revalidatePath("/pipeline");
+  return { ok: true };
+}
+
 /** Move an applicant to Not Progressing and send them a rejection reply. The
  *  email can include a talent-pool opt-in link. Message supports merge fields. */
 export async function sendRejection(

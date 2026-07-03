@@ -3,21 +3,22 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveDocumentDetails } from "@/modules/documents/actions";
-import type { DocumentDetails } from "@/lib/documents/fill";
+import type { DocDefaults } from "@/lib/documents/fill";
 
 const cls =
   "mt-1 block w-full rounded-lg border border-white/50 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
-/** Company-wide values that fill contract/policy placeholders on download
- *  (Policy owner, HR contact, approval & review dates). Admin-only. */
-export function DocumentDetailsForm({ details }: { details: DocumentDetails }) {
+/** Company-wide defaults that auto-fill contract/policy placeholders on download
+ *  (Policy owner, approver, HR contact, review period). Dates are derived per
+ *  document from when it was last saved. Admin-only. */
+export function DocumentDetailsForm({ details }: { details: DocDefaults }) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [d, setD] = useState<DocumentDetails>(details);
+  const [d, setD] = useState<DocDefaults>(details);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const set = (patch: Partial<DocumentDetails>) => { setD((c) => ({ ...c, ...patch })); setSaved(false); };
+  const set = (patch: Partial<DocDefaults>) => { setD((c) => ({ ...c, ...patch })); setSaved(false); };
 
   function save() {
     setSaved(false); setError(null);
@@ -31,8 +32,8 @@ export function DocumentDetailsForm({ details }: { details: DocumentDetails }) {
   return (
     <div>
       <p className="mb-3 text-xs text-gray-500">
-        These fill in the standard fields on your contracts and policies (owner, approver, contact, dates)
-        when you download them, so nothing is left blank.
+        Set these once — they auto-fill the standard fields on every contract and policy when you download it.
+        The approval and review dates are filled automatically from when each document was last saved.
       </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="text-xs font-medium text-gray-600">
@@ -52,12 +53,18 @@ export function DocumentDetailsForm({ details }: { details: DocumentDetails }) {
           <input type="email" value={d.hrContactEmail} onChange={(e) => set({ hrContactEmail: e.target.value })} placeholder="e.g. hr@yourcompany.co.uk" className={cls} />
         </label>
         <label className="text-xs font-medium text-gray-600">
-          Approval date
-          <input type="date" value={d.approvalDate} onChange={(e) => set({ approvalDate: e.target.value })} className={cls} />
-        </label>
-        <label className="text-xs font-medium text-gray-600">
-          Review date
-          <input type="date" value={d.reviewDate} onChange={(e) => set({ reviewDate: e.target.value })} className={cls} />
+          Review period (months)
+          <input
+            type="number"
+            min={1}
+            max={120}
+            value={d.reviewMonths}
+            onChange={(e) => set({ reviewMonths: Number(e.target.value) })}
+            className={cls}
+          />
+          <span className="mt-1 block text-[11px] font-normal text-gray-400">
+            Review date = last saved date + this many months. Default 24.
+          </span>
         </label>
       </div>
 

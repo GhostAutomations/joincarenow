@@ -3,15 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { requireCompany } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { DocumentDetails } from "@/lib/documents/fill";
+import type { DocDefaults } from "@/lib/documents/fill";
 
 const clean = (v: unknown, max = 200): string => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
-/** Save the company's "Document details" — the shared values (policy owner, HR
- *  contact, approval/review dates) that fill contract & policy placeholders on
- *  download. Merged into companies.settings.document_details. Admin-only. */
+/** Save the company's "Document details" defaults — the shared values (policy
+ *  owner, approver, HR contact, review period) that auto-fill every contract &
+ *  policy on download. Dates are derived per-document from its last-saved date,
+ *  so they're not stored here. Merged into settings.document_details. Admin-only. */
 export async function saveDocumentDetails(
-  input: DocumentDetails
+  input: DocDefaults
 ): Promise<{ ok?: boolean; error?: string }> {
   const { current } = await requireCompany();
   if (current.role !== "admin") return { error: "Only admins can change document details." };
@@ -19,13 +20,13 @@ export async function saveDocumentDetails(
   const admin = createAdminClient();
   const { data: co } = await admin.from("companies").select("settings").eq("id", current.company_id).single();
 
-  const document_details: DocumentDetails = {
+  const months = Number(input.reviewMonths);
+  const document_details: DocDefaults = {
     policyOwner: clean(input.policyOwner),
     approvedBy: clean(input.approvedBy),
     hrContactName: clean(input.hrContactName),
     hrContactEmail: clean(input.hrContactEmail),
-    approvalDate: clean(input.approvalDate, 20),
-    reviewDate: clean(input.reviewDate, 20),
+    reviewMonths: Number.isFinite(months) && months > 0 ? Math.min(120, Math.round(months)) : 24,
   };
 
   const settings = {

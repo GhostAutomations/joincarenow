@@ -1,39 +1,72 @@
 // Fill a contract/policy/JD template for a standalone (no-applicant) PDF so no
 // unresolved placeholders remain. Handles BOTH {{merge_fields}} and the plain
 // [bracket] placeholders used in authored document bodies (e.g. "Approved By:
-// [Name / Job Title]"). Company "Document details" values fill the shared fields;
-// person/offer fields become clear labels; genuinely optional brackets are left.
+// [Name / Job Title]").
+//
+// Two sources feed the fill:
+//  - Company DEFAULTS (set once in Settings): policy owner, approver, HR contact.
+//    These auto-fill every document so you don't re-enter them each time.
+//  - Per-document DATES, derived from when the document was last saved:
+//    approval date = last saved date; review date = that + the review period.
 
-export type DocumentDetails = {
+export type DocDefaults = {
   policyOwner: string;   // Policy owner name / job title
   approvedBy: string;    // Approver name / job title
   hrContactName: string; // People/HR contact name
   hrContactEmail: string;
-  approvalDate: string;  // ISO (yyyy-mm-dd) or ""
-  reviewDate: string;    // ISO or ""
+  reviewMonths: number;  // how far ahead the review date sits (default 24)
 };
 
-export const EMPTY_DOCUMENT_DETAILS: DocumentDetails = {
+export const EMPTY_DOC_DEFAULTS: DocDefaults = {
   policyOwner: "",
   approvedBy: "",
   hrContactName: "",
   hrContactEmail: "",
-  approvalDate: "",
-  reviewDate: "",
+  reviewMonths: 24,
+};
+
+/** The resolved values used to fill a specific document (dates already derived). */
+export type DocumentDetails = {
+  policyOwner: string;
+  approvedBy: string;
+  hrContactName: string;
+  hrContactEmail: string;
+  approvalDate: string; // ISO
+  reviewDate: string;   // ISO
 };
 
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 
-/** Read Document details from companies.settings.document_details. */
-export function readDocumentDetails(settings: unknown): DocumentDetails {
+/** Read company document defaults from companies.settings.document_details. */
+export function readDocDefaults(settings: unknown): DocDefaults {
   const d = (settings as { document_details?: Record<string, unknown> } | null)?.document_details ?? {};
+  const months = Number(d.reviewMonths);
   return {
     policyOwner: str(d.policyOwner),
     approvedBy: str(d.approvedBy),
     hrContactName: str(d.hrContactName),
     hrContactEmail: str(d.hrContactEmail),
-    approvalDate: str(d.approvalDate),
-    reviewDate: str(d.reviewDate),
+    reviewMonths: Number.isFinite(months) && months > 0 ? Math.min(120, Math.round(months)) : 24,
+  };
+}
+
+function addMonthsIso(iso: string, months: number): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString();
+}
+
+/** Combine company defaults with a document's last-saved date to derive the
+ *  approval date (that date) and review date (+ review period). */
+export function deriveDocumentDetails(defaults: DocDefaults, lastSavedIso: string): DocumentDetails {
+  return {
+    policyOwner: defaults.policyOwner,
+    approvedBy: defaults.approvedBy,
+    hrContactName: defaults.hrContactName,
+    hrContactEmail: defaults.hrContactEmail,
+    approvalDate: lastSavedIso || "",
+    reviewDate: lastSavedIso ? addMonthsIso(lastSavedIso, defaults.reviewMonths) : "",
   };
 }
 
@@ -63,7 +96,7 @@ export function fillDocument(body: string, opts: { companyName: string; details:
   const tokens: Record<string, string> = {
     company_name: companyName,
     company: companyName,
-    date: today,
+    date: approval || today,
     today,
     policy_owner: details.policyOwner,
     approved_by: details.approvedBy,
@@ -74,7 +107,6 @@ export function fillDocument(body: string, opts: { companyName: string; details:
     date_approved: approval,
     review_date: review,
     next_review: review,
-    // Person/offer fields have no value on a blank template — show a clear label.
     first_name: "[First name]",
     last_name: "[Last name]",
     name: "[Full name]",
@@ -88,14 +120,12 @@ export function fillDocument(body: string, opts: { companyName: string; details:
   };
   let out = (body || "").replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_m, raw: string) => {
     const key = String(raw).toLowerCase().trim();
-    if (key in tokens && tokens[key]) return tokens[key];
-    if (key in tokens) return tokens[key]; // known but empty -> keep (may be "")
+    if (key in tokens) return tokens[key];
     const words = key.replace(/[._]+/g, " ").trim();
     return `[${words.charAt(0).toUpperCase()}${words.slice(1)}]`;
   });
 
-  // 2) [bracket] placeholders, using the label before them on the same line when
-  //    present (e.g. "Policy Owner: [Name / Job Title]"), else the bracket text.
+  // 2) [bracket] placeholders, using the label before them when present.
   const lineFill = (label: string, inner: string): string | null => {
     const l = `${label} ${inner}`.toLowerCase();
     if (/review date|next review/.test(l) && review) return review;
@@ -105,7 +135,6 @@ export function fillDocument(body: string, opts: { companyName: string; details:
     if (/(hr|people)/.test(l) && (details.hrContactName || details.hrContactEmail)) {
       return hrContact(details, /email/.test(l));
     }
-    // "Date Issued: [Date]" or a lone "[Date]" after a date-ish label.
     if (/\bdate\b/.test(label.toLowerCase()) && approval) return approval;
     return null;
   };
@@ -119,11 +148,7 @@ export function fillDocument(body: string, opts: { companyName: string; details:
         const v = lineFill(label, inner);
         if (v) return `${indent}${label}: ${v}`;
       }
-      // Inline brackets anywhere on the line (HR/people, policy owner).
-      return line.replace(/\[([^\]]+)\]/g, (whole, inner: string) => {
-        const v = lineFill("", inner);
-        return v ?? whole;
-      });
+      return line.replace(/\[([^\]]+)\]/g, (whole, inner: string) => lineFill("", inner) ?? whole);
     })
     .join("\n");
 

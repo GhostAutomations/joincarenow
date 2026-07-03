@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireCompany } from "@/modules/auth/queries";
 import { buildDocumentPdf } from "@/lib/pdf/document-pdf";
-import { fillDocument, readDocumentDetails } from "@/lib/documents/fill";
+import { fillDocument, readDocDefaults, deriveDocumentDetails } from "@/lib/documents/fill";
 
 export const runtime = "nodejs";
 
@@ -42,14 +42,16 @@ export async function GET(
   if (current.role !== "admin") return new Response("Not allowed", { status: 403 });
 
   const [{ data: doc }, { data: company }] = await Promise.all([
-    supabase.from(table).select("name, body").eq("id", id).eq("company_id", current.company_id).maybeSingle(),
+    supabase.from(table).select("name, body, updated_at, created_at").eq("id", id).eq("company_id", current.company_id).maybeSingle(),
     supabase.from("companies").select("name, settings").eq("id", current.company_id).maybeSingle(),
   ]);
   if (!doc) return new Response("Not found", { status: 404 });
 
   const companyName = (company?.name as string) ?? "";
   const settings = company?.settings as { brand?: { logo_url?: string; primary?: string } } | null;
-  const details = readDocumentDetails(company?.settings);
+  // Dates derive from when the document was last saved (created/edited).
+  const lastSaved = (doc.updated_at as string) ?? (doc.created_at as string) ?? new Date().toISOString();
+  const details = deriveDocumentDetails(readDocDefaults(company?.settings), lastSaved);
 
   const body = fillDocument((doc.body as string) ?? "", { companyName, details });
   const logo = await loadLogo(settings?.brand?.logo_url ?? null);

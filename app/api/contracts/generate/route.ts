@@ -12,18 +12,22 @@ export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
   try {
-    const { kind, name, brief, companyId } = (await req.json()) as {
+    const { kind, name, brief, companyId, store } = (await req.json()) as {
       kind?: string;
       name?: string;
       brief?: string;
       companyId?: string;
+      store?: boolean;
     };
 
-    // Founders (platform admins) can generate for a company they're setting up;
-    // otherwise the caller must be that company's own admin.
+    // Founders (platform admins) can generate: (a) File Store templates they'll
+    // sell — no company, so nothing is billed; or (b) for a company they're
+    // setting up. Otherwise the caller must be that company's own admin.
     const { profile } = await requireUser();
-    let billCompanyId: string;
-    if (profile?.is_platform_admin && companyId) {
+    let billCompanyId: string | null = null;
+    if (profile?.is_platform_admin && store) {
+      billCompanyId = null; // founder-authored store content isn't billable
+    } else if (profile?.is_platform_admin && companyId) {
       billCompanyId = companyId;
     } else {
       const { current } = await requireCompany();
@@ -41,7 +45,9 @@ export async function POST(req: NextRequest) {
           : await generateContractDraft(brief ?? "");
 
     const label = kind === "policy" ? "Policy" : kind === "job_description" ? "Job description" : "Contract";
-    await recordUsage(billCompanyId, "ai", 1, { label, actorId: profile?.id ?? null });
+    if (billCompanyId) {
+      await recordUsage(billCompanyId, "ai", 1, { label, actorId: profile?.id ?? null });
+    }
 
     return NextResponse.json({ text });
   } catch (e) {

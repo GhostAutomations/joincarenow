@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 import { addField, updateField } from "@/modules/forms/actions";
+import { UPLOAD_FIELD_TYPES } from "@/lib/forms/upload-field-types";
 
 const TYPES: { value: string; label: string }[] = [
   { value: "short_text", label: "Short text" },
@@ -18,6 +19,8 @@ const TYPES: { value: string; label: string }[] = [
   { value: "signature", label: "Signature" },
   { value: "address", label: "Address" },
   { value: "body_text", label: "Body text / information" },
+  // Care-sector document uploads (mirror the Workflow Uploads box).
+  ...UPLOAD_FIELD_TYPES.map((u) => ({ value: u.fieldType, label: u.label })),
 ];
 const CHOICE = ["dropdown", "radio", "checkboxes"];
 

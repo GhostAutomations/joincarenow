@@ -40,6 +40,7 @@ export function DocEditorForm({
   kind,
   doc,
   companyId,
+  store = false,
   embedded = false,
   saveAction,
   onSaved,
@@ -49,6 +50,8 @@ export function DocEditorForm({
   doc: { id: string; name: string; body: string; signatureMethod?: "type" | "draw" | "none" } | null;
   /** When set, the doc is saved for this company (founder setup) + sent to AI. */
   companyId?: string;
+  /** Founder File Store template — AI generation is unbilled (no company). */
+  store?: boolean;
   /** Render without the page chrome (back link / heading / card), for inline use. */
   embedded?: boolean;
   /** Override the save action (defaults to the company saveDoc). */
@@ -87,7 +90,7 @@ export function DocEditorForm({
       const res = await fetch("/api/contracts/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, name, brief, companyId }),
+        body: JSON.stringify({ kind, name, brief, companyId, store }),
         signal: controller.signal,
       });
       const data = (await res.json().catch(() => ({}))) as { text?: string; error?: string };

@@ -14,6 +14,8 @@ import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
 import { CareersContentForm } from "@/components/dashboard/careers-content-form";
 import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard/reminder-settings-form";
 import { PoppyPanel } from "@/components/dashboard/poppy-panel";
+import { DocumentDetailsForm } from "@/components/dashboard/document-details-form";
+import { readDocumentDetails } from "@/lib/documents/fill";
 import { readPoppyConfig } from "@/lib/poppy/config";
 import { poppyAllowanceUsed } from "@/lib/billing/poppy-credits";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -173,6 +175,13 @@ export default async function SettingsPage() {
         content: (
           <div className="space-y-6">
             <div>
+              <h3 className="text-sm font-medium text-gray-900">Document details</h3>
+              <p className="mb-3 mt-0.5 text-xs text-gray-500">
+                Shared values used to fill in your documents when downloaded as a PDF.
+              </p>
+              <DocumentDetailsForm details={readDocumentDetails(companyRow?.settings)} />
+            </div>
+            <div className="border-t border-gray-100 pt-6">
               <h3 className="text-sm font-medium text-gray-900">Contract templates</h3>
               <p className="mb-3 mt-0.5 text-xs text-gray-500">
                 The employment contract the applicant signs on accepting an offer.

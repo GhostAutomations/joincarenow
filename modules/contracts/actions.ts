@@ -24,7 +24,8 @@ export async function saveDoc(kind: Kind, formData: FormData): Promise<DocResult
   const id = formData.get("id")?.toString() || null;
   const name = (formData.get("name")?.toString() ?? "").trim();
   const body = formData.get("body")?.toString() ?? "";
-  const signatureMethod = formData.get("signature_method")?.toString() === "draw" ? "draw" : "type";
+  const smRaw = formData.get("signature_method")?.toString();
+  const signatureMethod = smRaw === "draw" ? "draw" : smRaw === "none" ? "none" : "type";
   if (name.length < 2) return { error: "Give the document a name." };
 
   const { supabase, current, user } = await requireCompany();
@@ -103,7 +104,8 @@ export async function saveFounderDoc(kind: Kind, formData: FormData): Promise<Do
   const id = formData.get("id")?.toString() || null;
   const name = (formData.get("name")?.toString() ?? "").trim();
   const body = formData.get("body")?.toString() ?? "";
-  const signatureMethod = formData.get("signature_method")?.toString() === "draw" ? "draw" : "type";
+  const smRaw = formData.get("signature_method")?.toString();
+  const signatureMethod = smRaw === "draw" ? "draw" : smRaw === "none" ? "none" : "type";
   if (!companyId) return { error: "Missing company." };
   if (name.length < 2) return { error: "Give the document a name." };
 

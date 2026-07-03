@@ -23,7 +23,7 @@ export default async function DocEditorPage({
   const { supabase, current } = await requireCompany();
   if (current.role !== "admin") redirect("/settings");
 
-  let doc: { id: string; name: string; body: string; signatureMethod: "type" | "draw" } | null = null;
+  let doc: { id: string; name: string; body: string; signatureMethod: "type" | "draw" | "none" } | null = null;
   if (id !== "new") {
     // Job descriptions aren't signed, so they have no signature_method column.
     const cols = kind === "job_description" ? "id, name, body" : "id, name, body, signature_method";
@@ -39,7 +39,7 @@ export default async function DocEditorPage({
       id: row.id,
       name: row.name,
       body: row.body ?? "",
-      signatureMethod: row.signature_method === "draw" ? "draw" : "type",
+      signatureMethod: row.signature_method === "draw" ? "draw" : row.signature_method === "none" ? "none" : "type",
     };
   }
 

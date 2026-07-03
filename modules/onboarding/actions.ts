@@ -867,7 +867,8 @@ export async function acknowledgeTask(formData: FormData) {
 /** Applicant reads the contract/policy linked to a read-&-sign task. Returns the
  *  merge-filled body (RLS-safe via SECURITY DEFINER RPC, guarded by ownership). */
 export async function loadOnboardingDocument(taskId: string): Promise<
-  { title: string; body: string; kind: string; alreadySigned: boolean } | { error: string }
+  { title: string; body: string; kind: string; alreadySigned: boolean; signatureMethod: "type" | "draw" | "none" }
+  | { error: string }
 > {
   if (!taskId) return { error: "Missing task" };
   const { supabase } = await requireUser();
@@ -875,12 +876,25 @@ export async function loadOnboardingDocument(taskId: string): Promise<
   if (error) return { error: "This document isn't available." };
   const row = Array.isArray(data) ? data[0] : data;
   if (!row) return { error: "This document isn't available." };
+  const sm = String(row.signature_method ?? "type");
   return {
     title: String(row.title ?? ""),
     body: String(row.body ?? ""),
     kind: String(row.kind ?? "policy"),
     alreadySigned: row.already_signed === true,
+    signatureMethod: sm === "draw" ? "draw" : sm === "none" ? "none" : "type",
   };
+}
+
+/** Applicant confirms they've read a "signature not required" document — marks
+ *  the read task complete with no signature captured. */
+export async function confirmOnboardingDocument(taskId: string): Promise<{ ok?: boolean; error?: string }> {
+  if (!taskId) return { error: "Missing task" };
+  const { supabase } = await requireUser();
+  const { error } = await supabase.rpc("acknowledge_onboarding", { p_task_id: taskId });
+  if (error) return { error: "Could not confirm. Please try again." };
+  revalidatePath("/portal");
+  return { ok: true };
 }
 
 /** Applicant signs the linked document (type name, or a drawn signature image).

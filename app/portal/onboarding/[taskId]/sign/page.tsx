@@ -54,6 +54,7 @@ export default async function SignOnboardingDocPage({
               kind={doc.kind}
               defaultName={defaultName}
               alreadySigned={doc.alreadySigned}
+              signatureMethod={doc.signatureMethod}
             />
           )}
         </div>

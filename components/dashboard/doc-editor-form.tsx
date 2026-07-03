@@ -46,7 +46,7 @@ export function DocEditorForm({
   onCancel,
 }: {
   kind: Kind;
-  doc: { id: string; name: string; body: string; signatureMethod?: "type" | "draw" } | null;
+  doc: { id: string; name: string; body: string; signatureMethod?: "type" | "draw" | "none" } | null;
   /** When set, the doc is saved for this company (founder setup) + sent to AI. */
   companyId?: string;
   /** Render without the page chrome (back link / heading / card), for inline use. */
@@ -61,7 +61,7 @@ export function DocEditorForm({
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState(doc?.name ?? "");
   const [body, setBody] = useState(doc?.body ?? "");
-  const [sigMethod, setSigMethod] = useState<"type" | "draw">(doc?.signatureMethod ?? "type");
+  const [sigMethod, setSigMethod] = useState<"type" | "draw" | "none">(doc?.signatureMethod ?? "type");
   const [brief, setBrief] = useState("");
   const [generating, setGenerating] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -324,6 +324,20 @@ export function DocEditorForm({
               <span>
                 <span className="font-medium text-gray-900">Tick &amp; draw signature</span>
                 <span className="block text-xs text-gray-500">Applicant ticks to agree and draws their signature.</span>
+              </span>
+            </label>
+            <label className={`flex flex-1 cursor-pointer items-start gap-2 rounded-lg border px-3 py-2 text-sm ${sigMethod === "none" ? "border-brand-500 bg-brand-50" : "border-gray-200"}`}>
+              <input
+                type="radio"
+                name="signature_method"
+                value="none"
+                checked={sigMethod === "none"}
+                onChange={() => setSigMethod("none")}
+                className="mt-0.5"
+              />
+              <span>
+                <span className="font-medium text-gray-900">Signature not required</span>
+                <span className="block text-xs text-gray-500">Applicant reads &amp; confirms — no signature captured.</span>
               </span>
             </label>
           </div>

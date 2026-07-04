@@ -15,7 +15,7 @@ import { Check, Search, Sparkles } from "lucide-react";
 type Msg = { from: "ruby" | "candidate"; text: string };
 
 const SCRIPT: Msg[] = [
-  { from: "ruby", text: "Hi Megan, I'm Ruby, the recruitment assistant for Bay View Care. Thanks for applying for Care Assistant (Nights). OK if I ask two quick questions?" },
+  { from: "ruby", text: "Hi Megan, I'm Ruby, the recruitment assistant for Bay View Care. Thanks for applying for Care Assistant (Nights). OK if I ask a few quick questions?" },
   { from: "candidate", text: "Yes, no problem." },
   { from: "ruby", text: "I noticed a gap in your work history between March and September last year. Could you tell me a little about that time?" },
   { from: "candidate", text: "I was caring for my mum full time after her stroke." },

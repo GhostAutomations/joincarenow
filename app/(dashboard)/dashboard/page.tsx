@@ -129,7 +129,7 @@ export default async function DashboardPage() {
       {/* fluid colour blobs */}
       <div className="jcn-blob pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-amber-400/20 blur-3xl" />
       <div className="jcn-blob jcn-blob-2 pointer-events-none absolute left-1/2 top-1/3 h-72 w-72 rounded-full bg-amber-300/10 blur-3xl" />
-      <div className="jcn-blob jcn-blob-3 pointer-events-none absolute -bottom-24 right-0 h-96 w-96 rounded-full bg-blue-400/20 blur-3xl" />
+      <div className="jcn-blob jcn-blob-3 pointer-events-none absolute -bottom-24 right-0 h-96 w-96 rounded-full bg-amber-400/20 blur-3xl" />
 
       <SignoffLive />
       <div className="relative">

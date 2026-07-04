@@ -26,8 +26,8 @@ const SCRIPT: Msg[] = [
 
 // Pacing: no typing indicators (neither side shows one); messages simply
 // arrive at a steady, readable rhythm.
-const RUBY_DELAY = 1000;
-const CANDIDATE_DELAY = 1000;
+const RUBY_DELAY = 1500;
+const CANDIDATE_DELAY = 1500;
 const BEFORE_HANDOFF_MS = 1000;
 const REPORT_WRITING_MS = 2200;
 const REPORT_HOLD_MS = 10000;

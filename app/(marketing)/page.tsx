@@ -10,16 +10,16 @@ import {
   FileCheck2,
   FolderKanban,
   Sparkles,
-  Clock,
   Heart,
 } from "lucide-react";
 import { DemoForm } from "@/components/marketing/demo-form";
 import { BoardMockup, OnboardingMockup } from "@/components/marketing/mockups";
+import { RubyDemo } from "@/components/marketing/ruby-demo";
 
 export const metadata: Metadata = {
   title: "Care recruitment & onboarding software | Join Care Now",
   description:
-    "Hire compliant care staff faster, without the chaos of spreadsheets. Branded careers pages, applicant tracking and full onboarding (Right to Work, DBS, references, contracts) in one calm system, kept inspection-ready. Built for UK care providers, from £49/month.",
+    "Hire compliant care staff faster — with Ruby, your AI assistant, doing the first-round screening. Careers pages, applicant tracking and full onboarding (Right to Work, DBS, references, contracts) in one calm, inspection-ready system. Built for UK care providers, from £49/month.",
   alternates: { canonical: "https://www.joincarenow.com" },
   openGraph: {
     title: "Care recruitment & onboarding software | Join Care Now",
@@ -70,6 +70,8 @@ const PROBLEMS = [
   { pain: "Spreadsheets and inboxes everywhere", fix: "One simple system from advert to hired." },
   { pain: "Chasing DBS and references over email", fix: "Every check requested, tracked and stored in one place." },
   { pain: "Good candidates going cold", fix: "See who needs a nudge and reply by email or SMS in seconds." },
+  { pain: "Evenings lost to first-round screening calls", fix: "Ruby holds the first conversation and writes the report for you." },
+  { pain: "A pile of applications you can't tell apart", fix: "A clear screening report and recommendation on every applicant." },
 ];
 
 const PLAN_INCLUDES = [
@@ -98,8 +100,9 @@ const RUBY_INCLUDES = [
 
 const STEPS = [
   { n: "1", title: "Advertise", body: "Post your roles to a branded careers page and share the link." },
-  { n: "2", title: "Track", body: "Review applicants and move them through your hiring steps." },
-  { n: "3", title: "Onboard to hired", body: "Collect checks and documents, sign contracts, and create the staff record." },
+  { n: "2", title: "Ruby screens", body: "On Core + Ruby, every applicant is reviewed and interviewed by Ruby, with a report for your team." },
+  { n: "3", title: "Track & interview", body: "Move applicants through your hiring steps and book interviews by email or SMS." },
+  { n: "4", title: "Onboard to hired", body: "Collect checks and documents, sign contracts, and create the staff record." },
 ];
 
 const FOUNDING = [
@@ -120,48 +123,98 @@ export default function LandingPage() {
             <span className="text-3xl font-bold text-white drop-shadow-sm sm:text-4xl">Join Care Now</span>
           </span>
           <nav className="flex items-center gap-4 sm:gap-7">
-            <a href="#pricing" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Pricing</a>
-            <a href="#ruby" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Ruby</a>
+            <a href="#ruby" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Meet Ruby</a>
             <a href="#features" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Features</a>
+            <a href="#pricing" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Pricing</a>
             <Link href="/sign-in" className="text-base font-medium text-white/90 hover:text-white">Account Sign In</Link>
             <a href="#demo" className="rounded-lg bg-white px-5 py-2.5 text-base font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">Book a demo</a>
           </nav>
         </div>
       </header>
 
-      {/* Hero — lead with inspection confidence */}
+      {/* Hero — platform promise, with Ruby screening live beside it */}
       <section className="jcn-app-bg relative overflow-hidden text-white">
         <div className="jcn-blob pointer-events-none absolute -left-20 -top-24 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
         <div className="jcn-blob jcn-blob-3 pointer-events-none absolute -bottom-24 right-0 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-        <div className="relative mx-auto max-w-4xl px-6 pb-20 pt-32 text-center sm:pb-28 sm:pt-40">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden /> Founding customer offers available
-          </span>
-          <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            Hire compliant care staff faster, without the chaos of spreadsheets
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-white/90">
-            One calm system from advert to first shift: track every applicant, capture every
-            check, and keep your evidence inspection-ready.
-          </p>
-          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <a href="#demo" className="inline-flex items-center gap-2 rounded-lg bg-white px-7 py-3.5 text-base font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">
-              Book a demo <ArrowRight className="h-4 w-4" aria-hidden />
-            </a>
-            <a href="#pricing" className="inline-flex items-center gap-2 rounded-lg border border-white/40 bg-white/10 px-7 py-3.5 text-base font-semibold text-white backdrop-blur transition hover:bg-white/20">
-              See pricing
-            </a>
-          </div>
-          <p className="mt-4 text-sm text-white/80">No hard sell · No obligation · No setup fee on annual plans</p>
-
-          {/* Product preview */}
-          <div className="mx-auto mt-16 max-w-5xl">
-            <BoardMockup />
+        <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-32 sm:pb-24 sm:pt-40">
+          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+            <div className="text-center lg:text-left">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden /> Founding customer offers available
+              </span>
+              <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl">
+                Hire compliant care staff faster — with{" "}
+                <span className="bg-gradient-to-r from-fuchsia-300 to-violet-200 bg-clip-text text-transparent">Ruby</span>,
+                your AI assistant, doing the first-round screening
+              </h1>
+              <p className="mt-6 text-lg text-white/90">
+                One calm system from advert to first shift: track every applicant, capture every
+                check, stay inspection-ready — while Ruby reviews each application, chats with
+                the candidate, and tells you who&apos;s worth meeting.
+              </p>
+              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+                <a href="#demo" className="inline-flex items-center gap-2 rounded-lg bg-white px-7 py-3.5 text-base font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">
+                  Book a demo <ArrowRight className="h-4 w-4" aria-hidden />
+                </a>
+                <a href="#pricing" className="inline-flex items-center gap-2 rounded-lg border border-white/40 bg-white/10 px-7 py-3.5 text-base font-semibold text-white backdrop-blur transition hover:bg-white/20">
+                  See pricing
+                </a>
+              </div>
+              <p className="mt-4 text-sm text-white/80">No hard sell · No obligation · No setup fee on annual plans</p>
+            </div>
+            <RubyDemo />
           </div>
         </div>
       </section>
 
-      {/* 1) Inspection-ready — the hook, right under the hero */}
+      {/* 1) Meet Ruby — the differentiator, straight after the hero */}
+      <section id="ruby" className="mx-auto max-w-6xl px-6 pb-6 pt-14">
+        <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-600 via-violet-600 to-brand-600 p-8 text-white shadow-lg sm:p-12">
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider backdrop-blur">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden /> Meet Ruby
+              </span>
+              <h2 className="mt-4 text-2xl font-bold sm:text-3xl">Ruby, Your AI Recruitment Assistant</h2>
+              <p className="mt-3 text-white/90">
+                First-round screening is the most time-hungry part of care hiring: reading
+                applications, spotting the gaps, playing phone tag for answers. Ruby does all
+                of it for you. She reviews each applicant against your role, asks them a few
+                friendly follow-up questions, and hands your team a clear report with a hire
+                recommendation — so your time goes on the candidates worth meeting.
+              </p>
+              <p className="mt-4 text-sm text-white/80">
+                Included on the <span className="font-semibold text-white">Core + Ruby</span> plan:
+                40 applicants screened each month, then just 75p each. That&apos;s first-round
+                screening handled for about £1 an applicant.
+              </p>
+              <p className="mt-2 text-xs text-white/60">
+                Consent-based and advisory — candidates agree to chat with Ruby, and your team
+                always makes the final hiring decision.
+              </p>
+              <a href="#demo" className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
+                See Ruby in a demo <ArrowRight className="h-4 w-4" aria-hidden />
+              </a>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {[
+                { icon: FileCheck2, title: "1. Reviews the application", body: "Reads the form, CV, your job description and policies to spot gaps and strengths." },
+                { icon: MessageSquare, title: "2. Asks the candidate", body: "Holds a short, friendly follow-up conversation — with the applicant's consent." },
+                { icon: Sparkles, title: "3. Writes it up", body: "Turns their answers into a clear, fair screening report your team can read in seconds." },
+                { icon: UserCheck, title: "4. Recommends", body: "Gives a plain hire recommendation — proceed, proceed with caution, or not a fit." },
+              ].map((s) => (
+                <div key={s.title} className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur">
+                  <s.icon className="h-6 w-6" aria-hidden />
+                  <h3 className="mt-3 text-sm font-semibold">{s.title}</h3>
+                  <p className="mt-1 text-sm text-white/85">{s.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2) Inspection-ready — the compliance hook */}
       <section id="compliance" className="border-b border-gray-100 bg-white">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
@@ -241,15 +294,15 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-4xl px-6 py-16 text-center">
           <h2 className="text-2xl font-bold sm:text-3xl">It pays for itself in time alone</h2>
           <p className="mx-auto mt-4 max-w-2xl text-white/90">
-            At £49 a month, Join Care Now costs less than a couple of hours of admin. It&apos;s
-            built to give you those hours back, and then some, every single week. One vacancy
-            filled sooner, one fewer compliance scramble before an inspection, and it&apos;s
-            already more than paid for.
+            At £49 a month, Join Care Now costs less than a couple of hours of admin — and
+            it&apos;s built to give you those hours back every single week. Add Ruby and the
+            maths gets even better: first-round screening on 40 applicants a month, handled
+            for about £1 each, without a single phone-tag afternoon.
           </p>
           <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur">
-              <Clock className="mx-auto h-6 w-6" aria-hidden />
-              <p className="mt-3 text-sm text-white/90">Hours of chasing and re-keying handed back to your week</p>
+              <Sparkles className="mx-auto h-6 w-6" aria-hidden />
+              <p className="mt-3 text-sm text-white/90">First-round screening done by Ruby, not your evenings</p>
             </div>
             <div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur">
               <ShieldCheck className="mx-auto h-6 w-6" aria-hidden />
@@ -281,50 +334,6 @@ export default function LandingPage() {
               <p className="mt-2 text-sm text-gray-600">{f.proof}</p>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* Meet Ruby */}
-      <section id="ruby" className="mx-auto max-w-6xl px-6 pb-4 pt-8">
-        <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-600 via-violet-600 to-brand-600 p-8 text-white shadow-lg sm:p-12">
-          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5" aria-hidden /> Meet Ruby
-              </span>
-              <h2 className="mt-4 text-2xl font-bold sm:text-3xl">Ruby, Your AI Recruitment Assistant</h2>
-              <p className="mt-3 text-white/90">
-                Ruby does your first-round screening for you. She reviews each applicant against the
-                role, asks them a few friendly follow-up questions, and hands your team a clear report
-                with a hire recommendation — so you spend your time on the candidates worth meeting,
-                not on phone tag.
-              </p>
-              <p className="mt-4 text-sm text-white/80">
-                Included on the <span className="font-semibold text-white">Core + Ruby</span> plan (and
-                Diamond): 40 applicants screened each month, then just 75p each.
-              </p>
-              <p className="mt-2 text-xs text-white/60">
-                Ruby&apos;s assessment is advisory — your team always makes the final hiring decision.
-              </p>
-              <a href="#demo" className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
-                See Ruby in a demo <ArrowRight className="h-4 w-4" aria-hidden />
-              </a>
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {[
-                { icon: FileCheck2, title: "1. Reviews the application", body: "Reads the form, CV, your job description and policies to spot gaps and strengths." },
-                { icon: MessageSquare, title: "2. Asks the candidate", body: "Holds a short, friendly follow-up conversation — with the applicant's consent." },
-                { icon: Sparkles, title: "3. Writes it up", body: "Turns their answers into a clear, fair screening report your team can read in seconds." },
-                { icon: UserCheck, title: "4. Recommends", body: "Gives a plain hire recommendation — proceed, proceed with caution, or not a fit." },
-              ].map((s) => (
-                <div key={s.title} className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur">
-                  <s.icon className="h-6 w-6" aria-hidden />
-                  <h3 className="mt-3 text-sm font-semibold">{s.title}</h3>
-                  <p className="mt-1 text-sm text-white/85">{s.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
@@ -440,7 +449,7 @@ export default function LandingPage() {
       <section className="border-y border-gray-100 bg-gray-50">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">From advert to hired in three steps</h2>
-          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3">
+          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((s) => (
               <div key={s.n} className="text-center">
                 <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-brand-600 text-lg font-bold text-white">{s.n}</span>
@@ -498,6 +507,7 @@ export default function LandingPage() {
               </p>
               <ul className="mt-6 space-y-2 text-sm text-white/90">
                 <li className="flex items-center gap-2"><Check className="h-4 w-4" aria-hidden /> Built for UK care providers</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4" aria-hidden /> Watch Ruby screen a real application, live</li>
                 <li className="flex items-center gap-2"><Check className="h-4 w-4" aria-hidden /> No obligation, no hard sell</li>
                 <li className="flex items-center gap-2"><Check className="h-4 w-4" aria-hidden /> Your data handled with care, isolated per company</li>
               </ul>

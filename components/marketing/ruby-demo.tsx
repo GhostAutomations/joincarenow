@@ -26,6 +26,7 @@ const SCRIPT: Msg[] = [
 
 // Pacing: no typing indicators (neither side shows one); messages simply
 // arrive at a steady, readable rhythm.
+const FIRST_MESSAGE_DELAY = 400; // Ruby's opener lands almost immediately
 const RUBY_DELAY = 1500;
 const CANDIDATE_DELAY = 1500;
 const BEFORE_HANDOFF_MS = 1000;
@@ -109,7 +110,10 @@ export function RubyDemo() {
       if (shown < SCRIPT.length) {
         const next = SCRIPT[shown];
         timers.push(
-          setTimeout(() => setShown((n) => n + 1), next.from === "ruby" ? RUBY_DELAY : CANDIDATE_DELAY)
+          setTimeout(
+            () => setShown((n) => n + 1),
+            shown === 0 ? FIRST_MESSAGE_DELAY : next.from === "ruby" ? RUBY_DELAY : CANDIDATE_DELAY
+          )
         );
       } else {
         timers.push(setTimeout(() => setPhase("writing"), BEFORE_HANDOFF_MS));

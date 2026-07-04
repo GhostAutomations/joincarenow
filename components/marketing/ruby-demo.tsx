@@ -27,8 +27,8 @@ const SCRIPT: Msg[] = [
 
 // Pacing: a pause before Ruby starts typing, a readable typing spell, and
 // generous gaps so visitors can actually read each message.
-const PRE_TYPING_PAUSE = 1000;
-const RUBY_TYPING_MS = 2600;
+const PRE_TYPING_PAUSE = 700;
+const RUBY_TYPING_MS = 1500;
 const CANDIDATE_DELAY = 2600;
 const BEFORE_HANDOFF_MS = 1400;
 const REPORT_WRITING_MS = 3000;

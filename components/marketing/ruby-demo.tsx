@@ -6,8 +6,7 @@ import { Check, Search, Sparkles } from "lucide-react";
 /**
  * Animated Ruby screening demo for the marketing homepage. Decorative only.
  * Act 1 — the candidate's portal: Ruby holds the screening chat. Only things
- * the CANDIDATE would see appear here (a natural pause, then typing dots,
- * then the message). Act 2 — the handoff: a staff-view pipeline frame slides
+ * the CANDIDATE would see appear here, arriving at a steady rhythm. Act 2 — the handoff: a staff-view pipeline frame slides
  * in over the chat, first "writing the report", then the finished report —
  * staff-facing states never appear in the candidate's chat. Paced for
  * reading; loops; starts in view; respects prefers-reduced-motion.
@@ -25,11 +24,10 @@ const SCRIPT: Msg[] = [
   { from: "ruby", text: "That's everything I need. I'll pass your answers to the team. Good luck!" },
 ];
 
-// Pacing: a pause before Ruby starts typing, a readable typing spell, and
-// generous gaps so visitors can actually read each message.
-const PRE_TYPING_PAUSE = 700;
-const RUBY_TYPING_MS = 1500;
-const CANDIDATE_DELAY = 1500;
+// Pacing: no typing indicators (neither side shows one); messages simply
+// arrive at a steady, readable rhythm.
+const RUBY_DELAY = 1000;
+const CANDIDATE_DELAY = 1000;
 const BEFORE_HANDOFF_MS = 1000;
 const REPORT_WRITING_MS = 2200;
 const REPORT_HOLD_MS = 10000;
@@ -50,16 +48,6 @@ function Chrome({ url }: { url: string }) {
       <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
       <span className="ml-3 hidden flex-1 rounded-md bg-white px-3 py-1 text-[11px] text-gray-400 sm:block">{url}</span>
     </div>
-  );
-}
-
-function TypingDots() {
-  return (
-    <span className="inline-flex items-center gap-1 px-1 py-1">
-      {[0, 150, 300].map((d) => (
-        <span key={d} className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: `${d}ms` }} />
-      ))}
-    </span>
   );
 }
 
@@ -85,7 +73,6 @@ function Bubble({ msg }: { msg: Msg }) {
 
 export function RubyDemo() {
   const [shown, setShown] = useState(0);
-  const [typing, setTyping] = useState(false);
   const [phase, setPhase] = useState<"chat" | "writing" | "report">("chat");
   const [started, setStarted] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -121,18 +108,9 @@ export function RubyDemo() {
     if (phase === "chat") {
       if (shown < SCRIPT.length) {
         const next = SCRIPT[shown];
-        if (next.from === "ruby") {
-          // Pause first (Ruby "reads" the reply), then typing dots, then the message.
-          timers.push(setTimeout(() => setTyping(true), PRE_TYPING_PAUSE));
-          timers.push(
-            setTimeout(() => {
-              setTyping(false);
-              setShown((n) => n + 1);
-            }, PRE_TYPING_PAUSE + RUBY_TYPING_MS)
-          );
-        } else {
-          timers.push(setTimeout(() => setShown((n) => n + 1), CANDIDATE_DELAY));
-        }
+        timers.push(
+          setTimeout(() => setShown((n) => n + 1), next.from === "ruby" ? RUBY_DELAY : CANDIDATE_DELAY)
+        );
       } else {
         timers.push(setTimeout(() => setPhase("writing"), BEFORE_HANDOFF_MS));
       }
@@ -152,7 +130,7 @@ export function RubyDemo() {
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [shown, typing]);
+  }, [shown]);
 
   const handoff = phase !== "chat"; // pipeline frame visible (writing or report)
 
@@ -172,18 +150,10 @@ export function RubyDemo() {
             <p className="text-[10px] text-gray-400">With the candidate&apos;s consent</p>
           </div>
         </div>
-        <div ref={scrollRef} className="flex h-[360px] flex-col gap-3 overflow-hidden bg-gray-50/60 p-4 sm:p-5">
+        <div ref={scrollRef} className="flex h-[480px] flex-col gap-3 overflow-hidden bg-gray-50/60 p-4 sm:p-5">
           {SCRIPT.slice(0, shown).map((m, i) => (
             <Bubble key={i} msg={m} />
           ))}
-          {typing && (
-            <div className="jcn-msg-in flex items-end gap-2">
-              <RubyAvatar />
-              <span className="rounded-2xl rounded-bl-sm bg-white px-3 py-2 shadow-sm ring-1 ring-gray-100">
-                <TypingDots />
-              </span>
-            </div>
-          )}
         </div>
       </div>
 

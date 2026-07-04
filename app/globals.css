@@ -28,6 +28,18 @@
   --brand-accent: #14306b;    /* lighter navy */
 }
 
+/* Soft enter animation for chat bubbles (marketing Ruby demo). */
+@keyframes jcn-msg-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.jcn-msg-in {
+  animation: jcn-msg-in 0.35s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .jcn-msg-in { animation: none; }
+}
+
 /* App background gradient (used across every level). */
 .jcn-app-bg {
   background-image: linear-gradient(

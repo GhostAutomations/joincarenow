@@ -29,9 +29,9 @@ const SCRIPT: Msg[] = [
 // generous gaps so visitors can actually read each message.
 const PRE_TYPING_PAUSE = 700;
 const RUBY_TYPING_MS = 1500;
-const CANDIDATE_DELAY = 2600;
-const BEFORE_HANDOFF_MS = 1400;
-const REPORT_WRITING_MS = 3000;
+const CANDIDATE_DELAY = 1500;
+const BEFORE_HANDOFF_MS = 1000;
+const REPORT_WRITING_MS = 2200;
 const REPORT_HOLD_MS = 10000;
 
 function RubyAvatar() {
@@ -66,7 +66,7 @@ function TypingDots() {
 function Bubble({ msg }: { msg: Msg }) {
   const ruby = msg.from === "ruby";
   return (
-    <div className={`flex items-end gap-2 ${ruby ? "" : "flex-row-reverse"}`}>
+    <div className={`jcn-msg-in flex items-end gap-2 ${ruby ? "" : "flex-row-reverse"}`}>
       {ruby ? (
         <RubyAvatar />
       ) : (
@@ -151,7 +151,7 @@ export function RubyDemo() {
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [shown, typing]);
 
   const handoff = phase !== "chat"; // pipeline frame visible (writing or report)
@@ -177,7 +177,7 @@ export function RubyDemo() {
             <Bubble key={i} msg={m} />
           ))}
           {typing && (
-            <div className="flex items-end gap-2">
+            <div className="jcn-msg-in flex items-end gap-2">
               <RubyAvatar />
               <span className="rounded-2xl rounded-bl-sm bg-white px-3 py-2 shadow-sm ring-1 ring-gray-100">
                 <TypingDots />

@@ -65,12 +65,12 @@ export function PricingTiers() {
             type="button"
             onClick={() => setBillingInterval(i.key)}
             className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
-              interval === i.key ? "bg-brand-600 text-white shadow-sm" : "text-gray-600 hover:text-gray-900"
+              interval === i.key ? "bg-[#0d1d4b] text-amber-300 shadow-sm" : "text-gray-600 hover:text-gray-900"
             }`}
           >
             {i.label}
             {i.hint && interval !== i.key && (
-              <span className="ml-1.5 hidden text-[10px] font-medium text-brand-600 sm:inline">{i.hint}</span>
+              <span className="ml-1.5 hidden text-[10px] font-medium text-amber-600 sm:inline">{i.hint}</span>
             )}
           </button>
         ))}
@@ -78,8 +78,8 @@ export function PricingTiers() {
 
       <div className="mx-auto mt-10 grid max-w-5xl grid-cols-1 items-start gap-6 lg:grid-cols-2">
         {/* Core */}
-        <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-lg ring-1 ring-brand-100">
-          <div className="jcn-app-bg p-8 text-white">
+        <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-lg ring-1 ring-blue-50">
+          <div className="bg-gradient-to-br from-[#081231] via-[#0d1d4b] to-[#14306b] p-8 text-white">
             <p className="text-xs font-semibold uppercase tracking-wider text-white/80">Core</p>
             <p className="mt-3 flex items-baseline gap-1">
               <span className="text-5xl font-bold">{p.core.price}</span>
@@ -96,7 +96,7 @@ export function PricingTiers() {
             <ul className="mt-4 space-y-2.5">
               {CORE_INCLUDES.map((pt) => (
                 <li key={pt} className="flex items-start gap-2 text-sm text-gray-700">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
                   {pt}
                 </li>
               ))}
@@ -105,11 +105,11 @@ export function PricingTiers() {
         </div>
 
         {/* Core + Ruby */}
-        <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border-2 border-brand-500 bg-white shadow-xl ring-2 ring-brand-200">
-          <span className="absolute right-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-brand-700 shadow-sm backdrop-blur">
+        <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border-2 border-amber-400 bg-white shadow-xl ring-2 ring-amber-200">
+          <span className="absolute right-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-[#081231] shadow-sm">
             <Sparkles className="h-3.5 w-3.5" aria-hidden /> Most popular
           </span>
-          <div className="bg-gradient-to-br from-fuchsia-600 via-violet-600 to-brand-600 p-8 text-white">
+          <div className="bg-gradient-to-br from-rose-800 via-rose-700 to-red-700 p-8 text-white">
             <p className="text-xs font-semibold uppercase tracking-wider text-white/85">Core + Ruby</p>
             <p className="mt-3 flex items-baseline gap-1">
               <span className="text-5xl font-bold">{p.ruby.price}</span>
@@ -126,7 +126,7 @@ export function PricingTiers() {
             <ul className="mt-4 space-y-2.5">
               {RUBY_INCLUDES.map((pt) => (
                 <li key={pt} className="flex items-start gap-2 text-sm text-gray-700">
-                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
                   {pt}
                 </li>
               ))}

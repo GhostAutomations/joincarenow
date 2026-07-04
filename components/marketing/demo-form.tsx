@@ -6,7 +6,7 @@ import { CheckCircle2, Send } from "lucide-react";
 import { submitDemoLead, type DemoLeadState } from "@/modules/marketing/actions";
 
 const field =
-  "mt-1 block w-full rounded-lg border border-white/40 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200";
+  "mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200";
 const label = "block text-sm font-medium text-gray-700";
 
 export function DemoForm() {
@@ -19,10 +19,10 @@ export function DemoForm() {
     return (
       <div
         role="status"
-        className="flex flex-col items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-8 text-center"
+        className="flex flex-col items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center"
       >
-        <CheckCircle2 className="h-10 w-10 text-brand-600" aria-hidden />
-        <h3 className="text-lg font-semibold text-gray-900">Thanks — we&apos;ll be in touch</h3>
+        <CheckCircle2 className="h-10 w-10 text-amber-600" aria-hidden />
+        <h3 className="text-lg font-semibold text-gray-900">Thanks, we&apos;ll be in touch</h3>
         <p className="max-w-sm text-sm text-gray-600">
           Your request is in. A member of the team will email you shortly to arrange a
           time that suits you.
@@ -81,10 +81,10 @@ export function DemoForm() {
       </div>
 
       <div className="mt-4 flex items-start gap-2.5">
-        <input id="df-consent" name="consent" type="checkbox" required className="mt-1 h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500" />
+        <input id="df-consent" name="consent" type="checkbox" required className="mt-1 h-4 w-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500" />
         <label htmlFor="df-consent" className="text-sm text-gray-600">
           I&apos;m happy for Join Care Now to contact me about a demo. See our{" "}
-          <Link href="/privacy" className="font-medium text-brand-700 underline">privacy notice</Link>.
+          <Link href="/privacy" className="font-medium text-amber-700 underline">privacy notice</Link>.
         </label>
       </div>
 
@@ -95,7 +95,7 @@ export function DemoForm() {
       <button
         type="submit"
         disabled={pending}
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-base font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60 sm:w-auto"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-amber-400 px-6 py-3 text-base font-semibold text-[#081231] transition hover:bg-amber-300 disabled:opacity-60 sm:w-auto"
       >
         <Send className="h-4 w-4" aria-hidden />
         {pending ? "Sending…" : "Book a demo"}

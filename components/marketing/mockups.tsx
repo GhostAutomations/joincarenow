@@ -76,7 +76,7 @@ export function BoardMockup() {
       title: "Interview",
       count: 2,
       cards: [
-        { initials: "GE", color: "bg-emerald-500", name: "Grace Evans", role: "Care Assistant", chip: "Booked", chipClass: "bg-brand-100 text-brand-700" },
+        { initials: "GE", color: "bg-emerald-500", name: "Grace Evans", role: "Care Assistant", chip: "Booked", chipClass: "bg-amber-100 text-amber-700" },
       ],
     },
     {
@@ -121,18 +121,18 @@ export function CommsMockup() {
         </div>
         <div className="ml-auto flex gap-1">
           {["All", "Email", "SMS"].map((t, i) => (
-            <span key={t} className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${i === 0 ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-500"}`}>{t}</span>
+            <span key={t} className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${i === 0 ? "bg-[#0d1d4b] text-amber-300" : "bg-gray-100 text-gray-500"}`}>{t}</span>
           ))}
         </div>
       </div>
       <div className="space-y-3 bg-gray-50/60 p-4">
         <div className="flex justify-end">
           <div className="max-w-[85%]">
-            <p className="rounded-2xl rounded-br-sm bg-brand-600 px-3.5 py-2.5 text-[13px] leading-snug text-white shadow-sm">
-              Hi Aisha, great news — we&apos;d love to invite you to interview on Tuesday at 10am. Does that work for you?
+            <p className="rounded-2xl rounded-br-sm bg-[#0d1d4b] px-3.5 py-2.5 text-[13px] leading-snug text-white shadow-sm">
+              Hi Aisha, great news! We&apos;d love to invite you to interview on Tuesday at 10am. Does that work for you?
             </p>
             <p className="mt-1 flex items-center justify-end gap-1 text-[10px] text-gray-400">
-              SMS · Delivered <CheckCheck className="h-3 w-3 text-brand-500" aria-hidden />
+              SMS · Delivered <CheckCheck className="h-3 w-3 text-amber-500" aria-hidden />
             </p>
           </div>
         </div>
@@ -146,11 +146,11 @@ export function CommsMockup() {
         </div>
         <div className="flex justify-end">
           <div className="max-w-[85%]">
-            <p className="rounded-2xl rounded-br-sm bg-brand-600 px-3.5 py-2.5 text-[13px] leading-snug text-white shadow-sm">
-              Interview confirmed — details and directions sent by email.
+            <p className="rounded-2xl rounded-br-sm bg-[#0d1d4b] px-3.5 py-2.5 text-[13px] leading-snug text-white shadow-sm">
+              Interview confirmed. Details and directions sent by email.
             </p>
             <p className="mt-1 flex items-center justify-end gap-1 text-[10px] text-gray-400">
-              Email · Opened <CheckCheck className="h-3 w-3 text-brand-500" aria-hidden />
+              Email · Opened <CheckCheck className="h-3 w-3 text-amber-500" aria-hidden />
             </p>
           </div>
         </div>
@@ -163,7 +163,7 @@ export function CommsMockup() {
 export function CareersMockup() {
   return (
     <div aria-hidden className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
-      <div className="jcn-app-bg px-5 py-4 text-white">
+      <div className="bg-gradient-to-br from-[#081231] via-[#0d1d4b] to-[#14306b] px-5 py-4 text-white">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">Careers at</p>
         <p className="text-lg font-bold">Bay View Care</p>
       </div>
@@ -178,7 +178,7 @@ export function CareersMockup() {
                 <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" aria-hidden /> Full-time</span>
               </div>
             </div>
-            <span className="rounded-lg bg-brand-600 px-3.5 py-2 text-[11px] font-semibold text-white">Apply now</span>
+            <span className="rounded-lg bg-amber-400 px-3.5 py-2 text-[11px] font-semibold text-[#081231]">Apply now</span>
           </div>
         </div>
         <div className="mt-3 rounded-xl border border-gray-200 p-4">
@@ -191,10 +191,10 @@ export function CareersMockup() {
                 <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" aria-hidden /> Full-time</span>
               </div>
             </div>
-            <span className="rounded-lg bg-brand-600 px-3.5 py-2 text-[11px] font-semibold text-white">Apply now</span>
+            <span className="rounded-lg bg-amber-400 px-3.5 py-2 text-[11px] font-semibold text-[#081231]">Apply now</span>
           </div>
         </div>
-        <p className="mt-3 text-center text-[10px] text-gray-400">Your brand, your jobs — found on Google, shared anywhere</p>
+        <p className="mt-3 text-center text-[10px] text-gray-400">Your brand, your jobs, found on Google and shared anywhere</p>
       </div>
     </div>
   );
@@ -219,7 +219,7 @@ export function OnboardingMockup() {
           <p className="text-sm font-semibold text-gray-900">Sarah Jones</p>
           <p className="text-[11px] text-gray-500">Support Worker · Onboarding</p>
         </div>
-        <span className="ml-auto rounded-full bg-brand-100 px-2.5 py-1 text-[10px] font-semibold text-brand-700">4 of 6 complete</span>
+        <span className="ml-auto rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700">4 of 6 complete</span>
       </div>
       <ul className="divide-y divide-gray-100">
         {rows.map((r) => (

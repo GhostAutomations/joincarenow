@@ -1,7 +1,8 @@
 import { Settings, Eye } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { manageAsCompany } from "@/modules/founder/actions";
-import { CompanyForm } from "@/components/dashboard/company-form";
+import { AddCompanyModal } from "@/components/founder/add-company-modal";
+import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
 import { DeleteCompany } from "@/components/dashboard/delete-company";
 import { InviteForm } from "@/components/dashboard/invite-form";
 import { PendingInvites } from "@/components/dashboard/pending-invites";
@@ -91,18 +92,16 @@ export default async function CompaniesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Companies</h1>
-      <p className="mt-1 text-sm text-white/80">
-        Create care companies and invite their first administrator. Admins then
-        invite their own managers and recruiters.
-      </p>
-
-      <section className="mt-6 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm">
-        <h2 className="text-base font-medium text-gray-900">Add a company</h2>
-        <div className="mt-4">
-          <CompanyForm />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-white drop-shadow-sm">Companies</h1>
+          <p className="mt-1 text-sm text-white/80">
+            Create care companies and invite their first administrator. Admins then
+            invite their own managers and recruiters.
+          </p>
         </div>
-      </section>
+        <AddCompanyModal />
+      </div>
 
       <section className="mt-6">
         <h2 className="text-base font-medium text-white drop-shadow-sm">
@@ -111,35 +110,22 @@ export default async function CompaniesPage() {
 
         {(companies ?? []).length === 0 && (
           <div className="mt-3 rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-8 text-center text-sm text-gray-600 shadow-sm">
-            No companies yet. Create your first one above.
+            No companies yet. Use the Add a company button to create your first one.
           </div>
         )}
 
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 space-y-3">
           {(companies ?? []).map((c) => {
             const companyAdmins = adminsByCompany.get(c.id) ?? [];
             const pending = invitesByCompany.get(c.id) ?? [];
             return (
-              <div
+              <CollapsibleSection
                 key={c.id}
-                className="rounded-2xl border border-white/40 bg-white/55 backdrop-blur-md p-6 shadow-sm"
+                title={c.name}
+                subtitle={`joincarenow.com/careers/${c.slug}`}
+                badge={`${companyAdmins.length} admin${companyAdmins.length === 1 ? "" : "s"}`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-base font-semibold text-gray-900">
-                      {c.name}
-                    </h3>
-                    <p className="text-xs text-gray-600">
-                      joincarenow.com/careers/{c.slug}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-                    {companyAdmins.length} admin
-                    {companyAdmins.length === 1 ? "" : "s"}
-                  </span>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   <form action={manageAsCompany} className="flex-1">
                     <input type="hidden" name="companyId" value={c.id} />
                     <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
@@ -236,7 +222,7 @@ export default async function CompaniesPage() {
                 <div className="mt-4 flex justify-end border-t border-gray-100 pt-3">
                   <DeleteCompany companyId={c.id} companyName={c.name} />
                 </div>
-              </div>
+              </CollapsibleSection>
             );
           })}
         </div>

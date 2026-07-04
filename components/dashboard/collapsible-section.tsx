@@ -7,11 +7,15 @@ import { ChevronDown } from "lucide-react";
  *  Used to group forms by category on the Forms and File Store screens. */
 export function CollapsibleSection({
   title,
+  subtitle,
+  badge,
   count,
   defaultOpen = false,
   children,
 }: {
   title: string;
+  subtitle?: string;
+  badge?: string;
   count?: number;
   defaultOpen?: boolean;
   children: React.ReactNode;
@@ -25,10 +29,18 @@ export function CollapsibleSection({
         aria-expanded={open}
       >
         <span className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-900">{title}</span>
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold text-gray-900">{title}</span>
+            {subtitle && <span className="block truncate text-xs text-gray-500">{subtitle}</span>}
+          </span>
           {typeof count === "number" && (
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
               {count}
+            </span>
+          )}
+          {badge && (
+            <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+              {badge}
             </span>
           )}
         </span>

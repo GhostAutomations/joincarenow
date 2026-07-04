@@ -15,10 +15,10 @@ type Box = {
   dueDays: string;
   required: boolean;
   triggerStage: string;
-  poppyEngage: string;
-  poppyFormIds: string[];
-  poppyIncludeCv: boolean;
-  poppyDocumentIds: string[];
+  rubyEngage: string;
+  rubyFormIds: string[];
+  rubyIncludeCv: boolean;
+  rubyDocumentIds: string[];
 };
 
 const blankBox = (): Box => ({
@@ -27,25 +27,25 @@ const blankBox = (): Box => ({
   dueDays: "",
   required: true,
   triggerStage: "",
-  poppyEngage: "",
-  poppyFormIds: [],
-  poppyIncludeCv: false,
-  poppyDocumentIds: [],
+  rubyEngage: "",
+  rubyFormIds: [],
+  rubyIncludeCv: false,
+  rubyDocumentIds: [],
 });
 
 export function AddTemplateTask({
   forms,
-  poppyDocs = [],
+  rubyDocs = [],
   roleOptions = [],
   saveAction = addTemplateTasks,
   showRole = true,
   roleLabel = "Applies to roles",
-  poppyEnabled = false,
+  rubyEnabled = false,
   appendMode = false,
 }: {
   forms: { id: string; name: string }[];
-  /** Company documents (policies + contracts) Poppy can compare against. */
-  poppyDocs?: { id: string; name: string }[];
+  /** Company documents (policies + contracts) Ruby can compare against. */
+  rubyDocs?: { id: string; name: string }[];
   /** Company: value = role UUID. Founder store: value = standard role name. */
   roleOptions?: { value: string; label: string }[];
   /** Server action that saves the drafts. Defaults to the company workflow
@@ -53,8 +53,8 @@ export function AddTemplateTask({
   saveAction?: (drafts: TaskDraft[]) => Promise<{ ok?: boolean; error?: string }>;
   showRole?: boolean;
   roleLabel?: string;
-  /** Show the Poppy AI screening step type (company has Poppy). */
-  poppyEnabled?: boolean;
+  /** Show the Ruby AI screening step type (company has Ruby). */
+  rubyEnabled?: boolean;
   /** Appending to an existing workflow — hide the workflow-level role field and
    *  relabel the title/CTA (name + roles come from the existing workflow). */
   appendMode?: boolean;
@@ -97,29 +97,29 @@ export function AddTemplateTask({
       )
     );
   }
-  function togglePoppyDoc(i: number, id: string) {
+  function toggleRubyDoc(i: number, id: string) {
     setBoxes((bs) =>
       bs.map((b, idx) =>
         idx === i
           ? {
               ...b,
-              poppyDocumentIds: b.poppyDocumentIds.includes(id)
-                ? b.poppyDocumentIds.filter((x) => x !== id)
-                : [...b.poppyDocumentIds, id],
+              rubyDocumentIds: b.rubyDocumentIds.includes(id)
+                ? b.rubyDocumentIds.filter((x) => x !== id)
+                : [...b.rubyDocumentIds, id],
             }
           : b
       )
     );
   }
-  function togglePoppyForm(i: number, id: string) {
+  function toggleRubyForm(i: number, id: string) {
     setBoxes((bs) =>
       bs.map((b, idx) =>
         idx === i
           ? {
               ...b,
-              poppyFormIds: b.poppyFormIds.includes(id)
-                ? b.poppyFormIds.filter((x) => x !== id)
-                : [...b.poppyFormIds, id],
+              rubyFormIds: b.rubyFormIds.includes(id)
+                ? b.rubyFormIds.filter((x) => x !== id)
+                : [...b.rubyFormIds, id],
             }
           : b
       )
@@ -137,10 +137,10 @@ export function AddTemplateTask({
       body,
       triggerStage: b.triggerStage,
       roleValues,
-      poppyEngage: b.poppyEngage,
-      poppyFormIds: b.poppyFormIds,
-      poppyIncludeCv: b.poppyIncludeCv,
-      poppyDocumentIds: b.poppyDocumentIds,
+      rubyEngage: b.rubyEngage,
+      rubyFormIds: b.rubyFormIds,
+      rubyIncludeCv: b.rubyIncludeCv,
+      rubyDocumentIds: b.rubyDocumentIds,
     }));
     setSaving(true);
     const res = await saveAction(drafts);
@@ -227,15 +227,15 @@ export function AddTemplateTask({
                 <option value="document">Upload a document</option>
                 <option value="form">Fill in a form</option>
                 <option value="acknowledge">Read &amp; confirm</option>
-                {poppyEnabled && <option value="poppy">Poppy AI screening</option>}
+                {rubyEnabled && <option value="ruby">Ruby AI screening</option>}
               </select>
             </label>
-            {b.taskType === "poppy" ? (
+            {b.taskType === "ruby" ? (
               <label className="text-xs font-medium text-gray-600">
-                When should Poppy engage?
+                When should Ruby engage?
                 <select
-                  value={b.poppyEngage}
-                  onChange={(e) => updateBox(i, { poppyEngage: e.target.value })}
+                  value={b.rubyEngage}
+                  onChange={(e) => updateBox(i, { rubyEngage: e.target.value })}
                   className={cls}
                 >
                   <option value="" disabled>Select one…</option>
@@ -263,10 +263,10 @@ export function AddTemplateTask({
             )}
           </div>
 
-          {/* Poppy: pick the stage (when engage = stage) + the forms it reviews. */}
-          {b.taskType === "poppy" && (
+          {/* Ruby: pick the stage (when engage = stage) + the forms it reviews. */}
+          {b.taskType === "ruby" && (
             <>
-              {b.poppyEngage === "stage" && (
+              {b.rubyEngage === "stage" && (
                 <label className="text-xs font-medium text-gray-600">
                   Which stage?
                   <select
@@ -285,14 +285,14 @@ export function AddTemplateTask({
                 </label>
               )}
               <div className="text-xs font-medium text-gray-600">
-                Forms Poppy reviews
+                Forms Ruby reviews
                 <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 backdrop-blur-sm p-2">
                   {/* CV is reviewable like a form (counts toward 'complete' once uploaded). */}
                   <label className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
                     <input
                       type="checkbox"
-                      checked={b.poppyIncludeCv}
-                      onChange={() => updateBox(i, { poppyIncludeCv: !b.poppyIncludeCv })}
+                      checked={b.rubyIncludeCv}
+                      onChange={() => updateBox(i, { rubyIncludeCv: !b.rubyIncludeCv })}
                       className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
                     />
                     CV (uploaded)
@@ -304,8 +304,8 @@ export function AddTemplateTask({
                       <label key={f.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
                         <input
                           type="checkbox"
-                          checked={b.poppyFormIds.includes(f.id)}
-                          onChange={() => togglePoppyForm(i, f.id)}
+                          checked={b.rubyFormIds.includes(f.id)}
+                          onChange={() => toggleRubyForm(i, f.id)}
                           className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
                         />
                         {f.name}
@@ -314,7 +314,7 @@ export function AddTemplateTask({
                   )}
                 </div>
                 <span className="mt-1 block text-[11px] font-normal text-gray-400">
-                  Poppy compares these against the job description to build screening questions.
+                  Ruby compares these against the job description to build screening questions.
                 </span>
               </div>
 
@@ -323,16 +323,16 @@ export function AddTemplateTask({
                   description is always compared automatically. */}
               <div className="text-xs font-medium text-gray-600">
                 What to compare to
-                {poppyDocs.length === 0 ? (
+                {rubyDocs.length === 0 ? (
                   <p className="mt-1 font-normal text-gray-400">No policies or contracts yet — add them in Settings first.</p>
                 ) : (
                   <div className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-md border border-white/60 bg-white/60 backdrop-blur-sm p-2">
-                    {poppyDocs.map((d) => (
+                    {rubyDocs.map((d) => (
                       <label key={d.id} className="flex items-center gap-2 rounded px-1 py-1 font-normal text-gray-700 hover:bg-white/60">
                         <input
                           type="checkbox"
-                          checked={b.poppyDocumentIds.includes(d.id)}
-                          onChange={() => togglePoppyDoc(i, d.id)}
+                          checked={b.rubyDocumentIds.includes(d.id)}
+                          onChange={() => toggleRubyDoc(i, d.id)}
                           className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
                         />
                         {d.name}
@@ -375,8 +375,8 @@ export function AddTemplateTask({
             </div>
           )}
 
-          {/* Due / required don't apply to the Poppy step. */}
-          {b.taskType !== "poppy" && (
+          {/* Due / required don't apply to the Ruby step. */}
+          {b.taskType !== "ruby" && (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="text-xs font-medium text-gray-600">
                 Due within (days)

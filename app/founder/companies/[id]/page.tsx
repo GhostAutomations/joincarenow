@@ -11,7 +11,7 @@ import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard
 import { InterviewAddressForm } from "@/components/dashboard/interview-address-form";
 import { BrandingForm } from "@/components/dashboard/branding-form";
 import { StarterPackPanel } from "@/components/founder/starter-pack-panel";
-import { PoppyToggle } from "@/components/founder/poppy-toggle";
+import { RubyToggle } from "@/components/founder/ruby-toggle";
 import { AccountReadyButton } from "@/components/founder/account-ready-button";
 import { FounderSetupWizard, type WizardTask } from "@/components/founder/setup-wizard";
 import { WorkflowApplyPanel } from "@/components/founder/workflow-apply-panel";
@@ -29,7 +29,7 @@ export default async function CompanySetupPage({
   const db = createAdminClient();
 
   const [{ data: company }, { data: branches }, { data: roles }, { data: storeWfRows }, { data: appliedRows }, { data: contractDocs }, { data: policyDocs }, { data: jobDescDocs }] = await Promise.all([
-    db.from("companies").select("id, name, slug, settings, poppy_enabled").eq("id", id).single(),
+    db.from("companies").select("id, name, slug, settings, ruby_enabled").eq("id", id).single(),
     db.from("branches").select("id, name, kind").eq("company_id", id).order("name"),
     db.from("roles").select("id, name, team").eq("company_id", id).order("team").order("position").order("name"),
     db
@@ -170,7 +170,7 @@ export default async function CompanySetupPage({
       </p>
       <div className="mt-6 space-y-4">
         <StarterPackPanel companyId={id} seeded={seeded} seededAt={settings.starter_seeded_at ?? null} />
-        <PoppyToggle companyId={id} enabled={company.poppy_enabled === true} />
+        <RubyToggle companyId={id} enabled={company.ruby_enabled === true} />
         <FounderSetupWizard companyId={id} tasks={wizardTasks.map((t) => ({ ...t, passed: passed.includes(t.key) }))} />
       </div>
     </div>

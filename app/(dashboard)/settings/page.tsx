@@ -13,12 +13,12 @@ import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
 import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
 import { CareersContentForm } from "@/components/dashboard/careers-content-form";
 import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard/reminder-settings-form";
-import { PoppyPanel } from "@/components/dashboard/poppy-panel";
+import { RubyPanel } from "@/components/dashboard/ruby-panel";
 import { DocumentDetailsForm } from "@/components/dashboard/document-details-form";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
 import { readDocDefaults } from "@/lib/documents/fill";
-import { readPoppyConfig } from "@/lib/poppy/config";
-import { poppyAllowanceUsed } from "@/lib/billing/poppy-credits";
+import { readRubyConfig } from "@/lib/ruby/config";
+import { rubyAllowanceUsed } from "@/lib/billing/ruby-credits";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SettingsHub, type SettingsSection } from "@/components/dashboard/settings-hub";
 import type { OpeningHours } from "@/lib/opening-hours";
@@ -51,7 +51,7 @@ export default async function SettingsPage() {
 
   const { data: companyRow } = await supabase
     .from("companies")
-    .select("settings, poppy_enabled")
+    .select("settings, ruby_enabled")
     .eq("id", current.company_id)
     .single();
   const settings = (companyRow?.settings as {
@@ -70,9 +70,9 @@ export default async function SettingsPage() {
     ((companyRow?.settings as { careers?: { intro?: string; benefits?: string[] } } | null)?.careers) ?? {};
   const reminderPrefs =
     ((companyRow?.settings as { reminders?: ReminderPrefs } | null)?.reminders) ?? {};
-  const poppyEnabled = companyRow?.poppy_enabled === true;
-  const poppyConfig = readPoppyConfig(companyRow?.settings);
-  const poppyUsage = poppyEnabled ? await poppyAllowanceUsed(current.company_id) : null;
+  const rubyEnabled = companyRow?.ruby_enabled === true;
+  const rubyConfig = readRubyConfig(companyRow?.settings);
+  const rubyUsage = rubyEnabled ? await rubyAllowanceUsed(current.company_id) : null;
 
   // Admins manage invitations. RLS only returns this company's invites.
   const { data: invites } = isAdmin
@@ -240,14 +240,14 @@ export default async function SettingsPage() {
         description: "Automated reminders to applicants and new starters — on/off and channel.",
         content: <ReminderSettingsForm companyId={current.company_id} prefs={reminderPrefs} />,
       },
-      ...(poppyEnabled
+      ...(rubyEnabled
         ? [
             {
-              key: "poppy",
-              label: "Poppy",
+              key: "ruby",
+              label: "Ruby",
               description:
                 "Configure your AI recruitment agent — attributes, focus, custom instructions, and how many questions it asks.",
-              content: <PoppyPanel config={poppyConfig} usage={poppyUsage} />,
+              content: <RubyPanel config={rubyConfig} usage={rubyUsage} />,
             },
           ]
         : []),

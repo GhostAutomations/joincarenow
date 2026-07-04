@@ -6,7 +6,7 @@ import { cleanMessageBody } from "@/lib/comms/clean";
 import { ConversationThread, type ChatMessage } from "@/components/portal/conversation-thread";
 import { PortalLive } from "@/components/portal/portal-live";
 
-// Poppy replies to an applicant after a ~15s human-feel gap, posted via `after`.
+// Ruby replies to an applicant after a ~15s human-feel gap, posted via `after`.
 // Keep the function alive long enough for that deferred work to run.
 export const maxDuration = 60;
 
@@ -26,7 +26,7 @@ export default async function PortalConversationPage({
 
   const { data: msgs } = await supabase
     .from("messages")
-    .select("id, body, direction, created_at, from_poppy")
+    .select("id, body, direction, created_at, from_ruby")
     .eq("application_id", applicationId)
     .order("created_at", { ascending: true });
 
@@ -34,9 +34,9 @@ export default async function PortalConversationPage({
     id: m.id as string,
     mine: m.direction === "inbound", // applicant's own messages
     // Clean the greeting/sign-off off the company's outbound messages — but leave
-    // Poppy's messages as written (they're already chat-style).
+    // Ruby's messages as written (they're already chat-style).
     body:
-      m.direction === "outbound" && !m.from_poppy
+      m.direction === "outbound" && !m.from_ruby
         ? cleanMessageBody(m.body as string)
         : (m.body as string),
     at: m.created_at as string,

@@ -7,6 +7,6 @@
     { "path": "/api/cron/usage-report", "schedule": "0 2 * * *" },
     { "path": "/api/cron/billing-snapshot", "schedule": "30 1 * * *" },
     { "path": "/api/cron/expire-jobs", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/poppy", "schedule": "*/5 * * * *" }
+    { "path": "/api/cron/ruby", "schedule": "*/5 * * * *" }
   ]
 }

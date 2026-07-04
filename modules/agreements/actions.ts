@@ -34,7 +34,7 @@ export async function signAgreement(_prev: AgreementState, formData: FormData): 
     companyName: (company?.name as string) ?? current.companies.name,
     plan: (company?.agreed_plan as AgreementPlan) ?? null,
     offer: (company?.agreed_offer as string) ?? null,
-    tier: company?.agreed_tier === "poppy" ? "poppy" : "core",
+    tier: company?.agreed_tier === "ruby" ? "ruby" : "core",
   });
 
   const { error } = await supabase.from("company_agreements").insert({

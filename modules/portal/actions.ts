@@ -5,10 +5,10 @@ import { revalidatePath } from "next/cache";
 import { requireApplicant } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyJobOwner } from "@/lib/comms/notify-owner";
-import { handlePoppyReply, isPoppyConversing } from "@/lib/poppy/conversation";
+import { handleRubyReply, isRubyConversing } from "@/lib/ruby/conversation";
 
-/** Gap before Poppy replies, so the conversation feels human rather than instant. */
-const POPPY_REPLY_DELAY_MS = 15_000;
+/** Gap before Ruby replies, so the conversation feels human rather than instant. */
+const RUBY_REPLY_DELAY_MS = 15_000;
 
 export type PortalReplyState = { error?: string; ok?: boolean } | undefined;
 
@@ -40,17 +40,17 @@ export async function postApplicantReply(_prev: PortalReplyState, formData: Form
   });
   if (error) return { error: "Could not send your message." };
 
-  // If Poppy is mid-screening with this applicant, let Poppy handle the reply
+  // If Ruby is mid-screening with this applicant, let Ruby handle the reply
   // (record the answer, ask the next question). Skip the human owner notification
   // in that case — the owner is alerted when the screening completes/declines.
-  // Poppy's reply is posted after a short gap (via `after`, so this action still
+  // Ruby's reply is posted after a short gap (via `after`, so this action still
   // returns immediately and the applicant's own message shows straight away) so
   // the conversation feels human rather than instant.
   const admin = createAdminClient();
-  if (await isPoppyConversing(admin, app.id)) {
+  if (await isRubyConversing(admin, app.id)) {
     after(async () => {
-      await new Promise((r) => setTimeout(r, POPPY_REPLY_DELAY_MS));
-      await handlePoppyReply(createAdminClient(), app.id, body);
+      await new Promise((r) => setTimeout(r, RUBY_REPLY_DELAY_MS));
+      await handleRubyReply(createAdminClient(), app.id, body);
     });
     revalidatePath(`/portal/conversations/${applicationId}`);
     revalidatePath("/portal/conversations");

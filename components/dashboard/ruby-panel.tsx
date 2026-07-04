@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, ListChecks } from "lucide-react";
-import { PoppySettingsForm } from "@/components/dashboard/poppy-settings-form";
-import { PoppyAttributesForm } from "@/components/dashboard/poppy-attributes-form";
-import type { PoppyConfig } from "@/lib/poppy/config";
+import { RubySettingsForm } from "@/components/dashboard/ruby-settings-form";
+import { RubyAttributesForm } from "@/components/dashboard/ruby-attributes-form";
+import type { RubyConfig } from "@/lib/ruby/config";
 
-/** The Poppy settings section. Shows Poppy's tuning, with Attributes as its own
+/** The Ruby settings section. Shows Ruby's tuning, with Attributes as its own
  *  sub-screen (opened from here, not expanded inline). */
-export function PoppyPanel({
+export function RubyPanel({
   config,
   usage,
 }: {
-  config: PoppyConfig;
+  config: RubyConfig;
   usage?: { used: number; included: number } | null;
 }) {
   const [view, setView] = useState<"main" | "attributes">("main");
@@ -24,14 +24,14 @@ export function PoppyPanel({
           onClick={() => setView("main")}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:text-brand-800"
         >
-          <ChevronLeft className="h-4 w-4" /> Poppy settings
+          <ChevronLeft className="h-4 w-4" /> Ruby settings
         </button>
         <h3 className="mt-3 text-base font-semibold text-gray-900">Attributes</h3>
         <p className="mt-0.5 text-sm text-gray-500">
-          The professional and personal attributes Poppy assesses every candidate against — split into
+          The professional and personal attributes Ruby assesses every candidate against — split into
           required and desirable.
         </p>
-        <PoppyAttributesForm config={config} />
+        <RubyAttributesForm config={config} />
       </div>
     );
   }
@@ -49,13 +49,13 @@ export function PoppyPanel({
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium text-gray-900">Attributes</span>
           <span className="block text-xs text-gray-500">
-            The professional &amp; personal attributes Poppy screens candidates against.
+            The professional &amp; personal attributes Ruby screens candidates against.
           </span>
         </span>
         <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
       </button>
 
-      <PoppySettingsForm config={config} usage={usage} />
+      <RubySettingsForm config={config} usage={usage} />
     </div>
   );
 }

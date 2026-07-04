@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FolderDown } from "lucide-react";
 import { getStaffFile } from "@/modules/employees/actions";
-import { poppyReportPdf } from "@/lib/pdf/poppy-report-pdf";
+import { rubyReportPdf } from "@/lib/pdf/ruby-report-pdf";
 
 /* ---- CDN loaders (no npm deps — mirrors signed-docs.tsx) ---- */
 type JsPdfDoc = {
@@ -156,9 +156,9 @@ export function StaffFileDownload({ employeeId }: { employeeId: string }) {
         try { formsFolder.file(`${String(i + 1).padStart(2, "0")} ${safe(f.name)}.pdf`, formPdf(JsPDF, f)); } catch { /* skip */ }
       });
 
-      if (data.poppyReport) {
+      if (data.rubyReport) {
         try {
-          zip.folder("Screening").file(`Poppy screening.pdf`, poppyReportPdf(JsPDF, data.poppyReport, data.fullName ?? "Applicant"));
+          zip.folder("Screening").file(`Ruby screening.pdf`, rubyReportPdf(JsPDF, data.rubyReport, data.fullName ?? "Applicant"));
         } catch { /* skip */ }
       }
 

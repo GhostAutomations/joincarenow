@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireCompany } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncEmployeeToCarerAcademy } from "@/lib/integrations/carer-academy";
-import type { PoppyReportData } from "@/lib/ai/generate-poppy-report";
+import type { RubyReportData } from "@/lib/ai/generate-ruby-report";
 
 export type EmployeeState = { error?: string; ok?: boolean } | undefined;
 
@@ -133,7 +133,7 @@ export async function getStaffFile(employeeId: string): Promise<{
   }[];
   forms?: { name: string; submittedAt: string | null; fields: { label: string; value: string }[] }[];
   files?: { filename: string; url: string }[];
-  poppyReport?: PoppyReportData;
+  rubyReport?: RubyReportData;
 }> {
   const { supabase, current } = await requireCompany();
 
@@ -259,17 +259,17 @@ export async function getStaffFile(employeeId: string): Promise<{
     await addFile("hr-documents", d.file_path as string, (d.title as string) || "HR document");
   }
 
-  // --- Poppy screening report (if one exists for this application) ---
-  let poppyReport: PoppyReportData | undefined;
+  // --- Ruby screening report (if one exists for this application) ---
+  let rubyReport: RubyReportData | undefined;
   if (emp.application_id) {
     const { data: pr } = await admin
-      .from("poppy_reports")
+      .from("ruby_reports")
       .select("report, status")
       .eq("application_id", emp.application_id)
       .eq("company_id", current.company_id)
       .maybeSingle();
-    if (pr && pr.status === "ready") poppyReport = pr.report as PoppyReportData;
+    if (pr && pr.status === "ready") rubyReport = pr.report as RubyReportData;
   }
 
-  return { employeeRef: emp.employee_ref as string, fullName, signedDocs, forms, files, poppyReport };
+  return { employeeRef: emp.employee_ref as string, fullName, signedDocs, forms, files, rubyReport };
 }

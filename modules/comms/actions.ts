@@ -15,7 +15,7 @@ export type Msg = {
   status: string;
   error: string | null;
   created_at: string;
-  from_poppy?: boolean;
+  from_ruby?: boolean;
 };
 
 export type ThreadTemplate = {
@@ -34,7 +34,7 @@ export async function getApplicantThread(
   const [{ data: messages }, { data: templates }] = await Promise.all([
     supabase
       .from("messages")
-      .select("id, channel, direction, subject, body, status, error, created_at, from_poppy")
+      .select("id, channel, direction, subject, body, status, error, created_at, from_ruby")
       .eq("application_id", applicationId)
       // Oldest first so the newest message is at the bottom (chat style).
       .order("created_at", { ascending: true }),

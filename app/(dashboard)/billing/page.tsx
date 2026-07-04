@@ -2,13 +2,13 @@ import { redirect } from "next/navigation";
 import { CreditCard, Check, MessageSquareText, Sparkles, Building2, ShieldCheck, CalendarClock, Download } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { requireCompany } from "@/modules/auth/queries";
-import { startCheckout, openBillingPortal, upgradeToPoppy } from "@/modules/billing/actions";
+import { startCheckout, openBillingPortal, upgradeToRuby } from "@/modules/billing/actions";
 import { BranchBilling } from "@/components/dashboard/branch-billing";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
-import { PoppyUpgradeButton } from "@/components/dashboard/poppy-upgrade-button";
-import { PoppyOfferBanner } from "@/components/dashboard/poppy-offer-banner";
+import { RubyUpgradeButton } from "@/components/dashboard/ruby-upgrade-button";
+import { RubyOfferBanner } from "@/components/dashboard/ruby-offer-banner";
 import { listInvoices } from "@/lib/billing/stripe";
-import { poppyAllowanceUsed } from "@/lib/billing/poppy-credits";
+import { rubyAllowanceUsed } from "@/lib/billing/ruby-credits";
 
 const INCLUDED = [
   "Every feature — recruitment, onboarding & employee records",
@@ -45,11 +45,11 @@ export default async function BillingPage() {
   const status = (company?.billing_status as string) ?? "none";
   const interval = company?.billing_interval as string | null;
   const diamond = company?.agreed_plan === "diamond";
-  const isPoppy = company?.plan_tier === "poppy";
-  const poppyUsage = isPoppy ? await poppyAllowanceUsed(current.company_id) : null;
-  const poppyOfferPending =
-    !isPoppy &&
-    ((company?.settings as { poppy_offer?: { status?: string } } | null)?.poppy_offer?.status === "pending");
+  const isRuby = company?.plan_tier === "ruby";
+  const rubyUsage = isRuby ? await rubyAllowanceUsed(current.company_id) : null;
+  const rubyOfferPending =
+    !isRuby &&
+    ((company?.settings as { ruby_offer?: { status?: string } } | null)?.ruby_offer?.status === "pending");
   const periodEnd = company?.current_period_end as string | null;
   const comped = company?.billing_comped === true;
   const active = status === "active" || status === "trialing" || comped;
@@ -59,7 +59,7 @@ export default async function BillingPage() {
     ? "Complimentary access"
     : diamond
       ? "Usage only — no subscription fee"
-      : isPoppy
+      : isRuby
         ? interval === "year"
           ? "£790 / year"
           : committed
@@ -97,7 +97,7 @@ export default async function BillingPage() {
     <div className="mx-auto max-w-5xl">
       <PageHeader title="Billing" subtitle="Manage your subscription, payment method and invoices." />
 
-      {poppyOfferPending && <PoppyOfferBanner diamond={diamond} />}
+      {rubyOfferPending && <RubyOfferBanner diamond={diamond} />}
 
       {active ? (
         <div className="mt-6 space-y-4">
@@ -108,7 +108,7 @@ export default async function BillingPage() {
                 <span className="h-1.5 w-1.5 rounded-full bg-green-300" />
                 {comped ? "Complimentary" : diamond ? "Diamond" : status === "trialing" ? "Trialing" : "Active"}
               </span>
-              <span className="font-semibold">Join Care Now{isPoppy ? " + Poppy" : ""}</span>
+              <span className="font-semibold">Join Care Now{isRuby ? " + Ruby" : ""}</span>
               <span className="text-white/90">{basePriceLabel}</span>
               {!comped && periodEnd && (
                 <span className="inline-flex items-center gap-1 text-sm text-white/70">
@@ -160,32 +160,32 @@ export default async function BillingPage() {
               <p className="mt-1 text-3xl font-bold text-gray-900">{1 + (company?.extra_branches ?? 0)}</p>
               <p className="mt-1.5 text-xs text-gray-400">{diamond ? "unlimited — free on Diamond" : "1 included, then £7.50/mo"}</p>
             </div>
-            {isPoppy && poppyUsage && (
+            {isRuby && rubyUsage && (
               <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
-                <p className="flex items-center gap-2 text-sm text-gray-500"><Sparkles className="h-4 w-4 text-brand-600" /> Poppy screens</p>
+                <p className="flex items-center gap-2 text-sm text-gray-500"><Sparkles className="h-4 w-4 text-brand-600" /> Ruby screens</p>
                 <p className="mt-1 text-3xl font-bold text-gray-900">
-                  {poppyUsage.used}<span className="text-sm font-normal text-gray-400"> / {poppyUsage.included}</span>
+                  {rubyUsage.used}<span className="text-sm font-normal text-gray-400"> / {rubyUsage.included}</span>
                 </p>
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                  <div className="h-full rounded-full bg-brand-500" style={{ width: `${Math.min(100, Math.round((poppyUsage.used / poppyUsage.included) * 100))}%` }} />
+                  <div className="h-full rounded-full bg-brand-500" style={{ width: `${Math.min(100, Math.round((rubyUsage.used / rubyUsage.included) * 100))}%` }} />
                 </div>
                 <p className="mt-1.5 text-xs text-gray-400">
-                  {poppyUsage.used > poppyUsage.included ? `${poppyUsage.used - poppyUsage.included} over — 75p each` : `${poppyUsage.included} included/month, then 75p`}
+                  {rubyUsage.used > rubyUsage.included ? `${rubyUsage.used - rubyUsage.included} over — 75p each` : `${rubyUsage.included} included/month, then 75p`}
                 </p>
               </div>
             )}
           </div>
 
-          {!isPoppy && !diamond && !comped && isAdmin && (
+          {!isRuby && !diamond && !comped && isAdmin && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-4 shadow-sm">
               <div className="flex items-start gap-2.5">
                 <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">Add Poppy — your AI recruitment assistant</p>
+                  <p className="text-sm font-semibold text-gray-900">Add Ruby — your AI recruitment assistant</p>
                   <p className="text-xs text-gray-600">Screens applicants for you: reviews forms &amp; CV, asks follow-ups, writes a recommendation. 40 applicants/month included, then 75p each.</p>
                 </div>
               </div>
-              <PoppyUpgradeButton />
+              <RubyUpgradeButton />
             </div>
           )}
 
@@ -302,37 +302,37 @@ export default async function BillingPage() {
                     </div>
                   </form>
 
-                  {/* Tier 2 — add Poppy */}
+                  {/* Tier 2 — add Ruby */}
                   <div className="rounded-xl border border-brand-300 bg-white/70 p-3.5 shadow-sm">
                     <div className="flex items-start gap-2">
                       <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900">Add Poppy — AI recruitment assistant</p>
+                        <p className="text-sm font-semibold text-gray-900">Add Ruby — AI recruitment assistant</p>
                         <p className="mt-0.5 text-xs text-gray-600">
-                          Everything above plus Poppy: automated applicant screening with a written recommendation. 40 applicants/month included, then 75p each.
+                          Everything above plus Ruby: automated applicant screening with a written recommendation. 40 applicants/month included, then 75p each.
                           <span className="font-medium text-gray-900"> £89/mo</span> · <span className="font-medium text-gray-900">£790/yr</span> · <span className="font-medium text-gray-900">£79/mo</span> on a 12‑month term.
                         </p>
                         <div className="mt-2.5 flex flex-wrap gap-2">
                           <form action={startCheckout}>
-                            <input type="hidden" name="tier" value="poppy" />
+                            <input type="hidden" name="tier" value="ruby" />
                             <input type="hidden" name="interval" value="year" />
                             <button className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700">
-                              Poppy annually <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">2 months free</span>
+                              Ruby annually <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">2 months free</span>
                             </button>
                           </form>
                           <form action={startCheckout}>
-                            <input type="hidden" name="tier" value="poppy" />
+                            <input type="hidden" name="tier" value="ruby" />
                             <input type="hidden" name="interval" value="month" />
                             <button className="rounded-lg border border-white/40 bg-white/60 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-white/60">
-                              Poppy monthly
+                              Ruby monthly
                             </button>
                           </form>
                           <form action={startCheckout}>
-                            <input type="hidden" name="tier" value="poppy" />
+                            <input type="hidden" name="tier" value="ruby" />
                             <input type="hidden" name="interval" value="month" />
                             <input type="hidden" name="commit" value="true" />
                             <button className="rounded-lg border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50">
-                              Poppy, 12‑month
+                              Ruby, 12‑month
                             </button>
                           </form>
                         </div>

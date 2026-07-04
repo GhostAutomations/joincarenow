@@ -9,7 +9,7 @@ import { InterviewSlotPicker, type BookedInterview } from "@/components/dashboar
 import { ApplicantComms } from "@/components/dashboard/applicant-comms";
 import { ApplicantForms } from "@/components/dashboard/applicant-forms";
 import { ApplicantReferences } from "@/components/dashboard/applicant-references";
-import { ApplicantPoppyReport } from "@/components/dashboard/applicant-poppy-report";
+import { ApplicantRubyReport } from "@/components/dashboard/applicant-ruby-report";
 import { ApplicantTeamMessages } from "@/components/dashboard/applicant-team-messages";
 import { CvRequest } from "@/components/dashboard/cv-request";
 import { DocRequest } from "@/components/dashboard/doc-request";
@@ -802,8 +802,8 @@ function ApplicantPanel({
           {/* References */}
           <ApplicantReferences applicationId={app.id} />
 
-          {/* Poppy — workflow screening report, else on-demand interview questions */}
-          <ApplicantPoppyReport
+          {/* Ruby — workflow screening report, else on-demand interview questions */}
+          <ApplicantRubyReport
             applicationId={app.id}
             applicantName={[app.first_name, app.last_name].filter(Boolean).join(" ") || "Applicant"}
           />

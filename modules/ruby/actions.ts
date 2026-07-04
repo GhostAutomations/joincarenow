@@ -3,18 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { requireCompany, requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { gatherPoppyUploads } from "@/lib/poppy/uploads";
-import { recordPoppyApplicant } from "@/lib/billing/poppy-credits";
+import { gatherRubyUploads } from "@/lib/ruby/uploads";
+import { recordRubyApplicant } from "@/lib/billing/ruby-credits";
 import {
   generateInterviewQuestions,
   type InterviewQuestionGroup,
 } from "@/lib/ai/generate-interview-questions";
-import { generatePoppyAnalysis, synthesizePoppyReport, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
-import { startPoppyConversation } from "@/lib/poppy/conversation";
-import { loadPoppyRuntimeConfig, readPoppyConfig, type PoppyConfig, type PoppyAttrGroup } from "@/lib/poppy/config";
+import { generateRubyAnalysis, synthesizeRubyReport, type RubyReportData } from "@/lib/ai/generate-ruby-report";
+import { startRubyConversation } from "@/lib/ruby/conversation";
+import { loadRubyRuntimeConfig, readRubyConfig, type RubyConfig, type RubyAttrGroup } from "@/lib/ruby/config";
 
 export type InterviewQuestionsResult = {
-  entitled: boolean; // company has Poppy
+  entitled: boolean; // company has Ruby
   status: "ready" | "needs_input" | "not_entitled" | "error";
   groups?: InterviewQuestionGroup[];
   generatedAt?: string | null;
@@ -39,7 +39,7 @@ type SubRow = { form_id: string; answers: unknown; forms: { name: string | null 
 
 /** Gather the applicant's submitted forms — the application form AND any forms
  *  added in the workflow — as readable "Label: answer" blocks, with field labels
- *  resolved from form_fields. This is Poppy's primary input. */
+ *  resolved from form_fields. This is Ruby's primary input. */
 async function gatherFormsText(applicationId: string, onlyFormIds?: string[]): Promise<string | null> {
   const admin = createAdminClient();
   let q = admin
@@ -114,9 +114,9 @@ async function generateAndStore(
     cvBase64Pdf,
   });
 
-  // Interview questions is a Poppy feature — bill it as a Poppy applicant credit
+  // Interview questions is a Ruby feature — bill it as a Ruby applicant credit
   // (deduped per applicant), NEVER as a company AI action.
-  await recordPoppyApplicant(app.company_id, app.id);
+  await recordRubyApplicant(app.company_id, app.id);
 
   await admin
     .from("application_interview_questions")
@@ -148,7 +148,7 @@ async function loadApp(applicationId: string, companyId: string): Promise<AppRow
   return (data as unknown as AppRow) ?? null;
 }
 
-/** Poppy can run once the applicant has submitted any form (application or
+/** Ruby can run once the applicant has submitted any form (application or
  *  workflow) or a CV — the application form is the default input. */
 async function hasInput(app: AppRow): Promise<boolean> {
   if (app.cv_path) return true;
@@ -161,18 +161,18 @@ async function hasInput(app: AppRow): Promise<boolean> {
 }
 
 /**
- * Load (and, on first view, auto-generate) Poppy interview questions for an
- * application. Staff-only and tenant-scoped. No-op unless the company has Poppy.
+ * Load (and, on first view, auto-generate) Ruby interview questions for an
+ * application. Staff-only and tenant-scoped. No-op unless the company has Ruby.
  */
 export async function getInterviewQuestions(applicationId: string): Promise<InterviewQuestionsResult> {
   const { supabase, user, current } = await requireCompany();
 
   const { data: company } = await supabase
     .from("companies")
-    .select("poppy_enabled")
+    .select("ruby_enabled")
     .eq("id", current.company_id)
     .single();
-  if (company?.poppy_enabled !== true) return { entitled: false, status: "not_entitled" };
+  if (company?.ruby_enabled !== true) return { entitled: false, status: "not_entitled" };
 
   const admin = createAdminClient();
   const { data: existing } = await admin
@@ -203,25 +203,25 @@ export async function getInterviewQuestions(applicationId: string): Promise<Inte
   }
 }
 
-export type PoppyReportResult = {
+export type RubyReportResult = {
   entitled: boolean;
   status: "ready" | "none";
   phase?: string; // analysed | conversing | complete | declined
-  report?: PoppyReportData;
+  report?: RubyReportData;
   generatedAt?: string | null;
 };
 
-/** Load the Poppy report for an application (staff-only, tenant-scoped). Returns
- *  entitled=false when the company doesn't have Poppy, {status:'none'} when no
+/** Load the Ruby report for an application (staff-only, tenant-scoped). Returns
+ *  entitled=false when the company doesn't have Ruby, {status:'none'} when no
  *  report exists yet. `phase` says where the screening conversation is up to. */
-export async function getPoppyReport(applicationId: string): Promise<PoppyReportResult> {
+export async function getRubyReport(applicationId: string): Promise<RubyReportResult> {
   const { current } = await requireCompany();
   const admin = createAdminClient();
-  const { data: co } = await admin.from("companies").select("poppy_enabled").eq("id", current.company_id).single();
-  if (co?.poppy_enabled !== true) return { entitled: false, status: "none" };
+  const { data: co } = await admin.from("companies").select("ruby_enabled").eq("id", current.company_id).single();
+  if (co?.ruby_enabled !== true) return { entitled: false, status: "none" };
 
   const { data } = await admin
-    .from("poppy_reports")
+    .from("ruby_reports")
     .select("status, phase, report, generated_at")
     .eq("application_id", applicationId)
     .eq("company_id", current.company_id)
@@ -231,7 +231,7 @@ export async function getPoppyReport(applicationId: string): Promise<PoppyReport
       entitled: true,
       status: "ready",
       phase: (data.phase as string) ?? "complete",
-      report: data.report as PoppyReportData,
+      report: data.report as RubyReportData,
       generatedAt: data.generated_at as string,
     };
   }
@@ -248,18 +248,18 @@ type ManualAppRow = {
   jobs: { title: string | null; description: string | null; role_id: string | null } | null;
 };
 
-/** Run Poppy now for one application (manual "Run / Regenerate"). Respects the
- *  applicable Poppy step's selected forms + CV when one exists; otherwise reviews
+/** Run Ruby now for one application (manual "Run / Regenerate"). Respects the
+ *  applicable Ruby step's selected forms + CV when one exists; otherwise reviews
  *  everything submitted. Generates the report, stores it, meters the AI. Does NOT
  *  notify the owner (that's for the automatic workflow run). */
-export async function runPoppyForApplication(
+export async function runRubyForApplication(
   applicationId: string
 ): Promise<{ ok?: boolean; error?: string }> {
   const { current } = await requireCompany();
   const admin = createAdminClient();
 
-  const { data: co } = await admin.from("companies").select("poppy_enabled").eq("id", current.company_id).single();
-  if (co?.poppy_enabled !== true) return { error: "Poppy isn't enabled for this company." };
+  const { data: co } = await admin.from("companies").select("ruby_enabled").eq("id", current.company_id).single();
+  if (co?.ruby_enabled !== true) return { error: "Ruby isn't enabled for this company." };
 
   const { data: appRaw } = await admin
     .from("applications")
@@ -272,7 +272,7 @@ export async function runPoppyForApplication(
 
   // Is there already a report? A re-run must NOT re-contact the applicant.
   const { data: existing } = await admin
-    .from("poppy_reports")
+    .from("ruby_reports")
     .select("phase, report")
     .eq("application_id", app.id)
     .eq("company_id", current.company_id)
@@ -281,11 +281,11 @@ export async function runPoppyForApplication(
   // Re-run on a COMPLETED screening → just refresh the verdict from the existing
   // answers (don't re-analyse or re-message).
   if (existing && existing.phase === "complete") {
-    const data = (existing.report as PoppyReportData) ?? { summary: "", concerns: [], questions: [] };
+    const data = (existing.report as RubyReportData) ?? { summary: "", concerns: [], questions: [] };
     if (data.questions?.some((q) => q.answer)) {
       try {
-        const rcfg = await loadPoppyRuntimeConfig(current.company_id);
-        const synth = await synthesizePoppyReport(
+        const rcfg = await loadRubyRuntimeConfig(current.company_id);
+        const synth = await synthesizeRubyReport(
           {
             jobTitle: app.jobs?.title ?? "Care role",
             jobDescription: app.jobs?.description ?? "",
@@ -302,12 +302,12 @@ export async function runPoppyForApplication(
         );
         if (synth.summary.length) data.summary = synth.summary;
         data.recommendation = synth.recommendation;
-        await admin.from("poppy_reports").update({ report: data, generated_at: new Date().toISOString() }).eq("application_id", app.id);
+        await admin.from("ruby_reports").update({ report: data, generated_at: new Date().toISOString() }).eq("application_id", app.id);
         // Re-run on an existing applicant → credit already claimed; idempotent.
-        await recordPoppyApplicant(current.company_id, app.id);
+        await recordRubyApplicant(current.company_id, app.id);
         return { ok: true };
       } catch (e) {
-        return { error: e instanceof Error ? e.message : "Poppy couldn't refresh the report." };
+        return { error: e instanceof Error ? e.message : "Ruby couldn't refresh the report." };
       }
     }
   }
@@ -316,33 +316,33 @@ export async function runPoppyForApplication(
   // re-analyse (it would clobber the questions and conversation state) or
   // re-contact the applicant.
   if (existing && (existing.phase === "analysed" || existing.phase === "conversing")) {
-    return { error: "Poppy is already screening this applicant — please wait for it to finish." };
+    return { error: "Ruby is already screening this applicant — please wait for it to finish." };
   }
 
-  // Find an applicable Poppy step (for its selected forms + CV choice).
+  // Find an applicable Ruby step (for its selected forms + CV choice).
   const { data: stepsRaw } = await admin
     .from("onboarding_templates")
-    .select("poppy_form_ids, poppy_include_cv, role_ids, poppy_focus, poppy_instructions, poppy_question_count, poppy_document_ids, poppy_upload_kinds")
+    .select("ruby_form_ids, ruby_include_cv, role_ids, ruby_focus, ruby_instructions, ruby_question_count, ruby_document_ids, ruby_upload_kinds")
     .eq("company_id", current.company_id)
     .eq("is_store", false)
-    .eq("task_type", "poppy");
+    .eq("task_type", "ruby");
   const steps = (stepsRaw ?? []) as {
-    poppy_form_ids: string[] | null;
-    poppy_include_cv: boolean | null;
+    ruby_form_ids: string[] | null;
+    ruby_include_cv: boolean | null;
     role_ids: string[] | null;
-    poppy_focus: string[] | null;
-    poppy_instructions: string | null;
-    poppy_question_count: number | null;
-    poppy_document_ids: string[] | null;
-    poppy_upload_kinds: string[] | null;
+    ruby_focus: string[] | null;
+    ruby_instructions: string | null;
+    ruby_question_count: number | null;
+    ruby_document_ids: string[] | null;
+    ruby_upload_kinds: string[] | null;
   }[];
   const roleId = app.jobs?.role_id ?? null;
   const step = steps.find((s) => !s.role_ids || s.role_ids.length === 0 || (!!roleId && s.role_ids.includes(roleId))) ?? null;
 
   // If a step restricts the forms, review only those; else review everything.
-  const onlyFormIds = step && (step.poppy_form_ids ?? []).length > 0 ? (step.poppy_form_ids as string[]) : undefined;
+  const onlyFormIds = step && (step.ruby_form_ids ?? []).length > 0 ? (step.ruby_form_ids as string[]) : undefined;
   // Include the CV when the step says so, or (no step) by default if present.
-  const includeCv = step ? step.poppy_include_cv === true : true;
+  const includeCv = step ? step.ruby_include_cv === true : true;
 
   let cvBase64Pdf: string | null = null;
   if (includeCv && app.cv_path && app.cv_path.toLowerCase().endsWith(".pdf")) {
@@ -356,16 +356,16 @@ export async function runPoppyForApplication(
 
   const formsText = await gatherFormsText(app.id, onlyFormIds);
   const answersText = [formsText, formatAnswers(app.answers)].filter(Boolean).join("\n\n") || null;
-  const attachments = await gatherPoppyUploads(admin, app.id, step?.poppy_upload_kinds);
+  const attachments = await gatherRubyUploads(admin, app.id, step?.ruby_upload_kinds);
   if (!answersText && !cvBase64Pdf && attachments.length === 0) {
     return { error: "Nothing to review yet — the applicant hasn't submitted a form, CV or upload." };
   }
   const name = [app.applicants?.first_name, app.applicants?.last_name].filter(Boolean).join(" ").trim() || "the candidate";
 
-  const cfg = await loadPoppyRuntimeConfig(current.company_id, step);
+  const cfg = await loadRubyRuntimeConfig(current.company_id, step);
   let analysis: { summary: string[]; concerns: string[]; questions: { question: string; rationale: string }[] };
   try {
-    analysis = await generatePoppyAnalysis({
+    analysis = await generateRubyAnalysis({
       jobTitle: app.jobs?.title ?? "Care role",
       jobDescription: app.jobs?.description ?? "",
       applicantName: name,
@@ -381,11 +381,11 @@ export async function runPoppyForApplication(
       attachments,
     });
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Poppy couldn't analyse the application." };
+    return { error: e instanceof Error ? e.message : "Ruby couldn't analyse the application." };
   }
 
-  const report: PoppyReportData = { summary: analysis.summary, concerns: analysis.concerns, questions: analysis.questions };
-  await admin.from("poppy_reports").upsert(
+  const report: RubyReportData = { summary: analysis.summary, concerns: analysis.concerns, questions: analysis.questions };
+  await admin.from("ruby_reports").upsert(
     {
       company_id: current.company_id,
       application_id: app.id,
@@ -397,21 +397,21 @@ export async function runPoppyForApplication(
     },
     { onConflict: "application_id" }
   );
-  // Poppy is billed per applicant (40 included/month, then 75p), NOT via the 10p
+  // Ruby is billed per applicant (40 included/month, then 75p), NOT via the 10p
   // AI meter. One credit per applicant, deduped by application_id.
-  await recordPoppyApplicant(current.company_id, app.id);
+  await recordRubyApplicant(current.company_id, app.id);
   // Only start the screening conversation (consent message + nudge SMS) on the
   // FIRST run — a re-run must never re-contact the applicant.
   if (!existing) {
-    await startPoppyConversation(admin, app.id);
+    await startRubyConversation(admin, app.id);
   }
   return { ok: true };
 }
 
-/** Founder: turn the Poppy entitlement on/off for a company. */
-export async function setCompanyPoppyEnabled(companyId: string, enabled: boolean): Promise<{ ok: boolean }> {
+/** Founder: turn the Ruby entitlement on/off for a company. */
+export async function setCompanyRubyEnabled(companyId: string, enabled: boolean): Promise<{ ok: boolean }> {
   await requirePlatformAdmin();
-  await createAdminClient().from("companies").update({ poppy_enabled: enabled }).eq("id", companyId);
+  await createAdminClient().from("companies").update({ ruby_enabled: enabled }).eq("id", companyId);
   revalidatePath(`/founder/companies/${companyId}`);
   return { ok: true };
 }
@@ -421,21 +421,21 @@ const cleanAttrList = (v: unknown): string[] =>
     ? [...new Set(v.filter((x): x is string => typeof x === "string" && !!x.trim()).map((x) => x.trim().slice(0, 120)))].slice(0, 100)
     : [];
 
-/** Save the tuning half of Poppy Settings (focus / instructions / question count
+/** Save the tuning half of Ruby Settings (focus / instructions / question count
  *  / follow-ups). Merges over the saved config so the Attributes screen's data
  *  is preserved. Admin-only. */
-export async function savePoppySettings(
+export async function saveRubySettings(
   input: { focus?: string[]; instructions?: string; questionCount?: number; followUps?: boolean }
 ): Promise<{ ok?: boolean; error?: string }> {
   const { current } = await requireCompany();
-  if (current.role !== "admin") return { error: "Only admins can change Poppy settings." };
+  if (current.role !== "admin") return { error: "Only admins can change Ruby settings." };
 
   const admin = createAdminClient();
-  const { data: co } = await admin.from("companies").select("poppy_enabled, settings").eq("id", current.company_id).single();
-  if (co?.poppy_enabled !== true) return { error: "Poppy isn't enabled for this company." };
+  const { data: co } = await admin.from("companies").select("ruby_enabled, settings").eq("id", current.company_id).single();
+  if (co?.ruby_enabled !== true) return { error: "Ruby isn't enabled for this company." };
 
-  const existing = readPoppyConfig(co.settings);
-  const merged: PoppyConfig = {
+  const existing = readRubyConfig(co.settings);
+  const merged: RubyConfig = {
     ...existing,
     focus: Array.isArray(input.focus) ? input.focus.filter((x) => typeof x === "string").slice(0, 20) : existing.focus,
     instructions: typeof input.instructions === "string" ? input.instructions.slice(0, 2000) : existing.instructions,
@@ -443,54 +443,54 @@ export async function savePoppySettings(
     followUps: input.followUps === true,
   };
 
-  const settings = { ...(co.settings && typeof co.settings === "object" ? (co.settings as Record<string, unknown>) : {}), poppy: merged };
+  const settings = { ...(co.settings && typeof co.settings === "object" ? (co.settings as Record<string, unknown>) : {}), ruby: merged };
   const { error } = await admin.from("companies").update({ settings }).eq("id", current.company_id);
-  if (error) return { error: "Couldn't save Poppy settings." };
+  if (error) return { error: "Couldn't save Ruby settings." };
 
   revalidatePath("/settings");
   return { ok: true };
 }
 
-/** Save the company's Poppy Attributes (its own Settings screen): the master
+/** Save the company's Ruby Attributes (its own Settings screen): the master
  *  on/off switch plus the professional & personal required/desired lists.
  *  Merges over the saved config so the tuning half is preserved. Admin-only. */
-export async function savePoppyAttributes(
-  input: { enabled: boolean; professional: PoppyAttrGroup; personal: PoppyAttrGroup }
+export async function saveRubyAttributes(
+  input: { enabled: boolean; professional: RubyAttrGroup; personal: RubyAttrGroup }
 ): Promise<{ ok?: boolean; error?: string }> {
   const { current } = await requireCompany();
-  if (current.role !== "admin") return { error: "Only admins can change Poppy settings." };
+  if (current.role !== "admin") return { error: "Only admins can change Ruby settings." };
 
   const admin = createAdminClient();
-  const { data: co } = await admin.from("companies").select("poppy_enabled, settings").eq("id", current.company_id).single();
-  if (co?.poppy_enabled !== true) return { error: "Poppy isn't enabled for this company." };
+  const { data: co } = await admin.from("companies").select("ruby_enabled, settings").eq("id", current.company_id).single();
+  if (co?.ruby_enabled !== true) return { error: "Ruby isn't enabled for this company." };
 
-  const group = (g: PoppyAttrGroup | undefined): PoppyAttrGroup => ({
+  const group = (g: RubyAttrGroup | undefined): RubyAttrGroup => ({
     required: cleanAttrList(g?.required),
     desired: cleanAttrList(g?.desired),
     custom: cleanAttrList(g?.custom),
   });
 
-  const existing = readPoppyConfig(co.settings);
-  const merged: PoppyConfig = {
+  const existing = readRubyConfig(co.settings);
+  const merged: RubyConfig = {
     ...existing,
     attributesEnabled: input.enabled === true,
     professional: group(input.professional),
     personal: group(input.personal),
   };
 
-  const settings = { ...(co.settings && typeof co.settings === "object" ? (co.settings as Record<string, unknown>) : {}), poppy: merged };
+  const settings = { ...(co.settings && typeof co.settings === "object" ? (co.settings as Record<string, unknown>) : {}), ruby: merged };
   const { error } = await admin.from("companies").update({ settings }).eq("id", current.company_id);
-  if (error) return { error: "Couldn't save Poppy attributes." };
+  if (error) return { error: "Couldn't save Ruby attributes." };
 
   revalidatePath("/settings");
   return { ok: true };
 }
 
-/** Load the company's saved Poppy config for the Settings form. */
-export async function getPoppySettings(): Promise<PoppyConfig> {
+/** Load the company's saved Ruby config for the Settings form. */
+export async function getRubySettings(): Promise<RubyConfig> {
   const { current } = await requireCompany();
   const { data: co } = await createAdminClient().from("companies").select("settings").eq("id", current.company_id).single();
-  return readPoppyConfig(co?.settings);
+  return readRubyConfig(co?.settings);
 }
 
 /** Force a fresh generation (Regenerate button). Re-meters as an AI action. */
@@ -499,10 +499,10 @@ export async function regenerateInterviewQuestions(applicationId: string): Promi
 
   const { data: company } = await createAdminClient()
     .from("companies")
-    .select("poppy_enabled")
+    .select("ruby_enabled")
     .eq("id", current.company_id)
     .single();
-  if (company?.poppy_enabled !== true) return { entitled: false, status: "not_entitled" };
+  if (company?.ruby_enabled !== true) return { entitled: false, status: "not_entitled" };
 
   const app = await loadApp(applicationId, current.company_id);
   if (!app) return { entitled: true, status: "error", error: "Application not found." };

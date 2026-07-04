@@ -3,20 +3,20 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
-import { savePoppySettings } from "@/modules/poppy/actions";
-import { POPPY_FOCUS_OPTIONS, type PoppyConfig } from "@/lib/poppy/config";
+import { saveRubySettings } from "@/modules/ruby/actions";
+import { RUBY_FOCUS_OPTIONS, type RubyConfig } from "@/lib/ruby/config";
 
 const cls =
   "block w-full rounded-lg border border-white/40 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
-/** Company-default tuning for the Poppy screening agent. Admin-only. The
- *  attributes Poppy compares against live on their own "Attributes" screen. */
-export function PoppySettingsForm({
+/** Company-default tuning for the Ruby screening agent. Admin-only. The
+ *  attributes Ruby compares against live on their own "Attributes" screen. */
+export function RubySettingsForm({
   config,
   usage,
 }: {
-  config: PoppyConfig;
-  /** This month's Poppy screen usage against the included allowance. */
+  config: RubyConfig;
+  /** This month's Ruby screen usage against the included allowance. */
   usage?: { used: number; included: number } | null;
 }) {
   const router = useRouter();
@@ -36,7 +36,7 @@ export function PoppySettingsForm({
     setSaved(false);
     setError(null);
     start(async () => {
-      const res = await savePoppySettings({
+      const res = await saveRubySettings({
         focus,
         instructions,
         questionCount: Math.min(20, Math.max(1, Math.round(Number(questionCount) || 8))),
@@ -66,10 +66,10 @@ export function PoppySettingsForm({
       <div>
         <label className="block text-xs font-medium text-gray-600">Focus areas</label>
         <p className="mb-2 mt-0.5 text-xs text-gray-500">
-          Nudge Poppy to weigh these more heavily. Leave all off for a balanced review.
+          Nudge Ruby to weigh these more heavily. Leave all off for a balanced review.
         </p>
         <div className="flex flex-wrap gap-2">
-          {POPPY_FOCUS_OPTIONS.map((f) => {
+          {RUBY_FOCUS_OPTIONS.map((f) => {
             const on = focus.includes(f);
             return (
               <button
@@ -97,7 +97,7 @@ export function PoppySettingsForm({
             rows={4}
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
-            placeholder="Anything specific you want Poppy to check or ask about — e.g. confirm driving licence and access to a car, probe gaps in employment, check availability for weekend shifts."
+            placeholder="Anything specific you want Ruby to check or ask about — e.g. confirm driving licence and access to a car, probe gaps in employment, check availability for weekend shifts."
             className={`mt-1 ${cls}`}
           />
         </label>
@@ -129,7 +129,7 @@ export function PoppySettingsForm({
           <span>
             <span className="block text-sm font-medium text-gray-700">Follow-up questions</span>
             <span className="block text-xs text-gray-500">
-              After the applicant answers, Poppy reviews their responses and asks any follow-up
+              After the applicant answers, Ruby reviews their responses and asks any follow-up
               questions worth clarifying. Follow-ups are added to the report.
             </span>
           </span>
@@ -143,7 +143,7 @@ export function PoppySettingsForm({
           disabled={pending}
           className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
         >
-          {pending ? "Saving…" : "Save Poppy settings"}
+          {pending ? "Saving…" : "Save Ruby settings"}
         </button>
         {saved && <span className="text-sm text-green-700">Saved.</span>}
         {error && <span className="text-sm text-red-600">{error}</span>}

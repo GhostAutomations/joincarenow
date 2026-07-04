@@ -88,8 +88,8 @@ const ADD_ONS = [
   { label: "Forms", price: "from the File Store, priced per form" },
 ];
 
-const POPPY_INCLUDES = [
-  "Everything in Core, plus Poppy",
+const RUBY_INCLUDES = [
+  "Everything in Core, plus Ruby",
   "AI screens each applicant against the role, your job description & policies",
   "Holds a friendly follow-up conversation with the candidate (consent-based)",
   "Writes a clear report with a hire recommendation for your team",
@@ -121,7 +121,7 @@ export default function LandingPage() {
           </span>
           <nav className="flex items-center gap-4 sm:gap-7">
             <a href="#pricing" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Pricing</a>
-            <a href="#poppy" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Poppy</a>
+            <a href="#ruby" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Ruby</a>
             <a href="#features" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Features</a>
             <Link href="/sign-in" className="text-base font-medium text-white/90 hover:text-white">Account Sign In</Link>
             <a href="#demo" className="rounded-lg bg-white px-5 py-2.5 text-base font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">Book a demo</a>
@@ -284,30 +284,30 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Meet Poppy */}
-      <section id="poppy" className="mx-auto max-w-6xl px-6 pb-4 pt-8">
+      {/* Meet Ruby */}
+      <section id="ruby" className="mx-auto max-w-6xl px-6 pb-4 pt-8">
         <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-600 via-violet-600 to-brand-600 p-8 text-white shadow-lg sm:p-12">
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5" aria-hidden /> Meet Poppy
+                <Sparkles className="h-3.5 w-3.5" aria-hidden /> Meet Ruby
               </span>
-              <h2 className="mt-4 text-2xl font-bold sm:text-3xl">Your AI recruitment assistant</h2>
+              <h2 className="mt-4 text-2xl font-bold sm:text-3xl">Ruby, Your AI Recruitment Assistant</h2>
               <p className="mt-3 text-white/90">
-                Poppy does your first-round screening for you. She reviews each applicant against the
+                Ruby does your first-round screening for you. She reviews each applicant against the
                 role, asks them a few friendly follow-up questions, and hands your team a clear report
                 with a hire recommendation — so you spend your time on the candidates worth meeting,
                 not on phone tag.
               </p>
               <p className="mt-4 text-sm text-white/80">
-                Included on the <span className="font-semibold text-white">Core + Poppy</span> plan (and
+                Included on the <span className="font-semibold text-white">Core + Ruby</span> plan (and
                 Diamond): 40 applicants screened each month, then just 75p each.
               </p>
               <p className="mt-2 text-xs text-white/60">
-                Poppy&apos;s assessment is advisory — your team always makes the final hiring decision.
+                Ruby&apos;s assessment is advisory — your team always makes the final hiring decision.
               </p>
               <a href="#demo" className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
-                See Poppy in a demo <ArrowRight className="h-4 w-4" aria-hidden />
+                See Ruby in a demo <ArrowRight className="h-4 w-4" aria-hidden />
               </a>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -334,7 +334,7 @@ export default function LandingPage() {
           <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Simple, honest pricing.</h2>
           <p className="mt-3 text-gray-600">
             Two plans, no quote-chasing and no hidden fees. Core compliance (Right to Work, DBS
-            and references) is always in the base, never an add-on. Add <span className="font-semibold text-gray-900">Poppy</span>,
+            and references) is always in the base, never an add-on. Add <span className="font-semibold text-gray-900">Ruby</span>,
             your AI recruitment assistant, when you&apos;re ready.
           </p>
         </div>
@@ -377,13 +377,13 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Tier 2 — Poppy (highlighted) */}
+          {/* Tier 2 — Ruby (highlighted) */}
           <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border-2 border-brand-500 bg-white shadow-xl ring-2 ring-brand-200">
             <span className="absolute right-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-brand-700 shadow-sm backdrop-blur">
               <Sparkles className="h-3.5 w-3.5" aria-hidden /> Most popular
             </span>
             <div className="bg-gradient-to-br from-fuchsia-600 via-violet-600 to-brand-600 p-8 text-white">
-              <p className="text-xs font-semibold uppercase tracking-wider text-white/85">Core + Poppy</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-white/85">Core + Ruby</p>
               <p className="mt-3 flex items-baseline gap-1">
                 <span className="text-5xl font-bold">£89</span>
                 <span className="text-lg text-white/80">/ month</span>
@@ -407,7 +407,7 @@ export default function LandingPage() {
             <div className="flex-1 p-8">
               <p className="text-sm font-semibold text-gray-900">What&apos;s included</p>
               <ul className="mt-4 space-y-2.5">
-                {POPPY_INCLUDES.map((pt) => (
+                {RUBY_INCLUDES.map((pt) => (
                   <li key={pt} className="flex items-start gap-2 text-sm text-gray-700">
                     <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
                     {pt}
@@ -520,7 +520,7 @@ export default function LandingPage() {
             </span>
             <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
               <a href="#features" className="hover:text-gray-900">Features</a>
-              <a href="#poppy" className="hover:text-gray-900">Poppy</a>
+              <a href="#ruby" className="hover:text-gray-900">Ruby</a>
               <a href="#pricing" className="hover:text-gray-900">Pricing</a>
               <a href="#demo" className="hover:text-gray-900">Book a demo</a>
               <Link href="/privacy" className="hover:text-gray-900">Privacy</Link>

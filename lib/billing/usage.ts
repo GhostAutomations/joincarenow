@@ -29,7 +29,7 @@ export async function recordUsage(
 
 /**
  * Send a customer SMS and (by default) meter it against the company. Pass
- * `meta.meter = false` for Poppy's own SMS — Poppy is billed per applicant, so
+ * `meta.meter = false` for Ruby's own SMS — Ruby is billed per applicant, so
  * its nudges must NOT count towards the company's SMS usage. `meta.label` is the
  * GDPR-safe reason (e.g. "Interview", "Reminder") stored for the usage drill-down.
  */

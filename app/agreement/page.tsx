@@ -27,7 +27,7 @@ export default async function AgreementPage() {
     companyName: (company?.name as string) ?? current.companies.name,
     plan: (company?.agreed_plan as AgreementPlan) ?? null,
     offer: (company?.agreed_offer as string) ?? null,
-    tier: company?.agreed_tier === "poppy" ? "poppy" : "core",
+    tier: company?.agreed_tier === "ruby" ? "ruby" : "core",
   });
 
   return (

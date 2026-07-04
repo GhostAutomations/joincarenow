@@ -1,6 +1,6 @@
 /** Standard care-sector document uploads that can be requested in a workflow.
  *  Dropping one on a pipeline stage creates a document-upload task; dropping one
- *  in a Poppy box tells Poppy to review that uploaded document. */
+ *  in a Ruby box tells Ruby to review that uploaded document. */
 export type UploadType = {
   key: string;
   label: string;

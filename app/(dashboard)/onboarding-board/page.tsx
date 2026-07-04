@@ -22,18 +22,18 @@ export default async function OnboardingBoardPage() {
   const [{ data: templates }, { data: forms }, { data: roles }, { data: company }] = await Promise.all([
     supabase
       .from("onboarding_templates")
-      .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, role_ids, workflow_id, workflow_name, position, poppy_engage, poppy_form_ids, poppy_include_cv, poppy_focus, poppy_instructions, poppy_question_count, poppy_document_ids")
+      .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, role_ids, workflow_id, workflow_name, position, ruby_engage, ruby_form_ids, ruby_include_cv, ruby_focus, ruby_instructions, ruby_question_count, ruby_document_ids")
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
     supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("position").order("name"),
-    supabase.from("companies").select("poppy_enabled").eq("id", current.company_id).single(),
+    supabase.from("companies").select("ruby_enabled").eq("id", current.company_id).single(),
   ]);
-  const poppyEnabled = company?.poppy_enabled === true;
+  const rubyEnabled = company?.ruby_enabled === true;
 
   // The application form is tied to the job advert (applicants complete it when
-  // they apply). It stays in the Forms box so Poppy can review it, but it's
-  // flagged "Poppy only" so it can't be reissued to the applicant as a task.
+  // they apply). It stays in the Forms box so Ruby can review it, but it's
+  // flagged "Ruby only" so it can't be reissued to the applicant as a task.
   const { data: appForms } = await supabase
     .from("jobs")
     .select("application_form_id")
@@ -42,11 +42,11 @@ export default async function OnboardingBoardPage() {
   const applicationFormIds = new Set((appForms ?? []).map((j) => j.application_form_id as string));
   const builderForms = ((forms ?? []) as { id: string; name: string }[]).map((f) => ({
     ...f,
-    poppyOnly: applicationFormIds.has(f.id),
+    rubyOnly: applicationFormIds.has(f.id),
   }));
 
   // Company documents (policies + contracts). Used both by the workflow builder
-  // (drop a document in as a read-&-confirm task) and by the Poppy "what to
+  // (drop a document in as a read-&-confirm task) and by the Ruby "what to
   // compare to" picker (which shows the type suffix).
   const [{ data: pol }, { data: con }] = await Promise.all([
     supabase.from("policy_documents").select("id, name, signature_method").eq("company_id", current.company_id).order("name"),
@@ -59,8 +59,8 @@ export default async function OnboardingBoardPage() {
     ...(pol ?? []).filter((d) => d.signature_method !== "none").map((d) => ({ id: d.id as string, name: d.name as string, kind: "policy" as const })),
     ...(con ?? []).filter((d) => d.signature_method !== "none").map((d) => ({ id: d.id as string, name: d.name as string, kind: "contract" as const })),
   ];
-  // Type-suffixed names for the Poppy comparison picker.
-  const poppyDocs: { id: string; name: string }[] = [
+  // Type-suffixed names for the Ruby comparison picker.
+  const rubyDocs: { id: string; name: string }[] = [
     ...(pol ?? []).map((d) => ({ id: d.id as string, name: `${d.name as string} · Policy` })),
     ...(con ?? []).map((d) => ({ id: d.id as string, name: `${d.name as string} · Contract` })),
   ];
@@ -80,20 +80,20 @@ export default async function OnboardingBoardPage() {
     workflow_id: string | null;
     workflow_name: string | null;
     position: number;
-    poppy_engage: string | null;
-    poppy_form_ids: string[] | null;
-    poppy_include_cv: boolean | null;
-    poppy_focus: string[] | null;
-    poppy_instructions: string | null;
-    poppy_question_count: number | null;
-    poppy_document_ids: string[] | null;
+    ruby_engage: string | null;
+    ruby_form_ids: string[] | null;
+    ruby_include_cv: boolean | null;
+    ruby_focus: string[] | null;
+    ruby_instructions: string | null;
+    ruby_question_count: number | null;
+    ruby_document_ids: string[] | null;
   };
   const toTasks = (ts: Tpl[]): WorkflowTask[] => ts.map((t) => ({
     id: t.id, title: t.title, task_type: t.task_type, trigger_stage: t.trigger_stage,
     due_days: t.due_days, required: t.required, body: t.body, form_id: t.form_id,
-    poppy_engage: t.poppy_engage, poppy_form_ids: t.poppy_form_ids, poppy_include_cv: t.poppy_include_cv,
-    poppy_focus: t.poppy_focus, poppy_instructions: t.poppy_instructions, poppy_question_count: t.poppy_question_count,
-    poppy_document_ids: t.poppy_document_ids,
+    ruby_engage: t.ruby_engage, ruby_form_ids: t.ruby_form_ids, ruby_include_cv: t.ruby_include_cv,
+    ruby_focus: t.ruby_focus, ruby_instructions: t.ruby_instructions, ruby_question_count: t.ruby_question_count,
+    ruby_document_ids: t.ruby_document_ids,
   }));
   const wfMap = new Map<
     string,
@@ -141,8 +141,8 @@ export default async function OnboardingBoardPage() {
                   workflowId={wf.id}
                   items={toTasks(wf.items)}
                   forms={(forms ?? []) as { id: string; name: string }[]}
-                  poppyDocs={poppyDocs}
-                  poppyEnabled={poppyEnabled}
+                  rubyDocs={rubyDocs}
+                  rubyEnabled={rubyEnabled}
                   deleteWorkflow={deleteWorkflow}
                   deleteTask={deleteTemplateTask}
                   updateTask={updateTemplateTask}
@@ -163,7 +163,7 @@ export default async function OnboardingBoardPage() {
             <WorkflowBuilder
               forms={builderForms}
               docs={builderDocs}
-              poppyEnabled={poppyEnabled}
+              rubyEnabled={rubyEnabled}
               roleOptions={roleOptions}
             />
           </div>

@@ -12,18 +12,18 @@ export type InterviewInputs = {
   answersText?: string | null;
   /** The applicant's CV as a base64 PDF, if uploaded. */
   cvBase64Pdf?: string | null;
-  /** Poppy Settings config (company): extra reference docs (policies etc.),
+  /** Ruby Settings config (company): extra reference docs (policies etc.),
    *  focus areas, custom instructions, and how many questions to produce. */
   referenceDocs?: { name: string; body: string }[];
   focus?: string[];
   instructions?: string | null;
   questionCount?: number;
-  /** Must-have attributes Poppy assesses every candidate against. */
+  /** Must-have attributes Ruby assesses every candidate against. */
   requiredAttributes?: string[];
   /** Desirable (nice-to-have) attributes — note them, but their absence isn't
    *  disqualifying. */
   desiredAttributes?: string[];
-  /** Uploaded documents (DBS, proof of address, etc.) attached for Poppy to read. */
+  /** Uploaded documents (DBS, proof of address, etc.) attached for Ruby to read. */
   attachments?: { name: string; base64: string; mediaType: string }[];
 };
 
@@ -64,7 +64,7 @@ export async function generateInterviewQuestions(
   inputs: InterviewInputs
 ): Promise<InterviewQuestionGroup[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("Poppy isn't configured yet (missing ANTHROPIC_API_KEY).");
+  if (!apiKey) throw new Error("Ruby isn't configured yet (missing ANTHROPIC_API_KEY).");
 
   const client = new Anthropic({ apiKey, maxRetries: 0, timeout: 50_000 });
   const model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
@@ -87,7 +87,7 @@ export async function generateInterviewQuestions(
     });
   } catch (err: unknown) {
     const e = err as { name?: string; status?: number; message?: string; error?: { error?: { message?: string } } };
-    console.error("Poppy interview questions — Anthropic request failed:", err);
+    console.error("Ruby interview questions — Anthropic request failed:", err);
     const detail = e?.error?.error?.message || e?.message || "unknown error";
     throw new Error(`AI request failed: ${e?.name ?? "Error"}${e?.status ? ` ${e.status}` : ""} — ${detail}`);
   }
@@ -100,14 +100,14 @@ export async function generateInterviewQuestions(
   const start = text.indexOf("[");
   const end = text.lastIndexOf("]");
   if (start === -1 || end === -1 || end < start) {
-    throw new Error("Poppy couldn't produce questions from this application.");
+    throw new Error("Ruby couldn't produce questions from this application.");
   }
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(text.slice(start, end + 1));
   } catch {
-    throw new Error("Poppy returned an unexpected response. Please try again.");
+    throw new Error("Ruby returned an unexpected response. Please try again.");
   }
   if (!Array.isArray(parsed)) return [];
 

@@ -3,13 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X, GripVertical } from "lucide-react";
-import { savePoppyAttributes } from "@/modules/poppy/actions";
+import { saveRubyAttributes } from "@/modules/ruby/actions";
 import {
-  POPPY_PROFESSIONAL_ATTRIBUTES,
-  POPPY_PERSONAL_ATTRIBUTES,
-  type PoppyAttrGroup,
-  type PoppyConfig,
-} from "@/lib/poppy/config";
+  RUBY_PROFESSIONAL_ATTRIBUTES,
+  RUBY_PERSONAL_ATTRIBUTES,
+  type RubyAttrGroup,
+  type RubyConfig,
+} from "@/lib/ruby/config";
 
 const uniq = (xs: string[]) => [...new Set(xs)];
 
@@ -17,21 +17,21 @@ type GroupState = { required: string[]; desired: string[]; custom: string[] };
 
 /** Seed a group's editable state, making sure any custom names already sitting in
  *  a bucket are tracked in `custom` so they survive being unassigned. */
-function seedGroup(g: PoppyAttrGroup, standard: string[]): GroupState {
+function seedGroup(g: RubyAttrGroup, standard: string[]): GroupState {
   const notStandard = (a: string) => !standard.includes(a);
   const custom = uniq([...(g.custom ?? []), ...g.required.filter(notStandard), ...g.desired.filter(notStandard)]);
   return { required: [...g.required], desired: [...g.desired], custom };
 }
 
-/** Poppy Attributes screen — the master on/off switch plus Professional and
+/** Ruby Attributes screen — the master on/off switch plus Professional and
  *  Personal attributes, each split into Required and Desired via drag/drop
  *  (tap-to-assign also works). Admin-only. */
-export function PoppyAttributesForm({ config }: { config: PoppyConfig }) {
+export function RubyAttributesForm({ config }: { config: RubyConfig }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [enabled, setEnabled] = useState(config.attributesEnabled !== false);
-  const [pro, setPro] = useState<GroupState>(seedGroup(config.professional, POPPY_PROFESSIONAL_ATTRIBUTES));
-  const [per, setPer] = useState<GroupState>(seedGroup(config.personal, POPPY_PERSONAL_ATTRIBUTES));
+  const [pro, setPro] = useState<GroupState>(seedGroup(config.professional, RUBY_PROFESSIONAL_ATTRIBUTES));
+  const [per, setPer] = useState<GroupState>(seedGroup(config.personal, RUBY_PERSONAL_ATTRIBUTES));
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +39,7 @@ export function PoppyAttributesForm({ config }: { config: PoppyConfig }) {
     setSaved(false);
     setError(null);
     start(async () => {
-      const res = await savePoppyAttributes({
+      const res = await saveRubyAttributes({
         enabled,
         professional: pro,
         personal: per,
@@ -61,8 +61,8 @@ export function PoppyAttributesForm({ config }: { config: PoppyConfig }) {
           <p className="text-sm font-medium text-gray-800">Use attributes when screening</p>
           <p className="mt-0.5 text-xs text-gray-500">
             {enabled
-              ? "On — Poppy assesses every candidate against the attributes below and the workflow instructions."
-              : "Off — Poppy ignores these attributes and screens on the role and your instructions only from the workflow."}
+              ? "On — Ruby assesses every candidate against the attributes below and the workflow instructions."
+              : "Off — Ruby ignores these attributes and screens on the role and your instructions only from the workflow."}
           </p>
         </div>
         <button
@@ -81,7 +81,7 @@ export function PoppyAttributesForm({ config }: { config: PoppyConfig }) {
           groupId="pro"
           title="Professional attributes"
           hint="Compliance and job-readiness — DBS, references, qualifications, experience."
-          standard={POPPY_PROFESSIONAL_ATTRIBUTES}
+          standard={RUBY_PROFESSIONAL_ATTRIBUTES}
           state={pro}
           onChange={setPro}
         />
@@ -89,7 +89,7 @@ export function PoppyAttributesForm({ config }: { config: PoppyConfig }) {
           groupId="per"
           title="Personal attributes"
           hint="Values and soft skills — compassion, communication, reliability."
-          standard={POPPY_PERSONAL_ATTRIBUTES}
+          standard={RUBY_PERSONAL_ATTRIBUTES}
           state={per}
           onChange={setPer}
         />

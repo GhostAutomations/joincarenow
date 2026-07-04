@@ -130,10 +130,10 @@ export async function POST(req: Request) {
     status: "delivered",
   });
 
-  // If Poppy is mid-screening with this applicant, the conversation lives in
+  // If Ruby is mid-screening with this applicant, the conversation lives in
   // their portal — nudge them back there (one SMS) instead of alerting the owner.
   const { data: pr } = await admin
-    .from("poppy_reports")
+    .from("ruby_reports")
     .select("phase")
     .eq("application_id", app.id)
     .maybeSingle();
@@ -144,14 +144,14 @@ export async function POST(req: Request) {
       .from("messages")
       .select("id", { count: "exact", head: true })
       .eq("application_id", app.id)
-      .eq("from_poppy", true)
+      .eq("from_ruby", true)
       .eq("channel", "sms")
       .eq("direction", "outbound")
       .gte("created_at", since);
     if (!recentNudges) {
       const link = `${BASE_URL}/portal/conversations/${app.id}`;
       const nudge = `Thanks! To make sure I record your answer, please reply in your portal: ${link}`;
-      // Poppy nudge — covered by the per-applicant price, not company SMS.
+      // Ruby nudge — covered by the per-applicant price, not company SMS.
       const r = await sendCompanySms(app.company_id, { to: from, body: nudge }, { meter: false });
       await admin.from("messages").insert({
         company_id: app.company_id,
@@ -159,7 +159,7 @@ export async function POST(req: Request) {
         applicant_id: applicant.id,
         channel: "sms",
         direction: "outbound",
-        from_poppy: true,
+        from_ruby: true,
         body: nudge,
         status: r.ok ? "sent" : "failed",
       });

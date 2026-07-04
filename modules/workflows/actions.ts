@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { normPoppyCount } from "@/lib/poppy/config";
+import { normRubyCount } from "@/lib/ruby/config";
 import type { TaskDraft } from "@/modules/onboarding/actions";
 
 export type ApplyState = { error?: string; ok?: boolean; applied?: string } | undefined;
@@ -19,12 +19,12 @@ export async function addStoreWorkflowTasks(
   if (!Array.isArray(drafts) || drafts.length === 0) return { error: "Nothing to add" };
   for (const d of drafts) {
     if (((d.workflowTitle ?? d.title) ?? "").trim().length < 2) return { error: "Give the workflow a title" };
-    if (!["form", "document", "acknowledge", "poppy"].includes(d.taskType)) return { error: "Pick a type for each task" };
-    if (d.taskType === "poppy") {
-      if (!["all_forms", "as_forms", "stage"].includes(d.poppyEngage ?? "")) return { error: "Choose when Poppy should engage" };
-      if (d.poppyEngage === "stage" && ![...STAGES, "right_to_work"].includes(d.triggerStage)) return { error: "Choose which stage Poppy engages at" };
-      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv && (!d.poppyUploadKinds || d.poppyUploadKinds.length === 0)) {
-        return { error: "Give Poppy at least one form, upload or the CV to review" };
+    if (!["form", "document", "acknowledge", "ruby"].includes(d.taskType)) return { error: "Pick a type for each task" };
+    if (d.taskType === "ruby") {
+      if (!["all_forms", "as_forms", "stage"].includes(d.rubyEngage ?? "")) return { error: "Choose when Ruby should engage" };
+      if (d.rubyEngage === "stage" && ![...STAGES, "right_to_work"].includes(d.triggerStage)) return { error: "Choose which stage Ruby engages at" };
+      if ((!d.rubyFormIds || d.rubyFormIds.length === 0) && !d.rubyIncludeCv && (!d.rubyUploadKinds || d.rubyUploadKinds.length === 0)) {
+        return { error: "Give Ruby at least one form, upload or the CV to review" };
       }
       continue;
     }
@@ -81,21 +81,21 @@ export async function addStoreWorkflowTasks(
       workflow_id: workflowId,
       workflow_name: workflowName,
     };
-    if (d.taskType === "poppy") {
+    if (d.taskType === "ruby") {
       rows.push({
         ...base,
         title: d.title.trim(),
-        task_type: "poppy",
+        task_type: "ruby",
         form_id: null,
-        trigger_stage: d.poppyEngage === "stage" ? d.triggerStage : "on_application",
-        poppy_engage: d.poppyEngage,
-        poppy_form_ids: d.poppyFormIds ?? [],
-        poppy_include_cv: d.poppyIncludeCv === true,
-        poppy_focus: d.poppyFocus?.length ? d.poppyFocus : null,
-        poppy_instructions: d.poppyInstructions?.trim() || null,
-        poppy_question_count: normPoppyCount(d.poppyQuestionCount),
-        poppy_document_ids: d.poppyDocumentIds?.length ? d.poppyDocumentIds : null,
-        poppy_upload_kinds: d.poppyUploadKinds?.length ? d.poppyUploadKinds : null,
+        trigger_stage: d.rubyEngage === "stage" ? d.triggerStage : "on_application",
+        ruby_engage: d.rubyEngage,
+        ruby_form_ids: d.rubyFormIds ?? [],
+        ruby_include_cv: d.rubyIncludeCv === true,
+        ruby_focus: d.rubyFocus?.length ? d.rubyFocus : null,
+        ruby_instructions: d.rubyInstructions?.trim() || null,
+        ruby_question_count: normRubyCount(d.rubyQuestionCount),
+        ruby_document_ids: d.rubyDocumentIds?.length ? d.rubyDocumentIds : null,
+        ruby_upload_kinds: d.rubyUploadKinds?.length ? d.rubyUploadKinds : null,
         position: pos++,
       });
     } else if (d.taskType === "form") {
@@ -189,12 +189,12 @@ export type EditStoreStepInput = {
   required: boolean;
   body: string;
   formId: string;
-  poppyEngage?: string;
-  poppyFormIds?: string[];
-  poppyIncludeCv?: boolean;
-  poppyFocus?: string[];
-  poppyInstructions?: string;
-  poppyQuestionCount?: number | string;
+  rubyEngage?: string;
+  rubyFormIds?: string[];
+  rubyIncludeCv?: boolean;
+  rubyFocus?: string[];
+  rubyInstructions?: string;
+  rubyQuestionCount?: number | string;
 };
 
 /** Founder: edit a single store-workflow step. */
@@ -202,25 +202,25 @@ export async function updateStoreWorkflowStep(input: EditStoreStepInput): Promis
   const { supabase } = await requirePlatformAdmin();
   if (!input?.id) return { error: "Missing step" };
 
-  if (input.taskType === "poppy") {
-    if (!["all_forms", "as_forms", "stage"].includes(input.poppyEngage ?? "")) return { error: "Choose when Poppy should engage" };
-    if (input.poppyEngage === "stage" && ![...STAGES, "right_to_work"].includes(input.triggerStage)) return { error: "Choose which stage Poppy engages at" };
-    if ((!input.poppyFormIds || input.poppyFormIds.length === 0) && !input.poppyIncludeCv) {
-      return { error: "Choose at least one form (or the CV) for Poppy to review" };
+  if (input.taskType === "ruby") {
+    if (!["all_forms", "as_forms", "stage"].includes(input.rubyEngage ?? "")) return { error: "Choose when Ruby should engage" };
+    if (input.rubyEngage === "stage" && ![...STAGES, "right_to_work"].includes(input.triggerStage)) return { error: "Choose which stage Ruby engages at" };
+    if ((!input.rubyFormIds || input.rubyFormIds.length === 0) && !input.rubyIncludeCv) {
+      return { error: "Choose at least one form (or the CV) for Ruby to review" };
     }
     const { error } = await supabase
       .from("onboarding_templates")
       .update({
-        task_type: "poppy",
-        poppy_engage: input.poppyEngage,
-        poppy_form_ids: input.poppyFormIds ?? [],
-        poppy_include_cv: input.poppyIncludeCv === true,
-        poppy_focus: input.poppyFocus?.length ? input.poppyFocus : null,
-        poppy_instructions: input.poppyInstructions?.trim() || null,
-        poppy_question_count: normPoppyCount(input.poppyQuestionCount),
-        trigger_stage: input.poppyEngage === "stage" ? input.triggerStage : "on_application",
+        task_type: "ruby",
+        ruby_engage: input.rubyEngage,
+        ruby_form_ids: input.rubyFormIds ?? [],
+        ruby_include_cv: input.rubyIncludeCv === true,
+        ruby_focus: input.rubyFocus?.length ? input.rubyFocus : null,
+        ruby_instructions: input.rubyInstructions?.trim() || null,
+        ruby_question_count: normRubyCount(input.rubyQuestionCount),
+        trigger_stage: input.rubyEngage === "stage" ? input.triggerStage : "on_application",
         body: input.body.trim() || null,
-        title: input.title.trim() || "Poppy screening",
+        title: input.title.trim() || "Ruby screening",
         form_id: null,
       })
       .eq("id", input.id)
@@ -336,7 +336,7 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
 
   const { data: steps } = await db
     .from("onboarding_templates")
-    .select("title, task_type, form_id, body, required, due_days, trigger_stage, position, workflow_name, role_names, poppy_engage, poppy_form_ids, poppy_include_cv, poppy_focus, poppy_instructions, poppy_question_count")
+    .select("title, task_type, form_id, body, required, due_days, trigger_stage, position, workflow_name, role_names, ruby_engage, ruby_form_ids, ruby_include_cv, ruby_focus, ruby_instructions, ruby_question_count")
     .eq("is_store", true)
     .eq("workflow_id", workflowId)
     .order("position", { ascending: true });
@@ -345,12 +345,12 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
   const storeRoleNames = ((steps[0] as { role_names: string[] | null }).role_names) ?? [];
 
   // Copy referenced store forms into the company (reuse if already copied).
-  // Include forms a Poppy step reviews so they're copied + remappable too.
+  // Include forms a Ruby step reviews so they're copied + remappable too.
   const storeFormIds = [
     ...new Set(
       [
         ...steps.map((s) => (s as { form_id: string | null }).form_id),
-        ...steps.flatMap((s) => ((s as { poppy_form_ids: string[] | null }).poppy_form_ids) ?? []),
+        ...steps.flatMap((s) => ((s as { ruby_form_ids: string[] | null }).ruby_form_ids) ?? []),
       ].filter(Boolean) as string[]
     ),
   ];
@@ -450,8 +450,8 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
     const step = s as {
       title: string; task_type: string; form_id: string | null; body: string | null;
       required: boolean; due_days: number | null; trigger_stage: string | null;
-      poppy_engage: string | null; poppy_form_ids: string[] | null; poppy_include_cv: boolean | null;
-      poppy_focus: string[] | null; poppy_instructions: string | null; poppy_question_count: number | null;
+      ruby_engage: string | null; ruby_form_ids: string[] | null; ruby_include_cv: boolean | null;
+      ruby_focus: string[] | null; ruby_instructions: string | null; ruby_question_count: number | null;
     };
     return {
       company_id: companyId,
@@ -463,13 +463,13 @@ export async function applyStoreWorkflow(_prev: ApplyState, formData: FormData):
       required: step.required,
       due_days: step.due_days,
       trigger_stage: step.trigger_stage,
-      // Remap the Poppy reviewer forms onto the company's copies.
-      poppy_engage: step.poppy_engage,
-      poppy_form_ids: (step.poppy_form_ids ?? []).map((fid) => formMap.get(fid)).filter(Boolean),
-      poppy_include_cv: step.poppy_include_cv ?? false,
-      poppy_focus: step.poppy_focus,
-      poppy_instructions: step.poppy_instructions,
-      poppy_question_count: step.poppy_question_count,
+      // Remap the Ruby reviewer forms onto the company's copies.
+      ruby_engage: step.ruby_engage,
+      ruby_form_ids: (step.ruby_form_ids ?? []).map((fid) => formMap.get(fid)).filter(Boolean),
+      ruby_include_cv: step.ruby_include_cv ?? false,
+      ruby_focus: step.ruby_focus,
+      ruby_instructions: step.ruby_instructions,
+      ruby_question_count: step.ruby_question_count,
       role_id: null,
       role_ids,
       workflow_id: newWorkflowId,

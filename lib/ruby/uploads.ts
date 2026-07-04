@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
-export type PoppyAttachment = { name: string; base64: string; mediaType: string };
+export type RubyAttachment = { name: string; base64: string; mediaType: string };
 
 /** Media type Claude accepts for an uploaded file, or null if unsupported. */
 function mediaTypeFor(path: string): string | null {
@@ -16,16 +16,16 @@ function mediaTypeFor(path: string): string | null {
 
 /**
  * Download the applicant's uploaded documents for the given kinds (e.g. 'dbs',
- * 'proof_of_address') so Poppy can review them. Matches by the document task's
+ * 'proof_of_address') so Ruby can review them. Matches by the document task's
  * doc_kind and only returns files Claude can read (PDF / image). CV is handled
  * separately via the application's cv_path.
  */
-export async function gatherPoppyUploads(
+export async function gatherRubyUploads(
   db: Admin,
   applicationId: string,
   kinds: string[] | null | undefined,
   limit = 6
-): Promise<PoppyAttachment[]> {
+): Promise<RubyAttachment[]> {
   const wanted = (kinds ?? []).filter((k) => k && k !== "cv");
   if (wanted.length === 0) return [];
 
@@ -36,7 +36,7 @@ export async function gatherPoppyUploads(
     .in("doc_kind", wanted)
     .not("doc_path", "is", null);
 
-  const out: PoppyAttachment[] = [];
+  const out: RubyAttachment[] = [];
   const add = async (path: string | null, label: string) => {
     if (!path || out.length >= limit) return;
     const mediaType = mediaTypeFor(path);

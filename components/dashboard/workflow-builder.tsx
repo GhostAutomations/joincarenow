@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, X, GripVertical, FileText, ScrollText, Sparkles, CheckCircle2, GitBranch, Check, UploadCloud } from "lucide-react";
 import { addTemplateTasks, type TaskDraft } from "@/modules/onboarding/actions";
 import { MultiSelect } from "@/components/dashboard/multi-select";
-import { POPPY_FOCUS_OPTIONS } from "@/lib/poppy/config";
+import { RUBY_FOCUS_OPTIONS } from "@/lib/ruby/config";
 import { UPLOAD_TYPES } from "@/lib/documents/uploads";
 
 const cls =
@@ -31,7 +31,7 @@ const ENGAGE: { key: Engage; label: string }[] = [
 ];
 
 // Temporarily hidden (kept in code): the Pipeline library box and the
-// "when they reach a stage" Poppy engage option. Flip to true to bring back.
+// "when they reach a stage" Ruby engage option. Flip to true to bring back.
 const SHOW_PIPELINE = false;
 const ENGAGE_VISIBLE = SHOW_PIPELINE ? ENGAGE : ENGAGE.filter((m) => m.key !== "stage");
 
@@ -42,9 +42,9 @@ type Lib = {
   kind?: "contract" | "policy";
   /** For an upload item: the body/prompt shown to the applicant on the task. */
   body?: string;
-  /** The job application form — Poppy may review it, but it can't be reissued as
+  /** The job application form — Ruby may review it, but it can't be reissued as
    *  a pipeline task (it's tied to the advert). */
-  poppyOnly?: boolean;
+  rubyOnly?: boolean;
 };
 type Placed = Lib & { key: string };
 const sameItem = (a: Lib, b: Lib) => a.source === b.source && a.refId === b.refId;
@@ -53,7 +53,7 @@ const sameItem = (a: Lib, b: Lib) => a.source === b.source && a.refId === b.refI
  * The drag-and-drop workflow builder. Collapsed to an "Add workflow" button;
  * expands into a pipeline-style board. Library boxes (Forms, Contracts &
  * policies, Pipeline) hold draggable chips. Forms/documents drop onto a pipeline
- * stage column to become tasks. Poppy has its own area with three "engage"
+ * stage column to become tasks. Ruby has its own area with three "engage"
  * boxes — drop the forms/policies/contracts it should use into the box for the
  * moment it should run (box 3 also takes a pipeline stage).
  */
@@ -63,19 +63,19 @@ export function WorkflowBuilder({
   roleOptions = [],
   showRole = true,
   roleLabel = "Applies to roles",
-  poppyEnabled = false,
+  rubyEnabled = false,
   saveAction = addTemplateTasks,
 }: {
-  forms: { id: string; name: string; poppyOnly?: boolean }[];
+  forms: { id: string; name: string; rubyOnly?: boolean }[];
   /** Contracts + policies. Dropped on a stage = read-&-sign task; dropped in a
-   *  Poppy box = something Poppy compares the candidate against. */
+   *  Ruby box = something Ruby compares the candidate against. */
   docs?: { id: string; name: string; kind: "contract" | "policy" }[];
   /** Company: value = role UUID. Founder store: value = standard role name. */
   roleOptions?: { value: string; label: string }[];
   showRole?: boolean;
   roleLabel?: string;
-  /** Show the Poppy AI screening area (company has Poppy). */
-  poppyEnabled?: boolean;
+  /** Show the Ruby AI screening area (company has Ruby). */
+  rubyEnabled?: boolean;
   saveAction?: (drafts: TaskDraft[]) => Promise<{ ok?: boolean; error?: string }>;
 }) {
   const router = useRouter();
@@ -85,14 +85,14 @@ export function WorkflowBuilder({
   const [placed, setPlaced] = useState<Record<string, Placed[]>>({});
   const [armed, setArmed] = useState<Lib | null>(null); // tap-to-place fallback
   const [dropTarget, setDropTarget] = useState<string | null>(null);
-  // Poppy config (one Poppy step per workflow).
-  const [poppyEngage, setPoppyEngage] = useState<Engage | "">("");
-  const [poppyItems, setPoppyItems] = useState<Lib[]>([]); // forms reviewed + docs compared
-  const [poppyStage, setPoppyStage] = useState<string>("");
-  const [poppyIncludeCv, setPoppyIncludeCv] = useState(true);
-  const [poppyFocus, setPoppyFocus] = useState<string[]>([]);
-  const [poppyInstructions, setPoppyInstructions] = useState("");
-  const [poppyQuestionCount, setPoppyQuestionCount] = useState("");
+  // Ruby config (one Ruby step per workflow).
+  const [rubyEngage, setRubyEngage] = useState<Engage | "">("");
+  const [rubyItems, setRubyItems] = useState<Lib[]>([]); // forms reviewed + docs compared
+  const [rubyStage, setRubyStage] = useState<string>("");
+  const [rubyIncludeCv, setRubyIncludeCv] = useState(true);
+  const [rubyFocus, setRubyFocus] = useState<string[]>([]);
+  const [rubyInstructions, setRubyInstructions] = useState("");
+  const [rubyQuestionCount, setRubyQuestionCount] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [created, setCreated] = useState(false);
@@ -102,13 +102,13 @@ export function WorkflowBuilder({
     setRoleValues([]);
     setPlaced({});
     setArmed(null);
-    setPoppyEngage("");
-    setPoppyItems([]);
-    setPoppyStage("");
-    setPoppyIncludeCv(true);
-    setPoppyFocus([]);
-    setPoppyInstructions("");
-    setPoppyQuestionCount("");
+    setRubyEngage("");
+    setRubyItems([]);
+    setRubyStage("");
+    setRubyIncludeCv(true);
+    setRubyFocus([]);
+    setRubyInstructions("");
+    setRubyQuestionCount("");
     setError(null);
     setCreated(false);
   }
@@ -116,10 +116,10 @@ export function WorkflowBuilder({
   // --- Pipeline columns (form/document tasks) ---
   function place(stageKey: string, item: Lib) {
     if (item.source === "stage") return; // stages aren't tasks
-    if (item.poppyOnly) {
-      // The application form is tied to the advert — Poppy can review it, but it
+    if (item.rubyOnly) {
+      // The application form is tied to the advert — Ruby can review it, but it
       // can't be reissued to the applicant as a pipeline task.
-      setError(`"${item.name}" is the job application form — it can only be given to Poppy, not sent as a task.`);
+      setError(`"${item.name}" is the job application form — it can only be given to Ruby, not sent as a task.`);
       setArmed(null);
       return;
     }
@@ -145,35 +145,35 @@ export function WorkflowBuilder({
     }
   }
 
-  // --- Poppy engage boxes ---
-  function addToPoppy(mode: Engage, item: Lib) {
+  // --- Ruby engage boxes ---
+  function addToRuby(mode: Engage, item: Lib) {
     if (item.source === "stage") {
       if (mode !== "stage") return; // a stage only belongs in the pipeline-stage box
-      setPoppyEngage("stage");
-      setPoppyStage(item.refId);
+      setRubyEngage("stage");
+      setRubyStage(item.refId);
       setArmed(null);
       return;
     }
-    setPoppyEngage(mode);
-    setPoppyItems((prev) => (prev.some((x) => sameItem(x, item)) ? prev : [...prev, item]));
+    setRubyEngage(mode);
+    setRubyItems((prev) => (prev.some((x) => sameItem(x, item)) ? prev : [...prev, item]));
     setArmed(null);
   }
-  function onPoppyBoxDrop(mode: Engage, e: React.DragEvent) {
+  function onRubyBoxDrop(mode: Engage, e: React.DragEvent) {
     e.preventDefault();
     setDropTarget(null);
     const raw = e.dataTransfer.getData("text/plain");
     if (!raw) return;
     try {
-      addToPoppy(mode, JSON.parse(raw) as Lib);
+      addToRuby(mode, JSON.parse(raw) as Lib);
     } catch {
       /* ignore */
     }
   }
-  function onPoppyBoxClick(mode: Engage) {
-    if (armed) addToPoppy(mode, armed);
+  function onRubyBoxClick(mode: Engage) {
+    if (armed) addToRuby(mode, armed);
   }
-  function removePoppyItem(item: Lib) {
-    setPoppyItems((prev) => prev.filter((x) => !sameItem(x, item)));
+  function removeRubyItem(item: Lib) {
+    setRubyItems((prev) => prev.filter((x) => !sameItem(x, item)));
   }
 
   async function create() {
@@ -228,44 +228,44 @@ export function WorkflowBuilder({
       }
     }
 
-    // Poppy step (optional). Present once an engage box has been chosen.
-    if (poppyEngage) {
-      const poppyFormIds = poppyItems.filter((x) => x.source === "form").map((x) => x.refId);
-      const poppyDocumentIds = poppyItems.filter((x) => x.source === "doc").map((x) => x.refId);
-      const poppyUploads = poppyItems.filter((x) => x.source === "upload").map((x) => x.refId);
-      const poppyUploadKinds = poppyUploads.filter((k) => k !== "cv");
-      const includeCv = poppyIncludeCv || poppyUploads.includes("cv");
-      if (poppyFormIds.length === 0 && !includeCv && poppyUploadKinds.length === 0) {
-        setError("Give Poppy at least one form, upload or the CV to review.");
+    // Ruby step (optional). Present once an engage box has been chosen.
+    if (rubyEngage) {
+      const rubyFormIds = rubyItems.filter((x) => x.source === "form").map((x) => x.refId);
+      const rubyDocumentIds = rubyItems.filter((x) => x.source === "doc").map((x) => x.refId);
+      const rubyUploads = rubyItems.filter((x) => x.source === "upload").map((x) => x.refId);
+      const rubyUploadKinds = rubyUploads.filter((k) => k !== "cv");
+      const includeCv = rubyIncludeCv || rubyUploads.includes("cv");
+      if (rubyFormIds.length === 0 && !includeCv && rubyUploadKinds.length === 0) {
+        setError("Give Ruby at least one form, upload or the CV to review.");
         return;
       }
-      if (poppyEngage === "stage" && !poppyStage) {
-        setError("Drag a pipeline stage into the third Poppy box.");
+      if (rubyEngage === "stage" && !rubyStage) {
+        setError("Drag a pipeline stage into the third Ruby box.");
         return;
       }
       drafts.push({
-        title: "Poppy screening",
+        title: "Ruby screening",
         workflowTitle: title.trim(),
-        taskType: "poppy",
+        taskType: "ruby",
         formIds: [],
         dueDays: "",
         required: true,
         body: "",
-        triggerStage: poppyEngage === "stage" ? poppyStage : "on_application",
+        triggerStage: rubyEngage === "stage" ? rubyStage : "on_application",
         roleValues,
-        poppyEngage,
-        poppyFormIds,
-        poppyIncludeCv: includeCv,
-        poppyFocus,
-        poppyInstructions,
-        poppyQuestionCount,
-        poppyDocumentIds,
-        poppyUploadKinds,
+        rubyEngage,
+        rubyFormIds,
+        rubyIncludeCv: includeCv,
+        rubyFocus,
+        rubyInstructions,
+        rubyQuestionCount,
+        rubyDocumentIds,
+        rubyUploadKinds,
       });
     }
 
     if (drafts.length === 0) {
-      setError("Add at least one form, document or Poppy step.");
+      setError("Add at least one form, document or Ruby step.");
       return;
     }
     setSaving(true);
@@ -322,11 +322,11 @@ export function WorkflowBuilder({
 
   const armEq = (l: Lib) => armed && sameItem(armed, l);
 
-  // Which library items are already placed (in a stage or a Poppy box) — their
+  // Which library items are already placed (in a stage or a Ruby box) — their
   // library chip turns blue so you don't drag the same one again.
   const usedKeys = new Set<string>();
   for (const list of Object.values(placed)) for (const it of list) usedKeys.add(`${it.source}:${it.refId}`);
-  for (const it of poppyItems) usedKeys.add(`${it.source}:${it.refId}`);
+  for (const it of rubyItems) usedKeys.add(`${it.source}:${it.refId}`);
   const isUsed = (l: Lib) => usedKeys.has(`${l.source}:${l.refId}`);
 
   const LibChip = ({ item, icon }: { item: Lib; icon: React.ReactNode }) => {
@@ -353,9 +353,9 @@ export function WorkflowBuilder({
       {icon}
       <span className="truncate">{item.name}</span>
       {used && <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-blue-500" />}
-      {item.poppyOnly && !used && (
+      {item.rubyOnly && !used && (
         <span className="ml-auto shrink-0 rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand-700">
-          Poppy only
+          Ruby only
         </span>
       )}
     </button>
@@ -437,7 +437,7 @@ export function WorkflowBuilder({
             {forms.length === 0 ? (
               <p className="text-xs text-gray-400">No forms yet — create one in Forms first.</p>
             ) : (
-              forms.map((f) => <LibChip key={f.id} item={{ source: "form", refId: f.id, name: f.name, poppyOnly: f.poppyOnly }} icon={<FileText className="h-3.5 w-3.5 shrink-0 text-brand-500" />} />)
+              forms.map((f) => <LibChip key={f.id} item={{ source: "form", refId: f.id, name: f.name, rubyOnly: f.rubyOnly }} icon={<FileText className="h-3.5 w-3.5 shrink-0 text-brand-500" />} />)
             )}
           </div>
         </div>
@@ -521,33 +521,33 @@ export function WorkflowBuilder({
         })}
       </div>
 
-      {/* Poppy AI screening — its own 3-box "when to engage" area. */}
-      {poppyEnabled && (
+      {/* Ruby AI screening — its own 3-box "when to engage" area. */}
+      {rubyEnabled && (
         <div className="space-y-3 rounded-xl border border-brand-200 bg-brand-50/50 p-4 backdrop-blur-sm">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-brand-800">
-            <Sparkles className="h-4 w-4 text-brand-500" /> Poppy AI screening
+            <Sparkles className="h-4 w-4 text-brand-500" /> Ruby AI screening
           </p>
-          <p className="text-xs font-medium text-gray-700">When should Poppy engage?</p>
+          <p className="text-xs font-medium text-gray-700">When should Ruby engage?</p>
           <p className="text-[11px] text-gray-500">
-            Drop what Poppy reviews into one box — forms, uploads (DBS, etc.) and any policies/contracts to
+            Drop what Ruby reviews into one box — forms, uploads (DBS, etc.) and any policies/contracts to
             compare against.{SHOW_PIPELINE && " For the third box, also drop a pipeline stage."}
           </p>
 
           <div className={`grid grid-cols-1 gap-3 ${ENGAGE_VISIBLE.length >= 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
             {ENGAGE_VISIBLE.map((mode) => {
-              const isActive = poppyEngage === mode.key;
+              const isActive = rubyEngage === mode.key;
               return (
                 <div
                   key={mode.key}
-                  onClick={() => onPoppyBoxClick(mode.key)}
+                  onClick={() => onRubyBoxClick(mode.key)}
                   onDragOver={(e) => {
                     e.preventDefault();
-                    setDropTarget(`poppy-${mode.key}`);
+                    setDropTarget(`ruby-${mode.key}`);
                   }}
-                  onDragLeave={() => setDropTarget((t) => (t === `poppy-${mode.key}` ? null : t))}
-                  onDrop={(e) => onPoppyBoxDrop(mode.key, e)}
+                  onDragLeave={() => setDropTarget((t) => (t === `ruby-${mode.key}` ? null : t))}
+                  onDrop={(e) => onRubyBoxDrop(mode.key, e)}
                   className={`flex min-h-[7rem] flex-col rounded-xl border p-2.5 transition ${
-                    dropTarget === `poppy-${mode.key}`
+                    dropTarget === `ruby-${mode.key}`
                       ? "border-brand-400 bg-white ring-1 ring-brand-300"
                       : isActive
                         ? "border-brand-400 bg-white/90"
@@ -561,10 +561,10 @@ export function WorkflowBuilder({
                     {isActive ? (
                       <>
                         {mode.key === "stage" && (
-                          poppyStage ? (
+                          rubyStage ? (
                             <ItemChip
-                              item={{ source: "stage", refId: poppyStage, name: STAGES.find((s) => s.key === poppyStage)?.label ?? poppyStage }}
-                              onRemove={() => setPoppyStage("")}
+                              item={{ source: "stage", refId: rubyStage, name: STAGES.find((s) => s.key === rubyStage)?.label ?? rubyStage }}
+                              onRemove={() => setRubyStage("")}
                             />
                           ) : (
                             <p className="rounded-md border border-dashed border-brand-300 px-1.5 py-1 text-[10px] text-brand-600/70">
@@ -572,10 +572,10 @@ export function WorkflowBuilder({
                             </p>
                           )
                         )}
-                        {poppyItems.map((it) => (
-                          <ItemChip key={`${it.source}-${it.refId}`} item={it} onRemove={() => removePoppyItem(it)} />
+                        {rubyItems.map((it) => (
+                          <ItemChip key={`${it.source}-${it.refId}`} item={it} onRemove={() => removeRubyItem(it)} />
                         ))}
-                        {poppyItems.length === 0 && mode.key !== "stage" && (
+                        {rubyItems.length === 0 && mode.key !== "stage" && (
                           <p className="px-0.5 text-[10px] text-gray-400">Drop forms / policies / contracts</p>
                         )}
                       </>
@@ -590,13 +590,13 @@ export function WorkflowBuilder({
             })}
           </div>
 
-          {poppyEngage && (
+          {rubyEngage && (
             <>
               <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
                 <input
                   type="checkbox"
-                  checked={poppyIncludeCv}
-                  onChange={() => setPoppyIncludeCv((v) => !v)}
+                  checked={rubyIncludeCv}
+                  onChange={() => setRubyIncludeCv((v) => !v)}
                   className="h-4 w-4 rounded border-white/40 text-brand-600 focus:ring-brand-500"
                 />
                 Also review the applicant&apos;s CV
@@ -608,13 +608,13 @@ export function WorkflowBuilder({
                 <div className="text-xs font-medium text-gray-600">
                   Focus on
                   <div className="mt-1 flex flex-wrap gap-1.5">
-                    {POPPY_FOCUS_OPTIONS.map((f) => {
-                      const on = poppyFocus.includes(f);
+                    {RUBY_FOCUS_OPTIONS.map((f) => {
+                      const on = rubyFocus.includes(f);
                       return (
                         <button
                           key={f}
                           type="button"
-                          onClick={() => setPoppyFocus((prev) => (on ? prev.filter((x) => x !== f) : [...prev, f]))}
+                          onClick={() => setRubyFocus((prev) => (on ? prev.filter((x) => x !== f) : [...prev, f]))}
                           className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
                             on ? "border-brand-500 bg-brand-100 text-brand-800" : "border-white/60 bg-white/70 text-gray-600 hover:border-brand-300"
                           }`}
@@ -629,8 +629,8 @@ export function WorkflowBuilder({
                   <label className="text-xs font-medium text-gray-600">
                     Number of questions
                     <input
-                      value={poppyQuestionCount}
-                      onChange={(e) => setPoppyQuestionCount(e.target.value)}
+                      value={rubyQuestionCount}
+                      onChange={(e) => setRubyQuestionCount(e.target.value)}
                       type="number"
                       min="1"
                       max="20"
@@ -640,10 +640,10 @@ export function WorkflowBuilder({
                   </label>
                 </div>
                 <label className="block text-xs font-medium text-gray-600">
-                  Instructions for Poppy
+                  Instructions for Ruby
                   <textarea
-                    value={poppyInstructions}
-                    onChange={(e) => setPoppyInstructions(e.target.value)}
+                    value={rubyInstructions}
+                    onChange={(e) => setRubyInstructions(e.target.value)}
                     rows={2}
                     placeholder="e.g. Probe any gaps in employment history."
                     className={cls}

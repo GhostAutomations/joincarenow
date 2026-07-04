@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireCompany, requireUser } from "@/modules/auth/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { normPoppyCount } from "@/lib/poppy/config";
+import { normRubyCount } from "@/lib/ruby/config";
 import { notifyApplicant } from "@/modules/comms/actions";
 
 export type OnbState = { error?: string; ok?: boolean } | undefined;
@@ -20,19 +20,19 @@ export type TaskDraft = {
   /** Workflow-level role association. Company: role UUIDs. Founder store:
    *  standard role names. Empty = applies to all roles. */
   roleValues: string[];
-  /** Poppy step only: when it engages (all_forms | as_forms | stage), which
+  /** Ruby step only: when it engages (all_forms | as_forms | stage), which
    *  company form ids it reviews, and whether it also reviews the CV. */
-  poppyEngage?: string;
-  poppyFormIds?: string[];
-  poppyIncludeCv?: boolean;
-  /** Poppy step overrides of the company-default tuning (empty = use default). */
-  poppyFocus?: string[];
-  poppyInstructions?: string;
-  poppyQuestionCount?: number | string;
-  /** Documents (policy/contract ids) Poppy compares against for this step. */
-  poppyDocumentIds?: string[];
-  /** Uploaded document kinds (e.g. 'dbs') Poppy should review for this step. */
-  poppyUploadKinds?: string[];
+  rubyEngage?: string;
+  rubyFormIds?: string[];
+  rubyIncludeCv?: boolean;
+  /** Ruby step overrides of the company-default tuning (empty = use default). */
+  rubyFocus?: string[];
+  rubyInstructions?: string;
+  rubyQuestionCount?: number | string;
+  /** Documents (policy/contract ids) Ruby compares against for this step. */
+  rubyDocumentIds?: string[];
+  /** Uploaded document kinds (e.g. 'dbs') Ruby should review for this step. */
+  rubyUploadKinds?: string[];
   /** For a document-upload task: the standard upload kind requested (e.g. 'dbs'). */
   docKind?: string;
   /** The workflow's own name, decoupled from a task's own title so the
@@ -67,25 +67,25 @@ function buildTemplateRows(opts: {
     const dueDays = d.dueDays === "" ? null : Math.max(0, parseInt(d.dueDays, 10) || 0);
     const body = (d.body ?? "").trim() || null;
     const shared = { company_id: companyId, body, role_id: null, role_ids, workflow_id: workflowId, workflow_name: workflowName };
-    if (d.taskType === "poppy") {
+    if (d.taskType === "ruby") {
       rows.push({
         ...shared,
-        title: d.title.trim() || "Poppy screening",
-        task_type: "poppy",
+        title: d.title.trim() || "Ruby screening",
+        task_type: "ruby",
         form_id: null,
         required: d.required,
         due_days: dueDays,
-        // Poppy uses poppy_engage; trigger_stage is inert unless engage='stage'.
+        // Ruby uses ruby_engage; trigger_stage is inert unless engage='stage'.
         // trigger_stage is NOT NULL, so use a harmless valid default otherwise.
-        trigger_stage: d.poppyEngage === "stage" ? d.triggerStage : "on_application",
-        poppy_engage: d.poppyEngage,
-        poppy_form_ids: d.poppyFormIds ?? [],
-        poppy_include_cv: d.poppyIncludeCv === true,
-        poppy_focus: d.poppyFocus?.length ? d.poppyFocus : null,
-        poppy_instructions: d.poppyInstructions?.trim() || null,
-        poppy_question_count: normPoppyCount(d.poppyQuestionCount),
-        poppy_document_ids: d.poppyDocumentIds?.length ? d.poppyDocumentIds : null,
-        poppy_upload_kinds: d.poppyUploadKinds?.length ? d.poppyUploadKinds : null,
+        trigger_stage: d.rubyEngage === "stage" ? d.triggerStage : "on_application",
+        ruby_engage: d.rubyEngage,
+        ruby_form_ids: d.rubyFormIds ?? [],
+        ruby_include_cv: d.rubyIncludeCv === true,
+        ruby_focus: d.rubyFocus?.length ? d.rubyFocus : null,
+        ruby_instructions: d.rubyInstructions?.trim() || null,
+        ruby_question_count: normRubyCount(d.rubyQuestionCount),
+        ruby_document_ids: d.rubyDocumentIds?.length ? d.rubyDocumentIds : null,
+        ruby_upload_kinds: d.rubyUploadKinds?.length ? d.rubyUploadKinds : null,
         position: pos++,
       });
     } else if (d.taskType === "form") {
@@ -132,20 +132,20 @@ export async function addTemplateTasks(
   const STAGES = ["on_application", "reviewing", "interview", "right_to_work", "offer", "hired"];
   for (const d of drafts) {
     if ((d.title ?? "").trim().length < 2) return { error: "Give each task a title" };
-    if (!["form", "document", "acknowledge", "poppy"].includes(d.taskType)) {
+    if (!["form", "document", "acknowledge", "ruby"].includes(d.taskType)) {
       return { error: "Pick a type for each task" };
     }
-    if (d.taskType === "poppy") {
-      if (!["all_forms", "as_forms", "stage"].includes(d.poppyEngage ?? "")) {
-        return { error: "Choose when Poppy should engage" };
+    if (d.taskType === "ruby") {
+      if (!["all_forms", "as_forms", "stage"].includes(d.rubyEngage ?? "")) {
+        return { error: "Choose when Ruby should engage" };
       }
-      // Poppy can also engage at Right to work (a real pipeline stage the legacy
+      // Ruby can also engage at Right to work (a real pipeline stage the legacy
       // workflow trigger list doesn't include).
-      if (d.poppyEngage === "stage" && ![...STAGES, "right_to_work"].includes(d.triggerStage)) {
-        return { error: "Choose which stage Poppy engages at" };
+      if (d.rubyEngage === "stage" && ![...STAGES, "right_to_work"].includes(d.triggerStage)) {
+        return { error: "Choose which stage Ruby engages at" };
       }
-      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv && (!d.poppyUploadKinds || d.poppyUploadKinds.length === 0)) {
-        return { error: "Give Poppy at least one form, upload or the CV to review" };
+      if ((!d.rubyFormIds || d.rubyFormIds.length === 0) && !d.rubyIncludeCv && (!d.rubyUploadKinds || d.rubyUploadKinds.length === 0)) {
+        return { error: "Give Ruby at least one form, upload or the CV to review" };
       }
       continue;
     }
@@ -213,14 +213,14 @@ export async function addTasksToWorkflow(
   if (current.role !== "admin") return { error: "Only admins can edit workflows." };
 
   for (const d of drafts) {
-    if (!["form", "document", "acknowledge", "poppy"].includes(d.taskType)) return { error: "Pick a type for each task" };
-    if (d.taskType === "poppy") {
-      if (!["all_forms", "as_forms", "stage"].includes(d.poppyEngage ?? "")) return { error: "Choose when Poppy should engage" };
-      if (d.poppyEngage === "stage" && ![...WORKFLOW_STAGES, "right_to_work"].includes(d.triggerStage)) return { error: "Choose which stage Poppy engages at" };
-      if ((!d.poppyFormIds || d.poppyFormIds.length === 0) && !d.poppyIncludeCv && (!d.poppyUploadKinds || d.poppyUploadKinds.length === 0)) return { error: "Give Poppy at least one form, upload or the CV to review" };
+    if (!["form", "document", "acknowledge", "ruby"].includes(d.taskType)) return { error: "Pick a type for each task" };
+    if (d.taskType === "ruby") {
+      if (!["all_forms", "as_forms", "stage"].includes(d.rubyEngage ?? "")) return { error: "Choose when Ruby should engage" };
+      if (d.rubyEngage === "stage" && ![...WORKFLOW_STAGES, "right_to_work"].includes(d.triggerStage)) return { error: "Choose which stage Ruby engages at" };
+      if ((!d.rubyFormIds || d.rubyFormIds.length === 0) && !d.rubyIncludeCv && (!d.rubyUploadKinds || d.rubyUploadKinds.length === 0)) return { error: "Give Ruby at least one form, upload or the CV to review" };
     } else if (d.taskType === "form" && (!d.formIds || d.formIds.length === 0)) {
       return { error: "Choose at least one form for each form task" };
-    } else if (d.taskType !== "poppy" && !WORKFLOW_STAGES.includes(d.triggerStage)) {
+    } else if (d.taskType !== "ruby" && !WORKFLOW_STAGES.includes(d.triggerStage)) {
       return { error: "Choose when to send each task" };
     }
   }
@@ -381,14 +381,14 @@ export type EditTaskInput = {
   required: boolean;
   body: string;
   formId: string;
-  poppyEngage?: string;
-  poppyFormIds?: string[];
-  poppyIncludeCv?: boolean;
-  poppyFocus?: string[];
-  poppyInstructions?: string;
-  poppyQuestionCount?: number | string;
-  poppyDocumentIds?: string[];
-  poppyUploadKinds?: string[];
+  rubyEngage?: string;
+  rubyFormIds?: string[];
+  rubyIncludeCv?: boolean;
+  rubyFocus?: string[];
+  rubyInstructions?: string;
+  rubyQuestionCount?: number | string;
+  rubyDocumentIds?: string[];
+  rubyUploadKinds?: string[];
 };
 
 const WF_STAGES = ["on_application", "reviewing", "interview", "offer", "hired"];
@@ -398,32 +398,32 @@ export async function updateTemplateTask(input: EditTaskInput): Promise<{ ok?: b
   const { supabase, current } = await requireCompany();
   if (!input?.id) return { error: "Missing task" };
 
-  // Poppy step edit.
-  if (input.taskType === "poppy") {
-    if (!["all_forms", "as_forms", "stage"].includes(input.poppyEngage ?? "")) {
-      return { error: "Choose when Poppy should engage" };
+  // Ruby step edit.
+  if (input.taskType === "ruby") {
+    if (!["all_forms", "as_forms", "stage"].includes(input.rubyEngage ?? "")) {
+      return { error: "Choose when Ruby should engage" };
     }
-    if (input.poppyEngage === "stage" && ![...WF_STAGES, "right_to_work"].includes(input.triggerStage)) {
-      return { error: "Choose which stage Poppy engages at" };
+    if (input.rubyEngage === "stage" && ![...WF_STAGES, "right_to_work"].includes(input.triggerStage)) {
+      return { error: "Choose which stage Ruby engages at" };
     }
-    if ((!input.poppyFormIds || input.poppyFormIds.length === 0) && !input.poppyIncludeCv && (!input.poppyUploadKinds || input.poppyUploadKinds.length === 0)) {
-      return { error: "Give Poppy at least one form, upload or the CV to review" };
+    if ((!input.rubyFormIds || input.rubyFormIds.length === 0) && !input.rubyIncludeCv && (!input.rubyUploadKinds || input.rubyUploadKinds.length === 0)) {
+      return { error: "Give Ruby at least one form, upload or the CV to review" };
     }
     const { error } = await supabase
       .from("onboarding_templates")
       .update({
-        task_type: "poppy",
-        poppy_engage: input.poppyEngage,
-        poppy_form_ids: input.poppyFormIds ?? [],
-        poppy_include_cv: input.poppyIncludeCv === true,
-        poppy_focus: input.poppyFocus?.length ? input.poppyFocus : null,
-        poppy_instructions: input.poppyInstructions?.trim() || null,
-        poppy_question_count: normPoppyCount(input.poppyQuestionCount),
-        poppy_document_ids: input.poppyDocumentIds?.length ? input.poppyDocumentIds : null,
-        poppy_upload_kinds: input.poppyUploadKinds?.length ? input.poppyUploadKinds : null,
-        trigger_stage: input.poppyEngage === "stage" ? input.triggerStage : "on_application",
+        task_type: "ruby",
+        ruby_engage: input.rubyEngage,
+        ruby_form_ids: input.rubyFormIds ?? [],
+        ruby_include_cv: input.rubyIncludeCv === true,
+        ruby_focus: input.rubyFocus?.length ? input.rubyFocus : null,
+        ruby_instructions: input.rubyInstructions?.trim() || null,
+        ruby_question_count: normRubyCount(input.rubyQuestionCount),
+        ruby_document_ids: input.rubyDocumentIds?.length ? input.rubyDocumentIds : null,
+        ruby_upload_kinds: input.rubyUploadKinds?.length ? input.rubyUploadKinds : null,
+        trigger_stage: input.rubyEngage === "stage" ? input.triggerStage : "on_application",
         body: input.body.trim() || null,
-        title: input.title.trim() || "Poppy screening",
+        title: input.title.trim() || "Ruby screening",
         form_id: null,
       })
       .eq("id", input.id)

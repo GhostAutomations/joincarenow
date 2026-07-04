@@ -7,7 +7,7 @@ import { founderMigrateCorePrices, founderRunUsageReport } from "@/modules/billi
 
 type Res = { changed: number; skipped: number; errors: number };
 
-/** Founder-only billing maintenance actions. Poppy is added/removed per company
+/** Founder-only billing maintenance actions. Ruby is added/removed per company
  *  from the company's billing page, not in bulk here. */
 export function FounderBillingTools() {
   const router = useRouter();

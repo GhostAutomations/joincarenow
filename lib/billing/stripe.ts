@@ -10,14 +10,16 @@ export const PRICES = {
   // (same £49 price; the commitment just waives the setup fee).
   monthly: process.env.STRIPE_PRICE_MONTHLY, // £49 / month recurring
   annual: process.env.STRIPE_PRICE_ANNUAL, // £490 / year recurring
-  // Tier 2 ("poppy") — includes Poppy. Commit has its own discounted price.
+  // Tier 2 ("ruby") — includes Ruby. Commit has its own discounted price.
   t2Monthly: process.env.STRIPE_PRICE_T2_MONTHLY, // £89 / month (cancel anytime)
   t2MonthlyCommit: process.env.STRIPE_PRICE_T2_MONTHLY_COMMIT, // £79 / month (12-month)
   t2Annual: process.env.STRIPE_PRICE_T2_ANNUAL, // £790 / year recurring
   setup: process.env.STRIPE_PRICE_SETUP, // £150 one-time (both tiers, monthly non-commit)
-  // Poppy applicant overage — 75p metered, 40 included/month handled in-app.
-  poppy: process.env.STRIPE_PRICE_POPPY, // 75p metered, monthly
-  poppyYear: process.env.STRIPE_PRICE_POPPY_YEAR, // 75p metered, yearly
+  // Ruby applicant overage — 75p metered, 40 included/month handled in-app.
+  // Falls back to the legacy POPPY env names so billing keeps working until
+  // the Vercel env vars are renamed to STRIPE_PRICE_RUBY(_YEAR).
+  ruby: process.env.STRIPE_PRICE_RUBY ?? process.env.STRIPE_PRICE_POPPY, // 75p metered, monthly
+  rubyYear: process.env.STRIPE_PRICE_RUBY_YEAR ?? process.env.STRIPE_PRICE_POPPY_YEAR, // 75p metered, yearly
   // Add-ons come in interval variants so they can attach to either base plan
   // (Stripe forbids mixing intervals within one subscription).
   branch: process.env.STRIPE_PRICE_BRANCH, // £7.50 / month (licensed)
@@ -30,11 +32,11 @@ export const PRICES = {
 
 /** The base recurring price for a (tier, interval, commit) combination. */
 export function basePriceFor(
-  tier: "core" | "poppy",
+  tier: "core" | "ruby",
   interval: "month" | "year",
   committed: boolean
 ): string | undefined {
-  if (tier === "poppy") {
+  if (tier === "ruby") {
     if (interval === "year") return PRICES.t2Annual;
     return committed ? PRICES.t2MonthlyCommit : PRICES.t2Monthly;
   }
@@ -155,7 +157,7 @@ async function concessionCoupon(
 export async function createCheckoutSession(opts: {
   customerId: string;
   companyId: string;
-  tier?: "core" | "poppy"; // Tier 2 ("poppy") includes Poppy
+  tier?: "core" | "ruby"; // Tier 2 ("ruby") includes Ruby
   interval: "month" | "year";
   commit?: boolean; // monthly with a 12-month commitment (no setup fee)
   meteredOnly?: boolean; // Diamond: no base/setup, only metered SMS + AI
@@ -197,12 +199,12 @@ export async function createCheckoutSession(opts: {
   const aiPrice = isYear ? PRICES.aiYear : PRICES.ai;
   if (smsPrice) lineItems.push({ price: smsPrice });
   if (aiPrice) lineItems.push({ price: aiPrice });
-  // Poppy applicant meter (75p; first 40/month — 480/year — free via the price's
+  // Ruby applicant meter (75p; first 40/month — 480/year — free via the price's
   // graduated tiers). Attached on Tier 2, AND on Diamond (usage-only) — Diamond
-  // includes Poppy and simply pays per applicant beyond the allowance.
-  if (tier === "poppy" || opts.meteredOnly) {
-    const poppyPrice = isYear ? PRICES.poppyYear : PRICES.poppy;
-    if (poppyPrice) lineItems.push({ price: poppyPrice });
+  // includes Ruby and simply pays per applicant beyond the allowance.
+  if (tier === "ruby" || opts.meteredOnly) {
+    const rubyPrice = isYear ? PRICES.rubyYear : PRICES.ruby;
+    if (rubyPrice) lineItems.push({ price: rubyPrice });
   }
 
   // Defensive: Stripe rejects the same recurring price twice.
@@ -472,12 +474,12 @@ export async function swapSubscriptionBasePrice(
 }
 
 /** Move an ACTIVE subscription between tiers: swap the base price and add/remove
- *  the Poppy applicant meter to match. Base swap prorates the difference onto the
+ *  the Ruby applicant meter to match. Base swap prorates the difference onto the
  *  next invoice. No-op branches are skipped. `committed` picks the Tier 2 12-month
  *  price where relevant. */
 export async function setSubscriptionTier(
   subscriptionId: string,
-  tier: "core" | "poppy",
+  tier: "core" | "ruby",
   committed = false
 ): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -496,13 +498,13 @@ export async function setSubscriptionTier(
     await stripeRequest(`/subscription_items/${base.id}`, "POST", { price: newBase, proration_behavior: "create_prorations" });
   }
 
-  const poppyPrice = isYear ? PRICES.poppyYear : PRICES.poppy;
+  const rubyPrice = isYear ? PRICES.rubyYear : PRICES.ruby;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const existingPoppy = items.find((it: any) => it?.price?.id === PRICES.poppy || it?.price?.id === PRICES.poppyYear);
-  if (tier === "poppy" && poppyPrice && !existingPoppy) {
-    await stripeRequest("/subscription_items", "POST", { subscription: subscriptionId, price: poppyPrice });
-  } else if (tier === "core" && existingPoppy) {
-    await stripeRequest(`/subscription_items/${existingPoppy.id}`, "DELETE", {});
+  const existingRuby = items.find((it: any) => it?.price?.id === PRICES.ruby || it?.price?.id === PRICES.rubyYear);
+  if (tier === "ruby" && rubyPrice && !existingRuby) {
+    await stripeRequest("/subscription_items", "POST", { subscription: subscriptionId, price: rubyPrice });
+  } else if (tier === "core" && existingRuby) {
+    await stripeRequest(`/subscription_items/${existingRuby.id}`, "DELETE", {});
   }
 }
 

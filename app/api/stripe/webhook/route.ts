@@ -60,24 +60,24 @@ export async function POST(req: Request) {
         const status = obj.status as string; // active, past_due, canceled, etc.
         const interval = obj?.items?.data?.[0]?.price?.recurring?.interval as string | undefined;
 
-        // Keep plan_tier + poppy_enabled in sync with the subscription. Poppy is
-        // enabled whenever the Poppy meter is attached — that covers Tier 2 AND
-        // Diamond (usage-only, which now includes Poppy). Fall back to the base
-        // price for Core. An unrecognised sub (comped Poppy with no Stripe price)
+        // Keep plan_tier + ruby_enabled in sync with the subscription. Ruby is
+        // enabled whenever the Ruby meter is attached — that covers Tier 2 AND
+        // Diamond (usage-only, which now includes Ruby). Fall back to the base
+        // price for Core. An unrecognised sub (comped Ruby with no Stripe price)
         // leaves the flags untouched.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const priceIds: string[] = (obj?.items?.data ?? []).map((it: any) => it?.price?.id).filter(Boolean);
         const t2Ids = [PRICES.t2Monthly, PRICES.t2MonthlyCommit, PRICES.t2Annual].filter(Boolean) as string[];
         const coreIds = [PRICES.monthly, PRICES.annual].filter(Boolean) as string[];
-        const poppyIds = [PRICES.poppy, PRICES.poppyYear].filter(Boolean) as string[];
-        const hasPoppy = priceIds.some((p) => poppyIds.includes(p)) || priceIds.some((p) => t2Ids.includes(p));
+        const rubyIds = [PRICES.ruby, PRICES.rubyYear].filter(Boolean) as string[];
+        const hasRuby = priceIds.some((p) => rubyIds.includes(p)) || priceIds.some((p) => t2Ids.includes(p));
         const tierUpdate: Record<string, unknown> =
           event.type === "customer.subscription.deleted"
-            ? { plan_tier: "core", poppy_enabled: false }
-            : hasPoppy
-              ? { plan_tier: "poppy", poppy_enabled: true }
+            ? { plan_tier: "core", ruby_enabled: false }
+            : hasRuby
+              ? { plan_tier: "ruby", ruby_enabled: true }
               : priceIds.some((p) => coreIds.includes(p))
-                ? { plan_tier: "core", poppy_enabled: false }
+                ? { plan_tier: "core", ruby_enabled: false }
                 : {};
 
         await db

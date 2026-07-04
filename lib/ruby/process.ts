@@ -1,9 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { recordPoppyApplicant } from "@/lib/billing/poppy-credits";
-import { generatePoppyAnalysis, type PoppyReportData } from "@/lib/ai/generate-poppy-report";
-import { startPoppyConversation } from "@/lib/poppy/conversation";
-import { loadPoppyRuntimeConfig } from "@/lib/poppy/config";
-import { gatherPoppyUploads } from "@/lib/poppy/uploads";
+import { recordRubyApplicant } from "@/lib/billing/ruby-credits";
+import { generateRubyAnalysis, type RubyReportData } from "@/lib/ai/generate-ruby-report";
+import { startRubyConversation } from "@/lib/ruby/conversation";
+import { loadRubyRuntimeConfig } from "@/lib/ruby/config";
+import { gatherRubyUploads } from "@/lib/ruby/uploads";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -65,17 +65,17 @@ async function downloadCvPdf(db: Admin, cvPath: string | null): Promise<string |
   return null;
 }
 
-type PoppyStep = {
-  poppy_engage: string | null;
-  poppy_form_ids: string[] | null;
-  poppy_include_cv: boolean | null;
+type RubyStep = {
+  ruby_engage: string | null;
+  ruby_form_ids: string[] | null;
+  ruby_include_cv: boolean | null;
   trigger_stage: string | null;
   role_ids: string[] | null;
-  poppy_focus: string[] | null;
-  poppy_instructions: string | null;
-  poppy_question_count: number | null;
-  poppy_document_ids: string[] | null;
-  poppy_upload_kinds: string[] | null;
+  ruby_focus: string[] | null;
+  ruby_instructions: string | null;
+  ruby_question_count: number | null;
+  ruby_document_ids: string[] | null;
+  ruby_upload_kinds: string[] | null;
 };
 type AppRow = {
   id: string;
@@ -87,14 +87,14 @@ type AppRow = {
   applicants: { first_name: string | null; last_name: string | null } | null;
 };
 
-/** Does this Poppy step's engage condition hold for this application? The CV (if
+/** Does this Ruby step's engage condition hold for this application? The CV (if
  *  selected) counts as a reviewable item — "complete" once a CV is uploaded. */
-async function conditionMet(db: Admin, app: AppRow, step: PoppyStep): Promise<boolean> {
-  const engage = step.poppy_engage;
+async function conditionMet(db: Admin, app: AppRow, step: RubyStep): Promise<boolean> {
+  const engage = step.ruby_engage;
   if (engage === "stage") return stageReached(app.stage, step.trigger_stage);
 
-  const formIds = (step.poppy_form_ids ?? []).filter(Boolean);
-  const wantCv = step.poppy_include_cv === true;
+  const formIds = (step.ruby_form_ids ?? []).filter(Boolean);
+  const wantCv = step.ruby_include_cv === true;
   const cvDone = !!app.cv_path;
   if (formIds.length === 0 && !wantCv) return false;
 
@@ -117,38 +117,38 @@ async function conditionMet(db: Admin, app: AppRow, step: PoppyStep): Promise<bo
   return false;
 }
 
-function stepApplies(step: PoppyStep, roleId: string | null): boolean {
+function stepApplies(step: RubyStep, roleId: string | null): boolean {
   const roles = step.role_ids ?? [];
   return roles.length === 0 || (!!roleId && roles.includes(roleId));
 }
 
-export type PoppyRun = { generated: number; skipped: number; errors: number };
+export type RubyRun = { generated: number; skipped: number; errors: number };
 
 /**
- * Reconcile Poppy workflow steps: for each Poppy-enabled company, find candidate
- * applications whose Poppy step has engaged but which have no report yet, then
+ * Reconcile Ruby workflow steps: for each Ruby-enabled company, find candidate
+ * applications whose Ruby step has engaged but which have no report yet, then
  * generate the report, store it, meter the AI action, and notify the job owner.
  * Idempotent: one report per application (unique application_id) — so each
  * application is processed once. Bounded by `limit` per run.
  */
-export async function runPoppy(limit = 25): Promise<PoppyRun> {
-  const res: PoppyRun = { generated: 0, skipped: 0, errors: 0 };
+export async function runRuby(limit = 25): Promise<RubyRun> {
+  const res: RubyRun = { generated: 0, skipped: 0, errors: 0 };
   if (!process.env.ANTHROPIC_API_KEY) return res;
   const db = createAdminClient();
   const model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
 
-  const { data: companies } = await db.from("companies").select("id").eq("poppy_enabled", true);
+  const { data: companies } = await db.from("companies").select("id").eq("ruby_enabled", true);
   for (const co of companies ?? []) {
     if (res.generated >= limit) break;
     const companyId = co.id as string;
 
     const { data: stepsRaw } = await db
       .from("onboarding_templates")
-      .select("poppy_engage, poppy_form_ids, poppy_include_cv, trigger_stage, role_ids, poppy_focus, poppy_instructions, poppy_question_count, poppy_document_ids, poppy_upload_kinds")
+      .select("ruby_engage, ruby_form_ids, ruby_include_cv, trigger_stage, role_ids, ruby_focus, ruby_instructions, ruby_question_count, ruby_document_ids, ruby_upload_kinds")
       .eq("company_id", companyId)
       .eq("is_store", false)
-      .eq("task_type", "poppy");
-    const steps = (stepsRaw as unknown as PoppyStep[]) ?? [];
+      .eq("task_type", "ruby");
+    const steps = (stepsRaw as unknown as RubyStep[]) ?? [];
     if (steps.length === 0) continue;
 
     const { data: appsRaw } = await db
@@ -162,7 +162,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
 
     // Applications that already have a report — skip (idempotent, cost-bounded).
     const { data: existing } = await db
-      .from("poppy_reports")
+      .from("ruby_reports")
       .select("application_id")
       .in("application_id", apps.map((a) => a.id));
     const haveReport = new Set((existing ?? []).map((e) => e.application_id as string));
@@ -172,7 +172,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
       if (haveReport.has(app.id)) continue;
       const roleId = app.jobs?.role_id ?? null;
 
-      let chosen: PoppyStep | null = null;
+      let chosen: RubyStep | null = null;
       for (const s of steps) {
         if (!stepApplies(s, roleId)) continue;
         if (await conditionMet(db, app, s)) {
@@ -185,10 +185,10 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
         continue;
       }
 
-      // Re-check right before the expensive AI call: a manual "Run Poppy" (or a
+      // Re-check right before the expensive AI call: a manual "Run Ruby" (or a
       // prior run) may have created the report since we built `haveReport`, so we
       // don't clobber it, waste an AI call, or double-message the applicant.
-      const { data: fresh } = await db.from("poppy_reports").select("id").eq("application_id", app.id).maybeSingle();
+      const { data: fresh } = await db.from("ruby_reports").select("id").eq("application_id", app.id).maybeSingle();
       if (fresh) {
         res.skipped++;
         continue;
@@ -196,7 +196,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
 
       try {
         // Only read the CV if this step's reviewer list includes it.
-        const cvBase64Pdf = chosen.poppy_include_cv === true ? await downloadCvPdf(db, app.cv_path) : null;
+        const cvBase64Pdf = chosen.ruby_include_cv === true ? await downloadCvPdf(db, app.cv_path) : null;
         const formsText = await gatherFormsText(db, app.id);
         const answersText = [formsText, formatAnswers(app.answers)].filter(Boolean).join("\n\n") || null;
         const name =
@@ -204,9 +204,9 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
 
         // Phase 1 — analyse into concerns + questions. The conversation (Slice B)
         // asks the questions; the final report is written once they're answered.
-        const cfg = await loadPoppyRuntimeConfig(companyId, chosen);
-        const attachments = await gatherPoppyUploads(db, app.id, chosen.poppy_upload_kinds);
-        const analysis = await generatePoppyAnalysis({
+        const cfg = await loadRubyRuntimeConfig(companyId, chosen);
+        const attachments = await gatherRubyUploads(db, app.id, chosen.ruby_upload_kinds);
+        const analysis = await generateRubyAnalysis({
           jobTitle: app.jobs?.title ?? "Care role",
           jobDescription: app.jobs?.description ?? "",
           applicantName: name,
@@ -221,7 +221,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
           desiredAttributes: cfg.desiredAttributes,
           attachments,
         });
-        const report: PoppyReportData = {
+        const report: RubyReportData = {
           summary: analysis.summary,
           concerns: analysis.concerns,
           questions: analysis.questions,
@@ -231,7 +231,7 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
         // run created one in the meantime, `ins` is empty and we bail — no
         // clobber, no second conversation.
         const { data: ins } = await db
-          .from("poppy_reports")
+          .from("ruby_reports")
           .upsert(
             {
               company_id: companyId,
@@ -250,15 +250,15 @@ export async function runPoppy(limit = 25): Promise<PoppyRun> {
           res.skipped++;
           continue;
         }
-        // Poppy is billed per applicant (40 included/month, then 75p) — NOT via
+        // Ruby is billed per applicant (40 included/month, then 75p) — NOT via
         // the generic 10p AI meter. One credit per applicant, deduped.
-        await recordPoppyApplicant(companyId, app.id);
+        await recordRubyApplicant(companyId, app.id);
         // Kick off the screening conversation (consent message + nudge SMS).
-        await startPoppyConversation(db, app.id);
+        await startRubyConversation(db, app.id);
         res.generated++;
       } catch (e) {
         res.errors++;
-        await db.from("poppy_reports").upsert(
+        await db.from("ruby_reports").upsert(
           {
             company_id: companyId,
             application_id: app.id,

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { requireCompany } from "@/modules/auth/queries";
-import { poppyAllowanceUsed } from "@/lib/billing/poppy-credits";
+import { rubyAllowanceUsed } from "@/lib/billing/ruby-credits";
 import { londonToUtcIso } from "@/lib/time";
 import { AppGrid } from "@/components/dashboard/app-grid";
 import { SignoffLive } from "@/components/dashboard/signoff-live";
 import { GettingStartedChecklist, type ChecklistItem } from "@/components/dashboard/getting-started-checklist";
-import { PoppyOfferBanner } from "@/components/dashboard/poppy-offer-banner";
+import { RubyOfferBanner } from "@/components/dashboard/ruby-offer-banner";
 import { SETUP_TASK_META } from "@/lib/setup-tasks";
 import { feedbackOpen } from "@/lib/feedback";
 
@@ -36,20 +36,20 @@ export default async function DashboardPage() {
   };
 
   const { data: companyRow } = await supabase
-    .from("companies").select("created_at, settings, plan_tier, agreed_plan, poppy_enabled").eq("id", cid).single();
+    .from("companies").select("created_at, settings, plan_tier, agreed_plan, ruby_enabled").eq("id", cid).single();
   const fbOpen = feedbackOpen(companyRow?.created_at as string | undefined);
   const isAdmin = current.role === "admin";
-  const poppyEnabled = companyRow?.poppy_enabled === true;
+  const rubyEnabled = companyRow?.ruby_enabled === true;
 
-  // Poppy screens this month (admins with Poppy) — same source as the "Screens
-  // this month" figure in Poppy Settings, so the two always match.
-  let poppyScreens = 0;
-  if (isAdmin && poppyEnabled) {
-    poppyScreens = (await poppyAllowanceUsed(cid)).used;
+  // Ruby screens this month (admins with Ruby) — same source as the "Screens
+  // this month" figure in Ruby Settings, so the two always match.
+  let rubyScreens = 0;
+  if (isAdmin && rubyEnabled) {
+    rubyScreens = (await rubyAllowanceUsed(cid)).used;
   }
-  const poppyOfferPending =
-    companyRow?.plan_tier !== "poppy" &&
-    ((companyRow?.settings as { poppy_offer?: { status?: string } } | null)?.poppy_offer?.status === "pending");
+  const rubyOfferPending =
+    companyRow?.plan_tier !== "ruby" &&
+    ((companyRow?.settings as { ruby_offer?: { status?: string } } | null)?.ruby_offer?.status === "pending");
   const isDiamond = companyRow?.agreed_plan === "diamond";
   const onboardingDismissed = (companyRow?.settings as { onboarding_done?: boolean } | null)?.onboarding_done === true;
 
@@ -118,9 +118,9 @@ export default async function DashboardPage() {
     { label: "Sign Off", value: count(signoff), href: "/sign-off" },
     { label: "Messages", value: count(unreadMsgs), href: "/messages" },
     { label: "SMS this month", value: count(sms), href: "/templates" },
-    // Poppy screens — admins on the Poppy plan only.
-    ...(isAdmin && poppyEnabled
-      ? [{ label: "Poppy screens", value: poppyScreens, href: "/settings?s=poppy" }]
+    // Ruby screens — admins on the Ruby plan only.
+    ...(isAdmin && rubyEnabled
+      ? [{ label: "Ruby screens", value: rubyScreens, href: "/settings?s=ruby" }]
       : []),
   ];
 
@@ -136,8 +136,8 @@ export default async function DashboardPage() {
         <h1 className="text-3xl font-semibold">{greeting}, {first} 👋</h1>
         <p className="mt-1 text-white/70">{current.companies.name} · here&apos;s what&apos;s happening today.</p>
 
-        {/* Founder has offered Poppy — admins can accept/decline right here */}
-        {isAdmin && poppyOfferPending && <PoppyOfferBanner diamond={isDiamond} variant="dark" />}
+        {/* Founder has offered Ruby — admins can accept/decline right here */}
+        {isAdmin && rubyOfferPending && <RubyOfferBanner diamond={isDiamond} variant="dark" />}
 
         {/* stat cards — small squares, wrap to one line */}
         <div className="mt-6 flex flex-wrap justify-center gap-3">

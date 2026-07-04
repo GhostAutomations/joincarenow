@@ -61,15 +61,15 @@ export async function founderResetBilling(formData: FormData): Promise<void> {
 }
 
 /**
- * Founder: set a company's tier (Core / Poppy). Updates agreed_tier + plan_tier +
- * poppy_enabled, and — if there's an active subscription — moves the Stripe
- * subscription onto the matching base price and Poppy meter. Use this to sell
- * Tier 2 at setup, or to comp/remove Poppy for an existing company.
+ * Founder: set a company's tier (Core / Ruby). Updates agreed_tier + plan_tier +
+ * ruby_enabled, and — if there's an active subscription — moves the Stripe
+ * subscription onto the matching base price and Ruby meter. Use this to sell
+ * Tier 2 at setup, or to comp/remove Ruby for an existing company.
  */
 export async function founderSetTier(formData: FormData): Promise<void> {
   await requirePlatformAdmin();
   const id = formData.get("id")?.toString();
-  const tier = formData.get("tier") === "poppy" ? "poppy" : "core";
+  const tier = formData.get("tier") === "ruby" ? "ruby" : "core";
   if (!id) return;
   const db = createAdminClient();
   const { data: c } = await db
@@ -90,7 +90,7 @@ export async function founderSetTier(formData: FormData): Promise<void> {
 
   await db
     .from("companies")
-    .update({ plan_tier: tier, agreed_tier: tier, poppy_enabled: tier === "poppy" })
+    .update({ plan_tier: tier, agreed_tier: tier, ruby_enabled: tier === "ruby" })
     .eq("id", id);
   revalidatePath(`/founder/billing/${id}`);
   revalidatePath(`/founder/companies/${id}`);
@@ -98,12 +98,12 @@ export async function founderSetTier(formData: FormData): Promise<void> {
 }
 
 /**
- * Founder: OFFER Poppy to a company. Nothing changes on their subscription — this
- * records a pending offer (companies.settings.poppy_offer) and emails the
+ * Founder: OFFER Ruby to a company. Nothing changes on their subscription — this
+ * records a pending offer (companies.settings.ruby_offer) and emails the
  * company's admin(s). The admin accepts on their Billing page, which is what
  * actually applies the tier change and the new billing. Idempotent.
  */
-export async function founderOfferPoppy(formData: FormData): Promise<void> {
+export async function founderOfferRuby(formData: FormData): Promise<void> {
   await requirePlatformAdmin();
   const id = formData.get("id")?.toString();
   if (!id) return;
@@ -113,10 +113,10 @@ export async function founderOfferPoppy(formData: FormData): Promise<void> {
     .select("name, settings, plan_tier, agreed_plan")
     .eq("id", id)
     .single();
-  if (!c || c.plan_tier === "poppy") return; // already on Poppy — nothing to offer
+  if (!c || c.plan_tier === "ruby") return; // already on Ruby — nothing to offer
 
   const settings = { ...(c.settings && typeof c.settings === "object" ? (c.settings as Record<string, unknown>) : {}) };
-  settings.poppy_offer = { status: "pending", offered_at: new Date().toISOString() };
+  settings.ruby_offer = { status: "pending", offered_at: new Date().toISOString() };
   await db.from("companies").update({ settings }).eq("id", id);
 
   // Notify + email the company admin(s) — branded Join Care Now platform email
@@ -133,9 +133,9 @@ export async function founderOfferPoppy(formData: FormData): Promise<void> {
     .map((a) => ({
       company_id: id,
       user_id: a.user_id as string,
-      type: "poppy_offer",
-      title: "Add Poppy to your plan?",
-      body: "Your provider has offered to add Poppy, your AI recruitment assistant. Review & confirm in Billing.",
+      type: "ruby_offer",
+      title: "Add Ruby to your plan?",
+      body: "Your provider has offered to add Ruby, your AI recruitment assistant. Review & confirm in Billing.",
       link: "/billing",
     }));
   if (notifs.length) await db.from("notifications").insert(notifs);
@@ -148,12 +148,12 @@ export async function founderOfferPoppy(formData: FormData): Promise<void> {
   for (const to of emails) {
     await sendBrandedEmail(db, null, {
       to,
-      subject: "Add Poppy, your AI recruitment assistant, to your plan",
+      subject: "Add Ruby, your AI recruitment assistant, to your plan",
       text:
-        `Poppy is the AI recruitment assistant that screens your applicants for you — reviewing each application against the role, asking the candidate a few follow-up questions, and giving you a clear hire recommendation.\n\n` +
+        `Ruby is the AI recruitment assistant that screens your applicants for you — reviewing each application against the role, asking the candidate a few follow-up questions, and giving you a clear hire recommendation.\n\n` +
         `${priceLine}\n\n` +
         `Nothing changes until you say yes. Open your Billing page to review and confirm — you'll authorise the updated billing there.`,
-      cta: { label: "Review & add Poppy", url: `${BASE_URL}/billing` },
+      cta: { label: "Review & add Ruby", url: `${BASE_URL}/billing` },
       footerNote: "You're receiving this because you're an admin on a Join Care Now account.",
     });
   }
@@ -162,17 +162,17 @@ export async function founderOfferPoppy(formData: FormData): Promise<void> {
   revalidatePath(`/founder/companies/${id}`);
 }
 
-/** Founder: withdraw a pending Poppy offer (before the admin accepts). */
-export async function founderWithdrawPoppyOffer(formData: FormData): Promise<void> {
+/** Founder: withdraw a pending Ruby offer (before the admin accepts). */
+export async function founderWithdrawRubyOffer(formData: FormData): Promise<void> {
   await requirePlatformAdmin();
   const id = formData.get("id")?.toString();
   if (!id) return;
   const db = createAdminClient();
   const { data: c } = await db.from("companies").select("settings").eq("id", id).single();
   const settings = { ...(c?.settings && typeof c.settings === "object" ? (c.settings as Record<string, unknown>) : {}) };
-  delete settings.poppy_offer;
+  delete settings.ruby_offer;
   await db.from("companies").update({ settings }).eq("id", id);
-  await db.from("notifications").delete().eq("company_id", id).eq("type", "poppy_offer");
+  await db.from("notifications").delete().eq("company_id", id).eq("type", "ruby_offer");
   revalidatePath(`/founder/billing/${id}`);
 }
 

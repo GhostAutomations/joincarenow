@@ -2,20 +2,20 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { InterviewInputs } from "@/lib/ai/generate-interview-questions";
 
 /** One screening question, optionally with the applicant's answer (filled during
- *  the conversation). `followUp` marks a question Poppy asked after reviewing the
+ *  the conversation). `followUp` marks a question Ruby asked after reviewing the
  *  applicant's earlier answers. */
-export type PoppyQ = { question: string; rationale: string; answer?: string; followUp?: boolean };
+export type RubyQ = { question: string; rationale: string; answer?: string; followUp?: boolean };
 
-/** The progressively-filled Poppy report stored on poppy_reports.report:
+/** The progressively-filled Ruby report stored on ruby_reports.report:
  *  - after analysis: summary + concerns + questions (no answers/recommendation)
  *  - after the conversation: questions gain answers
  *  - after synthesis: recommendation (and a refined summary) */
-export type PoppyReportData = {
+export type RubyReportData = {
   summary: string[]; // key findings as bullet points
   concerns: string[];
   recommendation?: string;
-  questions: PoppyQ[];
-  /** Set once Poppy has generated its one round of follow-up questions. */
+  questions: RubyQ[];
+  /** Set once Ruby has generated its one round of follow-up questions. */
   followUpsAdded?: boolean;
 };
 
@@ -23,7 +23,7 @@ const MODEL = () => process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
 
 function client(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("Poppy isn't configured (missing ANTHROPIC_API_KEY).");
+  if (!apiKey) throw new Error("Ruby isn't configured (missing ANTHROPIC_API_KEY).");
   return new Anthropic({ apiKey, maxRetries: 0, timeout: 50_000 });
 }
 
@@ -32,7 +32,7 @@ async function askClaude(inputs: InterviewInputs, prompt: string): Promise<Recor
   if (inputs.cvBase64Pdf) {
     content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: inputs.cvBase64Pdf } });
   }
-  // Uploaded documents (DBS, proof of address, etc.) Poppy should read.
+  // Uploaded documents (DBS, proof of address, etc.) Ruby should read.
   for (const a of inputs.attachments ?? []) {
     if (a.mediaType === "application/pdf") {
       content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: a.base64 } });
@@ -49,11 +49,11 @@ async function askClaude(inputs: InterviewInputs, prompt: string): Promise<Recor
     .join("\n");
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
-  if (start === -1 || end === -1 || end < start) throw new Error("Poppy returned an unexpected response.");
+  if (start === -1 || end === -1 || end < start) throw new Error("Ruby returned an unexpected response.");
   try {
     return JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>;
   } catch {
-    throw new Error("Poppy returned an unexpected response.");
+    throw new Error("Ruby returned an unexpected response.");
   }
 }
 
@@ -74,12 +74,12 @@ const FAIRNESS = "Be fair and non-discriminatory: never reference age, race, rel
 
 /**
  * ANALYSIS — review the application against the JD and produce the concerns plus
- * the screening questions Poppy will ASK the applicant (no verdict yet).
+ * the screening questions Ruby will ASK the applicant (no verdict yet).
  */
-export async function generatePoppyAnalysis(
+export async function generateRubyAnalysis(
   inputs: InterviewInputs
 ): Promise<{ summary: string[]; concerns: string[]; questions: { question: string; rationale: string }[] }> {
-  const prompt = `You are Poppy, screening a candidate for a UK care-sector recruiter. Compare their application (and CV, if attached) against the job description.
+  const prompt = `You are Ruby, screening a candidate for a UK care-sector recruiter. Compare their application (and CV, if attached) against the job description.
 
 ${candidateBlock(inputs)}
 
@@ -122,16 +122,16 @@ Rules:
  * their answers and produce up to `max` follow-up questions worth clarifying
  * (vague, concerning or incomplete answers). Returns [] if nothing needs probing.
  */
-export async function generatePoppyFollowUps(
+export async function generateRubyFollowUps(
   inputs: InterviewInputs,
-  qa: PoppyQ[],
+  qa: RubyQ[],
   max = 5
 ): Promise<{ question: string; rationale: string }[]> {
   const answered = qa.filter((q) => q.answer && q.answer.trim());
   if (!answered.length) return [];
   const transcript = answered.map((q, i) => `Q${i + 1}: ${q.question}\nA${i + 1}: ${q.answer}`).join("\n\n");
 
-  const prompt = `You are Poppy, screening a candidate for a UK care-sector recruiter. You already asked screening questions; the candidate's answers are below. Review them and decide whether any FOLLOW-UP questions are worth asking to clarify a vague, incomplete or concerning answer.
+  const prompt = `You are Ruby, screening a candidate for a UK care-sector recruiter. You already asked screening questions; the candidate's answers are below. Review them and decide whether any FOLLOW-UP questions are worth asking to clarify a vague, incomplete or concerning answer.
 
 ${candidateBlock(inputs)}
 
@@ -168,16 +168,16 @@ Rules:
  * SYNTHESIS — given the concerns and the candidate's ANSWERS to the screening
  * questions, write the verdict (recommendation + refreshed summary).
  */
-export async function synthesizePoppyReport(
+export async function synthesizeRubyReport(
   inputs: InterviewInputs,
   concerns: string[],
-  qa: PoppyQ[]
+  qa: RubyQ[]
 ): Promise<{ summary: string[]; recommendation: string }> {
   const transcript = qa
     .map((q, i) => `Q${i + 1}: ${q.question}\nA${i + 1}: ${q.answer?.trim() || "(no answer)"}`)
     .join("\n\n");
 
-  const prompt = `You are Poppy. You already reviewed this candidate and asked them screening questions; their answers are below. Write a short verdict for the recruiter, taking the answers into account.
+  const prompt = `You are Ruby. You already reviewed this candidate and asked them screening questions; their answers are below. Write a short verdict for the recruiter, taking the answers into account.
 
 ${candidateBlock(inputs)}
 

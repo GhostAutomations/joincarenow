@@ -8,28 +8,28 @@ import {
   founderCancelSubscription,
   founderResetBilling,
   founderSetTier,
-  founderOfferPoppy,
-  founderWithdrawPoppyOffer,
+  founderOfferRuby,
+  founderWithdrawRubyOffer,
 } from "@/modules/billing/admin-actions";
 
 export function FounderBillingControls({
   companyId,
   comped,
   hasSubscription,
-  poppy,
+  ruby,
   offerPending,
 }: {
   companyId: string;
   comped: boolean;
   hasSubscription: boolean;
-  /** Whether the company is currently on Poppy (Tier 2 / Diamond+Poppy). */
-  poppy: boolean;
-  /** Whether a Poppy offer has been sent and is awaiting the admin's acceptance. */
+  /** Whether the company is currently on Ruby (Tier 2 / Diamond+Ruby). */
+  ruby: boolean;
+  /** Whether a Ruby offer has been sent and is awaiting the admin's acceptance. */
   offerPending: boolean;
 }) {
   const router = useRouter();
 
-  // While a Poppy offer is pending, poll so this control flips to "Remove Poppy"
+  // While a Ruby offer is pending, poll so this control flips to "Remove Ruby"
   // the moment the company admin accepts — without the founder refreshing.
   useEffect(() => {
     if (!offerPending) return;
@@ -47,25 +47,25 @@ export function FounderBillingControls({
       <p className="mt-1 text-xs text-gray-500">Manual overrides. These affect the customer&apos;s billing — use with care.</p>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {/* Poppy: already on → remove immediately; offer pending → withdraw;
+        {/* Ruby: already on → remove immediately; offer pending → withdraw;
             otherwise → send the admin an offer to accept (they authorise billing). */}
-        {poppy ? (
+        {ruby ? (
           <form
             action={founderSetTier}
-            onSubmit={confirmSubmit("Remove Poppy from this company? Their subscription moves back to Core (Tier 1) pricing and Poppy is turned off.")}
+            onSubmit={confirmSubmit("Remove Ruby from this company? Their subscription moves back to Core (Tier 1) pricing and Ruby is turned off.")}
           >
             <input type="hidden" name="id" value={companyId} />
             <input type="hidden" name="tier" value="core" />
             <button className="inline-flex items-center gap-1.5 rounded-lg border border-fuchsia-300 bg-fuchsia-50 px-3 py-1.5 text-sm font-medium text-fuchsia-700 hover:bg-fuchsia-100">
-              <Sparkles className="h-4 w-4" /> Remove Poppy
+              <Sparkles className="h-4 w-4" /> Remove Ruby
             </button>
           </form>
         ) : offerPending ? (
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700">
-              <Clock className="h-4 w-4" /> Poppy offer sent — awaiting acceptance
+              <Clock className="h-4 w-4" /> Ruby offer sent — awaiting acceptance
             </span>
-            <form action={founderWithdrawPoppyOffer} onSubmit={confirmSubmit("Withdraw the pending Poppy offer?")}>
+            <form action={founderWithdrawRubyOffer} onSubmit={confirmSubmit("Withdraw the pending Ruby offer?")}>
               <input type="hidden" name="id" value={companyId} />
               <button className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-white/60 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/60">
                 <XCircle className="h-4 w-4" /> Withdraw
@@ -74,12 +74,12 @@ export function FounderBillingControls({
           </div>
         ) : (
           <form
-            action={founderOfferPoppy}
-            onSubmit={confirmSubmit("Send this company an offer to add Poppy? Their admin will get an email + an in-app prompt to accept and authorise the billing. Nothing changes until they accept.")}
+            action={founderOfferRuby}
+            onSubmit={confirmSubmit("Send this company an offer to add Ruby? Their admin will get an email + an in-app prompt to accept and authorise the billing. Nothing changes until they accept.")}
           >
             <input type="hidden" name="id" value={companyId} />
             <button className="inline-flex items-center gap-1.5 rounded-lg border border-fuchsia-300 bg-fuchsia-50 px-3 py-1.5 text-sm font-medium text-fuchsia-700 hover:bg-fuchsia-100">
-              <Sparkles className="h-4 w-4" /> Add Poppy
+              <Sparkles className="h-4 w-4" /> Add Ruby
             </button>
           </form>
         )}

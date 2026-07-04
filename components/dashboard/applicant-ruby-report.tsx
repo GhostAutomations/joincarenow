@@ -3,40 +3,40 @@
 import { useEffect, useState } from "react";
 import { Sparkles, AlertTriangle, ClipboardList, RefreshCw, MessagesSquare, ChevronDown, Download } from "lucide-react";
 import {
-  getPoppyReport,
-  runPoppyForApplication,
-  type PoppyReportResult,
-} from "@/modules/poppy/actions";
-import { loadJsPdf, poppyReportPdf, pdfSafeName } from "@/lib/pdf/poppy-report-pdf";
+  getRubyReport,
+  runRubyForApplication,
+  type RubyReportResult,
+} from "@/modules/ruby/actions";
+import { loadJsPdf, rubyReportPdf, pdfSafeName } from "@/lib/pdf/ruby-report-pdf";
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * Poppy on the applicant panel. Collapsed by default (just a header) — expands
+ * Ruby on the applicant panel. Collapsed by default (just a header) — expands
  * on click to show the screening report. Re-collapses whenever the panel is
  * reopened (fresh mount). Phase-aware; renders nothing unless the company has
- * Poppy.
+ * Ruby.
  */
-export function ApplicantPoppyReport({
+export function ApplicantRubyReport({
   applicationId,
   applicantName = "Applicant",
 }: {
   applicationId: string;
   applicantName?: string;
 }) {
-  const [res, setRes] = useState<PoppyReportResult | null>(null);
+  const [res, setRes] = useState<RubyReportResult | null>(null);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function downloadPdf(report: NonNullable<PoppyReportResult["report"]>) {
+  async function downloadPdf(report: NonNullable<RubyReportResult["report"]>) {
     try {
       const JsPDF = await loadJsPdf();
-      const buf = poppyReportPdf(JsPDF, report, applicantName);
+      const buf = rubyReportPdf(JsPDF, report, applicantName);
       const blob = new Blob([buf], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${pdfSafeName(`Poppy screening ${applicantName}`)}.pdf`;
+      a.download = `${pdfSafeName(`Ruby screening ${applicantName}`)}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -47,13 +47,13 @@ export function ApplicantPoppyReport({
   }
 
   function load() {
-    return getPoppyReport(applicationId).then(setRes);
+    return getRubyReport(applicationId).then(setRes);
   }
   useEffect(() => {
     let alive = true;
     setRes(null);
     setOpen(false); // always start collapsed when the applicant changes
-    getPoppyReport(applicationId).then((r) => {
+    getRubyReport(applicationId).then((r) => {
       if (alive) setRes(r);
     });
     return () => {
@@ -70,11 +70,11 @@ export function ApplicantPoppyReport({
     const bump = () => {
       if (pending) clearTimeout(pending);
       pending = setTimeout(() => {
-        getPoppyReport(applicationId).then(setRes);
+        getRubyReport(applicationId).then(setRes);
       }, 500);
     };
     const channel = supabase
-      .channel(`poppy-report-${applicationId}`)
+      .channel(`ruby-report-${applicationId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, bump)
       .subscribe();
     return () => {
@@ -86,7 +86,7 @@ export function ApplicantPoppyReport({
   async function run() {
     setBusy(true);
     setError(null);
-    const r = await runPoppyForApplication(applicationId);
+    const r = await runRubyForApplication(applicationId);
     if (r.error) {
       setError(r.error);
       setBusy(false);
@@ -122,7 +122,7 @@ export function ApplicantPoppyReport({
       >
         <ChevronDown className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
         <span className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-gray-400">
-          <Sparkles className="h-3.5 w-3.5 text-brand-500" /> Poppy · Screening
+          <Sparkles className="h-3.5 w-3.5 text-brand-500" /> Ruby · Screening
         </span>
         <span className="ml-auto max-w-[55%] truncate text-xs text-gray-500">{busy ? "Working…" : status}</span>
       </button>
@@ -151,12 +151,12 @@ export function ApplicantPoppyReport({
 
           {busy ? (
             <p className="flex items-center gap-2 text-sm text-gray-500">
-              <Sparkles className="h-4 w-4 animate-pulse text-brand-500" /> Poppy is reviewing the application…
+              <Sparkles className="h-4 w-4 animate-pulse text-brand-500" /> Ruby is reviewing the application…
             </p>
           ) : res.status !== "ready" || !r ? (
             <div>
               <p className="text-sm text-gray-500">
-                No screening yet. Poppy runs automatically at your workflow step — or run it now.
+                No screening yet. Ruby runs automatically at your workflow step — or run it now.
               </p>
               {error && (
                 <p className="mt-1.5 flex items-start gap-1.5 text-sm text-red-600">
@@ -167,7 +167,7 @@ export function ApplicantPoppyReport({
                 onClick={run}
                 className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
               >
-                <Sparkles className="h-4 w-4" /> Run Poppy screening
+                <Sparkles className="h-4 w-4" /> Run Ruby screening
               </button>
             </div>
           ) : (
@@ -199,7 +199,7 @@ function Report({
   phase,
   generatedAt,
 }: {
-  r: NonNullable<PoppyReportResult["report"]>;
+  r: NonNullable<RubyReportResult["report"]>;
   phase: string;
   generatedAt: string | null;
 }) {
@@ -212,9 +212,9 @@ function Report({
       : [];
   const phaseNote =
     phase === "analysed"
-      ? "Concerns and screening questions ready — Poppy will ask the applicant next."
+      ? "Concerns and screening questions ready — Ruby will ask the applicant next."
       : phase === "conversing"
-        ? "Poppy is asking the applicant these questions in their portal."
+        ? "Ruby is asking the applicant these questions in their portal."
         : phase === "declined"
           ? "The applicant didn't complete the screening conversation."
           : null;
@@ -280,8 +280,8 @@ function Report({
       )}
 
       <p className="mt-2 text-[11px] text-gray-400">
-        {generatedAt && `Poppy · ${new Date(generatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}. `}
-        Poppy&apos;s assessment is advisory — a person makes the final hiring decision.
+        {generatedAt && `Ruby · ${new Date(generatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}. `}
+        Ruby&apos;s assessment is advisory — a person makes the final hiring decision.
       </p>
     </div>
   );

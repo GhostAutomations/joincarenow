@@ -76,20 +76,20 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
     return d;
   })();
 
-  const [{ data: usage }, { data: poppyCredits }, { data: branches }] = await Promise.all([
+  const [{ data: usage }, { data: rubyCredits }, { data: branches }] = await Promise.all([
     db.from("usage_events").select("kind, quantity, created_at").eq("company_id", id).gte("created_at", yearStart.toISOString()),
-    db.from("poppy_applicant_credits").select("consumed_at").eq("company_id", id).gte("consumed_at", yearStart.toISOString()),
+    db.from("ruby_applicant_credits").select("consumed_at").eq("company_id", id).gte("consumed_at", yearStart.toISOString()),
     db.from("branches").select("id, name").eq("company_id", id).order("created_at", { ascending: true }),
   ]);
   const sumUsage = (kind: string, since: Date) =>
     (usage ?? [])
       .filter((u) => u.kind === kind && new Date(u.created_at as string) >= since)
       .reduce((s, u) => s + ((u.quantity as number) ?? 0), 0);
-  const countPoppy = (since: Date) =>
-    (poppyCredits ?? []).filter((c) => new Date(c.consumed_at as string) >= since).length;
+  const countRuby = (since: Date) =>
+    (rubyCredits ?? []).filter((c) => new Date(c.consumed_at as string) >= since).length;
   const smsStats = { period: sumUsage("sms", periodStart), qtd: sumUsage("sms", quarterStart), ytd: sumUsage("sms", yearStart) };
   const aiStats = { period: sumUsage("ai", periodStart), qtd: sumUsage("ai", quarterStart), ytd: sumUsage("ai", yearStart) };
-  const poppyStats = { period: countPoppy(periodStart), qtd: countPoppy(quarterStart), ytd: countPoppy(yearStart) };
+  const rubyStats = { period: countRuby(periodStart), qtd: countRuby(quarterStart), ytd: countRuby(yearStart) };
 
   const customerId = company.stripe_customer_id as string | null;
   const invoices = customerId ? await listInvoices(customerId) : [];
@@ -98,20 +98,20 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
   const comped = company.billing_comped === true;
   const interval = company.billing_interval as string | null;
   const committed = company.commitment_until && new Date(company.commitment_until as string) > new Date();
-  const isPoppy = company.plan_tier === "poppy";
+  const isRuby = company.plan_tier === "ruby";
   const isDiamond = company.agreed_plan === "diamond";
-  const poppyOfferPending =
-    (company.settings as { poppy_offer?: { status?: string } } | null)?.poppy_offer?.status === "pending";
+  const rubyOfferPending =
+    (company.settings as { ruby_offer?: { status?: string } } | null)?.ruby_offer?.status === "pending";
   const corePrice = interval === "year" ? "£490 / year" : committed ? "£49 / month · 12-month commitment" : "£49 / month";
-  const poppyPrice = interval === "year" ? "£790 / year" : committed ? "£79 / month · 12-month commitment" : "£89 / month";
+  const rubyPrice = interval === "year" ? "£790 / year" : committed ? "£79 / month · 12-month commitment" : "£89 / month";
   const planLabel = comped
     ? "Complimentary"
     : status !== "active" && status !== "trialing"
     ? "—"
     : isDiamond
-    ? `Usage only${isPoppy ? " · Poppy" : ""}`
-    : isPoppy
-    ? poppyPrice
+    ? `Usage only${isRuby ? " · Ruby" : ""}`
+    : isRuby
+    ? rubyPrice
     : corePrice;
   const date = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
   const money = (pence: number) => "£" + (pence / 100).toFixed(2);
@@ -147,11 +147,11 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
         </div>
       </div>
 
-      {/* Usage — MTD / QTD / YTD. Click SMS, AI or Poppy to see what it was used for. */}
+      {/* Usage — MTD / QTD / YTD. Click SMS, AI or Ruby to see what it was used for. */}
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <UsageStatCard href={`/founder/billing/${id}/usage?kind=sms`} icon={MessageSquareText} label="SMS" stats={smsStats} />
         <UsageStatCard href={`/founder/billing/${id}/usage?kind=ai`} icon={Sparkles} label="AI" stats={aiStats} />
-        <UsageStatCard href={`/founder/billing/${id}/usage?kind=poppy`} icon={Bot} label="Poppy" stats={poppyStats} />
+        <UsageStatCard href={`/founder/billing/${id}/usage?kind=ruby`} icon={Bot} label="Ruby" stats={rubyStats} />
         <div className="rounded-2xl border border-white/40 bg-white/70 backdrop-blur-md p-4 shadow-sm">
           <p className="flex items-center gap-2 text-sm text-gray-500"><Building2 className="h-4 w-4 text-brand-600" /> Branches</p>
           <p className="mt-2 text-xl font-bold text-gray-900">{1 + ((company.extra_branches as number) ?? 0)}</p>
@@ -191,8 +191,8 @@ export default async function CompanyBillingPage({ params }: { params: Promise<{
           companyId={company.id as string}
           comped={comped}
           hasSubscription={Boolean(company.stripe_subscription_id)}
-          poppy={isPoppy}
-          offerPending={poppyOfferPending}
+          ruby={isRuby}
+          offerPending={rubyOfferPending}
         />
       </div>
     </div>

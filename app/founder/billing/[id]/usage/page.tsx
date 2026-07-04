@@ -9,11 +9,11 @@ const fmtDate = (iso: string) =>
 const TABS: { key: string; label: string }[] = [
   { key: "sms", label: "SMS" },
   { key: "ai", label: "AI" },
-  { key: "poppy", label: "Poppy" },
+  { key: "ruby", label: "Ruby" },
 ];
 
 /**
- * Founder drill-down: what a company's SMS / AI / Poppy usage was actually used
+ * Founder drill-down: what a company's SMS / AI / Ruby usage was actually used
  * for, in case a client queries their bill. GDPR-safe — SMS shows date, count and
  * reason only (no recipient or message content).
  */
@@ -27,7 +27,7 @@ export default async function CompanyUsagePage({
   await requirePlatformAdmin();
   const { id } = await params;
   const { kind: kindRaw } = await searchParams;
-  const kind = kindRaw === "ai" ? "ai" : kindRaw === "poppy" ? "poppy" : "sms";
+  const kind = kindRaw === "ai" ? "ai" : kindRaw === "ruby" ? "ruby" : "sms";
   const db = createAdminClient();
 
   const { data: company } = await db.from("companies").select("name").eq("id", id).single();
@@ -37,10 +37,10 @@ export default async function CompanyUsagePage({
   let columns: string[] = [];
   let rows: (string | number)[][] = [];
 
-  if (kind === "poppy") {
-    heading = "Poppy screenings";
+  if (kind === "ruby") {
+    heading = "Ruby screenings";
     const { data } = await db
-      .from("poppy_applicant_credits")
+      .from("ruby_applicant_credits")
       .select("consumed_at, applications ( applicants ( first_name, last_name ), jobs ( title ) )")
       .eq("company_id", id)
       .order("consumed_at", { ascending: false })

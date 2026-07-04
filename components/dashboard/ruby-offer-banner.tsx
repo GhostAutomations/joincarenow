@@ -3,12 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, Check, X } from "lucide-react";
-import { acceptPoppyOffer, declinePoppyOffer } from "@/modules/billing/actions";
+import { acceptRubyOffer, declineRubyOffer } from "@/modules/billing/actions";
 
-/** Shown on the Billing page and Dashboard when the founder has offered Poppy.
+/** Shown on the Billing page and Dashboard when the founder has offered Ruby.
  *  Accepting is what authorises the new billing and applies the change.
  *  `variant="dark"` styles it as a glassy card for the gradient dashboard. */
-export function PoppyOfferBanner({ diamond, variant = "light" }: { diamond: boolean; variant?: "light" | "dark" }) {
+export function RubyOfferBanner({ diamond, variant = "light" }: { diamond: boolean; variant?: "light" | "dark" }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +21,7 @@ export function PoppyOfferBanner({ diamond, variant = "light" }: { diamond: bool
   function act(accept: boolean) {
     setError(null);
     start(async () => {
-      const res = accept ? await acceptPoppyOffer() : await declinePoppyOffer();
+      const res = accept ? await acceptRubyOffer() : await declineRubyOffer();
       if (res.error) setError(res.error);
       else router.refresh();
     });
@@ -41,14 +41,14 @@ export function PoppyOfferBanner({ diamond, variant = "light" }: { diamond: bool
         </span>
         <div className="min-w-0 flex-1">
           <p className={`text-sm font-semibold ${dark ? "text-white" : "text-gray-900"}`}>
-            Add Poppy, your AI recruitment assistant?
+            Add Ruby, your AI recruitment assistant?
           </p>
           <p className={`mt-1 text-sm ${dark ? "text-white/85" : "text-gray-700"}`}>
-            Poppy screens your applicants for you — reviewing each application, asking the candidate
+            Ruby screens your applicants for you — reviewing each application, asking the candidate
             a few follow-up questions, and giving you a clear hire recommendation. {priceLine}
           </p>
           <p className={`mt-1 text-xs ${dark ? "text-white/60" : "text-gray-500"}`}>
-            Accepting authorises the updated billing on your saved payment method. You can remove Poppy later.
+            Accepting authorises the updated billing on your saved payment method. You can remove Ruby later.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button

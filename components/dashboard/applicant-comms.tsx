@@ -64,7 +64,7 @@ export function ApplicantComms({
     load();
   }, [load]);
 
-  // Live updates: refetch the thread whenever messages change (Poppy posts, the
+  // Live updates: refetch the thread whenever messages change (Ruby posts, the
   // applicant replies, a send completes). RLS scopes events to this company; the
   // refetch is scoped to this application. Slow poll as a socket-drop safety net.
   useEffect(() => {
@@ -196,8 +196,8 @@ export function ApplicantComms({
                 <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${inbound ? "rounded-bl-sm border border-gray-200 bg-white text-gray-800" : "rounded-br-sm bg-brand-600 text-white"}`}>
                   <p className="whitespace-pre-wrap break-words">{text}</p>
                   <p className={`mt-1 flex items-center gap-1 text-[10px] ${inbound ? "text-gray-400" : "text-white/70"}`}>
-                    {m.from_poppy ? <Sparkles className="h-3.5 w-3.5" /> : CH_ICON[m.channel]}
-                    {m.from_poppy ? "Poppy" : (CH_LABEL[m.channel] ?? m.channel)} · {new Date(m.created_at).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}
+                    {m.from_ruby ? <Sparkles className="h-3.5 w-3.5" /> : CH_ICON[m.channel]}
+                    {m.from_ruby ? "Ruby" : (CH_LABEL[m.channel] ?? m.channel)} · {new Date(m.created_at).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}
                     {!inbound && m.status === "failed" && <span className="text-red-200">· failed</span>}
                   </p>
                   {m.error && !inbound && <p className="mt-0.5 text-[10px] text-red-200">{m.error}</p>}

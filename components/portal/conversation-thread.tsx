@@ -30,7 +30,7 @@ export function ConversationThread({
     if (state?.ok) { formRef.current?.reset(); router.refresh(); }
   }, [state, router]);
 
-  // Poll so delayed / incoming messages (e.g. Poppy's reply, which is posted a
+  // Poll so delayed / incoming messages (e.g. Ruby's reply, which is posted a
   // few seconds after the applicant's) appear without a manual refresh.
   useEffect(() => {
     const t = setInterval(() => router.refresh(), 6000);

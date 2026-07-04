@@ -1,6 +1,6 @@
-// Client-side Poppy report → PDF (jsPDF from CDN, no npm dep). Shared by the
+// Client-side Ruby report → PDF (jsPDF from CDN, no npm dep). Shared by the
 // applicant panel "Download PDF" button and the staff-file ZIP.
-import type { PoppyReportData } from "@/lib/ai/generate-poppy-report";
+import type { RubyReportData } from "@/lib/ai/generate-ruby-report";
 
 export type JsPdfDoc = {
   internal: { pageSize: { getWidth: () => number; getHeight: () => number } };
@@ -50,8 +50,8 @@ export function pdfSafeName(s: string): string {
   return (s || "document").replace(/[/\\:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 80);
 }
 
-/** Render a Poppy screening report to a PDF ArrayBuffer. */
-export function poppyReportPdf(JsPDF: JsPdfCtor, report: PoppyReportData, applicantName: string): ArrayBuffer {
+/** Render a Ruby screening report to a PDF ArrayBuffer. */
+export function rubyReportPdf(JsPDF: JsPdfCtor, report: RubyReportData, applicantName: string): ArrayBuffer {
   const pdf = new JsPDF({ unit: "pt", format: "a4" });
   const margin = 48;
   const pageH = pdf.internal.pageSize.getHeight();
@@ -69,7 +69,7 @@ export function poppyReportPdf(JsPDF: JsPdfCtor, report: PoppyReportData, applic
     }
   };
 
-  line(`Poppy screening — ${applicantName}`, 16, "bold");
+  line(`Ruby screening — ${applicantName}`, 16, "bold");
   y += 6;
   if (report.recommendation) { line(`Recommendation: ${report.recommendation}`, 11, "bold"); y += 8; }
   const summaryList: string[] = Array.isArray(report.summary)

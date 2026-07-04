@@ -16,7 +16,7 @@ export function AuthCard({
       <div className="relative w-full max-w-md">
         <div className="mb-8 text-center">
           <Link href="/" className="text-2xl font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-sm">
+            <span className="-mb-1 inline-block bg-gradient-to-r from-amber-200 via-amber-300 to-amber-500 bg-clip-text pb-1 text-transparent drop-shadow-sm">
               Join Care Now
             </span>
           </Link>

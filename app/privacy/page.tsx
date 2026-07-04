@@ -18,7 +18,7 @@ export default function PrivacyPage() {
       <header className="bg-gradient-to-br from-[#081231] via-[#0d1d4b] to-[#14306b] shadow-md">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <Link href="/" className="text-lg font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-500 bg-clip-text text-transparent">
+            <span className="-mb-1 inline-block bg-gradient-to-r from-amber-200 via-amber-300 to-amber-500 bg-clip-text pb-1 text-transparent">
               Join Care Now
             </span>
           </Link>

@@ -43,7 +43,7 @@ const NAVY_BTN =
 function Wordmark({ className = "text-xl sm:text-2xl" }: { className?: string }) {
   return (
     <span className={`font-bold tracking-tight ${className}`}>
-      <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-sm">
+      <span className="-mb-1 inline-block bg-gradient-to-r from-amber-200 via-amber-300 to-amber-500 bg-clip-text pb-1 text-transparent drop-shadow-sm">
         Join Care Now
       </span>
     </span>
@@ -191,7 +191,7 @@ export default function LandingPage() {
               </span>
               <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl">
                 Hire compliant care staff faster.{" "}
-                <span className="bg-gradient-to-r from-rose-300 via-rose-200 to-amber-200 bg-clip-text text-transparent">Ruby</span>,
+                <span className="-mb-2 inline-block bg-gradient-to-r from-rose-300 via-rose-200 to-amber-200 bg-clip-text pb-2 text-transparent">Ruby</span>,
                 your AI assistant, screens every applicant for you.
               </h1>
               <p className="mt-6 text-lg text-white/85">

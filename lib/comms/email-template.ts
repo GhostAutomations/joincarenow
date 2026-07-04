@@ -40,7 +40,7 @@ export function renderEmailHtml(opts: {
   // Multiple side-by-side buttons (e.g. Accept / Decline). Takes precedence over cta.
   ctas?: { label: string; url: string; style?: "primary" | "danger" | "ghost" }[];
 }): string {
-  const brand = opts.brandColor || "#2d6d6a"; // JCN brand-600 teal
+  const brand = opts.brandColor || "#0d1d4b"; // JCN navy
   const brandDark = shade(brand, 0.82);
   const headerInner = opts.logoUrl
     ? `<img src="${esc(opts.logoUrl)}" alt="${esc(opts.heading || "Join Care Now")}" height="30" style="height:30px;width:auto;display:block"/>`

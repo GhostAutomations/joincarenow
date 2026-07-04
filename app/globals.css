@@ -1,27 +1,31 @@
 @import "tailwindcss";
 
 @theme {
-  /* Join Care Now brand palette */
-  --color-brand-50: #eef7f6;
-  --color-brand-100: #d5ecea;
-  --color-brand-200: #aedad6;
-  --color-brand-300: #7fc1bc;
-  --color-brand-400: #54a49f;
-  --color-brand-500: #3a8884;
-  --color-brand-600: #2d6d6a;
-  --color-brand-700: #275856;
-  --color-brand-800: #234746;
-  --color-brand-900: #203c3b;
-  --color-brand-950: #0e2221;
+  /* Join Care Now brand palette — navy (with gold as the site accent). */
+  --color-brand-50: #eef2fb;
+  --color-brand-100: #dae3f5;
+  --color-brand-200: #b6c7ea;
+  --color-brand-300: #8aa4db;
+  --color-brand-400: #5c7cc4;
+  --color-brand-500: #3a5aa4;
+  --color-brand-600: #1d3a7d;
+  --color-brand-700: #14306b;
+  --color-brand-800: #0d1d4b;
+  --color-brand-900: #0a1638;
+  --color-brand-950: #081231;
+  /* Gold accent (matches the marketing site). */
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #f59e0b;
 }
 
-/* Brand colours — defaults match the Join Care Now teal→cyan→indigo gradient.
-   Per-company branding overrides these three vars (and the brand-* palette)
-   via the injected <BrandStyle> tag in the dashboard layout. */
+/* Brand colours — defaults are the Join Care Now navy gradient (gold is the
+   accent). Per-company branding overrides these three vars (and the brand-*
+   palette) via the injected <BrandStyle> tag in the dashboard layout. */
 :root {
-  --brand-primary: #0d9488;   /* teal-600  */
-  --brand-secondary: #0e7490; /* cyan-700  */
-  --brand-accent: #3730a3;    /* indigo-800 */
+  --brand-primary: #081231;   /* deep navy */
+  --brand-secondary: #0d1d4b; /* navy      */
+  --brand-accent: #14306b;    /* lighter navy */
 }
 
 /* App background gradient (used across every level). */

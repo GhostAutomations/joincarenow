@@ -27,7 +27,7 @@ export function RubyToggle({ companyId, enabled }: { companyId: string; enabled:
   return (
     <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/40 bg-white/75 p-4 shadow-sm backdrop-blur-md">
       <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 text-white shadow">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-rose-600 to-red-700 text-white shadow">
           <Sparkles className="h-5 w-5" />
         </span>
         <div>

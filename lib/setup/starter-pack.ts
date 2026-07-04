@@ -322,4 +322,4 @@ export const STARTER_REMINDERS: Record<
 
 // A neutral brand primary so branded emails look intentional before the
 // company uploads their own. Only applied when no brand colour is set.
-export const STARTER_BRAND_PRIMARY = "#0d9488"; // teal-600
+export const STARTER_BRAND_PRIMARY = "#081231"; // Join Care Now navy

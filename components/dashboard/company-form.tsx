@@ -7,9 +7,9 @@ import { InviteLink } from "@/components/dashboard/invite-link";
 import { LogoCropper } from "@/components/dashboard/logo-cropper";
 
 const COLOURS = [
-  { name: "brandPrimary", label: "Primary", hint: "Buttons, links, highlights", def: "#0d9488" },
-  { name: "brandSecondary", label: "Secondary", hint: "Supporting / mid gradient", def: "#0e7490" },
-  { name: "brandAccent", label: "Accent", hint: "Deepest gradient tone", def: "#3730a3" },
+  { name: "brandPrimary", label: "Primary", hint: "Buttons, links, highlights", def: "#081231" },
+  { name: "brandSecondary", label: "Secondary", hint: "Supporting / mid gradient", def: "#0d1d4b" },
+  { name: "brandAccent", label: "Accent", hint: "Deepest gradient tone", def: "#14306b" },
 ];
 
 const sectionClass = "border-t border-white/40 pt-4";

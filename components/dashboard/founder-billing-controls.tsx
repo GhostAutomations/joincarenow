@@ -56,7 +56,7 @@ export function FounderBillingControls({
           >
             <input type="hidden" name="id" value={companyId} />
             <input type="hidden" name="tier" value="core" />
-            <button className="inline-flex items-center gap-1.5 rounded-lg border border-fuchsia-300 bg-fuchsia-50 px-3 py-1.5 text-sm font-medium text-fuchsia-700 hover:bg-fuchsia-100">
+            <button className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-100">
               <Sparkles className="h-4 w-4" /> Remove Ruby
             </button>
           </form>
@@ -78,7 +78,7 @@ export function FounderBillingControls({
             onSubmit={confirmSubmit("Send this company an offer to add Ruby? Their admin will get an email + an in-app prompt to accept and authorise the billing. Nothing changes until they accept.")}
           >
             <input type="hidden" name="id" value={companyId} />
-            <button className="inline-flex items-center gap-1.5 rounded-lg border border-fuchsia-300 bg-fuchsia-50 px-3 py-1.5 text-sm font-medium text-fuchsia-700 hover:bg-fuchsia-100">
+            <button className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-100">
               <Sparkles className="h-4 w-4" /> Add Ruby
             </button>
           </form>

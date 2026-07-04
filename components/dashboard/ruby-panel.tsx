@@ -43,7 +43,7 @@ export function RubyPanel({
         onClick={() => setView("attributes")}
         className="flex w-full items-center gap-3 rounded-xl border border-white/50 bg-white/60 px-4 py-3 text-left backdrop-blur-sm transition hover:bg-white/80"
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-fuchsia-500 to-pink-600 text-white shadow-sm">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-600 to-red-700 text-white shadow-sm">
           <ListChecks className="h-5 w-5" />
         </span>
         <span className="min-w-0 flex-1">

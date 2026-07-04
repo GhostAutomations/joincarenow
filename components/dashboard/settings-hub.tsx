@@ -59,8 +59,8 @@ const TILE_TINT: Record<string, string> = {
   interview: "from-indigo-500 to-indigo-600",
   hours: "from-cyan-500 to-cyan-600",
   communication: "from-orange-500 to-orange-600",
-  ruby: "from-pink-500 to-fuchsia-600",
-  attributes: "from-fuchsia-500 to-pink-600",
+  ruby: "from-rose-600 to-red-700",
+  attributes: "from-rose-500 to-red-600",
   team: "from-blue-500 to-blue-600",
   workflows: "from-emerald-400 to-emerald-600",
 };

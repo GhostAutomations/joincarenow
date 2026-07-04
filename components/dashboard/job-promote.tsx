@@ -47,7 +47,7 @@ function esc(s: string): string {
 
 export function JobPromote(props: JobPromoteProps) {
   const { companyName, jobTitle, location, salary, employmentType, jobUrl } = props;
-  const brand = props.brandPrimary && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(props.brandPrimary) ? props.brandPrimary : "#2d6d6a";
+  const brand = props.brandPrimary && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(props.brandPrimary) ? props.brandPrimary : "#0d1d4b";
 
   const [copied, setCopied] = useState<string | null>(null);
   const [posterErr, setPosterErr] = useState<string | null>(null);

@@ -32,11 +32,11 @@ export function RubyOfferBanner({ diamond, variant = "light" }: { diamond: boole
       className={
         dark
           ? "mt-6 overflow-hidden rounded-2xl border border-white/25 bg-white/15 p-5 shadow-sm backdrop-blur-md"
-          : "mt-6 overflow-hidden rounded-2xl border border-fuchsia-200 bg-gradient-to-br from-fuchsia-50 to-violet-50 p-5 shadow-sm"
+          : "mt-6 overflow-hidden rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 to-red-50 p-5 shadow-sm"
       }
     >
       <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 text-white shadow">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-rose-600 to-red-700 text-white shadow">
           <Sparkles className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">

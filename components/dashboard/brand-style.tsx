@@ -1,7 +1,7 @@
 /**
  * Injects a company's brand colours as CSS variables for the whole document.
  * Renders nothing when the company hasn't set a custom brand, so default
- * companies keep the standard Join Care Now teal palette.
+ * companies keep the standard Join Care Now navy palette.
  *
  * Setting --brand-primary also rebuilds the entire `brand-*` Tailwind palette
  * (buttons, links, active states) from that single colour using color-mix,
@@ -20,9 +20,9 @@ const safe = (v: string | null | undefined, fallback: string) =>
 export function BrandStyle({ brand }: { brand?: Brand | null }) {
   if (!brand || (!brand.primary && !brand.secondary && !brand.accent)) return null;
 
-  const primary = safe(brand.primary, "#0d9488");
-  const secondary = safe(brand.secondary, "#0e7490");
-  const accent = safe(brand.accent, "#3730a3");
+  const primary = safe(brand.primary, "#081231");
+  const secondary = safe(brand.secondary, "#0d1d4b");
+  const accent = safe(brand.accent, "#14306b");
 
   const css = `:root{
     --brand-primary:${primary};

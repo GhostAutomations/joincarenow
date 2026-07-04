@@ -16,10 +16,10 @@ export const PRICES = {
   t2Annual: process.env.STRIPE_PRICE_T2_ANNUAL, // £790 / year recurring
   setup: process.env.STRIPE_PRICE_SETUP, // £150 one-time (both tiers, monthly non-commit)
   // Ruby applicant overage — 75p metered, 40 included/month handled in-app.
-  // Falls back to the legacy POPPY env names so billing keeps working until
-  // the Vercel env vars are renamed to STRIPE_PRICE_RUBY(_YEAR).
-  ruby: process.env.STRIPE_PRICE_RUBY ?? process.env.STRIPE_PRICE_POPPY, // 75p metered, monthly
-  rubyYear: process.env.STRIPE_PRICE_RUBY_YEAR ?? process.env.STRIPE_PRICE_POPPY_YEAR, // 75p metered, yearly
+  // Env vars keep the legacy POPPY names (deliberate — set in Vercel long
+  // before the Ruby rename; renaming there means create+delete, not worth it).
+  ruby: process.env.STRIPE_PRICE_POPPY, // 75p metered, monthly
+  rubyYear: process.env.STRIPE_PRICE_POPPY_YEAR, // 75p metered, yearly
   // Add-ons come in interval variants so they can attach to either base plan
   // (Stripe forbids mixing intervals within one subscription).
   branch: process.env.STRIPE_PRICE_BRANCH, // £7.50 / month (licensed)

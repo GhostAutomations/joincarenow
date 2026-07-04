@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LayoutGrid } from "lucide-react";
 import { requirePlatformAdmin } from "@/modules/auth/queries";
 import { signOut } from "@/modules/auth/actions";
 import { FounderDock } from "@/components/dashboard/founder-dock";
@@ -18,7 +17,8 @@ export default async function AdminLayout({
           href="/founder"
           className="flex items-center gap-2 text-base font-bold text-brand-700 hover:text-brand-800"
         >
-          <LayoutGrid className="h-5 w-5" aria-hidden />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/jcn-mark-transparent.png" alt="" className="h-7 w-auto object-contain" />
           Join Care Now
         </Link>
         <div className="flex items-center gap-4">

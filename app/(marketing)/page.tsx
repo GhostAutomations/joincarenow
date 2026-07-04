@@ -3,18 +3,19 @@ import type { Metadata } from "next";
 import {
   ArrowRight,
   Check,
-  Megaphone,
+  X,
   ShieldCheck,
   MessageSquare,
   UserCheck,
   FileCheck2,
-  FolderKanban,
   Sparkles,
   Heart,
+  ChevronDown,
 } from "lucide-react";
 import { DemoForm } from "@/components/marketing/demo-form";
-import { BoardMockup, OnboardingMockup } from "@/components/marketing/mockups";
+import { BoardMockup, OnboardingMockup, CommsMockup, CareersMockup } from "@/components/marketing/mockups";
 import { RubyDemo } from "@/components/marketing/ruby-demo";
+import { PricingTiers } from "@/components/marketing/pricing-tiers";
 
 export const metadata: Metadata = {
   title: "Care recruitment & onboarding software | Join Care Now",
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Care recruitment & onboarding software | Join Care Now",
     description:
-      "Hire compliant care staff faster, without the chaos of spreadsheets. Recruitment and onboarding in one calm system, built for UK care providers.",
+      "Hire compliant care staff faster — with Ruby, your AI assistant, doing the first-round screening. One calm, inspection-ready system built for UK care providers.",
     url: "https://www.joincarenow.com",
     siteName: "Join Care Now",
     locale: "en_GB",
@@ -32,36 +33,45 @@ export const metadata: Metadata = {
   },
 };
 
-const FEATURES = [
+const STATS = [
+  { big: "£49", small: "a month — pricing you can see, no 'request a quote'" },
+  { big: "40", small: "applicants screened by Ruby each month on Core + Ruby" },
+  { big: "1", small: "calm system from advert to first shift" },
+  { big: "0", small: "spreadsheets, sticky notes or lost candidates" },
+];
+
+const SHOWCASES = [
   {
-    icon: ShieldCheck,
-    title: "Safe recruitment, evidenced",
-    proof: "Right to Work, DBS, references and employment history captured, time-stamped and stored against each person.",
+    kicker: "Your careers page",
+    title: "Advertise every role under your own brand",
+    body:
+      "Your jobs live on a branded careers page that's found on Google and shareable anywhere — no job-board fees, no third-party branding. Candidates apply on any device with your own application form.",
+    points: ["Found on Google for Jobs", "Share links, social posts and QR posters", "Closes automatically on your closing date"],
+    mock: <CareersMockup />,
   },
   {
-    icon: FolderKanban,
-    title: "Never lose a candidate again",
-    proof: "Track every applicant on a simple board or table, so you always know who's waiting on what.",
+    kicker: "Your pipeline",
+    title: "See every candidate, never lose one again",
+    body:
+      "In care, the best applicants are gone in days. Your pipeline shows every candidate at a glance — who's waiting on what, who needs a nudge — so people move from applied to first shift without the gaps.",
+    points: ["Drag-and-drop hiring stages", "Progress and missing items on every card", "Ruby's report right on the applicant"],
+    mock: <BoardMockup />,
   },
   {
-    icon: Megaphone,
-    title: "Fill roles faster",
-    proof: "Advertise every job on your own branded careers page and share the link anywhere, with no job-board fees.",
+    kicker: "Your messages",
+    title: "Email and SMS without leaving the system",
+    body:
+      "Message candidates by email or text with templates and merge fields, see what's delivered and opened, and keep the whole conversation on the applicant's timeline — not lost in someone's inbox.",
+    points: ["Templates with merge fields", "Delivery and open tracking", "Every message on the applicant's record"],
+    mock: <CommsMockup />,
   },
   {
-    icon: FileCheck2,
-    title: "Contracts & policies signed online",
-    proof: "Send contracts and policies for e-signature and collect every required document in one place.",
-  },
-  {
-    icon: MessageSquare,
-    title: "Email & SMS, all in one place",
-    proof: "Message candidates with templates and see what's been sent, delivered and replied to, without leaving the platform.",
-  },
-  {
-    icon: UserCheck,
-    title: "One staff record on hire",
-    proof: "When someone's hired, their whole history becomes a single employee record, with no re-keying and nothing lost.",
+    kicker: "Your evidence",
+    title: "Walk into your next inspection with the evidence ready",
+    body:
+      "Safe recruitment sits at the heart of CQC Regulation 19 and 17, with equivalent expectations from CIW. Every check — Right to Work, DBS, references, contracts — is captured, time-stamped and stored against the person, ready the moment you need it.",
+    points: ["Right to Work, DBS & references tracked", "Contracts & policies e-signed and filed", "Time-stamped audit trail on everything"],
+    mock: <OnboardingMockup />,
   },
 ];
 
@@ -74,13 +84,13 @@ const PROBLEMS = [
   { pain: "A pile of applications you can't tell apart", fix: "A clear screening report and recommendation on every applicant." },
 ];
 
-const PLAN_INCLUDES = [
-  "Every feature included: recruitment, onboarding and employee records",
-  "Core compliance always in the base: Right to Work, DBS, references",
-  "Branded careers page & applicant tracking",
-  "Contracts & policies with e-signature",
-  "Email & SMS messaging (100 SMS / month included)",
-  "1 branch included",
+const COMPARISON = [
+  { label: "Everything from advert to hired in one place" },
+  { label: "Right to Work, DBS & references tracked and evidenced" },
+  { label: "Candidate email & SMS built in" },
+  { label: "Contracts & policies signed online" },
+  { label: "Ruby — AI screening on every applicant" },
+  { label: "Built for care, not adapted to it" },
 ];
 
 const ADD_ONS = [
@@ -90,19 +100,38 @@ const ADD_ONS = [
   { label: "Forms", price: "from the File Store, priced per form" },
 ];
 
-const RUBY_INCLUDES = [
-  "Everything in Core, plus Ruby",
-  "AI screens each applicant against the role, your job description & policies",
-  "Holds a friendly follow-up conversation with the candidate (consent-based)",
-  "Writes a clear report with a hire recommendation for your team",
-  "40 applicants screened / month included, then 75p each",
-];
-
 const STEPS = [
   { n: "1", title: "Advertise", body: "Post your roles to a branded careers page and share the link." },
   { n: "2", title: "Ruby screens", body: "On Core + Ruby, every applicant is reviewed and interviewed by Ruby, with a report for your team." },
   { n: "3", title: "Track & interview", body: "Move applicants through your hiring steps and book interviews by email or SMS." },
   { n: "4", title: "Onboard to hired", body: "Collect checks and documents, sign contracts, and create the staff record." },
+];
+
+const FAQS = [
+  {
+    q: "We manage hiring in spreadsheets today — why change?",
+    a: "Spreadsheets don't chase references, text candidates, or produce a time-stamped audit trail when an inspector asks. Everything you do in the spreadsheet still happens — advertising, tracking, checking — it just happens in one place, with the evidence kept for you. Most teams are fully moved over within a week.",
+  },
+  {
+    q: "How long does setup take?",
+    a: "We do it with you. Every new company gets a hands-on setup: we build your first careers page, jobs and application form together, so you start with a working system rather than an empty one. There's no technical work on your side.",
+  },
+  {
+    q: "What exactly does Ruby do — and can candidates opt out?",
+    a: "Ruby reviews each application against your role, job description and policies, then asks the candidate a few friendly follow-up questions in their applicant portal — only with their consent, and they can decline. She writes a clear report with a hire recommendation. It's advisory: your team always makes the decision.",
+  },
+  {
+    q: "Is our candidate and staff data safe?",
+    a: "Yes. Data is hosted in the UK (London), every company's data is isolated from every other company's, files live in private storage with controlled access, and role-based permissions control who on your team sees what. Built for UK GDPR from day one.",
+  },
+  {
+    q: "Will my team actually use it?",
+    a: "It's designed for busy registered managers, not IT departments. If your team can use WhatsApp and a whiteboard, they can use this — one board, clear next steps on every candidate, and reminders that chase paperwork so your team doesn't have to.",
+  },
+  {
+    q: "Are there any hidden costs?",
+    a: "No. The price on this page is the price: £49 or £89 a month, with add-ons listed openly (extra branches, extra SMS, AI actions). No per-user fees, no compulsory setup packages, no 'contact sales to find out'.",
+  },
 ];
 
 const FOUNDING = [
@@ -114,29 +143,30 @@ const FOUNDING = [
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-white">
-      {/* Nav */}
-      <header className="absolute inset-x-0 top-0 z-20">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-          <span className="flex items-center gap-3.5">
+      {/* Sticky nav */}
+      <header className="jcn-app-bg sticky top-0 z-40 shadow-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
+          <a href="#top" className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/jcn-mark-white.png" alt="" className="h-14 w-auto drop-shadow-sm sm:h-16" />
-            <span className="text-3xl font-bold text-white drop-shadow-sm sm:text-4xl">Join Care Now</span>
-          </span>
-          <nav className="flex items-center gap-4 sm:gap-7">
-            <a href="#ruby" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Meet Ruby</a>
-            <a href="#features" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Features</a>
-            <a href="#pricing" className="hidden text-base font-medium text-white/90 hover:text-white sm:inline">Pricing</a>
-            <Link href="/sign-in" className="text-base font-medium text-white/90 hover:text-white">Account Sign In</Link>
-            <a href="#demo" className="rounded-lg bg-white px-5 py-2.5 text-base font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">Book a demo</a>
+            <img src="/brand/jcn-mark-white.png" alt="" className="h-10 w-auto drop-shadow-sm sm:h-11" />
+            <span className="text-xl font-bold text-white drop-shadow-sm sm:text-2xl">Join Care Now</span>
+          </a>
+          <nav className="flex items-center gap-4 sm:gap-6">
+            <a href="#ruby" className="hidden text-sm font-medium text-white/90 hover:text-white sm:inline">Meet Ruby</a>
+            <a href="#platform" className="hidden text-sm font-medium text-white/90 hover:text-white sm:inline">Platform</a>
+            <a href="#pricing" className="hidden text-sm font-medium text-white/90 hover:text-white sm:inline">Pricing</a>
+            <a href="#faq" className="hidden text-sm font-medium text-white/90 hover:text-white md:inline">FAQ</a>
+            <Link href="/sign-in" className="hidden text-sm font-medium text-white/90 hover:text-white sm:inline">Sign in</Link>
+            <a href="#demo" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-white/90">Book a demo</a>
           </nav>
         </div>
       </header>
 
-      {/* Hero — platform promise, with Ruby screening live beside it */}
-      <section className="jcn-app-bg relative overflow-hidden text-white">
+      {/* Hero */}
+      <section id="top" className="jcn-app-bg relative overflow-hidden text-white">
         <div className="jcn-blob pointer-events-none absolute -left-20 -top-24 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
         <div className="jcn-blob jcn-blob-3 pointer-events-none absolute -bottom-24 right-0 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-        <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-32 sm:pb-24 sm:pt-40">
+        <div className="relative mx-auto max-w-6xl px-6 pb-24 pt-16 sm:pb-28 sm:pt-20">
           <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
             <div className="text-center lg:text-left">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur">
@@ -162,13 +192,25 @@ export default function LandingPage() {
               </div>
               <p className="mt-4 text-sm text-white/80">No hard sell · No obligation · No setup fee on annual plans</p>
             </div>
-            <RubyDemo />
+            <div className="pb-10 sm:pb-12">
+              <RubyDemo />
+            </div>
+          </div>
+
+          {/* Stats strip */}
+          <div className="mt-14 grid grid-cols-2 gap-4 border-t border-white/15 pt-10 lg:grid-cols-4">
+            {STATS.map((s) => (
+              <div key={s.small} className="text-center lg:text-left">
+                <p className="text-3xl font-bold sm:text-4xl">{s.big}</p>
+                <p className="mt-1 text-sm text-white/80">{s.small}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* 1) Meet Ruby — the differentiator, straight after the hero */}
-      <section id="ruby" className="mx-auto max-w-6xl px-6 pb-6 pt-14">
+      {/* Meet Ruby — the differentiator */}
+      <section id="ruby" className="mx-auto max-w-6xl scroll-mt-20 px-6 pb-6 pt-16">
         <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-600 via-violet-600 to-brand-600 p-8 text-white shadow-lg sm:p-12">
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
             <div>
@@ -180,8 +222,9 @@ export default function LandingPage() {
                 First-round screening is the most time-hungry part of care hiring: reading
                 applications, spotting the gaps, playing phone tag for answers. Ruby does all
                 of it for you. She reviews each applicant against your role, asks them a few
-                friendly follow-up questions, and hands your team a clear report with a hire
-                recommendation — so your time goes on the candidates worth meeting.
+                friendly follow-up questions in their portal, and hands your team a clear
+                report with a hire recommendation — so your time goes on the candidates worth
+                meeting.
               </p>
               <p className="mt-4 text-sm text-white/80">
                 Included on the <span className="font-semibold text-white">Core + Ruby</span> plan:
@@ -214,43 +257,54 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 2) Inspection-ready — the compliance hook */}
-      <section id="compliance" className="border-b border-gray-100 bg-white">
-        <div className="mx-auto max-w-5xl px-6 py-20">
-          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">Inspection-ready</p>
-              <h2 className="mt-3 text-2xl font-bold text-gray-900 sm:text-3xl">Walk into your next inspection with the evidence ready</h2>
-              <p className="mt-4 text-gray-600">
-                Safe recruitment sits at the heart of CQC Regulation 19 (fit and proper persons)
-                and Regulation 17 (good governance and records), with the equivalent
-                expectations from CIW and Social Care Wales. Join Care Now captures each check,
-                time-stamps it, and stores it against the person, so the evidence is in one place
-                the moment you need it.
-              </p>
-              <p className="mt-4 text-sm text-gray-500">
-                Join Care Now helps you stay organised and evidence safe recruitment. It does
-                not replace your own checks; legal responsibility for compliance stays with
-                your organisation.
-              </p>
-            </div>
-            <OnboardingMockup />
-          </div>
+      {/* Platform showcases */}
+      <section id="platform" className="mx-auto max-w-5xl scroll-mt-20 px-6 py-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">One calm system for the whole journey</h2>
+          <p className="mt-3 text-gray-600">
+            Advert, applicants, checks, contracts, messages, staff record — everything in one
+            place, simple enough for a busy registered manager.
+          </p>
         </div>
+        <div className="mt-14 space-y-16">
+          {SHOWCASES.map((s, i) => (
+            <div key={s.kicker} className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+              <div className={i % 2 === 1 ? "lg:order-2" : ""}>
+                <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">{s.kicker}</p>
+                <h3 className="mt-3 text-2xl font-bold text-gray-900">{s.title}</h3>
+                <p className="mt-4 text-gray-600">{s.body}</p>
+                <ul className="mt-5 space-y-2">
+                  {s.points.map((pt) => (
+                    <li key={pt} className="flex items-start gap-2 text-sm text-gray-700">
+                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-700">
+                        <Check className="h-3 w-3" aria-hidden />
+                      </span>
+                      {pt}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className={i % 2 === 1 ? "lg:order-1" : ""}>{s.mock}</div>
+            </div>
+          ))}
+        </div>
+        <p className="mx-auto mt-14 max-w-2xl text-center text-sm text-gray-500">
+          Join Care Now helps you stay organised and evidence safe recruitment. It does not
+          replace your own checks; legal responsibility for compliance stays with your organisation.
+        </p>
       </section>
 
-      {/* 2) Spreadsheet chaos → calm */}
-      <section className="border-b border-gray-100 bg-gray-50">
+      {/* Before / after strip */}
+      <section className="border-y border-gray-100 bg-gray-50">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">
             Recruitment shouldn&apos;t feel like firefighting
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-center text-gray-600">
             If hiring lives across spreadsheets, inboxes and sticky notes, things slip. And in
-            care, the things that slip are the ones an inspector asks about. Join Care Now puts
-            the whole journey in one calm place.
+            care, the things that slip are the ones an inspector asks about.
           </p>
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {PROBLEMS.map((p) => (
               <div key={p.pain} className="rounded-2xl border border-gray-200 bg-white p-5">
                 <p className="text-sm font-medium text-gray-400 line-through decoration-gray-300">{p.pain}</p>
@@ -266,29 +320,46 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3) Never lose a candidate */}
-      <section className="border-b border-gray-100 bg-white">
-        <div className="mx-auto max-w-5xl px-6 py-20">
-          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
-            <div className="order-2 lg:order-1">
-              <BoardMockup />
-            </div>
-            <div className="order-1 lg:order-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">Keep every carer warm</p>
-              <h2 className="mt-3 text-2xl font-bold text-gray-900 sm:text-3xl">Stop good carers going cold</h2>
-              <p className="mt-4 text-gray-600">
-                In care, the best applicants are gone in days. When CVs are scattered across
-                inboxes, people get missed, and every missed carer is a shift you&apos;re still
-                trying to cover. Join Care Now shows you every applicant at a glance: who&apos;s
-                waiting on what, and who needs a nudge. Reply by email or SMS in seconds and move
-                them from applied to their first shift without the gaps.
-              </p>
-            </div>
-          </div>
+      {/* Comparison */}
+      <section className="mx-auto max-w-4xl px-6 py-16">
+        <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">
+          Better than the way you&apos;re doing it now
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-gray-600">
+          Most care firms run hiring on spreadsheets or a general-purpose project tool. Both
+          work — until a candidate slips through or an inspector asks for evidence.
+        </p>
+        <div className="mt-10 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                <th className="px-4 py-3.5 font-semibold sm:px-6">What you need</th>
+                <th className="px-3 py-3.5 text-center font-semibold">Spreadsheets<br className="sm:hidden" /> &amp; inboxes</th>
+                <th className="px-3 py-3.5 text-center font-semibold">Generic project tools</th>
+                <th className="bg-brand-600 px-3 py-3.5 text-center font-semibold text-white">Join Care Now</th>
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARISON.map((row) => (
+                <tr key={row.label} className="border-b border-gray-100 last:border-0">
+                  <td className="px-4 py-3.5 font-medium text-gray-800 sm:px-6">{row.label}</td>
+                  <td className="px-3 py-3.5 text-center">
+                    <X className="mx-auto h-4 w-4 text-gray-300" aria-hidden />
+                  </td>
+                  <td className="px-3 py-3.5 text-center">
+                    <X className="mx-auto h-4 w-4 text-gray-300" aria-hidden />
+                  </td>
+                  <td className="bg-brand-50/60 px-3 py-3.5 text-center">
+                    <Check className="mx-auto h-4 w-4 text-brand-600" aria-hidden />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
-      {/* ROI — it pays for itself */}
+      {/* ROI band */}
       <section className="jcn-app-bg relative overflow-hidden text-white">
         <div className="jcn-blob pointer-events-none absolute -right-24 -top-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div className="relative mx-auto max-w-4xl px-6 py-16 text-center">
@@ -316,31 +387,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="mx-auto max-w-6xl px-6 py-20">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Everything you need to hire well</h2>
-          <p className="mt-3 text-gray-600">
-            Built for the realities of care hiring, and simple enough for a busy registered manager.
-          </p>
-        </div>
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-brand-300 hover:shadow-md">
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-50 text-brand-600">
-                <f.icon className="h-5 w-5" aria-hidden />
-              </span>
-              <h3 className="mt-4 text-lg font-semibold text-gray-900">{f.title}</h3>
-              <p className="mt-2 text-sm text-gray-600">{f.proof}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Pricing */}
-      <section id="pricing" className="mx-auto max-w-6xl px-6 py-20">
+      <section id="pricing" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Simple, honest pricing.</h2>
+          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Simple, honest pricing</h2>
           <p className="mt-3 text-gray-600">
             Two plans, no quote-chasing and no hidden fees. Core compliance (Right to Work, DBS
             and references) is always in the base, never an add-on. Add <span className="font-semibold text-gray-900">Ruby</span>,
@@ -348,84 +398,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 items-start gap-6 lg:grid-cols-2">
-          {/* Tier 1 — Core */}
-          <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-lg ring-1 ring-brand-100">
-            <div className="jcn-app-bg p-8 text-white">
-              <p className="text-xs font-semibold uppercase tracking-wider text-white/80">Core</p>
-              <p className="mt-3 flex items-baseline gap-1">
-                <span className="text-5xl font-bold">£49</span>
-                <span className="text-lg text-white/80">/ month</span>
-              </p>
-              <p className="mt-2 text-sm text-white/85">Everything you need to hire and onboard.</p>
-              <ul className="mt-5 space-y-2 text-sm">
-                <li className="rounded-lg bg-white/10 px-3 py-2">
-                  <span className="font-semibold">Monthly:</span> £49/mo, cancel anytime. <span className="text-white/70">£150 one-off setup.</span>
-                </li>
-                <li className="rounded-lg bg-white/10 px-3 py-2">
-                  <span className="font-semibold">12-month plan:</span> £49/mo, <span className="text-white/90">no setup fee</span>.
-                </li>
-                <li className="rounded-lg bg-white/10 px-3 py-2">
-                  <span className="font-semibold">Annual:</span> £490/year (<span className="text-white/90">2 months free</span>), no setup fee.
-                </li>
-              </ul>
-              <a href="#demo" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
-                Book a demo
-              </a>
-            </div>
-            <div className="flex-1 p-8">
-              <p className="text-sm font-semibold text-gray-900">What&apos;s included</p>
-              <ul className="mt-4 space-y-2.5">
-                {PLAN_INCLUDES.map((pt) => (
-                  <li key={pt} className="flex items-start gap-2 text-sm text-gray-700">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
-                    {pt}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Tier 2 — Ruby (highlighted) */}
-          <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border-2 border-brand-500 bg-white shadow-xl ring-2 ring-brand-200">
-            <span className="absolute right-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-brand-700 shadow-sm backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden /> Most popular
-            </span>
-            <div className="bg-gradient-to-br from-fuchsia-600 via-violet-600 to-brand-600 p-8 text-white">
-              <p className="text-xs font-semibold uppercase tracking-wider text-white/85">Core + Ruby</p>
-              <p className="mt-3 flex items-baseline gap-1">
-                <span className="text-5xl font-bold">£89</span>
-                <span className="text-lg text-white/80">/ month</span>
-              </p>
-              <p className="mt-2 text-sm text-white/90">Your AI recruitment assistant, built in.</p>
-              <ul className="mt-5 space-y-2 text-sm">
-                <li className="rounded-lg bg-white/15 px-3 py-2">
-                  <span className="font-semibold">Monthly:</span> £89/mo, cancel anytime. <span className="text-white/75">£150 one-off setup.</span>
-                </li>
-                <li className="rounded-lg bg-white/15 px-3 py-2">
-                  <span className="font-semibold">12-month plan:</span> £79/mo, <span className="text-white/90">no setup fee</span>.
-                </li>
-                <li className="rounded-lg bg-white/15 px-3 py-2">
-                  <span className="font-semibold">Annual:</span> £790/year (<span className="text-white/90">2 months free</span>), no setup fee.
-                </li>
-              </ul>
-              <a href="#demo" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-900 transition hover:bg-white/90">
-                Book a demo
-              </a>
-            </div>
-            <div className="flex-1 p-8">
-              <p className="text-sm font-semibold text-gray-900">What&apos;s included</p>
-              <ul className="mt-4 space-y-2.5">
-                {RUBY_INCLUDES.map((pt) => (
-                  <li key={pt} className="flex items-start gap-2 text-sm text-gray-700">
-                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
-                    {pt}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
+        <PricingTiers />
 
         {/* Add-ons (shared) */}
         <div className="mx-auto mt-6 max-w-5xl rounded-2xl border border-gray-100 bg-gray-50 px-8 py-5">
@@ -448,7 +421,7 @@ export default function LandingPage() {
       {/* How it works */}
       <section className="border-y border-gray-100 bg-gray-50">
         <div className="mx-auto max-w-5xl px-6 py-20">
-          <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">From advert to hired in three steps</h2>
+          <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">From advert to hired in four steps</h2>
           <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((s) => (
               <div key={s.n} className="text-center">
@@ -461,8 +434,24 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section id="faq" className="mx-auto max-w-3xl scroll-mt-20 px-6 py-20">
+        <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">Questions care managers ask us</h2>
+        <div className="mt-10 space-y-3">
+          {FAQS.map((f) => (
+            <details key={f.q} className="group rounded-2xl border border-gray-200 bg-white p-5 open:shadow-sm">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-semibold text-gray-900 [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <ChevronDown className="h-5 w-5 shrink-0 text-gray-400 transition-transform group-open:rotate-180" aria-hidden />
+              </summary>
+              <p className="mt-3 text-sm leading-relaxed text-gray-600">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
       {/* Founding customers */}
-      <section className="mx-auto max-w-5xl px-6 py-20">
+      <section className="mx-auto max-w-5xl px-6 pb-20">
         <div className="rounded-3xl border border-brand-200 bg-brand-50/60 p-8 sm:p-12">
           <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2">
             <div>
@@ -494,7 +483,7 @@ export default function LandingPage() {
       </section>
 
       {/* Demo / final CTA */}
-      <section id="demo" className="jcn-app-bg relative overflow-hidden text-white">
+      <section id="demo" className="jcn-app-bg relative scroll-mt-20 overflow-hidden text-white">
         <div className="jcn-blob pointer-events-none absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div className="relative mx-auto max-w-5xl px-6 py-20">
           <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2">
@@ -521,23 +510,38 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white">
-        <div className="mx-auto max-w-6xl px-6 py-10">
-          <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-            <span className="flex items-center gap-2.5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/jcn-mark-transparent.png" alt="" className="h-9 w-auto" />
-              <span className="text-xl font-bold text-brand-700">Join Care Now</span>
-            </span>
-            <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
-              <a href="#features" className="hover:text-gray-900">Features</a>
-              <a href="#ruby" className="hover:text-gray-900">Ruby</a>
-              <a href="#pricing" className="hover:text-gray-900">Pricing</a>
-              <a href="#demo" className="hover:text-gray-900">Book a demo</a>
-              <Link href="/privacy" className="hover:text-gray-900">Privacy</Link>
-              <Link href="/sign-in" className="hover:text-gray-900">Account Sign In</Link>
-            </nav>
+        <div className="mx-auto max-w-6xl px-6 py-12">
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
+            <div>
+              <span className="flex items-center gap-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/brand/jcn-mark-transparent.png" alt="" className="h-9 w-auto" />
+                <span className="text-xl font-bold text-brand-700">Join Care Now</span>
+              </span>
+              <p className="mt-3 max-w-xs text-sm text-gray-500">
+                Recruitment and onboarding for UK care providers — with Ruby, Your AI
+                Recruitment Assistant.
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Product</p>
+              <nav className="mt-3 flex flex-col gap-2 text-sm text-gray-600">
+                <a href="#ruby" className="hover:text-gray-900">Meet Ruby</a>
+                <a href="#platform" className="hover:text-gray-900">Platform</a>
+                <a href="#pricing" className="hover:text-gray-900">Pricing</a>
+                <a href="#faq" className="hover:text-gray-900">FAQ</a>
+                <a href="#demo" className="hover:text-gray-900">Book a demo</a>
+              </nav>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Company</p>
+              <nav className="mt-3 flex flex-col gap-2 text-sm text-gray-600">
+                <Link href="/privacy" className="hover:text-gray-900">Privacy</Link>
+                <Link href="/sign-in" className="hover:text-gray-900">Account Sign In</Link>
+              </nav>
+            </div>
           </div>
-          <p className="mt-8 text-sm text-gray-400">
+          <p className="mt-10 border-t border-gray-100 pt-6 text-sm text-gray-400">
             © {new Date().getFullYear()} Join Care Now · joincarenow.com
           </p>
         </div>

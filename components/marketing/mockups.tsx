@@ -1,4 +1,4 @@
-import { Check, Clock } from "lucide-react";
+import { Check, CheckCheck, Clock, MapPin, Banknote, CalendarDays } from "lucide-react";
 
 /** Faux browser window chrome around a product mockup. Decorative only. */
 function BrowserFrame({ children }: { children: React.ReactNode }) {
@@ -106,6 +106,97 @@ export function BoardMockup() {
         ))}
       </div>
     </BrowserFrame>
+  );
+}
+
+/** Communication hub mockup — email/SMS thread with delivery status. Decorative. */
+export function CommsMockup() {
+  return (
+    <div aria-hidden className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+      <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50 px-5 py-3.5">
+        <span className="grid h-9 w-9 place-items-center rounded-full bg-rose-500 text-xs font-semibold text-white">AM</span>
+        <div>
+          <p className="text-sm font-semibold text-gray-900">Aisha Malik</p>
+          <p className="text-[11px] text-gray-500">Care Assistant · Interview</p>
+        </div>
+        <div className="ml-auto flex gap-1">
+          {["All", "Email", "SMS"].map((t, i) => (
+            <span key={t} className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${i === 0 ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-500"}`}>{t}</span>
+          ))}
+        </div>
+      </div>
+      <div className="space-y-3 bg-gray-50/60 p-4">
+        <div className="flex justify-end">
+          <div className="max-w-[85%]">
+            <p className="rounded-2xl rounded-br-sm bg-brand-600 px-3.5 py-2.5 text-[13px] leading-snug text-white shadow-sm">
+              Hi Aisha, great news — we&apos;d love to invite you to interview on Tuesday at 10am. Does that work for you?
+            </p>
+            <p className="mt-1 flex items-center justify-end gap-1 text-[10px] text-gray-400">
+              SMS · Delivered <CheckCheck className="h-3 w-3 text-brand-500" aria-hidden />
+            </p>
+          </div>
+        </div>
+        <div className="flex">
+          <div className="max-w-[85%]">
+            <p className="rounded-2xl rounded-bl-sm bg-white px-3.5 py-2.5 text-[13px] leading-snug text-gray-800 shadow-sm ring-1 ring-gray-100">
+              Yes, Tuesday at 10 is perfect. See you then!
+            </p>
+            <p className="mt-1 text-[10px] text-gray-400">SMS · Reply</p>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <div className="max-w-[85%]">
+            <p className="rounded-2xl rounded-br-sm bg-brand-600 px-3.5 py-2.5 text-[13px] leading-snug text-white shadow-sm">
+              Interview confirmed — details and directions sent by email.
+            </p>
+            <p className="mt-1 flex items-center justify-end gap-1 text-[10px] text-gray-400">
+              Email · Opened <CheckCheck className="h-3 w-3 text-brand-500" aria-hidden />
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Branded careers page mockup. Decorative. */
+export function CareersMockup() {
+  return (
+    <div aria-hidden className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+      <div className="jcn-app-bg px-5 py-4 text-white">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">Careers at</p>
+        <p className="text-lg font-bold">Bay View Care</p>
+      </div>
+      <div className="p-5">
+        <div className="rounded-xl border border-gray-200 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-gray-900">Care Assistant (Nights)</p>
+              <div className="mt-1.5 flex flex-wrap gap-2 text-[11px] text-gray-500">
+                <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" aria-hidden /> Cardiff</span>
+                <span className="inline-flex items-center gap-1"><Banknote className="h-3 w-3" aria-hidden /> £12.60/hr</span>
+                <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" aria-hidden /> Full-time</span>
+              </div>
+            </div>
+            <span className="rounded-lg bg-brand-600 px-3.5 py-2 text-[11px] font-semibold text-white">Apply now</span>
+          </div>
+        </div>
+        <div className="mt-3 rounded-xl border border-gray-200 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-gray-900">Senior Support Worker</p>
+              <div className="mt-1.5 flex flex-wrap gap-2 text-[11px] text-gray-500">
+                <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" aria-hidden /> Newport</span>
+                <span className="inline-flex items-center gap-1"><Banknote className="h-3 w-3" aria-hidden /> £13.40/hr</span>
+                <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" aria-hidden /> Full-time</span>
+              </div>
+            </div>
+            <span className="rounded-lg bg-brand-600 px-3.5 py-2 text-[11px] font-semibold text-white">Apply now</span>
+          </div>
+        </div>
+        <p className="mt-3 text-center text-[10px] text-gray-400">Your brand, your jobs — found on Google, shared anywhere</p>
+      </div>
+    </div>
   );
 }
 

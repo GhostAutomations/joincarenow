@@ -3,7 +3,8 @@
 Excludes testing and Carer.Academy integration. Last reviewed 5 Jul 2026.
 
 ## Half-built, needs finishing
-- [ ] Talent pool: consent capture at opt-in + 6-month auto-purge cron (GDPR). Token page + remove migration exist; consent + purge missing.
+- [x] Talent pool consent capture: already built (migs 0071/0081, applicants.talent_pool + talent_pool_consent_at).
+- [~] Talent pool 6-month auto-purge cron: BUILT 5 Jul (lib/comms/talent-pool-purge.ts + /api/cron/talent-pool, daily 04:00). Warns ~14 days before expiry with a re-consent button, then purges dormant retained applications and clears expired consent. Code-only, no migration. Needs Tuesday testing.
 - [ ] Contracts Slice 3: sealed PDF + audit trail (who/when/IP) auto-filed into employee Documents on hire. On-demand render route exists; verify filing-on-hire path.
 - [ ] Branding: settings-side brand colour/logo editing + brand-themed careers pages. Currently deferred.
 

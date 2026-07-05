@@ -36,13 +36,23 @@ export function parseSalary(raw: string | null | undefined): Money | undefined {
   else if (/(per\s*month|monthly|\/\s*month|\bpcm\b)/.test(s)) unitText = "MONTH";
   else if (/(per\s*week|weekly|\/\s*week)/.test(s)) unitText = "WEEK";
   else if (/(per\s*day|daily|\/\s*day)/.test(s)) unitText = "DAY";
-  if (!unitText) return undefined;
 
   // Pull the monetary figures (strip thousands separators).
   const nums = (s.match(/£?\s*\d[\d,]*(?:\.\d+)?/g) ?? [])
     .map((m) => parseFloat(m.replace(/[£,\s]/g, "")))
     .filter((n) => Number.isFinite(n) && n > 0);
   if (nums.length === 0) return undefined;
+
+  // Care adverts often omit the period (e.g. "£12.75"). Infer it from the size:
+  // small amounts are hourly, large amounts are annual. A genuinely ambiguous
+  // mid-range is left unset rather than guessed, so we never publish a wrong unit.
+  if (!unitText) {
+    const maxNum = Math.max(...nums);
+    const minNum = Math.min(...nums);
+    if (maxNum <= 100) unitText = "HOUR";
+    else if (minNum >= 1000) unitText = "YEAR";
+    else return undefined;
+  }
 
   const value: Record<string, unknown> = { "@type": "QuantitativeValue", unitText };
   if (nums.length >= 2) {

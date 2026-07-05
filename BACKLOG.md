@@ -28,6 +28,7 @@ Excludes testing and Carer.Academy integration. Last reviewed 5 Jul 2026.
 - NEEDS: migration 0153 shipped; Tuesday testing (destructive — test on a throwaway applicant).
 
 ## Go-to-market
+- [x] Google Search Console: SET UP 5 Jul. Domain property joincarenow.com verified via DNS TXT (in Vercel — keep it), sitemap.xml submitted, Carer job URL requested for indexing. Google had already discovered the URL via the sitemap (crawlability fix confirmed working).
 - [~] SEO pages: BUILT 5 Jul. New routes /features, /pricing (standalone), /guides + two sourced compliance articles (CQC Reg 19, CIW Wales) with Article JSON-LD. Shared marketing chrome (components/marketing/chrome.tsx). Added to sitemap + homepage footer links. Code-only. Needs visual check.
 - [ ] Social proof / outcome stat — BLOCKED on Phil: needs real testimonials/stats (won't invent).
 - [~] Self-serve signup — DECISION MADE 5 Jul (reverses invite-only rule): free trial + card, light care-provider gate, build now / gate activation behind SELF_SERVE_SIGNUP flag until Ltd + terms live. Plan in PLAN-SELF-SERVE.md.

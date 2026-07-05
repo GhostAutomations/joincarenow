@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireCompany, requireApplicant } from "@/modules/auth/queries";
+import { fileSignedDocumentsForEmployee } from "@/lib/documents/file-signed-docs";
 import { notifyApplicant } from "@/modules/comms/actions";
 
 export type SignOffDoc = {
@@ -77,8 +78,38 @@ export async function signOffDocument(id: string): Promise<{ ok?: boolean; error
     p_after: { review_status: "approved", title: doc.title, signer_name: doc.signer_name },
   });
 
+  // If this document belongs to an applicant who is already an employee (signed
+  // off after hire), seal the freshly approved copy into their Documents now.
+  // Idempotent and best-effort — never fails the sign-off.
+  try {
+    const { data: sd } = await supabase
+      .from("signed_documents")
+      .select("application_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (sd?.application_id) {
+      const { data: emp } = await supabase
+        .from("employees")
+        .select("id")
+        .eq("application_id", sd.application_id as string)
+        .eq("company_id", current.company_id)
+        .maybeSingle();
+      if (emp?.id) {
+        await fileSignedDocumentsForEmployee(supabase, {
+          companyId: current.company_id,
+          employeeId: emp.id as string,
+          applicationId: sd.application_id as string,
+          createdBy: user.id,
+        });
+      }
+    }
+  } catch {
+    /* filing is best-effort */
+  }
+
   revalidatePath("/sign-off");
   revalidatePath("/dashboard");
+  revalidatePath("/employees");
   return { ok: true };
 }
 

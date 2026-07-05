@@ -52,7 +52,40 @@ export type DocPdfInput = {
   brandHex?: string;        // e.g. "#009051"
   logo?: { bytes: Uint8Array; kind: "png" | "jpg" } | null;
   footerMeta?: string;      // e.g. "Generated 3 July 2026 · Thistle Care Ltd"
+  /** When present, append a sealed electronic-signature + audit block. */
+  signature?: {
+    signerName: string;
+    signedAt: string;                    // ISO timestamp
+    signerIp?: string | null;
+    method?: string | null;              // 'type' | 'draw' | 'none'
+    signatureImagePng?: string | null;   // data URL or bare base64 (drawn signatures)
+    version?: number | null;
+  };
 };
+
+/** Decode a PNG data URL (or bare base64) to bytes for pdf-lib embedPng. */
+function decodePngDataUrl(input: string): Uint8Array | null {
+  try {
+    const comma = input.indexOf(",");
+    const b64 = comma >= 0 ? input.slice(comma + 1) : input;
+    const bytes = Buffer.from(b64, "base64");
+    return bytes.length ? new Uint8Array(bytes) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Format an ISO timestamp in Europe/London for the audit trail. */
+function fmtLondon(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString("en-GB", {
+      day: "numeric", month: "long", year: "numeric",
+      hour: "2-digit", minute: "2-digit", timeZone: "Europe/London",
+    });
+  } catch {
+    return iso;
+  }
+}
 
 /**
  * Render a contract / policy / job description to a branded, well-typeset PDF:
@@ -156,6 +189,57 @@ export async function buildDocumentPdf(input: DocPdfInput): Promise<Uint8Array> 
       drawText(`•  ${t.replace(/^[-*]\s+/, "")}`, 10.5, font, ink, 14, 10, 12); continue;
     }
     drawText(t, 10.5, font, ink, 14.5);                 // paragraph
+  }
+
+  // ---- Sealed electronic-signature + audit block ----
+  if (input.signature) {
+    const s = input.signature;
+    y -= 14;
+    ensure(140);
+    page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, thickness: 0.75, color: rule });
+    y -= 20;
+    page.drawText("Electronic signature", { x: M, y: y - 12, size: 12, font: bold, color: brand });
+    y -= 28;
+
+    let drewImage = false;
+    if ((s.method ?? "type") === "draw" && s.signatureImagePng) {
+      const bytes = decodePngDataUrl(s.signatureImagePng);
+      if (bytes) {
+        try {
+          const img = await pdf.embedPng(bytes);
+          const maxW = 200, maxH = 70;
+          const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+          const iw = img.width * scale, ih = img.height * scale;
+          ensure(ih + 8);
+          page.drawImage(img, { x: M, y: y - ih, width: iw, height: ih });
+          y -= ih + 10;
+          drewImage = true;
+        } catch {
+          drewImage = false;
+        }
+      }
+    }
+    if (!drewImage) {
+      page.drawText(sanitize(s.signerName), { x: M, y: y - 18, size: 20, font: bold, color: ink });
+      y -= 30;
+    }
+
+    const audit: string[] = [`Signed by: ${s.signerName}`, `Date and time: ${fmtLondon(s.signedAt)}`];
+    if (s.signerIp) audit.push(`IP address: ${s.signerIp}`);
+    if (s.version != null) audit.push(`Document version: ${s.version}`);
+    for (const line of audit) {
+      ensure(13);
+      page.drawText(sanitize(line), { x: M, y: y - 10, size: 9, font, color: muted });
+      y -= 13;
+    }
+    y -= 6;
+    const seal =
+      "This document was signed electronically through Join Care Now. The wording above is the exact text presented to the signer at the time of signing, kept as a sealed record.";
+    for (const ln of wrap(sanitize(seal), font, 8, contentW)) {
+      ensure(11);
+      page.drawText(ln, { x: M, y: y - 8, size: 8, font, color: muted });
+      y -= 11;
+    }
   }
 
   // ---- Footer: page numbers + generated meta ----

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncEmployeeToCarerAcademy } from "@/lib/integrations/carer-academy";
+import { fileSignedDocumentsForEmployee } from "@/lib/documents/file-signed-docs";
 import { notifyApplicant } from "@/modules/comms/actions";
 import { requireCompany } from "@/modules/auth/queries";
 
@@ -217,6 +218,21 @@ export async function changeStage(
       p_before: {},
       p_after: { hired_by: hiredBy },
     });
+
+    // Seal the approved signed contracts/policies into the new employee's
+    // Documents (idempotent). Never block the hire on a filing error.
+    if (typeof employeeId === "string") {
+      try {
+        await fileSignedDocumentsForEmployee(supabase, {
+          companyId: before.company_id,
+          employeeId,
+          applicationId,
+          createdBy: auth.user?.id ?? null,
+        });
+      } catch {
+        /* filing is best-effort; the staff-file ZIP still renders signatures live */
+      }
+    }
   }
 
   revalidatePath("/pipeline");

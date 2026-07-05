@@ -37,6 +37,10 @@ type PublicJob = {
   vacancies: number;
   closing_date: string | null;
   created_at: string;
+  loc_street: string | null;
+  loc_city: string | null;
+  loc_region: string | null;
+  loc_postcode: string | null;
 };
 
 async function loadJob(
@@ -102,6 +106,10 @@ export default async function PublicJobPage({
     jobId: data.job_id,
     companySlugForUrl: data.company_slug,
     jobSlug: data.job_slug,
+    street: data.loc_street,
+    city: data.loc_city,
+    region: data.loc_region,
+    postcode: data.loc_postcode,
   });
 
   const brand = profile

@@ -92,6 +92,11 @@ export type JobPostingInput = {
   jobId: string;
   companySlugForUrl: string;
   jobSlug: string;
+  // Optional fuller address (from the job's branch) for a complete jobLocation.
+  street?: string | null;
+  city?: string | null;
+  region?: string | null;
+  postcode?: string | null;
 };
 
 /** Build the JobPosting JSON-LD object from a job's real data. */
@@ -119,7 +124,10 @@ export function buildJobPostingJsonLd(input: JobPostingInput): Record<string, un
       "@type": "Place",
       address: {
         "@type": "PostalAddress",
-        ...(input.location ? { addressLocality: input.location } : {}),
+        ...(input.street ? { streetAddress: input.street } : {}),
+        ...((input.city || input.location) ? { addressLocality: input.city || input.location } : {}),
+        ...(input.region ? { addressRegion: input.region } : {}),
+        ...(input.postcode ? { postalCode: input.postcode } : {}),
         addressCountry: "GB",
       },
     },

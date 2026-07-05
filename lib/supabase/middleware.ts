@@ -10,6 +10,14 @@ const PUBLIC_PATHS = [
   "/accept-invite",
   "/auth",
   "/careers",
+  // Public marketing pages (crawlable, no session).
+  "/features",
+  "/pricing",
+  "/guides",
+  // SEO endpoints — search engines and job aggregators must reach these
+  // without a login, or jobs never get discovered/indexed.
+  "/sitemap.xml",
+  "/robots.txt",
   "/applicant",
   // One-tap interview response links (token-secured, no login).
   "/interview",

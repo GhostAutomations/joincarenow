@@ -28,10 +28,10 @@ Excludes testing and Carer.Academy integration. Last reviewed 5 Jul 2026.
 - NEEDS: migration 0153 shipped; Tuesday testing (destructive — test on a throwaway applicant).
 
 ## Go-to-market
-- [ ] SEO pages (/features, CQC/Reg 19 articles)
-- [ ] Social proof / outcome stat
-- [ ] Self-serve signup decision
-- [ ] Multi-job-board / Indeed distribution (biggest product gap)
+- [~] SEO pages: BUILT 5 Jul. New routes /features, /pricing (standalone), /guides + two sourced compliance articles (CQC Reg 19, CIW Wales) with Article JSON-LD. Shared marketing chrome (components/marketing/chrome.tsx). Added to sitemap + homepage footer links. Code-only. Needs visual check.
+- [ ] Social proof / outcome stat — BLOCKED on Phil: needs real testimonials/stats (won't invent).
+- [ ] Self-serve signup decision — DECISION, conflicts with invite-only rule + needs company/entity + item-4 terms first. Parked.
+- [ ] Multi-job-board / Indeed distribution (biggest product gap) — not built (offered, Phil chose SEO pages this pass).
 
 ## Parked by own call
 - [ ] Care-jobs board (Phase 2, not until paying customers + Google for Jobs live)

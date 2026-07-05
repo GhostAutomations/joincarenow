@@ -544,8 +544,9 @@ export default function LandingPage() {
               <p className="text-xs font-semibold uppercase tracking-wide text-amber-300/80">Product</p>
               <nav className="mt-3 flex flex-col gap-2 text-sm text-white/70">
                 <a href="#ruby" className="hover:text-white">Meet Ruby</a>
-                <a href="#platform" className="hover:text-white">Platform</a>
-                <a href="#pricing" className="hover:text-white">Pricing</a>
+                <Link href="/features" className="hover:text-white">Features</Link>
+                <Link href="/pricing" className="hover:text-white">Pricing</Link>
+                <Link href="/guides" className="hover:text-white">Guides</Link>
                 <a href="#faq" className="hover:text-white">FAQ</a>
                 <a href="#demo" className="hover:text-white">Book a demo</a>
               </nav>

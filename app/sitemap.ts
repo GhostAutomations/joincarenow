@@ -31,8 +31,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  const marketingUrls: MetadataRoute.Sitemap = [
+    "/features",
+    "/pricing",
+    "/guides",
+    "/guides/cqc-regulation-19-safe-recruitment",
+    "/guides/ciw-safe-recruitment-wales",
+  ].map((path) => ({
+    url: `${SITE}${path}`,
+    changeFrequency: "monthly",
+    priority: 0.8,
+  }));
+
   return [
     { url: SITE, changeFrequency: "weekly", priority: 1 },
+    ...marketingUrls,
     ...careerUrls,
     ...jobUrls,
   ];

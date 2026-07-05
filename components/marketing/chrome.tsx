@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { selfServeEnabled } from "@/lib/flags";
 
 // Shared navy-and-gold chrome for marketing sub-pages (features, pricing,
 // guides). The homepage keeps its own single-page anchor nav; these pages are
@@ -33,7 +34,14 @@ export function MarketingHeader() {
           <Link href="/pricing" className="hidden text-sm font-medium text-white/85 hover:text-white sm:inline">Pricing</Link>
           <Link href="/guides" className="hidden text-sm font-medium text-white/85 hover:text-white sm:inline">Guides</Link>
           <Link href="/sign-in" className="hidden text-sm font-medium text-white/85 hover:text-white sm:inline">Sign in</Link>
-          <Link href="/#demo" className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-[#081231] shadow-sm transition hover:bg-amber-300">Book a demo</Link>
+          {selfServeEnabled() ? (
+            <>
+              <Link href="/#demo" className="hidden text-sm font-medium text-white/85 hover:text-white sm:inline">Book a demo</Link>
+              <Link href="/start" className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-[#081231] shadow-sm transition hover:bg-amber-300">Start free trial</Link>
+            </>
+          ) : (
+            <Link href="/#demo" className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-[#081231] shadow-sm transition hover:bg-amber-300">Book a demo</Link>
+          )}
         </nav>
       </div>
     </header>
@@ -95,10 +103,21 @@ export function MarketingCta({
       <div className="relative mx-auto max-w-3xl px-6 py-16 text-center">
         <h2 className="text-2xl font-bold sm:text-3xl">{title}</h2>
         <p className="mx-auto mt-4 max-w-xl text-white/85">{body}</p>
-        <div className="mt-8">
-          <Link href="/#demo" className={GOLD_BTN}>
-            Book a demo <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          {selfServeEnabled() ? (
+            <>
+              <Link href="/start" className={GOLD_BTN}>
+                Start free trial <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+              <Link href="/#demo" className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20">
+                Book a demo
+              </Link>
+            </>
+          ) : (
+            <Link href="/#demo" className={GOLD_BTN}>
+              Book a demo <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          )}
         </div>
       </div>
     </section>

@@ -16,6 +16,7 @@ import { DemoForm } from "@/components/marketing/demo-form";
 import { BoardMockup, OnboardingMockup, CommsMockup, CareersMockup } from "@/components/marketing/mockups";
 import { RubyDemo } from "@/components/marketing/ruby-demo";
 import { PricingTiers } from "@/components/marketing/pricing-tiers";
+import { selfServeEnabled } from "@/lib/flags";
 
 export const metadata: Metadata = {
   title: "Care recruitment & onboarding software | Join Care Now",
@@ -158,6 +159,7 @@ const FOUNDING = [
 ];
 
 export default function LandingPage() {
+  const selfServe = selfServeEnabled();
   return (
     <main className="min-h-screen bg-white">
       {/* Sticky nav */}
@@ -174,7 +176,14 @@ export default function LandingPage() {
             <a href="#pricing" className="hidden text-sm font-medium text-white/85 hover:text-white sm:inline">Pricing</a>
             <a href="#faq" className="hidden text-sm font-medium text-white/85 hover:text-white md:inline">FAQ</a>
             <Link href="/sign-in" className="hidden text-sm font-medium text-white/85 hover:text-white sm:inline">Sign in</Link>
-            <a href="#demo" className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-[#081231] shadow-sm transition hover:bg-amber-300">Book a demo</a>
+            {selfServe ? (
+              <>
+                <a href="#demo" className="hidden text-sm font-medium text-white/85 hover:text-white sm:inline">Book a demo</a>
+                <Link href="/start" className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-[#081231] shadow-sm transition hover:bg-amber-300">Start free trial</Link>
+              </>
+            ) : (
+              <a href="#demo" className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-[#081231] shadow-sm transition hover:bg-amber-300">Book a demo</a>
+            )}
           </nav>
         </div>
       </header>
@@ -200,14 +209,29 @@ export default function LandingPage() {
                 chats with the candidate, and tells you who&apos;s worth meeting.
               </p>
               <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
-                <a href="#demo" className={GOLD_BTN}>
-                  Book a demo <ArrowRight className="h-4 w-4" aria-hidden />
-                </a>
-                <a href="#pricing" className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-7 py-3.5 text-base font-semibold text-white backdrop-blur transition hover:bg-white/20">
-                  See pricing
-                </a>
+                {selfServe ? (
+                  <>
+                    <Link href="/start" className={GOLD_BTN}>
+                      Start free trial <ArrowRight className="h-4 w-4" aria-hidden />
+                    </Link>
+                    <a href="#demo" className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-7 py-3.5 text-base font-semibold text-white backdrop-blur transition hover:bg-white/20">
+                      Book a demo
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <a href="#demo" className={GOLD_BTN}>
+                      Book a demo <ArrowRight className="h-4 w-4" aria-hidden />
+                    </a>
+                    <a href="#pricing" className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-7 py-3.5 text-base font-semibold text-white backdrop-blur transition hover:bg-white/20">
+                      See pricing
+                    </a>
+                  </>
+                )}
               </div>
-              <p className="mt-4 text-sm text-white/70">No hard sell · No obligation · No setup fee on annual plans</p>
+              <p className="mt-4 text-sm text-white/70">
+                {selfServe ? "Free trial · No obligation · Set up in minutes" : "No hard sell · No obligation · No setup fee on annual plans"}
+              </p>
             </div>
             <div className="pb-10 sm:pb-12">
               <RubyDemo />

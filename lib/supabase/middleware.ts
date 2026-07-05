@@ -14,6 +14,8 @@ const PUBLIC_PATHS = [
   "/features",
   "/pricing",
   "/guides",
+  // Public self-serve signup (gated by the SELF_SERVE_SIGNUP flag at the route).
+  "/start",
   // SEO endpoints — search engines and job aggregators must reach these
   // without a login, or jobs never get discovered/indexed.
   "/sitemap.xml",

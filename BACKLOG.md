@@ -30,7 +30,9 @@ Excludes testing and Carer.Academy integration. Last reviewed 5 Jul 2026.
 ## Go-to-market
 - [~] SEO pages: BUILT 5 Jul. New routes /features, /pricing (standalone), /guides + two sourced compliance articles (CQC Reg 19, CIW Wales) with Article JSON-LD. Shared marketing chrome (components/marketing/chrome.tsx). Added to sitemap + homepage footer links. Code-only. Needs visual check.
 - [ ] Social proof / outcome stat — BLOCKED on Phil: needs real testimonials/stats (won't invent).
-- [ ] Self-serve signup decision — DECISION, conflicts with invite-only rule + needs company/entity + item-4 terms first. Parked.
+- [~] Self-serve signup — DECISION MADE 5 Jul (reverses invite-only rule): free trial + card, light care-provider gate, build now / gate activation behind SELF_SERVE_SIGNUP flag until Ltd + terms live. Plan in PLAN-SELF-SERVE.md.
+  - Slice 1 BUILT 5 Jul (flag OFF): mig 0154 self_serve_create_company RPC, lib/flags.ts, /start page + form, selfServeSignUp action, flag-driven "Start free trial" CTA (homepage + chrome, more prominent than demo when on). NEEDS: migration 0154 shipped.
+  - Slice 2 TO BUILD (gated): Stripe trial-with-card into the finishing gate + terms/DPA acceptance; /terms page (item 4) is a dependency; flip SELF_SERVE_SIGNUP=true when Ltd + terms live.
 - [ ] Multi-job-board / Indeed distribution (biggest product gap) — not built (offered, Phil chose SEO pages this pass).
 
 ## Parked by own call

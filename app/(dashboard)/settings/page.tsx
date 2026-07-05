@@ -12,6 +12,7 @@ import { EmployeeNumberSettings } from "@/components/dashboard/employee-number-s
 import { OpeningHoursForm } from "@/components/dashboard/opening-hours-form";
 import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
 import { CareersContentForm } from "@/components/dashboard/careers-content-form";
+import { BrandingForm } from "@/components/dashboard/branding-form";
 import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard/reminder-settings-form";
 import { RubyPanel } from "@/components/dashboard/ruby-panel";
 import { DocumentDetailsForm } from "@/components/dashboard/document-details-form";
@@ -68,6 +69,10 @@ export default async function SettingsPage() {
     ((companyRow?.settings as { show_sidebar?: boolean } | null)?.show_sidebar) === true;
   const careers =
     ((companyRow?.settings as { careers?: { intro?: string; benefits?: string[] } } | null)?.careers) ?? {};
+  const brand =
+    ((companyRow?.settings as {
+      brand?: { primary?: string; secondary?: string; accent?: string; logo_url?: string | null };
+    } | null)?.brand) ?? {};
   const reminderPrefs =
     ((companyRow?.settings as { reminders?: ReminderPrefs } | null)?.reminders) ?? {};
   const rubyEnabled = companyRow?.ruby_enabled === true;
@@ -139,6 +144,12 @@ export default async function SettingsPage() {
 
   if (isAdmin) {
     sections.push(
+      {
+        key: "branding",
+        label: "Branding",
+        description: "Your logo and brand colours. These theme your dashboard, applicant emails and public careers pages.",
+        content: <BrandingForm companyId={current.company_id} brand={brand} />,
+      },
       {
         key: "navigation",
         label: "Navigation",

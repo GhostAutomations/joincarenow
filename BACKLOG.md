@@ -7,7 +7,7 @@ Excludes testing and Carer.Academy integration. Last reviewed 5 Jul 2026.
 - [~] Talent pool 6-month auto-purge cron: BUILT 5 Jul (lib/comms/talent-pool-purge.ts + /api/cron/talent-pool, daily 04:00). Warns ~14 days before expiry with a re-consent button, then purges dormant retained applications and clears expired consent. Code-only, no migration. Needs Tuesday testing.
 - [~] Contracts Slice 3 (sealed PDF filed to employee Documents): BUILT 5 Jul. lib/documents/file-signed-docs.ts + signature/audit block in lib/pdf/document-pdf.ts. On hire (and on post-hire sign-off) each staff-approved signed contract/policy is rendered to a sealed PDF with an audit trail (signer, London date/time, IP, version) and stored in the employee's Documents (hr-documents bucket + employee_documents row). Idempotent, best-effort. Code-only, no migration. Needs Tuesday testing.
 - [ ] Contracts Slice 3: sealed PDF + audit trail (who/when/IP) auto-filed into employee Documents on hire. On-demand render route exists; verify filing-on-hire path.
-- [ ] Branding: settings-side brand colour/logo editing + brand-themed careers pages. Currently deferred.
+- [x] Branding: settings-side brand editing + themed careers pages. Careers pages were already themed (BrandStyle + careers RPC read settings.brand). 5 Jul: added a Branding section to company Settings (existing BrandingForm) so admins can edit logo + colours themselves. Save flows to dashboard, emails and careers. Code-only, no migration.
 
 ## Regulatory / legal (mostly paperwork)
 - [ ] ICO registration + fee

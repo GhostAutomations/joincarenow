@@ -14,6 +14,7 @@ import { SidebarToggle } from "@/components/dashboard/sidebar-toggle";
 import { CareersContentForm } from "@/components/dashboard/careers-content-form";
 import { BrandingForm } from "@/components/dashboard/branding-form";
 import { ReminderSettingsForm, type ReminderPrefs } from "@/components/dashboard/reminder-settings-form";
+import { RetentionSettingsForm, type RetentionPrefs } from "@/components/dashboard/retention-settings-form";
 import { RubyPanel } from "@/components/dashboard/ruby-panel";
 import { DocumentDetailsForm } from "@/components/dashboard/document-details-form";
 import { CollapsibleSection } from "@/components/dashboard/collapsible-section";
@@ -75,6 +76,8 @@ export default async function SettingsPage() {
     } | null)?.brand) ?? {};
   const reminderPrefs =
     ((companyRow?.settings as { reminders?: ReminderPrefs } | null)?.reminders) ?? {};
+  const retentionPrefs =
+    ((companyRow?.settings as { retention?: RetentionPrefs } | null)?.retention) ?? {};
   const rubyEnabled = companyRow?.ruby_enabled === true;
   const rubyConfig = readRubyConfig(companyRow?.settings);
   const rubyUsage = rubyEnabled ? await rubyAllowanceUsed(current.company_id) : null;
@@ -250,6 +253,12 @@ export default async function SettingsPage() {
         label: "Communication",
         description: "Automated reminders to applicants and new starters — on/off and channel.",
         content: <ReminderSettingsForm companyId={current.company_id} prefs={reminderPrefs} />,
+      },
+      {
+        key: "data-privacy",
+        label: "Data & privacy",
+        description: "Data retention: automatically erase applicant and leaver data once your retention period passes.",
+        content: <RetentionSettingsForm prefs={retentionPrefs} />,
       },
       ...(rubyEnabled
         ? [

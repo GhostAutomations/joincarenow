@@ -20,10 +20,12 @@ Excludes testing and Carer.Academy integration. Last reviewed 5 Jul 2026.
 - [ ] Website terms of use + acceptable use policy
 - [ ] Real company details in footer
 
-## GDPR product features (not built)
-- [ ] SAR export
-- [ ] Anonymisation
-- [ ] Retention / deletion jobs
+## GDPR product features
+- [~] SAR export: BUILT 5 Jul. exportApplicantData + DataPrivacyActions (Talent Pool page). One-click ZIP of data.json + files for a subject. Company-scoped, audited.
+- [~] Erasure (right to be forgotten): BUILT 5 Jul. Hard delete chosen over anonymisation. mig 0153 erase_applicant_at_company (company-scoped, shared profile only removed if orphaned) + eraseApplicant action (deletes storage + orphaned auth user). Admin-only, confirm dialog.
+- [~] Retention / deletion jobs: BUILT 5 Jul. lib/privacy/retention.ts + /api/cron/retention (daily 04:30). Per-company Settings → Data & privacy (unsuccessful applicants after N months, leavers after N years). OFF by default. Reuses the erase RPC.
+- [ ] Anonymisation: NOT built. Deliberately skipped (chose hard delete). Revisit if reports need to survive erasure.
+- NEEDS: migration 0153 shipped; Tuesday testing (destructive — test on a throwaway applicant).
 
 ## Go-to-market
 - [ ] SEO pages (/features, CQC/Reg 19 articles)

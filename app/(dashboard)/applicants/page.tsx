@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { requireCompany } from "@/modules/auth/queries";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { RemoveFromPoolButton } from "@/components/dashboard/remove-from-pool-button";
+import { DataPrivacyActions } from "@/components/dashboard/data-privacy-actions";
 
 type Row = {
   applicant_id: string;
@@ -129,7 +130,10 @@ export default async function ApplicantsPage({
                     {new Date(a.latest).toLocaleDateString("en-GB")}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <RemoveFromPoolButton applicantId={a.id} name={a.name} />
+                    <div className="flex flex-col items-end gap-1.5">
+                      <RemoveFromPoolButton applicantId={a.id} name={a.name} />
+                      <DataPrivacyActions applicantId={a.id} name={a.name} isAdmin={current.role === "admin"} />
+                    </div>
                   </td>
                 </tr>
               ))}

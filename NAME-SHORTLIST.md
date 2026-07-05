@@ -2,6 +2,14 @@
 
 ~420 domains checked. £0 budget = unregistered domains only, $11.25/yr each unless noted.
 
+## FRONT-RUNNER (5 Jul 2026): TOFLO — fully cleared
+
+Phil's coinage, "flow" wearing a name. Neutral, 2 syllables, spellable, no dictionary baggage.
+Clearance PASSED (cleanest of the day): UK IPO exact 9/35/42 = zero · Companies House = one dissolved Toflourish Ltd · toflo.com = private DJ's mix folder (innocent, plausibly buyable later) · only other Toflo worldwide = Japanese flow-meter manufacturer.
+Available: toflo.co.uk · toflo.ai ($160/2yr) · toflo.io · toflo.co · toflo.app · hellotoflo.com · toflohq.com · gettoflo.com · trytoflo.com — all $9.99-$37.99 except .ai.
+Suggested buy: toflo.co.uk (UK registrar) + toflo.ai + hellotoflo.com + toflohq.com. Decide canonical later (brand is parked; JCN focus first).
+Remaining pre-launch checks: social handles (@toflo / @toflohq) and a trademark filing when the brand goes live.
+
 ## Live candidates
 
 | Name | Domain | Lane | Notes |

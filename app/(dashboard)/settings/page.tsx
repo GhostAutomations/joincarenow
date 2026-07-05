@@ -53,9 +53,12 @@ export default async function SettingsPage() {
 
   const { data: companyRow } = await supabase
     .from("companies")
-    .select("settings, ruby_enabled")
+    .select("settings, ruby_enabled, agreed_plan")
     .eq("id", current.company_id)
     .single();
+  // Adding an extra branch always asks for confirmation; the message reflects
+  // whether it is chargeable (£7.50/mo on paid plans) or free (Diamond).
+  const branchChargeable = companyRow?.agreed_plan !== "diamond";
   const settings = (companyRow?.settings as {
     interview_address?: string;
     employee_number_mode?: string;
@@ -175,7 +178,7 @@ export default async function SettingsPage() {
         key: "branches",
         label: "Branches",
         description: "Set up branches once; they become selectable on jobs and follow each hire.",
-        content: <BranchesManager branches={branches ?? []} companyId={current.company_id} />,
+        content: <BranchesManager branches={branches ?? []} companyId={current.company_id} chargeable={branchChargeable} />,
       },
       {
         key: "roles",

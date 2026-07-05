@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Trash2, Plus, Pencil } from "lucide-react";
 import { createBranch, updateBranch, deleteBranch, type BranchState } from "@/modules/branches/actions";
@@ -89,12 +89,16 @@ function BranchRow({ b, companyId }: { b: Branch; companyId?: string }) {
 export function BranchesManager({
   branches,
   companyId,
+  chargeable = false,
 }: {
   branches: Branch[];
   companyId?: string;
+  chargeable?: boolean;
 }) {
   const [state, action] = useActionState<BranchState, FormData>(createBranch, undefined);
   const [showAddress, setShowAddress] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const confirmedRef = useRef(false);
   const ref = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const locations = branches.filter((b) => (b.kind ?? "branch") !== "office");
@@ -102,6 +106,21 @@ export function BranchesManager({
   useEffect(() => {
     if (state?.ok) { ref.current?.reset(); setShowAddress(false); router.refresh(); }
   }, [state, router]);
+
+  // The plan includes 1 branch; anything beyond the first is an extra, so ask
+  // before creating it. Diamond sees the same confirm but worded as free.
+  function onAddSubmit(e: FormEvent<HTMLFormElement>) {
+    if (confirmedRef.current) { confirmedRef.current = false; return; }
+    if (locations.length >= 1) {
+      e.preventDefault();
+      setConfirmOpen(true);
+    }
+  }
+  function confirmAdd() {
+    setConfirmOpen(false);
+    confirmedRef.current = true;
+    ref.current?.requestSubmit();
+  }
 
   return (
     <div>
@@ -115,7 +134,7 @@ export function BranchesManager({
         <p className="mb-3 text-sm text-gray-500">No branches yet.</p>
       )}
 
-      <form ref={ref} action={action} className="rounded-lg border border-gray-100 bg-white/40 p-2.5">
+      <form ref={ref} action={action} onSubmit={onAddSubmit} className="rounded-lg border border-gray-100 bg-white/40 p-2.5">
         {companyId && <input type="hidden" name="companyId" value={companyId} />}
         {state?.error && <p className="mb-1 text-xs text-red-600">{state.error}</p>}
         <div className="flex items-start gap-2">
@@ -143,6 +162,35 @@ export function BranchesManager({
       <p className="mt-2 text-xs text-gray-400">
         Your plan includes 1 branch; extras are £7.50/mo each (free on Diamond). Billing updates automatically.
       </p>
+
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-white/50 bg-white/90 p-5 shadow-xl backdrop-blur">
+            <h3 className="text-base font-semibold text-gray-900">Add an extra branch?</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              {chargeable
+                ? "Your plan includes 1 branch. This is an extra branch and will add £7.50/mo to your subscription."
+                : "Your plan includes 1 branch. This is an extra branch, and it's included free on your plan."}
+            </p>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                className="rounded-lg border border-white/50 bg-white/70 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-white/90"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmAdd}
+                className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+              >
+                {chargeable ? "Add for £7.50/mo" : "Add branch"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

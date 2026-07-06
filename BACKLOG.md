@@ -37,9 +37,10 @@ Excludes testing and Carer.Academy integration. Last reviewed 5 Jul 2026.
 - [x] Multi-job-board distribution: Google for Jobs live + submitted to Search Console; Indeed via scraping (crawlable). Aggregator XML feed BUILT 5 Jul (/jobs.xml, Indeed-style, mig 0156 get_public_jobs_feed) for Adzuna/Jooble/Talent.com — register the feed URL with each. Free Indeed XML feeds are dead industry-wide. Per-company opt-out flag honoured (no UI toggle yet).
 
 ## Parked by own call
-- [ ] Care-jobs board (Phase 2, not until paying customers + Google for Jobs live)
+- [ ] Care-jobs board (Phase 2, not until paying customers; GfJ + aggregator feed prerequisites now done)
 - [ ] Multi-brand generic second brand (plan banked; staying on JCN for now)
-- [ ] Reconcile ARCHITECTURE.md with real stack + add monitoring (Sentry/PostHog)
+- [x] Reconcile ARCHITECTURE.md — DONE 5 Jul (header + stack table + reconciliation note; local doc).
+- [~] Monitoring — DONE 5 Jul (no new service): error alert digest to platform admin. mig 0157 + lib/errors/alert.ts + /api/cron/error-alerts (*/15); recipient = ERROR_ALERT_EMAIL env else platform admin email. Sentry/PostHog optional future.
 
 ## To verify
 - [ ] Contract PDF auto-filing into employee Documents on hire

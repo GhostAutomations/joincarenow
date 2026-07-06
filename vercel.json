@@ -9,6 +9,7 @@
     { "path": "/api/cron/expire-jobs", "schedule": "0 3 * * *" },
     { "path": "/api/cron/talent-pool", "schedule": "0 4 * * *" },
     { "path": "/api/cron/retention", "schedule": "30 4 * * *" },
-    { "path": "/api/cron/ruby", "schedule": "*/5 * * * *" }
+    { "path": "/api/cron/ruby", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/error-alerts", "schedule": "*/15 * * * *" }
   ]
 }

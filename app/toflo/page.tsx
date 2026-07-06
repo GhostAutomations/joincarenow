@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Sparkles, Users, ClipboardCheck, MessageSquare } from "lucide-react";
 import { WaitlistForm } from "@/components/toflo/waitlist-form";
+import { TofloDemo } from "@/components/toflo/toflo-demo";
 
 export const metadata: Metadata = {
   title: "Toflo — modern hiring software, coming soon",
@@ -28,7 +29,7 @@ export default function TofloComingSoon() {
       <div className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-emerald-400/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 right-0 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
 
-      <div className="relative mx-auto flex min-h-screen max-w-5xl flex-col px-6 py-10">
+      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-10">
         {/* Wordmark */}
         <header>
           <span className="text-2xl font-bold tracking-tight">
@@ -37,23 +38,31 @@ export default function TofloComingSoon() {
         </header>
 
         {/* Hero */}
-        <section className="flex flex-1 flex-col justify-center py-16">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-200">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden /> Coming soon
-          </span>
-          <h1 className="mt-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
-            Modern hiring software, without the enterprise price tag.
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg text-white/70">
-            Post roles, track every applicant, screen with AI and onboard your new starters, all in
-            one simple platform. Toflo is launching soon. Join the waitlist to be first in.
-          </p>
+        <section className="flex flex-1 flex-col justify-center py-14">
+          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+            <div>
+              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-200">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden /> Coming soon
+              </span>
+              <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl">
+                Modern hiring software, without the enterprise price tag.
+              </h1>
+              <p className="mt-6 max-w-xl text-lg text-white/70">
+                Post roles, track every applicant, screen with AI and onboard your new starters, all
+                in one simple platform, for any industry. Toflo is launching soon. Join the waitlist
+                to be first in.
+              </p>
+              <div className="mt-9">
+                <WaitlistForm />
+              </div>
+            </div>
 
-          <div className="mt-9">
-            <WaitlistForm />
+            <div className="pb-10 lg:pb-12">
+              <TofloDemo />
+            </div>
           </div>
 
-          <div className="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-20 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {FEATURES.map((f) => (
               <div key={f.title} className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
                 <f.icon className="h-6 w-6 text-emerald-300" aria-hidden />

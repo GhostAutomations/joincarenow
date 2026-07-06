@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description:
     "Toflo is an all-in-one hiring platform: post roles, track applicants, screen with AI and onboard new starters in one place. Modern hiring without enterprise pricing. Join the waitlist.",
   alternates: { canonical: "https://toflo.co.uk" },
+  icons: { icon: "/toflo-icon.svg" },
   openGraph: {
     title: "Toflo — modern hiring software, coming soon",
     description: "Post roles, track applicants, screen with AI and onboard, all in one place. Join the waitlist.",

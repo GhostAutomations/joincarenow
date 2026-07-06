@@ -20,6 +20,7 @@ const PUBLIC_PATHS = [
   // without a login, or jobs never get discovered/indexed.
   "/sitemap.xml",
   "/robots.txt",
+  "/jobs.xml",
   "/applicant",
   // One-tap interview response links (token-secured, no login).
   "/interview",

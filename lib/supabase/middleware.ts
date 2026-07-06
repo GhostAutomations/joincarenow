@@ -21,6 +21,9 @@ const PUBLIC_PATHS = [
   "/sitemap.xml",
   "/robots.txt",
   "/jobs.xml",
+  // Toflo coming-soon holding page + its waitlist capture (public).
+  "/toflo",
+  "/api/toflo",
   "/applicant",
   // One-tap interview response links (token-secured, no login).
   "/interview",
@@ -56,6 +59,23 @@ function isPublicPath(pathname: string) {
 
 /** Refreshes the Supabase session cookie and guards private routes. */
 export async function updateSession(request: NextRequest) {
+  // Toflo domain: serve the coming-soon holding page for every page request, so
+  // toflo.co.uk shows Toflo (not the Join Care Now app). API + assets pass
+  // through. This is the only host routing for now; the full brand registry
+  // (PLAN-MULTIBRAND) comes later.
+  const host = (request.headers.get("host") ?? "").toLowerCase().replace(/^www\./, "");
+  const path = request.nextUrl.pathname;
+  if (
+    host.startsWith("toflo.") &&
+    path !== "/toflo" &&
+    !path.startsWith("/api/") &&
+    !path.startsWith("/_next")
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/toflo";
+    return NextResponse.rewrite(url);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

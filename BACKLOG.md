@@ -38,7 +38,7 @@ Excludes testing and Carer.Academy integration. Last reviewed 5 Jul 2026.
 
 ## Parked by own call
 - [ ] Care-jobs board (Phase 2, not until paying customers; GfJ + aggregator feed prerequisites now done)
-- [ ] Multi-brand generic second brand (plan banked; staying on JCN for now)
+- [~] Multi-brand generic second brand (Toflo): name chosen, toflo.co.uk bought + pointed to Vercel. Toflo coming-soon + waitlist page BUILT 5 Jul (mig 0158 waitlist table, /toflo page, /api/toflo/waitlist, middleware host rewrite for toflo.* → /toflo). Full brand registry (Phase 1) still parked. TODO: add toflo.co.uk to Vercel project joincarenowpd.
 - [x] Reconcile ARCHITECTURE.md — DONE 5 Jul (header + stack table + reconciliation note; local doc).
 - [~] Monitoring — DONE 5 Jul (no new service): error alert digest to platform admin. mig 0157 + lib/errors/alert.ts + /api/cron/error-alerts (*/15); recipient = ERROR_ALERT_EMAIL env else platform admin email. Sentry/PostHog optional future.
 

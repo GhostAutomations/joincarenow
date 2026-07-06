@@ -215,6 +215,8 @@ export default async function EditJobPage({
             vacancies: job.vacancies,
             closing_date: job.closing_date ?? "",
             application_form_id: job.application_form_id ?? "",
+            job_description_id: (job as { job_description_id?: string | null }).job_description_id ?? "",
+            contract_template_id: (job as { contract_template_id?: string | null }).contract_template_id ?? "",
           }}
         />
       </div>

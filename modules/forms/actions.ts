@@ -828,7 +828,7 @@ async function acquireOne(storeId: string): Promise<AcquireResult> {
 
   const { data: store } = await supabase
     .from("forms")
-    .select("id, name, description, style, category, price_pence")
+    .select("id, name, description, style, category, price_pence, purpose")
     .eq("id", storeId)
     .eq("is_store", true)
     .single();
@@ -881,6 +881,7 @@ async function acquireOne(storeId: string): Promise<AcquireResult> {
       description: store.description,
       style: store.style ?? {},
       category: store.category,
+      purpose: store.purpose,
       is_store: false,
       source_form_id: store.id,
       created_by: user.id,

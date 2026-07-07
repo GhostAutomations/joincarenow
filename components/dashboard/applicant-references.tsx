@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, AlertTriangle, Clock, Send, Eye } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Clock, Send, Eye, Check } from "lucide-react";
 import {
   getApplicationReferences,
   sendReferenceRequest,
@@ -109,9 +109,11 @@ export function ApplicantReferences({ applicationId }: { applicationId: string }
                   <button
                     onClick={() => send(r.id)}
                     disabled={busyId === r.id}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/40 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-white/60 disabled:opacity-60"
+                    title={r.status === "pending" ? "Send reference request" : "Resend reference request"}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-md bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-60"
                   >
-                    <Send className="h-3 w-3" /> {r.status === "pending" ? "Send" : "Resend"}
+                    {r.status === "sent" ? <Check className="h-3 w-3" /> : <Send className="h-3 w-3" />}
+                    {busyId === r.id ? "Sending…" : r.status === "pending" ? "Send" : r.status === "sent" ? "Sent" : "Resend"}
                   </button>
                 )}
                 {canReview && (

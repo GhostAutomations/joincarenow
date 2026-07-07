@@ -25,7 +25,7 @@ export default async function OnboardingBoardPage() {
       .select("id, title, task_type, required, due_days, trigger_stage, body, form_id, role_id, role_ids, workflow_id, workflow_name, position, ruby_engage, ruby_form_ids, ruby_include_cv, ruby_focus, ruby_instructions, ruby_question_count, ruby_document_ids")
       .eq("company_id", current.company_id)
       .order("position", { ascending: true }),
-    supabase.from("forms").select("id, name").eq("company_id", current.company_id).order("name"),
+    supabase.from("forms").select("id, name, purpose").eq("company_id", current.company_id).order("name"),
     supabase.from("roles").select("id, name").eq("company_id", current.company_id).order("position").order("name"),
     supabase.from("companies").select("ruby_enabled").eq("id", current.company_id).single(),
   ]);
@@ -40,7 +40,7 @@ export default async function OnboardingBoardPage() {
     .eq("company_id", current.company_id)
     .not("application_form_id", "is", null);
   const applicationFormIds = new Set((appForms ?? []).map((j) => j.application_form_id as string));
-  const builderForms = ((forms ?? []) as { id: string; name: string }[]).map((f) => ({
+  const builderForms = ((forms ?? []) as { id: string; name: string; purpose?: string }[]).map((f) => ({
     ...f,
     rubyOnly: applicationFormIds.has(f.id),
   }));

@@ -256,6 +256,9 @@ export function PipelineBoard({
   // Make-an-offer popup: holds the applicant being offered.
   const [offerId, setOfferId] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
+  // Drag into RTW & Referencing opens a focused popup with just the RTW +
+  // References actions (not the full applicant panel).
+  const [rtwId, setRtwId] = useState<string | null>(null);
 
   // Keep local state in sync when the server data refreshes.
   useEffect(() => setApps(initial), [initial]);
@@ -320,12 +323,11 @@ export function PipelineBoard({
       return;
     }
     setApps((prev) => prev.map((a) => (a.id === id ? { ...a, stage } : a)));
-    // Moving into Interview or Right to work opens the card so you can act straight away.
-    if (
-      (stage === "interview" || stage === "right_to_work") &&
-      prevStage !== stage
-    )
-      setSelectedId(id);
+    // Moving into Interview opens the full card so you can schedule straight away.
+    if (stage === "interview" && prevStage !== stage) setSelectedId(id);
+    // Moving into RTW & Referencing opens a focused popup with just the RTW +
+    // References actions.
+    if (stage === "right_to_work" && prevStage !== stage) setRtwId(id);
     // Moving into Offer opens the make-an-offer popup.
     if (stage === "offer" && prevStage !== "offer") setOfferId(id);
     changeStage(id, stage).then((res) => {
@@ -514,6 +516,48 @@ export function PipelineBoard({
       {rejectId && (
         <RejectModal applicationId={rejectId} onClose={() => setRejectId(null)} />
       )}
+
+      {rtwId && (() => {
+        const a = apps.find((x) => x.id === rtwId);
+        return a ? <RtwRefsModal app={a} onClose={() => setRtwId(null)} /> : null;
+      })()}
+    </div>
+  );
+}
+
+/** Focused popup shown when a card is dragged into RTW & Referencing — just the
+ *  Right to Work and References actions, nothing else. Full detail is still one
+ *  click away by opening the card. */
+function RtwRefsModal({ app, onClose }: { app: AppCard; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" aria-hidden onClick={onClose} />
+      <div className="relative flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="flex items-center justify-between gap-4 border-b border-gray-200 px-5 py-4">
+          <h2 className="text-base font-semibold text-gray-900">
+            RTW &amp; Referencing — {fullName(app)}
+          </h2>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="space-y-5 overflow-y-auto px-5 py-5">
+          <RightToWork
+            applicationId={app.id}
+            rtw={{
+              verifiedAt: app.rtwVerifiedAt,
+              shareCode: app.rtwShareCode,
+              expiry: app.rtwExpiry,
+              hasDoc: app.rtwHasDoc,
+            }}
+          />
+          <ApplicantReferences applicationId={app.id} />
+        </div>
+      </div>
     </div>
   );
 }

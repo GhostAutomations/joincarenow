@@ -66,7 +66,7 @@ export function WorkflowBuilder({
   rubyEnabled = false,
   saveAction = addTemplateTasks,
 }: {
-  forms: { id: string; name: string; rubyOnly?: boolean }[];
+  forms: { id: string; name: string; rubyOnly?: boolean; purpose?: string }[];
   /** Contracts + policies. Dropped on a stage = read-&-sign task; dropped in a
    *  Ruby box = something Ruby compares the candidate against. */
   docs?: { id: string; name: string; kind: "contract" | "policy" }[];
@@ -79,10 +79,20 @@ export function WorkflowBuilder({
   saveAction?: (drafts: TaskDraft[]) => Promise<{ ok?: boolean; error?: string }>;
 }) {
   const router = useRouter();
+  // Referencing is a standard pipeline step. If the company has installed the
+  // applicant "Your Referees" form (purpose = "reference"), auto-place it in the
+  // RTW & Referencing column so every new workflow collects referees by default.
+  // (Submitting it triggers the referee questionnaire via the referencing app.)
+  // Staff can remove it if a given workflow shouldn't chase references.
+  const referenceForm = forms.find((f) => f.purpose === "reference");
+  const seedPlaced = (): Record<string, Placed[]> =>
+    referenceForm
+      ? { right_to_work: [{ source: "form", refId: referenceForm.id, name: referenceForm.name, key: crypto.randomUUID() }] }
+      : {};
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [roleValues, setRoleValues] = useState<string[]>([]);
-  const [placed, setPlaced] = useState<Record<string, Placed[]>>({});
+  const [placed, setPlaced] = useState<Record<string, Placed[]>>(seedPlaced);
   const [armed, setArmed] = useState<Lib | null>(null); // tap-to-place fallback
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   // Ruby config (one Ruby step per workflow).
@@ -100,7 +110,7 @@ export function WorkflowBuilder({
   function reset() {
     setTitle("");
     setRoleValues([]);
-    setPlaced({});
+    setPlaced(seedPlaced());
     setArmed(null);
     setRubyEngage("");
     setRubyItems([]);

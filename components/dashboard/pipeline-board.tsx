@@ -73,7 +73,7 @@ const STAGES: { key: string; label: string; dot: string }[] = [
   { key: "applied", label: "Applied", dot: "bg-blue-500" },
   { key: "reviewing", label: "Reviewing", dot: "bg-indigo-500" },
   { key: "interview", label: "Interview", dot: "bg-purple-500" },
-  { key: "right_to_work", label: "Right to work", dot: "bg-amber-500" },
+  { key: "right_to_work", label: "RTW & Referencing", dot: "bg-amber-500" },
   { key: "offer", label: "Offer", dot: "bg-green-500" },
   { key: "hired", label: "Hired", dot: "bg-emerald-600" },
   { key: "rejected", label: "Not progressing", dot: "bg-gray-400" },
@@ -772,15 +772,19 @@ function ApplicantPanel({
           )}
 
           {app.stage === "right_to_work" && (
-            <RightToWork
-              applicationId={app.id}
-              rtw={{
-                verifiedAt: app.rtwVerifiedAt,
-                shareCode: app.rtwShareCode,
-                expiry: app.rtwExpiry,
-                hasDoc: app.rtwHasDoc,
-              }}
-            />
+            <>
+              <RightToWork
+                applicationId={app.id}
+                rtw={{
+                  verifiedAt: app.rtwVerifiedAt,
+                  shareCode: app.rtwShareCode,
+                  expiry: app.rtwExpiry,
+                  hasDoc: app.rtwHasDoc,
+                }}
+              />
+              {/* Referencing is contacted at this stage — front-and-centre alongside RTW. */}
+              <ApplicantReferences applicationId={app.id} />
+            </>
           )}
 
           {app.stage === "offer" && <OfferSection applicationId={app.id} onSend={onSendOffer} />}
@@ -799,8 +803,8 @@ function ApplicantPanel({
             />
           )}
 
-          {/* References */}
-          <ApplicantReferences applicationId={app.id} />
+          {/* References (shown up top at the RTW & Referencing stage) */}
+          {app.stage !== "right_to_work" && <ApplicantReferences applicationId={app.id} />}
 
           {/* Ruby — workflow screening report, else on-demand interview questions */}
           <ApplicantRubyReport

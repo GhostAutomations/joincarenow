@@ -31,7 +31,7 @@ const STAGE_LABEL: Record<string, string> = {
   applied: "Applied",
   reviewing: "Under review",
   interview: "Interview",
-  right_to_work: "Right to work",
+  right_to_work: "RTW & Referencing",
   offer: "Offer",
   hired: "Hired",
   rejected: "Not progressing",

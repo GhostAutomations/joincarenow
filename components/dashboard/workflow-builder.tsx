@@ -18,7 +18,7 @@ const STAGES: { key: string; label: string }[] = [
   { key: "on_application", label: "Application" },
   { key: "reviewing", label: "Reviewing" },
   { key: "interview", label: "Interview" },
-  { key: "right_to_work", label: "Right to work" },
+  { key: "right_to_work", label: "RTW & Referencing" },
   { key: "offer", label: "Offer" },
   { key: "hired", label: "Hired" },
 ];

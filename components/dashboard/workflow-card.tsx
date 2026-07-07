@@ -48,7 +48,7 @@ const RUBY_STAGE_OPTIONS: [string, string][] = [
   ["on_application", "Application submitted"],
   ["reviewing", "Reviewing"],
   ["interview", "Interview"],
-  ["right_to_work", "Right to work"],
+  ["right_to_work", "RTW & Referencing"],
   ["offer", "Offer"],
   ["hired", "Hired"],
 ];

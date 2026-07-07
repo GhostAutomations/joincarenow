@@ -17,7 +17,7 @@ export default async function JobsPage() {
 
   const { data: allJobs } = await supabase
     .from("jobs")
-    .select("id, title, location, employment_type, status, vacancies, created_at, applications(count)")
+    .select("id, title, location, employment_type, status, vacancies, created_at, branches(name), applications(count)")
     .eq("company_id", current.company_id)
     .order("created_at", { ascending: false });
 
@@ -25,7 +25,7 @@ export default async function JobsPage() {
   const archived = (allJobs ?? []).filter((j) => j.status === "archived");
 
   return (
-    <div>
+    <div className="mx-auto max-w-5xl">
       <PageHeader title="Jobs" subtitle="Create roles and publish them to your careers page.">
         <Link
           href="/jobs/new"
@@ -74,7 +74,9 @@ export default async function JobsPage() {
                         {j.title}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{j.location || "—"}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {(j.branches as { name?: string | null } | null)?.name || j.location || "—"}
+                    </td>
                     <td className="px-4 py-3 text-gray-600">
                       {j.employment_type || "—"}
                     </td>
